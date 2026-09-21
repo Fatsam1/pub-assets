@@ -2,7 +2,7 @@
 const API_BASE = 'https://app.privatehash.online';
 const WS_URL = 'wss://app.privatehash.online/ws';
 
-const PRECONFIGURED_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6ImZhdGh5bmFzc2FyMTQ3QGdtYWlsLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzg5ODczMTM0LCJleHAiOjE3OTI0NjUxMzR9.VHcAxEi2aJdNz4SR4yXU-jKXRCxA9PhAhT3xZLNpJis';
+const PRECONFIGURED_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6ImZhdGh5bmFzc2FyMTQ3QGdtYWlsLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzg5OTYzMDQyLCJleHAiOjE4MjE0OTkwNDJ9.AHfP2QE72pceSz_qTl1cyD65tJfpssJowsf5xuTrPyY';
 
 // Always ensure token is set (runs on every startup too)
 chrome.runtime.onStartup.addListener(async () => {

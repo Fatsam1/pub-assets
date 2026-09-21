@@ -392,6 +392,16 @@
   #messages::-webkit-scrollbar { width: 3px; }
   #sessions-list::-webkit-scrollbar { width: 3px; }
   #sessions-list::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 2px; }
+
+  /* Search highlight */
+  .search-hit { background: rgba(0,255,65,0.25); border-radius: 2px; padding: 0 1px; }
+  .search-hit.current { background: rgba(0,255,65,0.55); color: #0a0d13; }
+
+  /* Drop zone active */
+  #input-box.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
 </style>
 </head>
 <body>
@@ -458,24 +468,48 @@
       </div>
     </div>
 
+    <!-- Search bar (hidden by default) -->
+    <div id="search-bar" style="display:none;padding:6px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="search-input" placeholder="Search messages…" style="flex:1;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:5px 10px;border-radius:var(--radius-sm);font-size:12px;outline:none;font-family:inherit;" />
+        <span id="search-count" style="font-size:11px;color:var(--text-muted);white-space:nowrap;"></span>
+        <button id="search-prev" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 5px;">▲</button>
+        <button id="search-next" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 5px;">▼</button>
+        <button id="search-close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 5px;">✕</button>
+      </div>
+    </div>
+
     <div id="messages" style="display:none"></div>
+
+    <!-- Image preview strip (shown when image attached) -->
+    <div id="img-preview" style="display:none;padding:6px 12px;background:var(--bg-secondary);border-top:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <img id="img-thumb" style="height:48px;border-radius:6px;border:1px solid var(--border);" />
+        <span style="font-size:11px;color:var(--text-muted);flex:1;" id="img-name"></span>
+        <button id="img-remove" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;">✕</button>
+      </div>
+    </div>
 
     <!-- Quick chips -->
     <div id="toolbar">
       <button class="chip" id="chip-page">📄 Capture Page</button>
       <button class="chip" id="chip-sel">✂️ Selection</button>
       <button class="chip" id="chip-shot">📸 Screenshot</button>
+      <button class="chip" id="chip-export">💾 Export</button>
+      <button class="chip" id="chip-search">🔍 Search</button>
     </div>
 
     <!-- Input -->
     <div id="input-wrap">
-      <div id="input-box">
-        <textarea id="chat-input" placeholder="Message Priv8Agent..." rows="1"></textarea>
+      <div id="input-box" id="drop-zone">
+        <textarea id="chat-input" placeholder="Message Priv8Agent… (paste image or drop file)" rows="1"></textarea>
         <div id="input-footer">
           <div class="input-actions">
             <button class="ia-btn" id="ia-page" title="Capture current page">📄</button>
             <button class="ia-btn" id="ia-sel" title="Send selection">✂️</button>
             <button class="ia-btn" id="ia-shot" title="Screenshot">📸</button>
+            <button class="ia-btn" id="ia-img" title="Attach image">🖼️</button>
+            <input type="file" id="file-input" accept="image/*" style="display:none" />
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <button id="btn-stop">⏹</button>
@@ -511,7 +545,7 @@
     <hr class="setting-divider">
     <button id="btn-save">Save Settings</button>
     <button id="btn-logout">Sign Out</button>
-    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.0</div>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.1</div>
   </div>
 
   <div id="toast"></div>

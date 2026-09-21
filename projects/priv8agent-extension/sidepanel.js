@@ -2,6 +2,8 @@
 const API = 'https://app.privatehash.online';
 const WS_PATH = '/agent/ws'; // Nginx proxies /agent/ws → backend /ws (bypasses Cloudflare WS block)
 let token = '', ws = null, sessionId = null, streaming = false, buf = '', pendingMsg = null, model = '', reconnects = 0, reconnTimer = null;
+let attachedImage = null; // { dataUrl, name, mimeType }
+let searchMatches = [], searchIdx = -1;
 
 const $= id => document.getElementById(id);
 const authScreen=$('auth-screen'), statusPill=$('status-pill'), statusText=$('status-text');
@@ -104,12 +106,29 @@ function newChat() {
 
 // ─── Messaging ───
 function send(content) {
-  if(!content.trim()||streaming) return;
+  if((!content.trim()&&!attachedImage)||streaming) return;
   if(!token){authScreen.classList.add('visible');return;}
   if(!ws||ws.readyState!==1){connectWs();setTimeout(()=>send(content),600);return;}
-  addMsg('user',content);
-  welcomeEl.style.display='none'; messagesEl.style.display='flex';
-  ws.send(JSON.stringify({type:'user_message',content:content.trim(),...(sessionId?{sessionId}:{}),...(model?{model}:{})}));
+
+  // Build message payload
+  const payload = {type:'user_message', content:content.trim(), ...(sessionId?{sessionId}:{}), ...(model?{model}:{})};
+
+  // Attach image if present
+  if(attachedImage) {
+    payload.image = attachedImage.dataUrl;
+    payload.imageName = attachedImage.name;
+    // Show image preview in user bubble
+    const g=document.createElement('div'); g.className='msg-group user';
+    g.innerHTML=`<div class="msg-sender">You<div class="sender-avatar">👤</div></div><div class="bubble"><img src="${esc(attachedImage.dataUrl)}" style="max-width:100%;border-radius:8px;max-height:160px;display:block;margin-bottom:4px"/>${content.trim()?`<span>${esc(content.trim())}</span>`:''}</div>`;
+    welcomeEl.style.display='none'; messagesEl.style.display='flex';
+    messagesEl.appendChild(g); scrollBot();
+    clearAttach();
+  } else {
+    addMsg('user',content);
+    welcomeEl.style.display='none'; messagesEl.style.display='flex';
+  }
+
+  ws.send(JSON.stringify(payload));
   streaming=true; btnSend.disabled=true; btnStop.classList.add('show'); startAi();
 }
 function startAi() {
@@ -243,7 +262,7 @@ $('btn-new').addEventListener('click',newChat);
 $('btn-sessions-toggle').addEventListener('click',()=>{const open=$('sessions-panel').classList.contains('visible');showPanel(open?'chat':'sessions');if(!open)loadSessions();});
 $('btn-settings-toggle').addEventListener('click',()=>{const open=$('settings-panel').classList.contains('visible');showPanel(open?'chat':'settings');if(!open&&token)$('s-token').value=token;});
 
-btnSend.addEventListener('click',()=>{const t=chatInput.value.trim();if(t){send(t);chatInput.value='';resize();}});
+btnSend.addEventListener('click',()=>{const t=chatInput.value.trim();if(t||attachedImage){send(t||'');chatInput.value='';resize();}});
 btnStop.addEventListener('click',()=>{if(ws?.readyState===1&&sessionId)ws.send(JSON.stringify({type:'stop',sessionId}));finishAi();});
 chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();btnSend.click();}});
 chatInput.addEventListener('input',resize);
@@ -258,6 +277,132 @@ document.querySelectorAll('.sug').forEach(b=>b.addEventListener('click',async()=
 ['chip-page','ia-page'].forEach(id=>$(id)?.addEventListener('click',capturePage));
 ['chip-sel','ia-sel'].forEach(id=>$(id)?.addEventListener('click',sendSel));
 ['chip-shot','ia-shot'].forEach(id=>$(id)?.addEventListener('click',doScreenshot));
+
+// ── Image attach ──
+$('ia-img').addEventListener('click',()=>$('file-input').click());
+$('file-input').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) attachFile(f); e.target.value=''; });
+$('img-remove').addEventListener('click',clearAttach);
+
+// Paste image
+document.addEventListener('paste',e=>{
+  const item=Array.from(e.clipboardData?.items||[]).find(i=>i.type.startsWith('image/'));
+  if(item){ e.preventDefault(); attachFile(item.getAsFile()); }
+});
+
+// Drag & drop image onto input box
+const dropZone=$('input-box');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',e=>{
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/')) attachFile(f);
+});
+
+function attachFile(file) {
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    attachedImage={dataUrl:ev.target.result,name:file.name||'image.png',mimeType:file.type||'image/png'};
+    $('img-thumb').src=ev.target.result;
+    $('img-name').textContent=file.name||'image.png';
+    $('img-preview').style.display='block';
+    toast('🖼️ Image attached');
+  };
+  reader.readAsDataURL(file);
+}
+function clearAttach(){
+  attachedImage=null;
+  $('img-preview').style.display='none';
+  $('img-thumb').src='';
+}
+
+// ── Export conversation ──
+$('chip-export').addEventListener('click',exportChat);
+function exportChat(){
+  const msgs=messagesEl.querySelectorAll('.msg-group');
+  if(!msgs.length){toast('⚠️ No messages to export');return;}
+  let md=`# Priv8Agent Chat — ${new Date().toLocaleDateString()}\n\n`;
+  msgs.forEach(g=>{
+    const role=g.classList.contains('user')?'**You**':'**Priv8Agent**';
+    const content=g.querySelector('.bubble')?.innerText?.trim()||'';
+    if(content) md+=`${role}:\n${content}\n\n---\n\n`;
+  });
+  const blob=new Blob([md],{type:'text/markdown'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`priv8agent-chat-${Date.now()}.md`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('✅ Exported as Markdown');
+}
+
+// ── Search in messages ──
+$('chip-search').addEventListener('click',toggleSearch);
+$('search-close').addEventListener('click',closeSearch);
+$('search-input').addEventListener('input',runSearch);
+$('search-next').addEventListener('click',()=>moveSearch(1));
+$('search-prev').addEventListener('click',()=>moveSearch(-1));
+$('search-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.shiftKey?moveSearch(-1):moveSearch(1);}
+  if(e.key==='Escape') closeSearch();
+});
+
+function toggleSearch(){
+  const bar=$('search-bar');
+  if(bar.style.display==='none'){bar.style.display='block';$('search-input').focus();}
+  else closeSearch();
+}
+function closeSearch(){
+  $('search-bar').style.display='none';
+  $('search-input').value='';
+  clearHighlights(); searchMatches=[]; searchIdx=-1; $('search-count').textContent='';
+}
+function clearHighlights(){
+  messagesEl.querySelectorAll('.search-hit').forEach(el=>{
+    el.replaceWith(document.createTextNode(el.textContent));
+  });
+  // normalize text nodes
+  messagesEl.querySelectorAll('.bubble').forEach(b=>b.normalize());
+}
+function runSearch(){
+  clearHighlights(); searchMatches=[]; searchIdx=-1;
+  const q=$('search-input').value.trim();
+  if(q.length<2){$('search-count').textContent='';return;}
+  const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+  messagesEl.querySelectorAll('.bubble').forEach(bubble=>{
+    const walker=document.createTreeWalker(bubble,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node=>{
+      const txt=node.textContent;
+      if(!re.test(txt)) return;
+      re.lastIndex=0;
+      const frag=document.createDocumentFragment();
+      let last=0, m;
+      while((m=re.exec(txt))!==null){
+        if(m.index>last) frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+        const span=document.createElement('mark');
+        span.className='search-hit'; span.textContent=m[0];
+        frag.appendChild(span); searchMatches.push(span); last=re.lastIndex;
+      }
+      if(last<txt.length) frag.appendChild(document.createTextNode(txt.slice(last)));
+      node.replaceWith(frag);
+    });
+  });
+  $('search-count').textContent=searchMatches.length?`1/${searchMatches.length}`:'0 results';
+  if(searchMatches.length){searchIdx=0;highlightCurrent();}
+}
+function moveSearch(dir){
+  if(!searchMatches.length) return;
+  searchMatches[searchIdx]?.classList.remove('current');
+  searchIdx=(searchIdx+dir+searchMatches.length)%searchMatches.length;
+  highlightCurrent();
+}
+function highlightCurrent(){
+  const el=searchMatches[searchIdx]; if(!el) return;
+  el.classList.add('current');
+  el.scrollIntoView({block:'center',behavior:'smooth'});
+  $('search-count').textContent=`${searchIdx+1}/${searchMatches.length}`;
+}
 
 $('model-select').addEventListener('change',e=>{model=e.target.value;chrome.storage.local.set({defaultModel:model});});
 
