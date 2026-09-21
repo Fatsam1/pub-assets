@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priv8Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --bg3: #0a0d13; --bgi: #1c2128;
+    --border: rgba(0,255,65,0.12); --accent: #00FF41;
+    --adim: rgba(0,255,65,0.08); --green: #00FF41;
+    --text: #e6edf3; --text2: #8b949e; --text3: #484f58;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{width:340px;background:var(--bg3);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:13px;-webkit-font-smoothing:antialiased;}
+
+  #header{display:flex;align-items:center;gap:9px;padding:12px 14px;background:var(--bg2);border-bottom:1px solid var(--border);}
+  .logo{width:26px;height:26px;border-radius:7px;background:rgba(0,255,65,0.08);border:1px solid rgba(0,255,65,0.25);display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(0,255,65,.15);}
+  .brand{font-size:14px;font-weight:700;flex:1;letter-spacing:-.3px;}
+  .brand em{color:var(--accent);font-style:normal;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--text3);}
+  .dot.on{background:#00FF41;box-shadow:0 0 5px #00FF41;}
+
+  #quick{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+  #qi{width:100%;background:var(--bgi);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;resize:none;outline:none;font-family:inherit;height:68px;transition:border-color .15s;}
+  #qi:focus{border-color:rgba(139,92,246,.4);}
+  #qi::placeholder{color:var(--text3);}
+  #btn-open{background:var(--accent);border:none;color:#0a0d13;padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s;}
+  #btn-open:hover{opacity:.9;}
+
+  #actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 14px 14px;}
+  .ab{background:var(--bg2);border:1px solid var(--border);color:var(--text2);padding:10px 8px;border-radius:10px;cursor:pointer;text-align:center;font-size:12px;transition:all .15s;font-family:inherit;}
+  .ab:hover{border-color:rgba(139,92,246,.35);color:var(--text);background:var(--adim);}
+  .ab .icon{font-size:18px;display:block;margin-bottom:4px;}
+
+  #footer{display:flex;align-items:center;gap:8px;padding:9px 14px;border-top:1px solid var(--border);background:var(--bg2);}
+  #footer .mdl{font-size:11px;color:var(--text3);flex:1;}
+  #footer .mdl span{color:var(--text2);font-weight:500;}
+  #footer a{font-size:11px;color:var(--text3);text-decoration:none;}
+  #footer a:hover{color:var(--accent);}
+  hr{border:none;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+<div id="header">
+  <div class="logo"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 0.5L13 4V10L7 13.5L1 10V4L7 0.5Z" fill="#00FF41" opacity="0.15"/><path d="M7 0.5L13 4V10L7 13.5L1 10V4L7 0.5Z" stroke="#00FF41" stroke-width="0.8"/><text x="7" y="9.5" text-anchor="middle" font-size="5" font-weight="700" fill="#00FF41" font-family="Inter,sans-serif">P8</text></svg></div>
+  <span class="brand">Priv8<em>Agent</em></span>
+  <div class="dot" id="dot"></div>
+</div>
+
+<div id="quick">
+  <textarea id="qi" placeholder="Ask Priv8Agent anything… (Enter to send)"></textarea>
+  <button id="btn-open">Open Priv8Agent ↗</button>
+</div>
+
+<hr>
+
+<div id="actions">
+  <button class="ab" id="ab-page"><span class="icon">📄</span>Capture Page</button>
+  <button class="ab" id="ab-shot"><span class="icon">📸</span>Screenshot</button>
+  <button class="ab" id="ab-sel"><span class="icon">✂️</span>Selection</button>
+  <button class="ab" id="ab-hist"><span class="icon">💬</span>History</button>
+</div>
+
+<div id="footer">
+  <span class="mdl">Model: <span id="mdl-name">Auto</span></span>
+  <a href="#" id="settings-a">Settings ⚙</a>
+</div>
+
+<script>
+async function open(prompt=null,extra={}) {
+  if(prompt) await chrome.storage.local.set({pendingPrompt:prompt});
+  Object.keys(extra).length&&await chrome.storage.local.set(extra);
+  const [tab]=await chrome.tabs.query({active:true,currentWindow:true});
+  if(tab?.id) await chrome.sidePanel.open({tabId:tab.id});
+  window.close();
+}
+async function init(){
+  const s=await chrome.storage.local.get(['authToken','defaultModel']);
+  if(s.authToken) document.getElementById('dot').classList.add('on');
+  if(s.defaultModel){const n=s.defaultModel.split('-').slice(0,2).join(' ');document.getElementById('mdl-name').textContent=n||'Auto';}
+}
+document.getElementById('btn-open').addEventListener('click',async()=>{
+  const t=document.getElementById('qi').value.trim();
+  await open(t||null);
+});
+document.getElementById('qi').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('btn-open').click();}
+});
+document.getElementById('ab-page').addEventListener('click',async()=>{
+  await chrome.runtime.sendMessage({type:'CAPTURE_PAGE'});
+  await open();
+});
+document.getElementById('ab-shot').addEventListener('click',()=>open(null,{pendingScreenshot:true}));
+document.getElementById('ab-sel').addEventListener('click',async()=>{
+  const [tab]=await chrome.tabs.query({active:true,currentWindow:true});
+  if(tab?.id){
+    const r=await chrome.scripting.executeScript({target:{tabId:tab.id},func:()=>getSelection()?.toString()||''});
+    const sel=r?.[0]?.result?.trim();
+    await open(sel?`Explain this:\n"${sel}"`:null);
+  }
+});
+document.getElementById('ab-hist').addEventListener('click',()=>open(null,{showSessions:true}));
+document.getElementById('settings-a').addEventListener('click',async e=>{e.preventDefault();await open(null,{showSettings:true});});
+init();
+</script>
+</body>
+</html>

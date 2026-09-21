@@ -1,0 +1,89 @@
+{
+  "manifest_version": 3,
+  "name": "Priv8Agent",
+  "version": "1.0.0",
+  "description": "Priv8Agent AI Assistant — smarter than Claude. AI chat, page capture, image gen, memory, and more.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Priv8Agent"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "contextMenus",
+    "tabs",
+    "activeTab",
+    "scripting",
+    "clipboardWrite",
+    "notifications",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "https://app.privatehash.online/*",
+    "<all_urls>"
+  ],
+  "commands": {
+    "open_sidepanel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P",
+        "mac": "Command+Shift+P"
+      },
+      "description": "Open Priv8Agent side panel"
+    },
+    "quick_chat": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Quick chat with Priv8Agent"
+    },
+    "capture_page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Capture page and send to Priv8Agent"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "injected.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

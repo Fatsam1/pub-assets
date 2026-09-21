@@ -1,0 +1,288 @@
+
+const API = 'https://app.privatehash.online';
+const WS_PATH = '/agent/ws'; // Nginx proxies /agent/ws → backend /ws (bypasses Cloudflare WS block)
+let token = '', ws = null, sessionId = null, streaming = false, buf = '', pendingMsg = null, model = '', reconnects = 0, reconnTimer = null;
+
+const $= id => document.getElementById(id);
+const authScreen=$('auth-screen'), statusPill=$('status-pill'), statusText=$('status-text');
+const messagesEl=$('messages'), welcomeEl=$('welcome'), chatInput=$('chat-input');
+const btnSend=$('btn-send'), btnStop=$('btn-stop');
+
+// ─── Init ───
+async function init() {
+  const s = await chrome.storage.local.get(['authToken','serverUrl','defaultModel']);
+  token = s.authToken || '';
+  model = s.defaultModel || '';
+  if (s.defaultModel) { $('model-select').value = s.defaultModel; $('s-model').value = s.defaultModel; }
+  if (s.serverUrl) $('s-server').value = s.serverUrl;
+  if (!token) { authScreen.classList.add('visible'); return; }
+  boot();
+}
+
+// ─── Boot ───
+async function boot() {
+  connectWs();
+  const {lastSession} = await chrome.storage.local.get('lastSession');
+  if (lastSession) { sessionId = lastSession; await loadHistory(lastSession); }
+  loadSessions();
+  checkPending();
+}
+
+// ─── WebSocket ───
+function connectWs() {
+  if (ws && ws.readyState <= 1) return;
+  const url = API.replace('https://','wss://').replace('http://','ws://') + WS_PATH + '?token=' + encodeURIComponent(token);
+  try { ws = new WebSocket(url); } catch { scheduleRecon(); return; }
+  ws.onopen = () => { statusPill.className='online'; statusText.textContent='Connected'; reconnects=0; if(sessionId) ws.send(JSON.stringify({type:'hello',sessionId})); };
+  ws.onclose = () => { statusPill.className=''; statusText.textContent='Offline'; scheduleRecon(); };
+  ws.onerror = () => { statusPill.className=''; statusText.textContent='Error'; };
+  ws.onmessage = e => { try { onWsEvent(JSON.parse(e.data)); } catch {} };
+}
+function scheduleRecon() {
+  if (reconnTimer) return;
+  reconnects++;
+  reconnTimer = setTimeout(() => { reconnTimer=null; connectWs(); }, Math.min(1000*Math.pow(1.5,reconnects),30000));
+}
+function onWsEvent(ev) {
+  switch(ev.type) {
+    case 'token': case 'text_delta': case 'assistant_token':
+    case 'assistant_text_delta': appendToken(ev.content||ev.delta||ev.token||''); break;
+    case 'turn_start': case 'step_status': if(!pendingMsg) startAi(); break;
+    case 'turn_end': case 'done': case 'turn_complete':
+    case 'assistant_message_done': finishAi(); break;
+    case 'thinking': case 'thinking_delta': showThink(ev.content||ev.delta||''); break;
+    case 'error': finishAi(); addMsg('ai',`❌ ${ev.message||'An error occurred'}`); break;
+    case 'session_created': case 'session_id':
+      if(ev.sessionId){sessionId=ev.sessionId;chrome.storage.local.set({lastSession:ev.sessionId});}
+      break;
+    case 'media': if(ev.url||ev.dataUrl) addImage(ev.url||ev.dataUrl); break;
+    case 'pong': case 'status': case 'terminal': case 'plan':
+    case 'plan_update': case 'step_complete': case 'file_changed': break;
+  }
+}
+
+// ─── Sessions ───
+async function loadSessions() {
+  try {
+    const r = await fetch(`${API}/api/agent/sessions`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r.ok) return;
+    const list = await r.json();
+    const el = $('sessions-list'); el.innerHTML='';
+    list.slice(0,40).forEach(s => {
+      const d=document.createElement('div'); d.className='session-item'+(s.id===sessionId?' current':'');
+      d.innerHTML=`<div class="si-title">${esc(s.title||'Conversation')}</div><div class="si-meta">${s.messageCount||0} messages</div>`;
+      d.onclick=()=>switchSession(s.id);
+      el.appendChild(d);
+    });
+  } catch {}
+}
+async function switchSession(id) {
+  sessionId=id; chrome.storage.local.set({lastSession:id});
+  messagesEl.innerHTML=''; messagesEl.style.display='none'; welcomeEl.style.display='flex';
+  if(ws?.readyState===1) ws.send(JSON.stringify({type:'hello',sessionId:id}));
+  await loadHistory(id); showPanel('chat'); loadSessions();
+}
+async function loadHistory(id) {
+  try {
+    const r=await fetch(`${API}/api/agent/session/${encodeURIComponent(id)}/history`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r.ok) return;
+    const data=await r.json();
+    const msgs=data.messages||data||[];
+    if(msgs.length){
+      welcomeEl.style.display='none'; messagesEl.style.display='flex';
+      msgs.forEach(m=>{ if(m.role==='user') addMsg('user',m.content||'',false); else if(m.role==='assistant') addMsg('ai',m.content||'',false); });
+      scrollBot();
+    }
+  } catch {}
+}
+function newChat() {
+  sessionId=null; chrome.storage.local.remove('lastSession');
+  messagesEl.innerHTML=''; messagesEl.style.display='none'; welcomeEl.style.display='flex';
+  if(ws?.readyState===1) ws.send(JSON.stringify({type:'hello'}));
+  showPanel('chat');
+}
+
+// ─── Messaging ───
+function send(content) {
+  if(!content.trim()||streaming) return;
+  if(!token){authScreen.classList.add('visible');return;}
+  if(!ws||ws.readyState!==1){connectWs();setTimeout(()=>send(content),600);return;}
+  addMsg('user',content);
+  welcomeEl.style.display='none'; messagesEl.style.display='flex';
+  ws.send(JSON.stringify({type:'user_message',content:content.trim(),...(sessionId?{sessionId}:{}),...(model?{model}:{})}));
+  streaming=true; btnSend.disabled=true; btnStop.classList.add('show'); startAi();
+}
+function startAi() {
+  if(pendingMsg) return;
+  buf='';
+  const g=document.createElement('div'); g.className='msg-group ai';
+  g.innerHTML=`<div class="msg-sender"><div class="sender-avatar"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0.5L9 2.75V7.25L5 9.5L1 7.25V2.75L5 0.5Z" stroke="#00FF41" stroke-width="0.8"/></svg></div>Priv8Agent</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  messagesEl.appendChild(g); pendingMsg=g; scrollBot();
+}
+function appendToken(t) {
+  if(!pendingMsg) startAi();
+  buf+=t;
+  pendingMsg.querySelector('.bubble').innerHTML=renderMd(buf);
+  scrollBot();
+}
+function showThink(t) {
+  if(!pendingMsg) startAi();
+  pendingMsg.querySelector('.bubble').innerHTML=`<span style="color:var(--text-muted);font-size:12px;font-style:italic">💭 ${esc(t.substring(0,120))}…</span>`;
+}
+function finishAi() {
+  if(pendingMsg){
+    const b=pendingMsg.querySelector('.bubble');
+    if(buf){b.innerHTML=renderMd(buf);addCopyBtns(b);}
+    else pendingMsg.remove();
+    pendingMsg=null; buf='';
+  }
+  streaming=false; btnSend.disabled=false; btnStop.classList.remove('show'); scrollBot(); loadSessions();
+}
+function addMsg(role,content,scroll=true) {
+  const g=document.createElement('div'); g.className=`msg-group ${role}`;
+  const sender=role==='user'?'You':'Priv8Agent';
+  const avatar=role==='user'?'👤':'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0.5L9 2.75V7.25L5 9.5L1 7.25V2.75L5 0.5Z" stroke="#00FF41" stroke-width="0.8"/></svg>';
+  const b=document.createElement('div'); b.className='bubble';
+  if(role==='ai'){b.innerHTML=renderMd(content);addCopyBtns(b);}
+  else b.textContent=content;
+  g.innerHTML=`<div class="msg-sender">${role==='user'?`${sender}<div class="sender-avatar">${avatar}</div>`:`<div class="sender-avatar">${avatar}</div>${sender}`}</div>`;
+  g.appendChild(b); messagesEl.appendChild(g);
+  if(scroll) scrollBot();
+}
+function addImage(src) {
+  const g=document.createElement('div'); g.className='msg-group ai';
+  g.innerHTML=`<div class="msg-sender"><div class="sender-avatar"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0.5L9 2.75V7.25L5 9.5L1 7.25V2.75L5 0.5Z" stroke="#00FF41" stroke-width="0.8"/></svg></div>Priv8Agent</div><div class="bubble"><img src="${esc(src)}" style="max-width:100%;border-radius:8px;margin-top:4px" /></div>`;
+  messagesEl.appendChild(g); scrollBot();
+}
+
+// ─── Markdown ───
+function renderMd(t) {
+  if(!t) return '';
+  let h=t;
+  h=h.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>`<pre><button class="copy-btn" onclick="copyPre(this)">Copy</button><code>${esc(code.trim())}</code></pre>`);
+  h=h.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+  h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+  h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+  h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+  h=h.replace(/^[\-\*] (.+)$/gm,'<li>$1</li>');
+  h=h.replace(/(<li>[\s\S]+?<\/li>)/g,'<ul>$1</ul>');
+  h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+  h=h.replace(/\n/g,'<br>');
+  return h;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function addCopyBtns(el){el.querySelectorAll('pre').forEach(p=>{if(!p.querySelector('.copy-btn')){const b=document.createElement('button');b.className='copy-btn';b.textContent='Copy';b.onclick=()=>copyPre(b);p.insertBefore(b,p.firstChild);}});}
+window.copyPre=(btn)=>{const c=btn.parentElement?.querySelector('code');if(c){navigator.clipboard.writeText(c.textContent);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);}};
+
+// ─── Page actions ───
+async function capturePage() {
+  try {
+    const [tab]=await chrome.tabs.query({active:true,currentWindow:true});
+    if(!tab?.id)return;
+    const r=await chrome.scripting.executeScript({target:{tabId:tab.id},func:()=>({title:document.title,url:location.href,sel:getSelection()?.toString()||'',body:document.body?.innerText?.slice(0,7000)||''})});
+    if(!r?.[0]?.result)return;
+    const {title,url,sel,body}=r[0].result;
+    const txt=sel?`Selected text:\n"${sel}"`:`Page content:\n${body.slice(0,6000)}`;
+    showPanel('chat'); send(`Analyze this page:\n**${title}**\n${url}\n\n${txt}`);
+  } catch { toast('⚠️ Could not capture page'); }
+}
+async function sendSel() {
+  try {
+    const [tab]=await chrome.tabs.query({active:true,currentWindow:true});
+    if(!tab?.id)return;
+    const r=await chrome.scripting.executeScript({target:{tabId:tab.id},func:()=>getSelection()?.toString()||''});
+    const sel=r?.[0]?.result?.trim();
+    if(!sel){toast('⚠️ No text selected on page');return;}
+    showPanel('chat'); send(`Explain this:\n"${sel}"`);
+  } catch { toast('⚠️ Could not get selection'); }
+}
+async function doScreenshot() {
+  chrome.runtime.sendMessage({type:'TAKE_SCREENSHOT'},res=>{
+    if(res?.dataUrl){
+      const g=document.createElement('div'); g.className='msg-group user';
+      g.innerHTML=`<div class="msg-sender">You<div class="sender-avatar">👤</div></div><div class="bubble"><img src="${res.dataUrl}" style="max-width:100%;border-radius:8px;max-height:180px" /><br><span style="font-size:12px;color:var(--text-muted)">Screenshot</span></div>`;
+      welcomeEl.style.display='none'; messagesEl.style.display='flex'; messagesEl.appendChild(g); scrollBot();
+      send('What do you see in this screenshot? Describe and analyze it.');
+    }
+  });
+}
+
+// ─── UI helpers ───
+function showPanel(p) {
+  $('sessions-panel').classList.remove('visible');
+  $('settings-panel').classList.remove('visible');
+  $('chat-panel').style.display='none';
+  $('btn-sessions-toggle').classList.remove('active');
+  $('btn-settings-toggle').classList.remove('active');
+  if(p==='chat'){$('chat-panel').style.display='flex';}
+  else if(p==='sessions'){$('sessions-panel').classList.add('visible');$('btn-sessions-toggle').classList.add('active');}
+  else if(p==='settings'){$('settings-panel').classList.add('visible');$('btn-settings-toggle').classList.add('active');}
+}
+function scrollBot(){setTimeout(()=>messagesEl.scrollTop=messagesEl.scrollHeight,10);}
+function toast(msg,dur=2500){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+async function checkPending(){
+  const {pendingPrompt,focusInput}=await chrome.storage.local.get(['pendingPrompt','focusInput']);
+  if(pendingPrompt){chrome.storage.local.remove('pendingPrompt');showPanel('chat');send(pendingPrompt);}
+  if(focusInput){chrome.storage.local.remove('focusInput');chatInput.focus();}
+}
+
+// ─── Events ───
+$('btn-auth').addEventListener('click',async()=>{
+  const t=$('token-input').value.trim(); if(!t)return;
+  $('btn-auth').textContent='Verifying…'; $('btn-auth').disabled=true;
+  try{const r=await fetch(`${API}/api/auth/me`,{headers:{Authorization:`Bearer ${t}`}});
+    if(r.ok){token=t;await chrome.storage.local.set({authToken:t});authScreen.classList.remove('visible');boot();}
+    else{$('auth-error').style.display='block';}
+  }catch{$('auth-error').style.display='block';}
+  $('btn-auth').textContent='Connect →'; $('btn-auth').disabled=false;
+});
+
+$('btn-new').addEventListener('click',newChat);
+$('btn-sessions-toggle').addEventListener('click',()=>{const open=$('sessions-panel').classList.contains('visible');showPanel(open?'chat':'sessions');if(!open)loadSessions();});
+$('btn-settings-toggle').addEventListener('click',()=>{const open=$('settings-panel').classList.contains('visible');showPanel(open?'chat':'settings');if(!open&&token)$('s-token').value=token;});
+
+btnSend.addEventListener('click',()=>{const t=chatInput.value.trim();if(t){send(t);chatInput.value='';resize();}});
+btnStop.addEventListener('click',()=>{if(ws?.readyState===1&&sessionId)ws.send(JSON.stringify({type:'stop',sessionId}));finishAi();});
+chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();btnSend.click();}});
+chatInput.addEventListener('input',resize);
+function resize(){chatInput.style.height='auto';chatInput.style.height=Math.min(chatInput.scrollHeight,140)+'px';}
+
+document.querySelectorAll('.sug').forEach(b=>b.addEventListener('click',async()=>{
+  const p=b.dataset.prompt; if(!p)return;
+  if(p.includes('page')||p.includes('Page')){await capturePage();}
+  else{showPanel('chat');send(p);}
+}));
+
+['chip-page','ia-page'].forEach(id=>$(id)?.addEventListener('click',capturePage));
+['chip-sel','ia-sel'].forEach(id=>$(id)?.addEventListener('click',sendSel));
+['chip-shot','ia-shot'].forEach(id=>$(id)?.addEventListener('click',doScreenshot));
+
+$('model-select').addEventListener('change',e=>{model=e.target.value;chrome.storage.local.set({defaultModel:model});});
+
+$('btn-save').addEventListener('click',async()=>{
+  const t=$('s-token').value.trim(),srv=$('s-server').value.trim(),m=$('s-model').value;
+  if(t)token=t; if(m)model=m;
+  await chrome.storage.local.set({authToken:t||token,serverUrl:srv||API,defaultModel:m});
+  toast('✅ Settings saved'); showPanel('chat');
+  if(t&&!ws)boot();
+});
+$('btn-logout').addEventListener('click',async()=>{
+  token=''; await chrome.storage.local.remove(['authToken','lastSession']);
+  if(ws)ws.close(); ws=null;
+  showPanel('chat'); authScreen.classList.add('visible');
+  statusPill.className=''; statusText.textContent='Offline';
+});
+
+chrome.runtime.onMessage.addListener(msg=>{
+  if(msg.type==='PENDING_PROMPT'&&msg.text){showPanel('chat');send(msg.text);}
+});
+
+setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({type:'ping'}));},25000);
+
+// Expose internals for CDP/debug access
+window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, boot, send, newChat, showPanel, init };
+
+init(); showPanel('chat');
+
