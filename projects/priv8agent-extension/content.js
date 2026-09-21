@@ -78,20 +78,22 @@
     floatingBtn.style.cssText = `
       position: fixed; bottom: 20px; right: 20px; z-index: 2147483647;
       width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      background: #0d1117;
+      border: 1.5px solid rgba(0,255,65,0.5);
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px; cursor: pointer; box-shadow: 0 4px 16px rgba(124,58,237,0.5);
+      font-size: 20px; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,255,65,0.25), 0 0 0 0 rgba(0,255,65,0.15);
       transition: transform 0.2s, box-shadow 0.2s;
       user-select: none;
     `;
     floatingBtn.title = 'Priv8Agent (Alt+P)';
     floatingBtn.addEventListener('mouseenter', () => {
       floatingBtn.style.transform = 'scale(1.1)';
-      floatingBtn.style.boxShadow = '0 6px 24px rgba(124,58,237,0.7)';
+      floatingBtn.style.boxShadow = '0 6px 24px rgba(0,255,65,0.5), 0 0 0 4px rgba(0,255,65,0.1)';
     });
     floatingBtn.addEventListener('mouseleave', () => {
       floatingBtn.style.transform = 'scale(1)';
-      floatingBtn.style.boxShadow = '0 4px 16px rgba(124,58,237,0.5)';
+      floatingBtn.style.boxShadow = '0 4px 16px rgba(0,255,65,0.25)';
     });
     floatingBtn.addEventListener('click', () => {
       chrome.runtime.sendMessage({ type: 'OPEN_SIDEPANEL' });

@@ -132,8 +132,22 @@
   }
   .session-item:hover { background: var(--bg-secondary); border-color: var(--border); }
   .session-item.current { background: var(--accent-dim); border-color: rgba(139,92,246,0.25); }
-  .si-title { font-size: 13px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .si-title { font-size: 13px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex:1; min-width:0; }
+  .si-title input { background:var(--bg-input);border:1px solid var(--accent);color:var(--text-primary);border-radius:4px;padding:1px 6px;font-size:13px;font-family:inherit;width:100%;outline:none; }
   .si-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .si-del { background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0;opacity:0;transition:opacity .15s; }
+  .session-item:hover .si-del { opacity:1; }
+  .si-del:hover { color:var(--red); }
+
+  /* Timestamps */
+  .msg-time { font-size:10px;color:var(--text-muted);padding:0 4px;margin-top:2px;text-align:right; }
+  .msg-group.ai .msg-time { text-align:left; }
+
+  /* Reactions */
+  .msg-reactions { display:flex;gap:3px;padding:0 4px;margin-top:3px; }
+  .react-btn { background:none;border:1px solid transparent;border-radius:5px;cursor:pointer;font-size:13px;padding:1px 5px;color:var(--text-muted);transition:all .15s;font-family:inherit; }
+  .react-btn:hover { border-color:var(--border);background:var(--accent-dim); }
+  .react-btn.active { border-color:rgba(0,255,65,.35);background:var(--accent-dim);color:var(--green); }
 
   /* ── Chat ── */
   #chat-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }

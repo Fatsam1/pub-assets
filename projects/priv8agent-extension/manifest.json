@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Priv8Agent",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Priv8Agent AI Assistant — smarter than Claude. AI chat, page capture, image gen, memory, and more.",
   "icons": {
     "16": "icons/icon16.png",

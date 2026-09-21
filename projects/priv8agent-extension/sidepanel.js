@@ -77,7 +77,33 @@ async function loadSessions() {
     const el = $('sessions-list'); el.innerHTML='';
     list.slice(0,40).forEach(s => {
       const d=document.createElement('div'); d.className='session-item'+(s.id===sessionId?' current':'');
-      d.innerHTML=`<div class="si-title">${esc(s.title||'Conversation')}</div><div class="si-meta">${s.messageCount||0} messages</div>`;
+      d.style.display='flex'; d.style.alignItems='center'; d.style.gap='6px';
+      const info=document.createElement('div'); info.style.cssText='flex:1;min-width:0;';
+      info.innerHTML=`<div class="si-title">${esc(s.title||'Conversation')}</div><div class="si-meta">${s.messageCount||0} messages</div>`;
+      // double-click to rename
+      info.querySelector('.si-title').addEventListener('dblclick', e => {
+        e.stopPropagation();
+        const titleEl=e.target; const old=titleEl.textContent;
+        const inp=document.createElement('input'); inp.value=old;
+        inp.className='si-title'; titleEl.replaceWith(inp); inp.focus(); inp.select();
+        const save=async()=>{
+          const nv=inp.value.trim()||old;
+          inp.replaceWith(Object.assign(document.createElement('div'),{className:'si-title',textContent:nv}));
+          try{ await fetch(`${API}/api/agent/session/${encodeURIComponent(s.id)}`,{method:'PATCH',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({title:nv})}); }catch{}
+        };
+        inp.addEventListener('blur',save);
+        inp.addEventListener('keydown',e2=>{if(e2.key==='Enter')inp.blur();if(e2.key==='Escape'){inp.value=old;inp.blur();}});
+      });
+      const del=document.createElement('button'); del.className='si-del'; del.textContent='🗑';
+      del.title='Delete conversation';
+      del.onclick=async e=>{
+        e.stopPropagation();
+        if(!confirm('Delete this conversation?')) return;
+        try{ await fetch(`${API}/api/agent/session/${encodeURIComponent(s.id)}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}}); }catch{}
+        if(s.id===sessionId) newChat();
+        loadSessions();
+      };
+      d.appendChild(info); d.appendChild(del);
       d.onclick=()=>switchSession(s.id);
       el.appendChild(d);
     });
@@ -115,16 +141,14 @@ function send(content) {
   if(!token){authScreen.classList.add('visible');return;}
   if(!ws||ws.readyState!==1){connectWs();setTimeout(()=>send(content),600);return;}
 
-  // Build message payload
-  // Build effective content — prepend lang instruction if set
   let effectiveContent = content.trim();
-  if(forceLang && !sessionId) {
+  if(forceLang) {
     const langNames = {ar:'Arabic',en:'English',fr:'French',de:'German',es:'Spanish'};
     effectiveContent = (effectiveContent ? effectiveContent + '\n\n' : '') + `[Please reply in ${langNames[forceLang]||forceLang}]`;
   }
   const payload = {
     type:'user_message',
-    content: effectiveContent || content.trim(),
+    content: effectiveContent || '',
     ...(sessionId?{sessionId}:{}),
     ...(model?{model}:{}),
     ...(systemPrompt&&!sessionId?{systemPrompt}:{})
@@ -161,19 +185,39 @@ function appendToken(t) {
   pendingMsg.querySelector('.bubble').innerHTML=renderMd(buf);
   scrollBot();
 }
+let thinkBuf = '';
 function showThink(t) {
   if(!pendingMsg) startAi();
-  pendingMsg.querySelector('.bubble').innerHTML=`<span style="color:var(--text-muted);font-size:12px;font-style:italic">💭 ${esc(t.substring(0,120))}…</span>`;
+  thinkBuf += t;
+  const bubble = pendingMsg.querySelector('.bubble');
+  let thinkEl = bubble.querySelector('.think-block');
+  if(!thinkEl) {
+    bubble.innerHTML = `<details class="think-block" style="margin-bottom:6px"><summary style="cursor:pointer;font-size:11px;color:var(--text-muted);user-select:none">💭 Thinking…</summary><div class="think-body" style="font-size:12px;color:var(--text-muted);font-style:italic;margin-top:4px;white-space:pre-wrap;max-height:120px;overflow-y:auto;"></div></details>`;
+    thinkEl = bubble.querySelector('.think-block');
+  }
+  thinkEl.querySelector('.think-body').textContent = thinkBuf;
 }
 function finishAi() {
   if(pendingMsg){
     const b=pendingMsg.querySelector('.bubble');
-    if(buf){b.innerHTML=renderMd(buf);addCopyBtns(b);addInsertBtn(b);}
-    else pendingMsg.remove();
-    pendingMsg=null; buf='';
+    if(buf){
+      const thinkEl = b.querySelector('.think-block');
+      if(thinkEl){
+        // keep think block, append response after it
+        const resp = document.createElement('div');
+        resp.innerHTML = renderMd(buf);
+        b.appendChild(resp);
+        addCopyBtns(b); addInsertBtn(b);
+      } else {
+        b.innerHTML=renderMd(buf); addCopyBtns(b); addInsertBtn(b);
+      }
+    } else pendingMsg.remove();
+    pendingMsg=null; buf=''; thinkBuf='';
   }
   streaming=false; btnSend.disabled=false; btnStop.classList.remove('show'); scrollBot(); loadSessions();
 }
+function fmtTime(d=new Date()){return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+
 function addMsg(role,content,scroll=true) {
   const g=document.createElement('div'); g.className=`msg-group ${role}`;
   const sender=role==='user'?'You':'Priv8Agent';
@@ -181,8 +225,28 @@ function addMsg(role,content,scroll=true) {
   const b=document.createElement('div'); b.className='bubble';
   if(role==='ai'){b.innerHTML=renderMd(content);addCopyBtns(b);addInsertBtn(b);}
   else b.textContent=content;
-  g.innerHTML=`<div class="msg-sender">${role==='user'?`${sender}<div class="sender-avatar">${avatar}</div>`:`<div class="sender-avatar">${avatar}</div>${sender}`}</div>`;
-  g.appendChild(b); messagesEl.appendChild(g);
+  const senderRow=document.createElement('div'); senderRow.className='msg-sender';
+  senderRow.innerHTML=role==='user'?`${sender}<div class="sender-avatar">${avatar}</div>`:`<div class="sender-avatar">${avatar}</div>${sender}`;
+  g.appendChild(senderRow); g.appendChild(b);
+  // timestamp
+  const ts=document.createElement('div'); ts.className='msg-time'; ts.textContent=fmtTime();
+  g.appendChild(ts);
+  // reactions on AI messages
+  if(role==='ai'){
+    const rx=document.createElement('div'); rx.className='msg-reactions';
+    ['👍','👎','❤️','🔁'].forEach(em=>{
+      const btn=document.createElement('button'); btn.className='react-btn'; btn.textContent=em;
+      btn.title=em==='👍'?'Good response':em==='👎'?'Bad response':em==='❤️'?'Love it':'Regenerate';
+      btn.onclick=()=>{
+        if(em==='🔁'){if(ws?.readyState===1&&sessionId) ws.send(JSON.stringify({type:'regenerate',sessionId})); return;}
+        btn.classList.toggle('active');
+        rx.querySelectorAll('.react-btn').forEach(b2=>{if(b2!==btn&&(b2.textContent==='👍'||b2.textContent==='👎')) b2.classList.remove('active');});
+      };
+      rx.appendChild(btn);
+    });
+    g.appendChild(rx);
+  }
+  messagesEl.appendChild(g);
   if(scroll) scrollBot();
 }
 function addImage(src) {
@@ -290,8 +354,15 @@ function resize(){chatInput.style.height='auto';chatInput.style.height=Math.min(
 
 document.querySelectorAll('.sug').forEach(b=>b.addEventListener('click',async()=>{
   const p=b.dataset.prompt; if(!p)return;
-  if(p.includes('page')||p.includes('Page')){await capturePage();}
-  else{showPanel('chat');send(p);}
+  if(p.includes('page')||p.includes('Page')){
+    showPanel('chat');
+    await capturePage().catch(()=>{ send(p); });
+  } else if(p.includes('selected')||p.includes('selection')||p.includes('Selected')){
+    showPanel('chat');
+    await sendSel().catch(()=>{ send(p); });
+  } else {
+    showPanel('chat'); send(p);
+  }
 }));
 
 ['chip-page','ia-page'].forEach(id=>$(id)?.addEventListener('click',capturePage));
