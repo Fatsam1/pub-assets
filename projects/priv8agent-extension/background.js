@@ -151,6 +151,16 @@ chrome.action.onClicked.addListener(async (tab) => {
   }
 });
 
+// Track last selection per tab
+const tabSelections = new Map();
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'SELECTION_CHANGED' && sender.tab?.id) {
+    tabSelections.set(sender.tab.id, msg.text);
+    sendResponse({ ok: true });
+    return true;
+  }
+});
+
 // Keep service worker alive via periodic alarm
 chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
 chrome.alarms.onAlarm.addListener(() => {});

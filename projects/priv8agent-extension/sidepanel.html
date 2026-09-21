@@ -402,6 +402,13 @@
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-glow);
   }
+
+  /* Voice recording active */
+  #ia-voice.recording {
+    color: var(--red);
+    animation: voicePulse 0.8s ease-in-out infinite;
+  }
+  @keyframes voicePulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
 </style>
 </head>
 <body>
@@ -509,6 +516,7 @@
             <button class="ia-btn" id="ia-sel" title="Send selection">✂️</button>
             <button class="ia-btn" id="ia-shot" title="Screenshot">📸</button>
             <button class="ia-btn" id="ia-img" title="Attach image">🖼️</button>
+            <button class="ia-btn" id="ia-voice" title="Voice input (hold to record)">🎤</button>
             <input type="file" id="file-input" accept="image/*" style="display:none" />
           </div>
           <div style="display:flex;gap:6px;align-items:center">

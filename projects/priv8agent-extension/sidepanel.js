@@ -93,7 +93,7 @@ async function loadHistory(id) {
     if(msgs.length){
       welcomeEl.style.display='none'; messagesEl.style.display='flex';
       msgs.forEach(m=>{ if(m.role==='user') addMsg('user',m.content||'',false); else if(m.role==='assistant') addMsg('ai',m.content||'',false); });
-      scrollBot();
+      scrollBot(); patchAiBubbles();
     }
   } catch {}
 }
@@ -151,7 +151,7 @@ function showThink(t) {
 function finishAi() {
   if(pendingMsg){
     const b=pendingMsg.querySelector('.bubble');
-    if(buf){b.innerHTML=renderMd(buf);addCopyBtns(b);}
+    if(buf){b.innerHTML=renderMd(buf);addCopyBtns(b);addInsertBtn(b);}
     else pendingMsg.remove();
     pendingMsg=null; buf='';
   }
@@ -162,7 +162,7 @@ function addMsg(role,content,scroll=true) {
   const sender=role==='user'?'You':'Priv8Agent';
   const avatar=role==='user'?'👤':'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0.5L9 2.75V7.25L5 9.5L1 7.25V2.75L5 0.5Z" stroke="#00FF41" stroke-width="0.8"/></svg>';
   const b=document.createElement('div'); b.className='bubble';
-  if(role==='ai'){b.innerHTML=renderMd(content);addCopyBtns(b);}
+  if(role==='ai'){b.innerHTML=renderMd(content);addCopyBtns(b);addInsertBtn(b);}
   else b.textContent=content;
   g.innerHTML=`<div class="msg-sender">${role==='user'?`${sender}<div class="sender-avatar">${avatar}</div>`:`<div class="sender-avatar">${avatar}</div>${sender}`}</div>`;
   g.appendChild(b); messagesEl.appendChild(g);
@@ -242,9 +242,12 @@ function showPanel(p) {
 function scrollBot(){setTimeout(()=>messagesEl.scrollTop=messagesEl.scrollHeight,10);}
 function toast(msg,dur=2500){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 async function checkPending(){
-  const {pendingPrompt,focusInput}=await chrome.storage.local.get(['pendingPrompt','focusInput']);
-  if(pendingPrompt){chrome.storage.local.remove('pendingPrompt');showPanel('chat');send(pendingPrompt);}
-  if(focusInput){chrome.storage.local.remove('focusInput');chatInput.focus();}
+  const d=await chrome.storage.local.get(['pendingPrompt','focusInput','pendingScreenshot','showSessions','showSettings']);
+  if(d.pendingPrompt){chrome.storage.local.remove('pendingPrompt');showPanel('chat');send(d.pendingPrompt);}
+  if(d.focusInput){chrome.storage.local.remove('focusInput');chatInput.focus();}
+  if(d.pendingScreenshot){chrome.storage.local.remove('pendingScreenshot');showPanel('chat');doScreenshot();}
+  if(d.showSessions){chrome.storage.local.remove('showSessions');showPanel('sessions');loadSessions();}
+  if(d.showSettings){chrome.storage.local.remove('showSettings');showPanel('settings');}
 }
 
 // ─── Events ───
@@ -425,6 +428,107 @@ chrome.runtime.onMessage.addListener(msg=>{
 });
 
 setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({type:'ping'}));},25000);
+
+// ─── Voice Input ───
+let mediaRecorder = null, audioChunks = [], recognition = null;
+const voiceBtn = $('ia-voice');
+
+function startVoice() {
+  // Prefer Web Speech API (no server needed)
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'auto'; // picks up any language
+    let final = '';
+    recognition.onstart = () => { voiceBtn.classList.add('recording'); voiceBtn.title='🔴 Recording…'; };
+    recognition.onresult = e => {
+      let interim = '';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+        else interim=e.results[i][0].transcript;
+      }
+      chatInput.value = final + interim;
+      resize();
+    };
+    recognition.onend = () => {
+      voiceBtn.classList.remove('recording'); voiceBtn.title='Voice input';
+      chatInput.focus();
+    };
+    recognition.onerror = e => {
+      voiceBtn.classList.remove('recording');
+      toast('⚠️ Voice error: '+e.error);
+    };
+    recognition.start();
+  } else {
+    toast('⚠️ Voice not supported in this browser');
+  }
+}
+function stopVoice() {
+  if(recognition){ recognition.stop(); recognition=null; }
+}
+
+voiceBtn.addEventListener('mousedown', e => { e.preventDefault(); startVoice(); });
+voiceBtn.addEventListener('mouseup', stopVoice);
+voiceBtn.addEventListener('mouseleave', stopVoice);
+voiceBtn.addEventListener('touchstart', e => { e.preventDefault(); startVoice(); });
+voiceBtn.addEventListener('touchend', stopVoice);
+// Also support click-to-toggle
+voiceBtn.addEventListener('click', () => {
+  if(voiceBtn.classList.contains('recording')){ stopVoice(); }
+  else { startVoice(); }
+});
+
+// ─── Insert AI response into active page input ───
+// Add "Insert" button to each AI message on long-press / right-click
+function addInsertBtn(bubble) {
+  const btn = document.createElement('button');
+  btn.textContent = '⌨️ Insert';
+  btn.style.cssText = 'display:inline-block;margin-top:6px;background:none;border:1px solid var(--border);color:var(--text-muted);padding:2px 8px;border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;transition:all .15s;';
+  btn.title = 'Insert this text into the active input on the page';
+  btn.onmouseenter = () => { btn.style.borderColor='var(--accent)'; btn.style.color='var(--accent)'; };
+  btn.onmouseleave = () => { btn.style.borderColor='var(--border)'; btn.style.color='var(--text-muted)'; };
+  btn.onclick = async () => {
+    const text = bubble.innerText.replace(/^Copy\n/,'').replace(/\n?Copy$/,'').trim();
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if(!tab?.id){ toast('⚠️ No active tab'); return; }
+    const r = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (t) => {
+        const el = document.activeElement;
+        if(el && (el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable)){
+          if(el.isContentEditable){ el.innerText += t; }
+          else { const s=el.selectionStart||0; el.value=el.value.slice(0,s)+t+el.value.slice(el.selectionEnd||s); el.selectionStart=el.selectionEnd=s+t.length; el.dispatchEvent(new Event('input',{bubbles:true})); }
+          return true;
+        }
+        return false;
+      },
+      args: [text]
+    });
+    toast(r?.[0]?.result ? '✅ Inserted into page' : '⚠️ Click on an input field first');
+  };
+  bubble.appendChild(btn);
+}
+
+// Patch addCopyBtns to also add insert button
+const _origAddCopyBtns = addCopyBtns;
+window.addCopyBtnsWithInsert = (el) => {
+  _origAddCopyBtns(el);
+};
+
+// Insert btn on history AI messages (loaded from API)
+function patchAiBubbles() {
+  messagesEl.querySelectorAll('.msg-group.ai .bubble').forEach(b => {
+    if(!b.querySelector('button[title*="Insert"]')) addInsertBtn(b);
+  });
+}
+
+// ─── Keyboard: Ctrl+Shift+F = search ───
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key==='f'){ e.preventDefault(); toggleSearch(); }
+  if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key==='e'){ e.preventDefault(); exportChat(); }
+});
 
 // Expose internals for CDP/debug access
 window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, boot, send, newChat, showPanel, init };
