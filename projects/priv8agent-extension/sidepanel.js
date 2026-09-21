@@ -155,7 +155,11 @@ async function loadHistory(id) {
     const msgs=data.messages||data||[];
     if(msgs.length){
       welcomeEl.style.display='none'; messagesEl.style.display='flex';
-      msgs.forEach(m=>{ if(m.role==='user') addMsg('user',m.content||'',false); else if(m.role==='assistant') addMsg('ai',m.content||'',false); });
+      msgs.forEach(m=>{
+        const ts=m.createdAt||m.timestamp||m.created_at;
+        if(m.role==='user') addMsg('user',m.content||'',false,ts);
+        else if(m.role==='assistant') addMsg('ai',m.content||'',false,ts);
+      });
       scrollBot(); patchAiBubbles();
     }
   } catch {}
@@ -163,6 +167,7 @@ async function loadHistory(id) {
 function newChat() {
   sessionId=null; chrome.storage.local.remove('lastSession');
   messagesEl.innerHTML=''; messagesEl.style.display='none'; welcomeEl.style.display='flex';
+  userScrolled=false; $('btn-scroll-bot').style.display='none';
   if(ws?.readyState===1) ws.send(JSON.stringify({type:'hello'}));
   showPanel('chat');
 }
@@ -204,13 +209,13 @@ function send(content) {
     welcomeEl.style.display='none'; messagesEl.style.display='flex';
     messagesEl.appendChild(g); scrollBot(true);
     clearAttach();
-  } else {
+  } else if(content.trim()) {
     addMsg('user',content);
     welcomeEl.style.display='none'; messagesEl.style.display='flex';
     scrollBot(true);
   }
 
-  ws.send(JSON.stringify(payload));
+  try { ws.send(JSON.stringify(payload)); } catch { toast('⚠️ Send failed — reconnecting…'); finishAi(); connectWs(); return; }
   userScrolled=false;
   streaming=true; btnSend.disabled=true; btnStop.classList.add('show'); startAi();
 }
@@ -265,7 +270,7 @@ function finishAi() {
 }
 function fmtTime(d=new Date()){return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 
-function addMsg(role,content,scroll=true) {
+function addMsg(role,content,scroll=true,msgTime=null) {
   const g=document.createElement('div'); g.className=`msg-group ${role}`;
   const sender=role==='user'?'You':'Priv8Agent';
   const avatar=role==='user'?'👤':'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0.5L9 2.75V7.25L5 9.5L1 7.25V2.75L5 0.5Z" stroke="#00FF41" stroke-width="0.8"/></svg>';
@@ -276,7 +281,7 @@ function addMsg(role,content,scroll=true) {
   senderRow.innerHTML=role==='user'?`${sender}<div class="sender-avatar">${avatar}</div>`:`<div class="sender-avatar">${avatar}</div>${sender}`;
   g.appendChild(senderRow); g.appendChild(b);
   // timestamp
-  const ts=document.createElement('div'); ts.className='msg-time'; ts.textContent=fmtTime();
+  const ts=document.createElement('div'); ts.className='msg-time'; ts.textContent=msgTime?fmtTime(new Date(msgTime)):fmtTime();
   g.appendChild(ts);
   // edit button on user messages
   if(role==='user'){
@@ -293,6 +298,7 @@ function addMsg(role,content,scroll=true) {
         let next=g.nextSibling;
         while(next){const n2=next.nextSibling;next.remove();next=n2;}
         pendingMsg=null; buf=''; thinkBuf='';
+        chatInput.value=''; resize();
         send(nv);
       };
       b.querySelector('.msg-edit-cancel').onclick=()=>{ b.textContent=orig; };
@@ -613,8 +619,9 @@ $('model-select').addEventListener('change',e=>{
 $('btn-save').addEventListener('click',async()=>{
   const t=$('s-token').value.trim(),srv=$('s-server').value.trim(),m=$('s-model').value;
   const sp=$('s-system').value.trim(), lang=$('s-lang').value;
-  if(t)token=t; if(m)model=m; systemPrompt=sp; forceLang=lang;
-  await chrome.storage.local.set({authToken:t||token,serverUrl:srv||API,defaultModel:m,systemPrompt:sp,forceLang:lang});
+  const q=$('quality-select').value;
+  if(t)token=t; if(m)model=m; systemPrompt=sp; forceLang=lang; quality=q;
+  await chrome.storage.local.set({authToken:t||token,serverUrl:srv||API,defaultModel:m,systemPrompt:sp,forceLang:lang,quality:q});
   toast('✅ Settings saved'); showPanel('chat');
   if(t&&!ws)boot();
 });
