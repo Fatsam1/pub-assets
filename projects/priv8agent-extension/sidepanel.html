@@ -658,6 +658,7 @@
   <!-- Sessions -->
   <div id="sessions-panel">
     <div id="sessions-header">Recent Conversations</div>
+    <div id="projects-bar" style="display:flex;gap:4px;padding:4px 8px 0;flex-wrap:wrap;min-height:24px;"></div>
     <div id="sessions-list"></div>
   </div>
 
@@ -667,10 +668,22 @@
     <div id="gs-results"></div>
   </div>
 
-  <!-- Artifacts panel -->
-  <div id="artifacts-panel" style="display:none;flex-direction:column;flex:1;overflow-y:auto;padding:12px;gap:8px;background:var(--bg-tertiary);">
-    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Saved Artifacts</div>
-    <div id="artifacts-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+  <!-- Artifacts panel — split pane -->
+  <div id="artifacts-panel" style="display:none;flex-direction:column;flex:1;overflow:hidden;background:var(--bg-tertiary);">
+    <div style="display:flex;height:100%;overflow:hidden;">
+      <div id="artifacts-list-wrap" style="width:160px;min-width:130px;border-right:1px solid var(--border);overflow-y:auto;padding:6px;flex-shrink:0;">
+        <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;padding:4px 4px 6px;">Artifacts</div>
+        <div id="artifacts-list" style="display:flex;flex-direction:column;gap:3px;"></div>
+      </div>
+      <div id="artifact-preview" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div id="artifact-preview-toolbar" style="display:none;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg-secondary);flex-shrink:0;">
+          <span id="artifact-preview-title" style="flex:1;font-size:12px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          <button id="btn-artifact-copy" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">📋 Copy</button>
+          <button id="btn-artifact-tab" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">🖥️ Tab</button>
+        </div>
+        <div id="artifact-preview-body" style="flex:1;overflow:auto;padding:0;"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Chat -->
@@ -820,7 +833,7 @@
     <hr class="setting-divider">
     <button id="btn-save">Save Settings</button>
     <button id="btn-logout">Sign Out</button>
-    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.3.5</div>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.3.6</div>
   </div>
 
   <div id="toast"></div>

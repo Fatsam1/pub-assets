@@ -7,6 +7,8 @@ let attachedImages = []; // [{ dataUrl, name, mimeType }, ...]
 let searchMatches = [], searchIdx = -1;
 let incognito = false;
 let currentMode = 'chat'; // chat | code | artifacts
+let projects = []; // { id, name, color, sessionIds[] }
+let activeProjectFilter = null;
 
 const $= id => document.getElementById(id);
 const authScreen=$('auth-screen'), statusPill=$('status-pill'), statusText=$('status-text');
@@ -27,6 +29,9 @@ async function init() {
   if (s.forceLang) $('s-lang').value = s.forceLang;
   applyTheme(s.theme||'dark');
   if (!token) { authScreen.classList.add('visible'); return; }
+  const ps = await chrome.storage.local.get(['p8Projects']);
+  projects = ps.p8Projects || [];
+  renderProjectsBar();
   boot();
 }
 function applyTheme(t) {
@@ -101,7 +106,8 @@ async function loadSessions() {
     }
     const r = await fetch(`${API}/api/agent/sessions`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r.ok) return;
-    const list = await r.json();
+    const rawList = await r.json();
+    const list = filterSessionsByProject(rawList);
     el.innerHTML='';
     if(!list.length){
       el.innerHTML='<div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:12px;line-height:1.8;">No conversations yet<br><span style="font-size:20px">💬</span><br>Start chatting to see history here</div>';
@@ -137,6 +143,17 @@ async function loadSessions() {
       };
       d.appendChild(info); d.appendChild(del);
       d.onclick=()=>switchSession(s.id);
+      d.oncontextmenu = e => {
+        e.preventDefault();
+        if (!projects.length) { showToast('No projects — create one in Sessions bar'); return; }
+        const opts = projects.map((p,i)=>`${i+1}. ${p.name}`).join('\n');
+        const choice = prompt(`Assign to project (0 to remove):\n${opts}`);
+        if (choice === null) return;
+        const idx = parseInt(choice) - 1;
+        projects.forEach(p => { p.sessionIds = p.sessionIds.filter(id=>id!==s.id); });
+        if (idx >= 0 && idx < projects.length) projects[idx].sessionIds.push(s.id);
+        saveProjects();
+      };
       el.appendChild(d);
     });
   } catch {}
@@ -714,25 +731,112 @@ async function runGlobalSearch() {
   } catch { el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">Search unavailable</div>'; }
 }
 
-// ─── Artifacts gallery ───
+// ─── Artifacts gallery — split pane ───
+let _artifactsList = [];
 async function loadArtifacts() {
-  const el = $('artifacts-list'); el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">Loading…</div>';
+  const el = $('artifacts-list');
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px;">Loading…</div>';
+  $('artifact-preview-toolbar').style.display = 'none';
+  $('artifact-preview-body').innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:16px;text-align:center;">Select an artifact</div>';
   try {
     const r = await fetch(`${API}/api/agent/artifacts`, { headers: { Authorization: `Bearer ${token}` } });
-    if(!r.ok) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No artifacts yet</div>'; return; }
-    const list = await r.json();
-    el.innerHTML = '';
-    if(!list.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No artifacts yet — AI-generated code/html will appear here</div>'; return; }
-    list.forEach(a => {
-      const d = document.createElement('div');
-      d.style.cssText = 'background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;transition:border-color .15s;';
-      d.onmouseenter = () => d.style.borderColor = 'rgba(0,255,65,.35)';
-      d.onmouseleave = () => d.style.borderColor = 'var(--border)';
-      d.innerHTML = `<div style="font-size:13px;font-weight:500;color:var(--text-primary)">${esc(a.title||'Artifact')}</div><div style="font-size:11px;color:var(--text-muted);margin-top:3px">${esc(a.type||'code')} · ${new Date(a.createdAt||Date.now()).toLocaleDateString()}</div>`;
-      d.onclick = () => { switchSession(a.sessionId); $('tab-chat').click(); };
-      el.appendChild(d);
-    });
-  } catch { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">Could not load artifacts</div>'; }
+    if (!r.ok) { el.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px;">No artifacts yet</div>'; return; }
+    _artifactsList = await r.json();
+    renderArtifactList();
+    if (_artifactsList.length) showArtifactPreview(_artifactsList[0]);
+  } catch { el.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px;">Could not load</div>'; }
+}
+function renderArtifactList() {
+  const el = $('artifacts-list'); el.innerHTML = '';
+  if (!_artifactsList.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px;line-height:1.5;">No artifacts yet.<br>AI-generated code/HTML will appear here.</div>';
+    return;
+  }
+  _artifactsList.forEach((a, i) => {
+    const d = document.createElement('div');
+    d.dataset.idx = i;
+    d.style.cssText = 'padding:6px 8px;border-radius:4px;cursor:pointer;font-size:11px;border:1px solid transparent;transition:all .12s;';
+    const icon = a.type === 'html' ? '🌐' : a.type === 'js' ? '📜' : '📄';
+    d.innerHTML = `<div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${icon} ${esc(a.title||'Artifact')}</div><div style="color:var(--text-muted);font-size:10px;margin-top:1px;">${esc(a.type||'code')}</div>`;
+    d.onclick = () => { el.querySelectorAll('[data-idx]').forEach(x=>x.style.background=''); d.style.background='var(--accent-dim)'; d.style.borderColor='rgba(0,255,65,.2)'; showArtifactPreview(a); };
+    d.onmouseenter = () => { if(d.style.background!=='var(--accent-dim)') d.style.background='var(--bg-secondary)'; };
+    d.onmouseleave = () => { if(d.style.background!=='var(--accent-dim)') d.style.background=''; };
+    el.appendChild(d);
+  });
+}
+async function showArtifactPreview(a) {
+  const toolbar = $('artifact-preview-toolbar'), body = $('artifact-preview-body'), title = $('artifact-preview-title');
+  title.textContent = a.title || 'Artifact';
+  toolbar.style.display = 'flex';
+  body.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:16px;text-align:center;">Loading…</div>';
+  let content = a.content || '';
+  if (!content && a.id) {
+    try {
+      const r = await fetch(`${API}/api/agent/artifacts/${a.id}/content`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) content = (await r.json()).content || '';
+    } catch {}
+  }
+  if (!content) { body.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:16px;text-align:center;">No content</div>'; return; }
+  if (a.type === 'html') {
+    const fr = document.createElement('iframe');
+    fr.style.cssText = 'width:100%;height:100%;border:none;background:#fff;';
+    fr.sandbox = 'allow-scripts allow-same-origin';
+    body.innerHTML = '';
+    body.style.padding = '0';
+    body.appendChild(fr);
+    fr.srcdoc = content;
+  } else {
+    body.style.padding = '12px';
+    body.innerHTML = `<pre style="font-size:11px;line-height:1.5;color:var(--text-primary);white-space:pre-wrap;word-break:break-all;margin:0;font-family:monospace;">${esc(content)}</pre>`;
+  }
+  $('btn-artifact-copy').onclick = () => { navigator.clipboard.writeText(content).then(() => showToast('Copied!')); };
+  $('btn-artifact-tab').onclick = () => {
+    const blob = new Blob([content], { type: a.type === 'html' ? 'text/html' : 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    chrome.tabs.create({ url });
+  };
+}
+
+// ─── Projects ───
+const PROJECT_COLORS = ['#00FF41','#60a5fa','#f472b6','#fb923c','#a78bfa'];
+function renderProjectsBar() {
+  const bar = $('projects-bar'); if (!bar) return;
+  bar.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.textContent = 'All';
+  allBtn.style.cssText = `font-size:10px;padding:2px 8px;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:${activeProjectFilter===null?'var(--accent-dim)':'transparent'};color:${activeProjectFilter===null?'var(--accent)':'var(--text-muted)'};font-family:inherit;`;
+  allBtn.onclick = () => { activeProjectFilter = null; renderProjectsBar(); loadSessions(); };
+  bar.appendChild(allBtn);
+  projects.forEach(p => {
+    const btn = document.createElement('button');
+    btn.textContent = p.name;
+    const active = activeProjectFilter === p.id;
+    btn.style.cssText = `font-size:10px;padding:2px 8px;border-radius:10px;cursor:pointer;border:1px solid ${p.color};background:${active?p.color+'22':'transparent'};color:${active?p.color:'var(--text-muted)'};font-family:inherit;`;
+    btn.onclick = () => { activeProjectFilter = p.id; renderProjectsBar(); loadSessions(); };
+    btn.oncontextmenu = e => { e.preventDefault(); if(confirm(`Delete project "${p.name}"?`)) { projects = projects.filter(x=>x.id!==p.id); saveProjects(); if(activeProjectFilter===p.id) activeProjectFilter=null; renderProjectsBar(); loadSessions(); } };
+    bar.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+';
+  addBtn.title = 'New project';
+  addBtn.style.cssText = 'font-size:10px;padding:2px 7px;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:inherit;';
+  addBtn.onclick = () => {
+    const name = prompt('Project name:');
+    if (!name || !name.trim()) return;
+    const id = 'p8proj_' + Date.now();
+    const color = PROJECT_COLORS[projects.length % PROJECT_COLORS.length];
+    projects.push({ id, name: name.trim(), color, sessionIds: [] });
+    saveProjects();
+    renderProjectsBar();
+  };
+  bar.appendChild(addBtn);
+}
+function saveProjects() { chrome.storage.local.set({ p8Projects: projects }); }
+function filterSessionsByProject(sessions) {
+  if (!activeProjectFilter) return sessions;
+  const p = projects.find(x => x.id === activeProjectFilter);
+  if (!p) return sessions;
+  return sessions.filter(s => p.sessionIds.includes(s.id));
 }
 
 // ─── Plus menu ───
