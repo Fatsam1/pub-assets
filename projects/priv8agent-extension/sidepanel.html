@@ -173,7 +173,7 @@
   .react-btn.active { border-color:rgba(0,255,65,.35);background:var(--accent-dim);color:var(--green); }
 
   /* ── Chat ── */
-  #chat-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  #chat-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; }
 
   #welcome {
     flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -547,6 +547,12 @@
   /* ── Min width ── */
   body { min-width: 320px; }
 
+  /* ── Skeleton loading ── */
+  @keyframes skel {
+    0%,100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
   /* ── Light theme ── */
   #app[data-theme="light"] {
     --bg-primary: #f6f8fa;
@@ -704,6 +710,7 @@
     </div>
 
     <div id="messages" style="display:none"></div>
+    <button id="btn-scroll-bot" title="Scroll to bottom" style="display:none;position:absolute;bottom:180px;right:14px;z-index:50;width:30px;height:30px;border-radius:50%;background:var(--bg-secondary);border:1px solid var(--border);color:var(--accent);font-size:14px;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:opacity .15s;">↓</button>
 
     <!-- Image preview strip (shown when images attached) -->
     <div id="img-preview" style="display:none;padding:6px 12px;background:var(--bg-secondary);border-top:1px solid var(--border);flex-shrink:0;">

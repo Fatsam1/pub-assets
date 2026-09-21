@@ -31,6 +31,14 @@ async function init() {
 }
 function applyTheme(t) {
   $('app').dataset.theme=t;
+  // update theme buttons active state
+  const lt=$('btn-theme-light'), dk=$('btn-theme-dark');
+  if(lt&&dk){
+    const activeStyle='flex:1;padding:8px;border-radius:var(--radius-sm);background:var(--accent-dim);border:1px solid rgba(0,255,65,.25);color:var(--accent);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;';
+    const idleStyle='flex:1;padding:8px;border-radius:var(--radius-sm);background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;';
+    lt.style.cssText=t==='light'?activeStyle:idleStyle;
+    dk.style.cssText=t==='dark'?activeStyle:idleStyle;
+  }
 }
 window.setTheme=(t)=>{
   applyTheme(t);
@@ -86,10 +94,19 @@ function onWsEvent(ev) {
 // ─── Sessions ───
 async function loadSessions() {
   try {
+    const el = $('sessions-list');
+    if(!el.childElementCount) {
+      el.innerHTML='<div style="padding:8px 6px;display:flex;flex-direction:column;gap:4px;">' +
+        Array(5).fill('<div style="height:44px;border-radius:8px;background:var(--bg-secondary);animation:skel 1.2s ease-in-out infinite;"></div>').join('') + '</div>';
+    }
     const r = await fetch(`${API}/api/agent/sessions`,{headers:{Authorization:`Bearer ${token}`}});
     if(!r.ok) return;
     const list = await r.json();
-    const el = $('sessions-list'); el.innerHTML='';
+    el.innerHTML='';
+    if(!list.length){
+      el.innerHTML='<div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:12px;line-height:1.8;">No conversations yet<br><span style="font-size:20px">💬</span><br>Start chatting to see history here</div>';
+      return;
+    }
     list.slice(0,40).forEach(s => {
       const d=document.createElement('div'); d.className='session-item'+(s.id===sessionId?' current':'');
       d.style.display='flex'; d.style.alignItems='center'; d.style.gap='6px';
@@ -185,14 +202,16 @@ function send(content) {
     const imgs=attachedImages.map(i=>`<img src="${esc(i.dataUrl)}" style="max-width:100%;max-height:120px;border-radius:6px;border:1px solid var(--border);display:inline-block;margin:2px"/>`).join('');
     g.innerHTML=`<div class="msg-sender">You<div class="sender-avatar">👤</div></div><div class="bubble">${imgs}${content.trim()?`<div style="margin-top:6px">${esc(content.trim())}</div>`:''}</div>`;
     welcomeEl.style.display='none'; messagesEl.style.display='flex';
-    messagesEl.appendChild(g); scrollBot();
+    messagesEl.appendChild(g); scrollBot(true);
     clearAttach();
   } else {
     addMsg('user',content);
     welcomeEl.style.display='none'; messagesEl.style.display='flex';
+    scrollBot(true);
   }
 
   ws.send(JSON.stringify(payload));
+  userScrolled=false;
   streaming=true; btnSend.disabled=true; btnStop.classList.add('show'); startAi();
 }
 function startAi() {
@@ -372,7 +391,16 @@ function showPanel(p) {
   else if(p==='settings'){$('settings-panel').classList.add('visible');$('btn-settings-toggle').classList.add('active');}
   else if(p==='search-global'){$('global-search').classList.add('visible');$('btn-search-global').classList.add('active');}
 }
-function scrollBot(){setTimeout(()=>messagesEl.scrollTop=messagesEl.scrollHeight,10);}
+let userScrolled=false;
+messagesEl.addEventListener('scroll',()=>{
+  const atBottom=messagesEl.scrollHeight-messagesEl.scrollTop-messagesEl.clientHeight<60;
+  userScrolled=!atBottom;
+  $('btn-scroll-bot').style.display=atBottom?'none':'flex';
+});
+$('btn-scroll-bot').addEventListener('click',()=>{userScrolled=false;scrollBot(true);});
+function scrollBot(force=false){
+  if(force||!userScrolled) setTimeout(()=>{messagesEl.scrollTop=messagesEl.scrollHeight; userScrolled=false;},10);
+}
 function toast(msg,dur=2500){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 async function checkPending(){
   const d=await chrome.storage.local.get(['pendingPrompt','focusInput','pendingScreenshot','showSessions','showSettings']);
@@ -402,7 +430,24 @@ btnSend.addEventListener('click',()=>{const t=chatInput.value.trim();if(t||attac
 btnStop.addEventListener('click',()=>{if(ws?.readyState===1&&sessionId)ws.send(JSON.stringify({type:'stop',sessionId}));finishAi();});
 chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();btnSend.click();}});
 chatInput.addEventListener('input',resize);
-function resize(){chatInput.style.height='auto';chatInput.style.height=Math.min(chatInput.scrollHeight,140)+'px';}
+function resize(){
+  chatInput.style.height='auto';
+  chatInput.style.height=Math.min(chatInput.scrollHeight,140)+'px';
+  // character counter
+  const len=chatInput.value.length;
+  let counter=$('char-counter');
+  if(!counter){
+    counter=document.createElement('span');
+    counter.id='char-counter';
+    counter.style.cssText='font-size:10px;color:var(--text-muted);margin-right:4px;';
+    $('btn-stop').parentElement.insertBefore(counter,$('btn-stop'));
+  }
+  counter.textContent=len>100?`${len}`:'' ;
+  counter.style.color=len>3000?'var(--yellow)':len>7000?'var(--red)':'var(--text-muted)';
+  // send btn dim when empty
+  const hasContent=len>0||attachedImages.length>0;
+  btnSend.style.opacity=hasContent?'1':'0.35';
+}
 
 document.querySelectorAll('.sug').forEach(b=>b.addEventListener('click',async()=>{
   const p=b.dataset.prompt; if(!p)return;
@@ -559,7 +604,11 @@ function highlightCurrent(){
   $('search-count').textContent=`${searchIdx+1}/${searchMatches.length}`;
 }
 
-$('model-select').addEventListener('change',e=>{model=e.target.value;chrome.storage.local.set({defaultModel:model});});
+$('model-select').addEventListener('change',e=>{
+  model=e.target.value;
+  chrome.storage.local.set({defaultModel:model});
+  $('s-model').value=model;
+});
 
 $('btn-save').addEventListener('click',async()=>{
   const t=$('s-token').value.trim(),srv=$('s-server').value.trim(),m=$('s-model').value;
@@ -800,10 +849,23 @@ function patchAiBubbles() {
   });
 }
 
-// ─── Keyboard: Ctrl+Shift+F = search ───
+// ─── Keyboard shortcuts ───
 document.addEventListener('keydown', e => {
-  if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key==='f'){ e.preventDefault(); toggleSearch(); }
-  if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key==='e'){ e.preventDefault(); exportChat(); }
+  if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key.toLowerCase()==='f'){ e.preventDefault(); toggleSearch(); }
+  if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key.toLowerCase()==='e'){ e.preventDefault(); exportChat(); }
+  // Ctrl+K = global search
+  if((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase()==='k'){
+    e.preventDefault();
+    const open=$('global-search').classList.contains('visible');
+    if(open){$('global-search').classList.remove('visible');showPanel('chat');}
+    else{showPanel('search-global');$('gs-input').focus();}
+  }
+  // Escape = close any overlay
+  if(e.key==='Escape'){
+    if($('global-search').classList.contains('visible')){$('global-search').classList.remove('visible');showPanel('chat');}
+    else if($('search-bar').style.display!=='none') closeSearch();
+    else if($('plus-menu').classList.contains('open')) $('plus-menu').classList.remove('open');
+  }
 });
 
 // Expose internals for CDP/debug access
