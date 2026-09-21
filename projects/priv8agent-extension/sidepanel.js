@@ -2,9 +2,11 @@
 const API = 'https://app.privatehash.online';
 const WS_PATH = '/agent/ws'; // Nginx proxies /agent/ws → backend /ws (bypasses Cloudflare WS block)
 let token = '', ws = null, sessionId = null, streaming = false, buf = '', pendingMsg = null, model = '', reconnects = 0, reconnTimer = null;
-let systemPrompt = '', forceLang = '';
+let systemPrompt = '', forceLang = '', quality = 'normal';
 let attachedImage = null; // { dataUrl, name, mimeType }
 let searchMatches = [], searchIdx = -1;
+let incognito = false;
+let currentMode = 'chat'; // chat | code | artifacts
 
 const $= id => document.getElementById(id);
 const authScreen=$('auth-screen'), statusPill=$('status-pill'), statusText=$('status-text');
@@ -13,11 +15,12 @@ const btnSend=$('btn-send'), btnStop=$('btn-stop');
 
 // ─── Init ───
 async function init() {
-  const s = await chrome.storage.local.get(['authToken','serverUrl','defaultModel','systemPrompt','forceLang']);
+  const s = await chrome.storage.local.get(['authToken','serverUrl','defaultModel','systemPrompt','forceLang','quality']);
   token = s.authToken || '';
   model = s.defaultModel || '';
   systemPrompt = s.systemPrompt || '';
   forceLang = s.forceLang || '';
+  if (s.quality) { quality = s.quality; $('quality-select').value = s.quality; }
   if (s.defaultModel) { $('model-select').value = s.defaultModel; $('s-model').value = s.defaultModel; }
   if (s.serverUrl) $('s-server').value = s.serverUrl;
   if (s.systemPrompt) $('s-system').value = s.systemPrompt;
@@ -151,7 +154,10 @@ function send(content) {
     content: effectiveContent || '',
     ...(sessionId?{sessionId}:{}),
     ...(model?{model}:{}),
-    ...(systemPrompt&&!sessionId?{systemPrompt}:{})
+    ...(systemPrompt&&!sessionId?{systemPrompt}:{}),
+    ...(quality&&quality!=='normal'?{quality}:{}),
+    ...(currentMode==='code'?{mode:'code'}:{}),
+    ...(incognito?{incognito:true}:{})
   };
 
   // Attach image if present
@@ -313,12 +319,15 @@ async function doScreenshot() {
 function showPanel(p) {
   $('sessions-panel').classList.remove('visible');
   $('settings-panel').classList.remove('visible');
+  $('global-search').classList.remove('visible');
   $('chat-panel').style.display='none';
   $('btn-sessions-toggle').classList.remove('active');
   $('btn-settings-toggle').classList.remove('active');
+  $('btn-search-global').classList.remove('active');
   if(p==='chat'){$('chat-panel').style.display='flex';}
   else if(p==='sessions'){$('sessions-panel').classList.add('visible');$('btn-sessions-toggle').classList.add('active');}
   else if(p==='settings'){$('settings-panel').classList.add('visible');$('btn-settings-toggle').classList.add('active');}
+  else if(p==='search-global'){$('global-search').classList.add('visible');$('btn-search-global').classList.add('active');}
 }
 function scrollBot(){setTimeout(()=>messagesEl.scrollTop=messagesEl.scrollHeight,10);}
 function toast(msg,dur=2500){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
@@ -517,6 +526,131 @@ chrome.runtime.onMessage.addListener(msg=>{
 });
 
 setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({type:'ping'}));},25000);
+
+// ─── Mode Tabs ───
+document.querySelectorAll('.mode-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentMode = btn.dataset.mode;
+    document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if(currentMode === 'artifacts') {
+      showPanel('chat');
+      $('artifacts-panel').style.display = 'flex';
+      $('chat-panel').style.display = 'none';
+      loadArtifacts();
+    } else {
+      $('artifacts-panel').style.display = 'none';
+      showPanel('chat');
+      if(currentMode === 'code') {
+        chatInput.placeholder = 'Write code with Priv8Agent… (describe what to build)';
+      } else {
+        chatInput.placeholder = 'Message Priv8Agent… (paste image or drop file)';
+      }
+    }
+  });
+});
+
+// ─── Quality selector ───
+$('quality-select').addEventListener('change', e => {
+  quality = e.target.value;
+  chrome.storage.local.set({ quality });
+});
+
+// ─── Incognito mode ───
+$('btn-incognito').addEventListener('click', () => {
+  incognito = !incognito;
+  $('btn-incognito').classList.toggle('active', incognito);
+  $('incognito-badge').classList.toggle('on', incognito);
+  if(incognito) {
+    toast('🕶 Incognito ON — chat won\'t be saved');
+    newChat();
+  } else {
+    toast('Incognito OFF');
+  }
+});
+
+// ─── Global search ───
+$('btn-search-global').addEventListener('click', () => {
+  const open = $('global-search').classList.contains('visible');
+  if(open) { $('global-search').classList.remove('visible'); showPanel('chat'); }
+  else { showPanel('search-global'); $('gs-input').focus(); }
+});
+$('gs-input').addEventListener('input', debounce(runGlobalSearch, 300));
+$('gs-input').addEventListener('keydown', e => { if(e.key==='Escape'){ $('global-search').classList.remove('visible'); showPanel('chat'); }});
+
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+async function runGlobalSearch() {
+  const q = $('gs-input').value.trim();
+  const el = $('gs-results'); el.innerHTML = '';
+  if(q.length < 2) return;
+  try {
+    const r = await fetch(`${API}/api/agent/sessions?search=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } });
+    if(!r.ok) return;
+    const list = await r.json();
+    if(!list.length) { el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">No results</div>'; return; }
+    list.slice(0, 30).forEach(s => {
+      const d = document.createElement('div'); d.className = 'gs-item';
+      const snippet = (s.lastMessage || s.title || '').slice(0, 80);
+      const hi = (t) => t.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m => `<span class="gs-hit">${esc(m)}</span>`);
+      d.innerHTML = `<div class="gs-title">${hi(esc(s.title||'Conversation'))}</div><div class="gs-snippet">${hi(esc(snippet))}</div>`;
+      d.onclick = () => { switchSession(s.id); $('global-search').classList.remove('visible'); showPanel('chat'); };
+      el.appendChild(d);
+    });
+  } catch { el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">Search unavailable</div>'; }
+}
+
+// ─── Artifacts gallery ───
+async function loadArtifacts() {
+  const el = $('artifacts-list'); el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">Loading…</div>';
+  try {
+    const r = await fetch(`${API}/api/agent/artifacts`, { headers: { Authorization: `Bearer ${token}` } });
+    if(!r.ok) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No artifacts yet</div>'; return; }
+    const list = await r.json();
+    el.innerHTML = '';
+    if(!list.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No artifacts yet — AI-generated code/html will appear here</div>'; return; }
+    list.forEach(a => {
+      const d = document.createElement('div');
+      d.style.cssText = 'background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;transition:border-color .15s;';
+      d.onmouseenter = () => d.style.borderColor = 'rgba(0,255,65,.35)';
+      d.onmouseleave = () => d.style.borderColor = 'var(--border)';
+      d.innerHTML = `<div style="font-size:13px;font-weight:500;color:var(--text-primary)">${esc(a.title||'Artifact')}</div><div style="font-size:11px;color:var(--text-muted);margin-top:3px">${esc(a.type||'code')} · ${new Date(a.createdAt||Date.now()).toLocaleDateString()}</div>`;
+      d.onclick = () => { switchSession(a.sessionId); $('tab-chat').click(); };
+      el.appendChild(d);
+    });
+  } catch { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">Could not load artifacts</div>'; }
+}
+
+// ─── Plus menu ───
+const plusMenu = $('plus-menu');
+$('ia-plus').addEventListener('click', (e) => { e.stopPropagation(); plusMenu.classList.toggle('open'); });
+document.addEventListener('click', () => plusMenu.classList.remove('open'));
+plusMenu.addEventListener('click', e => e.stopPropagation());
+$('pm-file').addEventListener('click', () => { $('file-input').click(); plusMenu.classList.remove('open'); });
+$('pm-shot').addEventListener('click', () => { doScreenshot(); plusMenu.classList.remove('open'); });
+$('pm-page').addEventListener('click', () => { capturePage(); plusMenu.classList.remove('open'); });
+$('pm-sel').addEventListener('click', () => { sendSel(); plusMenu.classList.remove('open'); });
+$('pm-export').addEventListener('click', () => { exportChat(); plusMenu.classList.remove('open'); });
+
+// ─── Template chips ───
+const tplPrompts = {
+  write: 'Help me write: ',
+  code: 'Write code that ',
+  learn: 'Explain to me: ',
+  analyze: 'Analyze this: ',
+  translate: 'Translate this to English: ',
+  summarize: 'Summarize this page for me',
+};
+document.querySelectorAll('.t-chip').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const tpl = tplPrompts[btn.dataset.tpl] || '';
+    if(btn.dataset.tpl === 'summarize') { await capturePage().catch(() => send(tpl)); return; }
+    chatInput.value = tpl;
+    chatInput.focus();
+    chatInput.setSelectionRange(tpl.length, tpl.length);
+    resize();
+  });
+});
 
 // ─── Voice Input ───
 let mediaRecorder = null, audioChunks = [], recognition = null;

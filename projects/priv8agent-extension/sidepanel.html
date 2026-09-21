@@ -94,10 +94,26 @@
   }
   #btn-new:hover { background: var(--accent); color: #0a0d13; border-color: var(--accent); }
 
+  /* ── Mode Tabs (Chat / Code) ── */
+  #mode-tabs {
+    display: flex; gap: 0; padding: 6px 14px 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .mode-tab {
+    padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+    background: none; border: none; color: var(--text-muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .15s, border-color .15s; font-family: inherit;
+  }
+  .mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .mode-tab:hover:not(.active) { color: var(--text-primary); }
+
   /* ── Model Bar ── */
   #model-bar {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 14px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
@@ -109,6 +125,13 @@
     font-family: inherit; transition: border-color 0.15s;
   }
   #model-select:focus { border-color: var(--accent); color: var(--text-primary); }
+  #quality-select {
+    background: var(--bg-input); border: 1px solid var(--border);
+    color: var(--text-muted); padding: 5px 7px; border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 500; cursor: pointer; outline: none;
+    font-family: inherit; transition: border-color .15s; width: 72px;
+  }
+  #quality-select:focus { border-color: var(--accent); }
   .model-badge {
     font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
     background: rgba(0,255,65,0.1); color: var(--green); border: 1px solid rgba(0,255,65,0.2);
@@ -417,7 +440,67 @@
     box-shadow: 0 0 0 3px var(--accent-glow);
   }
 
-  /* Voice recording active */
+  /* ── Incognito badge ── */
+  #incognito-badge {
+    display:none; align-items:center; gap:5px;
+    padding:3px 8px; border-radius:20px; font-size:10px; font-weight:600;
+    background:rgba(251,191,36,0.12); color:#fbbf24;
+    border:1px solid rgba(251,191,36,0.25); flex-shrink:0;
+  }
+  #incognito-badge.on { display:flex; }
+  #btn-incognito.active { color: #fbbf24; }
+
+  /* ── Global search panel ── */
+  #global-search {
+    display:none; flex-direction:column; flex:1; overflow:hidden;
+    background:var(--bg-tertiary);
+  }
+  #global-search.visible { display:flex; }
+  #gs-wrap { padding:10px 12px; background:var(--bg-secondary); border-bottom:1px solid var(--border); }
+  #gs-input {
+    width:100%; background:var(--bg-input); border:1px solid var(--border);
+    color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm);
+    font-size:13px; outline:none; font-family:inherit;
+  }
+  #gs-input:focus { border-color:var(--accent); }
+  #gs-results { flex:1; overflow-y:auto; padding:6px; }
+  .gs-item {
+    padding:9px 12px; border-radius:var(--radius-sm); cursor:pointer;
+    margin-bottom:2px; border:1px solid transparent; transition:all .15s;
+  }
+  .gs-item:hover { background:var(--bg-secondary); border-color:var(--border); }
+  .gs-title { font-size:13px; font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gs-snippet { font-size:11px; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gs-hit { color:var(--accent); font-weight:600; }
+
+  /* ── Plus menu ── */
+  #plus-menu {
+    display:none; position:absolute; bottom:52px; left:10px; z-index:100;
+    background:var(--bg-secondary); border:1px solid var(--border);
+    border-radius:var(--radius); padding:5px; min-width:180px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  }
+  #plus-menu.open { display:block; }
+  .pm-item {
+    display:flex; align-items:center; gap:9px; padding:8px 10px;
+    border-radius:var(--radius-sm); cursor:pointer; font-size:12.5px;
+    color:var(--text-secondary); transition:all .15s; background:none;
+    border:none; width:100%; text-align:left; font-family:inherit;
+  }
+  .pm-item:hover { background:var(--accent-dim); color:var(--text-primary); }
+  .pm-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+
+  /* ── Template chips on welcome ── */
+  .template-chips { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:4px; }
+  .t-chip {
+    padding:5px 12px; border-radius:20px; font-size:11.5px; font-weight:500;
+    background:var(--bg-secondary); border:1px solid var(--border);
+    color:var(--text-muted); cursor:pointer; transition:all .15s; font-family:inherit;
+    display:flex; align-items:center; gap:5px;
+  }
+  .t-chip:hover { border-color:var(--border-hover); color:var(--text-primary); background:var(--accent-dim); }
+
+  /* ── Voice recording active ── */
   #ia-voice.recording {
     color: var(--red);
     animation: voicePulse 0.8s ease-in-out infinite;
@@ -445,10 +528,20 @@
   <div id="header">
     <div class="logo-mark"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" fill="#00FF41" opacity="0.15"/><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="#00FF41" stroke-width="1"/><text x="8" y="11" text-anchor="middle" font-size="6" font-weight="700" fill="#00FF41" font-family="Inter,sans-serif">P8</text></svg></div>
     <span class="logo-text">Priv8<em>Agent</em></span>
+    <div id="incognito-badge">🕶 Incognito</div>
     <div id="status-pill" title="Disconnected"><div class="dot"></div><span id="status-text">Offline</span></div>
+    <button class="hdr-btn" id="btn-search-global" title="Search chats">🔎</button>
+    <button class="hdr-btn" id="btn-incognito" title="Incognito mode (no history)">🕶</button>
     <button class="hdr-btn" id="btn-sessions-toggle" title="Conversations">☰</button>
     <button id="btn-new">+ New</button>
     <button class="hdr-btn" id="btn-settings-toggle" title="Settings">⚙</button>
+  </div>
+
+  <!-- Mode Tabs -->
+  <div id="mode-tabs">
+    <button class="mode-tab active" id="tab-chat" data-mode="chat">💬 Chat</button>
+    <button class="mode-tab" id="tab-code" data-mode="code">⚡ Code</button>
+    <button class="mode-tab" id="tab-artifacts" data-mode="artifacts">🎨 Artifacts</button>
   </div>
 
   <!-- Model bar -->
@@ -464,6 +557,11 @@
       <option value="deepseek-chat">DeepSeek V3</option>
       <option value="deepseek-reasoner">DeepSeek R1</option>
     </select>
+    <select id="quality-select" title="Response quality">
+      <option value="low">🟢 Low</option>
+      <option value="normal" selected>🟡 Normal</option>
+      <option value="high">🔴 High</option>
+    </select>
     <span class="model-badge">FREE</span>
   </div>
 
@@ -471,6 +569,18 @@
   <div id="sessions-panel">
     <div id="sessions-header">Recent Conversations</div>
     <div id="sessions-list"></div>
+  </div>
+
+  <!-- Global Search -->
+  <div id="global-search">
+    <div id="gs-wrap"><input id="gs-input" placeholder="Search all conversations…" /></div>
+    <div id="gs-results"></div>
+  </div>
+
+  <!-- Artifacts panel -->
+  <div id="artifacts-panel" style="display:none;flex-direction:column;flex:1;overflow-y:auto;padding:12px;gap:8px;background:var(--bg-tertiary);">
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Saved Artifacts</div>
+    <div id="artifacts-list" style="display:flex;flex-direction:column;gap:6px;"></div>
   </div>
 
   <!-- Chat -->
@@ -481,6 +591,14 @@
         <div class="welcome-title">Priv8<span>Agent</span></div>
       </div>
       <div class="welcome-sub">Your private AI — more powerful than Claude, no restrictions</div>
+      <div class="template-chips">
+        <button class="t-chip" data-tpl="write">✍️ Write</button>
+        <button class="t-chip" data-tpl="code">💻 Code</button>
+        <button class="t-chip" data-tpl="learn">📚 Learn</button>
+        <button class="t-chip" data-tpl="analyze">🔍 Analyze</button>
+        <button class="t-chip" data-tpl="translate">🌐 Translate</button>
+        <button class="t-chip" data-tpl="summarize">📄 Summarize</button>
+      </div>
       <div class="suggestions">
         <button class="sug" data-prompt="Summarize this page for me"><span class="sug-icon">📄</span> Summarize this page</button>
         <button class="sug" data-prompt="Write a Python script that"><span class="sug-icon">💻</span> Write code</button>
@@ -520,12 +638,22 @@
       <button class="chip" id="chip-search">🔍 Search</button>
     </div>
 
+    <!-- Plus menu -->
+    <div id="plus-menu">
+      <button class="pm-item" id="pm-file"><span class="pm-icon">📎</span>Attach file / image</button>
+      <button class="pm-item" id="pm-shot"><span class="pm-icon">📸</span>Screenshot</button>
+      <button class="pm-item" id="pm-page"><span class="pm-icon">📄</span>Capture page</button>
+      <button class="pm-item" id="pm-sel"><span class="pm-icon">✂️</span>Selected text</button>
+      <button class="pm-item" id="pm-export"><span class="pm-icon">💾</span>Export chat</button>
+    </div>
+
     <!-- Input -->
     <div id="input-wrap">
       <div id="input-box" id="drop-zone">
         <textarea id="chat-input" placeholder="Message Priv8Agent… (paste image or drop file)" rows="1"></textarea>
         <div id="input-footer">
           <div class="input-actions">
+            <button class="ia-btn" id="ia-plus" title="More actions">+</button>
             <button class="ia-btn" id="ia-page" title="Capture current page">📄</button>
             <button class="ia-btn" id="ia-sel" title="Send selection">✂️</button>
             <button class="ia-btn" id="ia-shot" title="Screenshot">📸</button>
