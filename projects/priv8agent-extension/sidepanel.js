@@ -44,7 +44,11 @@ function connectWs() {
   const url = API.replace('https://','wss://').replace('http://','ws://') + WS_PATH + '?token=' + encodeURIComponent(token);
   try { ws = new WebSocket(url); } catch { scheduleRecon(); return; }
   ws.onopen = () => { statusPill.className='online'; statusText.textContent='Connected'; reconnects=0; if(sessionId) ws.send(JSON.stringify({type:'hello',sessionId})); };
-  ws.onclose = () => { statusPill.className=''; statusText.textContent='Offline'; scheduleRecon(); };
+  ws.onclose = () => {
+    statusPill.className = reconnects >= 3 ? 'error' : '';
+    statusText.textContent = reconnects >= 3 ? 'Error' : 'Offline';
+    scheduleRecon();
+  };
   ws.onerror = () => { statusPill.className=''; statusText.textContent='Error'; };
   ws.onmessage = e => { try { onWsEvent(JSON.parse(e.data)); } catch {} };
 }
@@ -534,6 +538,7 @@ document.querySelectorAll('.mode-tab').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     if(currentMode === 'artifacts') {
+      $('input-box').classList.remove('code-mode');
       showPanel('chat');
       $('artifacts-panel').style.display = 'flex';
       $('chat-panel').style.display = 'none';
@@ -543,8 +548,10 @@ document.querySelectorAll('.mode-tab').forEach(btn => {
       showPanel('chat');
       if(currentMode === 'code') {
         chatInput.placeholder = 'Write code with Priv8Agent… (describe what to build)';
+        $('input-box').classList.add('code-mode');
       } else {
         chatInput.placeholder = 'Message Priv8Agent… (paste image or drop file)';
+        $('input-box').classList.remove('code-mode');
       }
     }
   });

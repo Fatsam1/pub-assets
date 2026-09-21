@@ -154,7 +154,7 @@
     margin-bottom: 2px; border: 1px solid transparent; transition: all 0.15s;
   }
   .session-item:hover { background: var(--bg-secondary); border-color: var(--border); }
-  .session-item.current { background: var(--accent-dim); border-color: rgba(139,92,246,0.25); }
+  .session-item.current { background: var(--accent-dim); border-color: rgba(0,255,65,0.25); }
   .si-title { font-size: 13px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex:1; min-width:0; }
   .si-title input { background:var(--bg-input);border:1px solid var(--accent);color:var(--text-primary);border-radius:4px;padding:1px 6px;font-size:13px;font-family:inherit;width:100%;outline:none; }
   .si-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -206,7 +206,7 @@
     display: flex; flex-direction: column; gap: 4px;
   }
   #messages::-webkit-scrollbar { width: 3px; }
-  #messages::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 2px; }
+  #messages::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.15); border-radius: 2px; }
 
   /* Message groups */
   .msg-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
@@ -306,8 +306,8 @@
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   #input-box:focus-within {
-    border-color: rgba(139,92,246,0.4);
-    box-shadow: 0 0 0 3px rgba(139,92,246,0.08);
+    border-color: rgba(0,255,65,0.4);
+    box-shadow: 0 0 0 3px rgba(0,255,65,0.08);
   }
   #chat-input {
     width: 100%; background: none; border: none; outline: none;
@@ -359,7 +359,7 @@
     font-size: 13px; outline: none; width: 100%; font-family: inherit;
     transition: border-color 0.15s;
   }
-  .setting-input:focus { border-color: rgba(139,92,246,0.4); }
+  .setting-input:focus { border-color: rgba(0,255,65,0.4); }
   .setting-hint { font-size: 11px; color: var(--text-muted); }
   .setting-hint a { color: var(--accent); text-decoration: none; }
   #btn-save {
@@ -402,7 +402,7 @@
     font-size: 13px; outline: none; width: 100%; font-family: 'JetBrains Mono', monospace;
     transition: border-color 0.15s; letter-spacing: 0.5px;
   }
-  #token-input:focus { border-color: rgba(139,92,246,0.4); }
+  #token-input:focus { border-color: rgba(0,255,65,0.4); }
   #token-input::placeholder { font-family: inherit; letter-spacing: 0; color: var(--text-muted); }
   #auth-error { font-size: 12px; color: var(--red); display: none; }
   #btn-auth {
@@ -428,7 +428,7 @@
 
   #messages::-webkit-scrollbar { width: 3px; }
   #sessions-list::-webkit-scrollbar { width: 3px; }
-  #sessions-list::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 2px; }
+  #sessions-list::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.15); border-radius: 2px; }
 
   /* Search highlight */
   .search-hit { background: rgba(0,255,65,0.25); border-radius: 2px; padding: 0 1px; }
@@ -506,6 +506,46 @@
     animation: voicePulse 0.8s ease-in-out infinite;
   }
   @keyframes voicePulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  /* ── Input wrap (relative for plus-menu positioning) ── */
+  #input-wrap { position: relative; }
+
+  /* ── Thinking block ── */
+  .think-block {
+    border:1px solid rgba(0,255,65,0.15);
+    border-radius:var(--radius-sm);
+    margin-bottom:8px;
+    background:rgba(0,255,65,0.04);
+  }
+  .think-block summary {
+    padding:6px 10px;
+    font-size:11px;
+    color:var(--text-muted);
+    cursor:pointer;
+    user-select:none;
+    list-style:none;
+  }
+  .think-block summary::-webkit-details-marker { display:none; }
+  .think-block[open] summary { color:var(--accent); }
+  .think-block .think-content {
+    padding:8px 10px;
+    font-size:12px;
+    color:var(--text-muted);
+    border-top:1px solid rgba(0,255,65,0.1);
+    white-space:pre-wrap;
+    line-height:1.5;
+  }
+
+  /* ── Code mode input indicator ── */
+  #input-box.code-mode { border-color:rgba(251,191,36,0.3); }
+  #input-box.code-mode:focus-within { border-color:rgba(251,191,36,0.6); box-shadow:0 0 0 3px rgba(251,191,36,0.08); }
+
+  /* ── Status error state ── */
+  #status-pill.error { border-color:rgba(248,113,113,0.3); color:var(--red); }
+  #status-pill.error .dot { background:var(--red); box-shadow:0 0 6px var(--red); }
+
+  /* ── Min width ── */
+  body { min-width: 320px; }
 </style>
 </head>
 <body>
@@ -591,6 +631,7 @@
         <div class="welcome-title">Priv8<span>Agent</span></div>
       </div>
       <div class="welcome-sub">Your private AI — more powerful than Claude, no restrictions</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:-10px;">Ctrl+Shift+P to open · Ctrl+Shift+S to capture page</div>
       <div class="template-chips">
         <button class="t-chip" data-tpl="write">✍️ Write</button>
         <button class="t-chip" data-tpl="code">💻 Code</button>
@@ -649,7 +690,7 @@
 
     <!-- Input -->
     <div id="input-wrap">
-      <div id="input-box" id="drop-zone">
+      <div id="input-box">
         <textarea id="chat-input" placeholder="Message Priv8Agent… (paste image or drop file)" rows="1"></textarea>
         <div id="input-footer">
           <div class="input-actions">
@@ -709,10 +750,19 @@
       </select>
       <div class="setting-hint">Force AI to always reply in this language</div>
     </div>
+    <div class="setting-group">
+      <div class="setting-label">Keyboard Shortcuts</div>
+      <div class="setting-hint" style="line-height:1.9">
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+Shift+P</kbd> Open panel<br>
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+Shift+K</kbd> Quick chat<br>
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+Shift+S</kbd> Capture page<br>
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Alt+P</kbd> Toggle floating button
+      </div>
+    </div>
     <hr class="setting-divider">
     <button id="btn-save">Save Settings</button>
     <button id="btn-logout">Sign Out</button>
-    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.2</div>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.3</div>
   </div>
 
   <div id="toast"></div>
