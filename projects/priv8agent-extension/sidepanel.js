@@ -2,6 +2,7 @@
 const API = 'https://app.privatehash.online';
 const WS_PATH = '/agent/ws'; // Nginx proxies /agent/ws → backend /ws (bypasses Cloudflare WS block)
 let token = '', ws = null, sessionId = null, streaming = false, buf = '', pendingMsg = null, model = '', reconnects = 0, reconnTimer = null;
+let systemPrompt = '', forceLang = '';
 let attachedImage = null; // { dataUrl, name, mimeType }
 let searchMatches = [], searchIdx = -1;
 
@@ -12,11 +13,15 @@ const btnSend=$('btn-send'), btnStop=$('btn-stop');
 
 // ─── Init ───
 async function init() {
-  const s = await chrome.storage.local.get(['authToken','serverUrl','defaultModel']);
+  const s = await chrome.storage.local.get(['authToken','serverUrl','defaultModel','systemPrompt','forceLang']);
   token = s.authToken || '';
   model = s.defaultModel || '';
+  systemPrompt = s.systemPrompt || '';
+  forceLang = s.forceLang || '';
   if (s.defaultModel) { $('model-select').value = s.defaultModel; $('s-model').value = s.defaultModel; }
   if (s.serverUrl) $('s-server').value = s.serverUrl;
+  if (s.systemPrompt) $('s-system').value = s.systemPrompt;
+  if (s.forceLang) $('s-lang').value = s.forceLang;
   if (!token) { authScreen.classList.add('visible'); return; }
   boot();
 }
@@ -111,7 +116,19 @@ function send(content) {
   if(!ws||ws.readyState!==1){connectWs();setTimeout(()=>send(content),600);return;}
 
   // Build message payload
-  const payload = {type:'user_message', content:content.trim(), ...(sessionId?{sessionId}:{}), ...(model?{model}:{})};
+  // Build effective content — prepend lang instruction if set
+  let effectiveContent = content.trim();
+  if(forceLang && !sessionId) {
+    const langNames = {ar:'Arabic',en:'English',fr:'French',de:'German',es:'Spanish'};
+    effectiveContent = (effectiveContent ? effectiveContent + '\n\n' : '') + `[Please reply in ${langNames[forceLang]||forceLang}]`;
+  }
+  const payload = {
+    type:'user_message',
+    content: effectiveContent || content.trim(),
+    ...(sessionId?{sessionId}:{}),
+    ...(model?{model}:{}),
+    ...(systemPrompt&&!sessionId?{systemPrompt}:{})
+  };
 
   // Attach image if present
   if(attachedImage) {
@@ -411,8 +428,9 @@ $('model-select').addEventListener('change',e=>{model=e.target.value;chrome.stor
 
 $('btn-save').addEventListener('click',async()=>{
   const t=$('s-token').value.trim(),srv=$('s-server').value.trim(),m=$('s-model').value;
-  if(t)token=t; if(m)model=m;
-  await chrome.storage.local.set({authToken:t||token,serverUrl:srv||API,defaultModel:m});
+  const sp=$('s-system').value.trim(), lang=$('s-lang').value;
+  if(t)token=t; if(m)model=m; systemPrompt=sp; forceLang=lang;
+  await chrome.storage.local.set({authToken:t||token,serverUrl:srv||API,defaultModel:m,systemPrompt:sp,forceLang:lang});
   toast('✅ Settings saved'); showPanel('chat');
   if(t&&!ws)boot();
 });

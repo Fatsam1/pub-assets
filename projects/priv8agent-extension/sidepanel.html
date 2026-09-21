@@ -550,10 +550,27 @@
         <option value="deepseek-chat">DeepSeek V3</option>
       </select>
     </div>
+    <div class="setting-group">
+      <div class="setting-label">System Prompt (Project Memory)</div>
+      <textarea class="setting-input" id="s-system" rows="4" placeholder="You are a helpful assistant. Custom instructions for every conversation…" style="resize:vertical;min-height:80px;"></textarea>
+      <div class="setting-hint">Applied to every new chat — like Claude's "Projects" system prompt</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Language</div>
+      <select class="setting-input" id="s-lang">
+        <option value="">Auto-detect</option>
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="es">Español</option>
+      </select>
+      <div class="setting-hint">Force AI to always reply in this language</div>
+    </div>
     <hr class="setting-divider">
     <button id="btn-save">Save Settings</button>
     <button id="btn-logout">Sign Out</button>
-    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.1</div>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.2</div>
   </div>
 
   <div id="toast"></div>
