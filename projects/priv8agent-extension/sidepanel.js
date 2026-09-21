@@ -3,7 +3,7 @@ const API = 'https://app.privatehash.online';
 const WS_PATH = '/agent/ws'; // Nginx proxies /agent/ws → backend /ws (bypasses Cloudflare WS block)
 let token = '', ws = null, sessionId = null, streaming = false, buf = '', pendingMsg = null, model = '', reconnects = 0, reconnTimer = null;
 let systemPrompt = '', forceLang = '', quality = 'normal';
-let attachedImage = null; // { dataUrl, name, mimeType }
+let attachedImages = []; // [{ dataUrl, name, mimeType }, ...]
 let searchMatches = [], searchIdx = -1;
 let incognito = false;
 let currentMode = 'chat'; // chat | code | artifacts
@@ -15,7 +15,7 @@ const btnSend=$('btn-send'), btnStop=$('btn-stop');
 
 // ─── Init ───
 async function init() {
-  const s = await chrome.storage.local.get(['authToken','serverUrl','defaultModel','systemPrompt','forceLang','quality']);
+  const s = await chrome.storage.local.get(['authToken','serverUrl','defaultModel','systemPrompt','forceLang','quality','theme']);
   token = s.authToken || '';
   model = s.defaultModel || '';
   systemPrompt = s.systemPrompt || '';
@@ -25,8 +25,16 @@ async function init() {
   if (s.serverUrl) $('s-server').value = s.serverUrl;
   if (s.systemPrompt) $('s-system').value = s.systemPrompt;
   if (s.forceLang) $('s-lang').value = s.forceLang;
+  applyTheme(s.theme||'dark');
   if (!token) { authScreen.classList.add('visible'); return; }
   boot();
+}
+function applyTheme(t) {
+  $('app').dataset.theme=t;
+}
+window.setTheme=(t)=>{
+  applyTheme(t);
+  chrome.storage.local.set({theme:t});
 }
 
 // ─── Boot ───
@@ -144,7 +152,7 @@ function newChat() {
 
 // ─── Messaging ───
 function send(content) {
-  if((!content.trim()&&!attachedImage)||streaming) return;
+  if((!content.trim()&&!attachedImages.length)||streaming) return;
   if(!token){authScreen.classList.add('visible');return;}
   if(!ws||ws.readyState!==1){connectWs();setTimeout(()=>send(content),600);return;}
 
@@ -164,13 +172,18 @@ function send(content) {
     ...(incognito?{incognito:true}:{})
   };
 
-  // Attach image if present
-  if(attachedImage) {
-    payload.image = attachedImage.dataUrl;
-    payload.imageName = attachedImage.name;
-    // Show image preview in user bubble
+  // Attach images if present (support multiple)
+  if(attachedImages.length) {
+    if(attachedImages.length === 1) {
+      payload.image = attachedImages[0].dataUrl;
+      payload.imageName = attachedImages[0].name;
+    } else {
+      payload.images = attachedImages.map(i=>({data:i.dataUrl,name:i.name,mimeType:i.mimeType}));
+    }
+    // Show image previews in user bubble
     const g=document.createElement('div'); g.className='msg-group user';
-    g.innerHTML=`<div class="msg-sender">You<div class="sender-avatar">👤</div></div><div class="bubble"><img src="${esc(attachedImage.dataUrl)}" style="max-width:100%;border-radius:8px;max-height:160px;display:block;margin-bottom:4px"/>${content.trim()?`<span>${esc(content.trim())}</span>`:''}</div>`;
+    const imgs=attachedImages.map(i=>`<img src="${esc(i.dataUrl)}" style="max-width:100%;max-height:120px;border-radius:6px;border:1px solid var(--border);display:inline-block;margin:2px"/>`).join('');
+    g.innerHTML=`<div class="msg-sender">You<div class="sender-avatar">👤</div></div><div class="bubble">${imgs}${content.trim()?`<div style="margin-top:6px">${esc(content.trim())}</div>`:''}</div>`;
     welcomeEl.style.display='none'; messagesEl.style.display='flex';
     messagesEl.appendChild(g); scrollBot();
     clearAttach();
@@ -222,7 +235,12 @@ function finishAi() {
         b.innerHTML=renderMd(buf); addCopyBtns(b); addInsertBtn(b);
       }
     } else pendingMsg.remove();
-    pendingMsg=null; buf=''; thinkBuf='';
+    pendingMsg=null;
+    const snippet=buf.slice(0,100); buf=''; thinkBuf='';
+    // Completion notification (only when sidepanel is in background)
+    if(document.hidden && snippet) {
+      chrome.notifications.create({type:'basic',iconUrl:'icons/icon48.png',title:'Priv8Agent',message:snippet});
+    }
   }
   streaming=false; btnSend.disabled=false; btnStop.classList.remove('show'); scrollBot(); loadSessions();
 }
@@ -241,6 +259,27 @@ function addMsg(role,content,scroll=true) {
   // timestamp
   const ts=document.createElement('div'); ts.className='msg-time'; ts.textContent=fmtTime();
   g.appendChild(ts);
+  // edit button on user messages
+  if(role==='user'){
+    const editBtn=document.createElement('button'); editBtn.className='msg-edit-btn'; editBtn.title='Edit message'; editBtn.textContent='✏️';
+    editBtn.onclick=()=>{
+      const orig=b.textContent;
+      b.innerHTML=`<textarea class="msg-edit-ta">${esc(orig)}</textarea><div class="msg-edit-btns"><button class="msg-edit-save">Send</button><button class="msg-edit-cancel">Cancel</button></div>`;
+      const ta=b.querySelector('.msg-edit-ta'); ta.style.cssText='width:100%;background:var(--bg-input);border:1px solid var(--accent);color:var(--text-primary);border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit;resize:vertical;outline:none;';
+      ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
+      b.querySelector('.msg-edit-save').onclick=()=>{
+        const nv=ta.value.trim(); if(!nv) return;
+        b.textContent=nv;
+        // Remove all messages after this one and re-send
+        let next=g.nextSibling;
+        while(next){const n2=next.nextSibling;next.remove();next=n2;}
+        pendingMsg=null; buf=''; thinkBuf='';
+        send(nv);
+      };
+      b.querySelector('.msg-edit-cancel').onclick=()=>{ b.textContent=orig; };
+    };
+    ts.appendChild(editBtn);
+  }
   // reactions on AI messages
   if(role==='ai'){
     const rx=document.createElement('div'); rx.className='msg-reactions';
@@ -359,7 +398,7 @@ $('btn-new').addEventListener('click',newChat);
 $('btn-sessions-toggle').addEventListener('click',()=>{const open=$('sessions-panel').classList.contains('visible');showPanel(open?'chat':'sessions');if(!open)loadSessions();});
 $('btn-settings-toggle').addEventListener('click',()=>{const open=$('settings-panel').classList.contains('visible');showPanel(open?'chat':'settings');if(!open&&token)$('s-token').value=token;});
 
-btnSend.addEventListener('click',()=>{const t=chatInput.value.trim();if(t||attachedImage){send(t||'');chatInput.value='';resize();}});
+btnSend.addEventListener('click',()=>{const t=chatInput.value.trim();if(t||attachedImages.length){send(t||'');chatInput.value='';resize();}});
 btnStop.addEventListener('click',()=>{if(ws?.readyState===1&&sessionId)ws.send(JSON.stringify({type:'stop',sessionId}));finishAi();});
 chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();btnSend.click();}});
 chatInput.addEventListener('input',resize);
@@ -384,13 +423,13 @@ document.querySelectorAll('.sug').forEach(b=>b.addEventListener('click',async()=
 
 // ── Image attach ──
 $('ia-img').addEventListener('click',()=>$('file-input').click());
-$('file-input').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) attachFile(f); e.target.value=''; });
+$('file-input').addEventListener('change',e=>{ Array.from(e.target.files).forEach(f=>attachFile(f)); e.target.value=''; });
 $('img-remove').addEventListener('click',clearAttach);
 
 // Paste image
 document.addEventListener('paste',e=>{
-  const item=Array.from(e.clipboardData?.items||[]).find(i=>i.type.startsWith('image/'));
-  if(item){ e.preventDefault(); attachFile(item.getAsFile()); }
+  const items=Array.from(e.clipboardData?.items||[]).filter(i=>i.type.startsWith('image/'));
+  if(items.length){ e.preventDefault(); items.forEach(i=>attachFile(i.getAsFile())); }
 });
 
 // Drag & drop image onto input box
@@ -399,25 +438,37 @@ dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.a
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop',e=>{
   e.preventDefault(); dropZone.classList.remove('drag-over');
-  const f=e.dataTransfer.files[0];
-  if(f&&f.type.startsWith('image/')) attachFile(f);
+  Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')).forEach(f=>attachFile(f));
 });
 
 function attachFile(file) {
   const reader=new FileReader();
   reader.onload=ev=>{
-    attachedImage={dataUrl:ev.target.result,name:file.name||'image.png',mimeType:file.type||'image/png'};
-    $('img-thumb').src=ev.target.result;
-    $('img-name').textContent=file.name||'image.png';
-    $('img-preview').style.display='block';
+    attachedImages.push({dataUrl:ev.target.result,name:file.name||'image.png',mimeType:file.type||'image/png'});
+    renderAttachStrip();
     toast('🖼️ Image attached');
   };
   reader.readAsDataURL(file);
 }
+function renderAttachStrip() {
+  const strip=$('img-preview');
+  if(!attachedImages.length){ strip.style.display='none'; return; }
+  const container=strip.querySelector('#img-thumbs');
+  container.innerHTML='';
+  attachedImages.forEach((img,i)=>{
+    const wrap=document.createElement('div'); wrap.style.cssText='position:relative;display:inline-block;';
+    const thumb=document.createElement('img'); thumb.src=img.dataUrl;
+    thumb.style.cssText='height:48px;border-radius:6px;border:1px solid var(--border);';
+    const rm=document.createElement('button'); rm.textContent='✕';
+    rm.style.cssText='position:absolute;top:-5px;right:-5px;background:var(--bg-secondary);border:1px solid var(--border);color:var(--red);border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;';
+    rm.onclick=()=>{ attachedImages.splice(i,1); renderAttachStrip(); };
+    wrap.appendChild(thumb); wrap.appendChild(rm); container.appendChild(wrap);
+  });
+  strip.style.display='block';
+}
 function clearAttach(){
-  attachedImage=null;
-  $('img-preview').style.display='none';
-  $('img-thumb').src='';
+  attachedImages=[];
+  renderAttachStrip();
 }
 
 // ── Export conversation ──
@@ -670,7 +721,7 @@ function startVoice() {
     recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = 'auto'; // picks up any language
+    recognition.lang = ''; // use browser/OS default language
     let final = '';
     recognition.onstart = () => { voiceBtn.classList.add('recording'); voiceBtn.title='🔴 Recording…'; };
     recognition.onresult = e => {
@@ -741,11 +792,6 @@ function addInsertBtn(bubble) {
   bubble.appendChild(btn);
 }
 
-// Patch addCopyBtns to also add insert button
-const _origAddCopyBtns = addCopyBtns;
-window.addCopyBtnsWithInsert = (el) => {
-  _origAddCopyBtns(el);
-};
 
 // Insert btn on history AI messages (loaded from API)
 function patchAiBubbles() {

@@ -546,6 +546,50 @@
 
   /* ── Min width ── */
   body { min-width: 320px; }
+
+  /* ── Light theme ── */
+  #app[data-theme="light"] {
+    --bg-primary: #f6f8fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #eef0f3;
+    --bg-input: #f0f2f5;
+    --border: rgba(0,0,0,0.1);
+    --border-hover: rgba(0,150,30,0.4);
+    --accent: #007a20;
+    --accent-dim: rgba(0,122,32,0.08);
+    --accent-glow: rgba(0,122,32,0.15);
+    --green: #007a20;
+    --text-primary: #1a1e26;
+    --text-secondary: #4a5568;
+    --text-muted: #9aa3b0;
+    --user-bubble: #e6f4ec;
+    --user-border: rgba(0,122,32,0.2);
+    --ai-bubble: #ffffff;
+  }
+  #app[data-theme="light"] .bubble h1,
+  #app[data-theme="light"] .bubble h2,
+  #app[data-theme="light"] .bubble h3 { color: #007a20; }
+  #app[data-theme="light"] .bubble strong { color: #1a6b2e; }
+  #app[data-theme="light"] .bubble em { color: #007a20; }
+  #app[data-theme="light"] .bubble code { color: #007a20; }
+  #app[data-theme="light"] #btn-theme-light { background: var(--accent-dim); border-color: rgba(0,122,32,.3); color: var(--accent); }
+  #app[data-theme="light"] #btn-theme-dark { background: var(--bg-input); border-color: var(--border); color: var(--text-secondary); }
+
+  /* ── Message edit button ── */
+  .msg-edit-btn {
+    background:none; border:none; cursor:pointer; font-size:11px;
+    opacity:0; transition:opacity .15s; padding:0 2px; margin-left:4px;
+    vertical-align:middle;
+  }
+  .msg-group.user:hover .msg-edit-btn { opacity:0.6; }
+  .msg-edit-btn:hover { opacity:1 !important; }
+  .msg-edit-btns { display:flex; gap:6px; margin-top:6px; }
+  .msg-edit-save, .msg-edit-cancel {
+    padding:3px 10px; border-radius:5px; font-size:11px; cursor:pointer;
+    font-family:inherit; border:none;
+  }
+  .msg-edit-save { background:var(--accent); color:#0a0d13; font-weight:600; }
+  .msg-edit-cancel { background:var(--bg-input); color:var(--text-muted); border:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -661,12 +705,11 @@
 
     <div id="messages" style="display:none"></div>
 
-    <!-- Image preview strip (shown when image attached) -->
+    <!-- Image preview strip (shown when images attached) -->
     <div id="img-preview" style="display:none;padding:6px 12px;background:var(--bg-secondary);border-top:1px solid var(--border);flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <img id="img-thumb" style="height:48px;border-radius:6px;border:1px solid var(--border);" />
-        <span style="font-size:11px;color:var(--text-muted);flex:1;" id="img-name"></span>
-        <button id="img-remove" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;">✕</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div id="img-thumbs" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;align-items:center;"></div>
+        <button id="img-remove" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,0.25);white-space:nowrap;">Clear all</button>
       </div>
     </div>
 
@@ -700,7 +743,7 @@
             <button class="ia-btn" id="ia-shot" title="Screenshot">📸</button>
             <button class="ia-btn" id="ia-img" title="Attach image">🖼️</button>
             <button class="ia-btn" id="ia-voice" title="Voice input (hold to record)">🎤</button>
-            <input type="file" id="file-input" accept="image/*" style="display:none" />
+            <input type="file" id="file-input" accept="image/*" multiple style="display:none" />
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <button id="btn-stop">⏹</button>
@@ -760,9 +803,17 @@
       </div>
     </div>
     <hr class="setting-divider">
+    <div class="setting-group">
+      <div class="setting-label">Theme</div>
+      <div style="display:flex;gap:8px;">
+        <button id="btn-theme-light" style="flex:1;padding:8px;border-radius:var(--radius-sm);background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;" onclick="setTheme('light')">☀️ Light</button>
+        <button id="btn-theme-dark" style="flex:1;padding:8px;border-radius:var(--radius-sm);background:var(--accent-dim);border:1px solid rgba(0,255,65,.25);color:var(--accent);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;" onclick="setTheme('dark')">🌙 Dark</button>
+      </div>
+    </div>
+    <hr class="setting-divider">
     <button id="btn-save">Save Settings</button>
     <button id="btn-logout">Sign Out</button>
-    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.3</div>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.3.3</div>
   </div>
 
   <div id="toast"></div>
