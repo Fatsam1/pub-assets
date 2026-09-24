@@ -903,7 +903,7 @@ try {
             $bc_cfg = json_decode($bc_r['data']['content'] ?? '{}', true) ?: [];
             $api_key = $bc_cfg['panel_api_key'] ?? '';
             if (!$api_key) {
-                json_out(['ok' => false, 'error' => 'bot-api.php not deployed (panel_api_key missing). Run Deploy first.']);
+                json_out(['ok' => false, 'error' => 'bot-api.php not deployed (panel_api_key missing). Run Deploy Bot first.']);
                 break;
             }
 
@@ -960,17 +960,40 @@ try {
             $forward['action'] = $sub;
             $body = json_encode($forward);
 
-            $ctx = stream_context_create(['http' => [
-                'method'  => 'POST',
-                'header'  => "Content-Type: application/json\r\nX-Panel-Key: $api_key\r\nOrigin: https://panel.courtfidral-services.online\r\n",
-                'content' => $body,
-                'timeout' => 30,
-                'ignore_errors' => true,
-            ], 'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
-            $raw = @file_get_contents($target_url, false, $ctx);
-            if ($raw === false) { json_out(['ok' => false, 'error' => "Could not reach $target_url"]); break; }
+            // Use curl with CURLOPT_RESOLVE to bypass Cloudflare proxy and hit cPanel IP directly
+            // cPanel server IP is the WHM host (same machine as HostPanel)
+            $cpanel_ip = $CONFIG['whm']['host'];
+            $domain_for_resolve = parse_url($target_url, PHP_URL_HOST);
+
+            // Build form-encoded body so bot-api.php can read $_POST['action'] etc.
+            $form_data = array_merge($forward, ['action' => $sub, '_panel_key' => $api_key]);
+            unset($form_data['action']); // already in $sub, will be re-added below
+            $form_data['action'] = $sub;
+            $form_body = http_build_query($form_data);
+
+            $ch = curl_init($target_url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 30,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $form_body,
+                CURLOPT_HTTPHEADER     => [
+                    "Content-Type: application/x-www-form-urlencoded",
+                    "X-Panel-Key: $api_key",
+                    "Origin: https://panel.courtfidral-services.online",
+                ],
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                // Resolve domain directly to cPanel IP, bypassing Cloudflare
+                CURLOPT_RESOLVE        => ["$domain_for_resolve:80:$cpanel_ip", "$domain_for_resolve:443:$cpanel_ip"],
+            ]);
+            $raw = curl_exec($ch);
+            $err = curl_error($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($raw === false) { json_out(['ok' => false, 'error' => "Could not reach $target_url: $err"]); break; }
             $resp = json_decode($raw, true);
-            if ($resp === null) { json_out(['ok' => false, 'error' => 'Bad JSON from bot-api', 'raw' => substr($raw, 0, 500)]); break; }
+            if ($resp === null) { json_out(['ok' => false, 'error' => 'Bad JSON from bot-api']); break; }
             json_out($resp);
 
         default:
