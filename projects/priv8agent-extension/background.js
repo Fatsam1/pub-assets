@@ -163,4 +163,91 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 // Keep service worker alive via periodic alarm
 chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
-chrome.alarms.onAlarm.addListener(() => {});
+
+// ── Computer Use: screenshot + command polling ─────────────────────────────
+// Runs every 1s when computerUseEnabled is true
+let computerUseEnabled = false;
+let computerUsePollTimer = null;
+
+async function computerUseTick() {
+  const { authToken, computerUseActive } = await chrome.storage.local.get(['authToken', 'computerUseActive']);
+  if (!computerUseActive || !authToken) return;
+
+  // 1. Get active tab and take screenshot
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+  if (!tab?.id || tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) return;
+
+  // Capture screenshot
+  let dataUrl = null;
+  try {
+    dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 60 });
+  } catch { return; }
+
+  // Send screenshot to backend
+  try {
+    await fetch(API_BASE + '/api/agent/computer/screenshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+      body: JSON.stringify({ dataUrl, width: tab.width || 1280, height: tab.height || 720, url: tab.url }),
+    });
+  } catch { return; }
+
+  // 2. Poll for pending commands
+  let commands = [];
+  try {
+    const r = await fetch(API_BASE + '/api/agent/computer/poll?token=' + encodeURIComponent(authToken));
+    const data = await r.json();
+    commands = data.commands || [];
+  } catch { return; }
+
+  // 3. Execute each command via content script
+  for (const cmd of commands) {
+    try {
+      const response = await chrome.tabs.sendMessage(tab.id, {
+        type: 'COMPUTER_COMMAND',
+        commandId: cmd.id,
+        action: cmd.action,
+        params: cmd.params,
+      });
+      // Report result back to backend
+      await fetch(API_BASE + '/api/agent/computer/result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+        body: JSON.stringify({ commandId: cmd.id, result: response?.result || 'ok' }),
+      });
+    } catch (e) {
+      // Report error
+      try {
+        await fetch(API_BASE + '/api/agent/computer/result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+          body: JSON.stringify({ commandId: cmd.id, result: 'error: ' + e.message }),
+        });
+      } catch {}
+    }
+  }
+}
+
+// Start/stop computer use from side panel
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'COMPUTER_USE_START') {
+    chrome.storage.local.set({ computerUseActive: true });
+    sendResponse({ ok: true });
+    return true;
+  }
+  if (msg.type === 'COMPUTER_USE_STOP') {
+    chrome.storage.local.set({ computerUseActive: false });
+    sendResponse({ ok: true });
+    return true;
+  }
+});
+
+// Poll every 1 second via alarm
+chrome.alarms.create('computer-use-poll', { periodInMinutes: 1 / 60 }); // ~1s
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'computer-use-poll') {
+    computerUseTick().catch(() => {});
+  }
+});

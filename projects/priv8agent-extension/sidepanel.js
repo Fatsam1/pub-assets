@@ -688,6 +688,30 @@ $('quality-select').addEventListener('change', e => {
 });
 
 // ─── Incognito mode ───
+// ─── Computer Use toggle ───
+let computerUseActive = false;
+const btnCU = $('btn-computer-use');
+if (btnCU) {
+  // Check saved state
+  chrome.storage.local.get(['computerUseActive'], (r) => {
+    computerUseActive = !!r.computerUseActive;
+    btnCU.classList.toggle('active', computerUseActive);
+    btnCU.title = computerUseActive ? '🖥️ Computer Use ON — agent controls this tab (click to stop)' : '🖥️ Computer Use — let agent control this browser tab';
+  });
+  btnCU.addEventListener('click', () => {
+    computerUseActive = !computerUseActive;
+    btnCU.classList.toggle('active', computerUseActive);
+    chrome.runtime.sendMessage({ type: computerUseActive ? 'COMPUTER_USE_START' : 'COMPUTER_USE_STOP' });
+    if (computerUseActive) {
+      toast('🖥️ Computer Use ON — agent can now see and control this tab');
+      btnCU.title = '🖥️ Computer Use ON — click to stop';
+    } else {
+      toast('🖥️ Computer Use OFF');
+      btnCU.title = '🖥️ Computer Use — let agent control this browser tab';
+    }
+  });
+}
+
 $('btn-incognito').addEventListener('click', () => {
   incognito = !incognito;
   $('btn-incognito').classList.toggle('active', incognito);

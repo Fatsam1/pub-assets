@@ -3,6 +3,141 @@
   if (window.__priv8AgentLoaded) return;
   window.__priv8AgentLoaded = true;
 
+  // ── Computer Use: execute commands from the agent ─────────────────────────
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.type === 'COMPUTER_COMMAND') {
+      const { commandId, action, params } = msg;
+      let result = 'ok';
+      try {
+        switch (action) {
+          case 'navigate':
+            window.location.href = params.url;
+            result = 'navigating to ' + params.url;
+            break;
+
+          case 'click': {
+            let el = null;
+            if (params.selector) {
+              el = document.querySelector(params.selector);
+            } else if (params.x != null && params.y != null) {
+              el = document.elementFromPoint(params.x, params.y);
+            }
+            if (el) {
+              el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: params.x || 0, clientY: params.y || 0 }));
+              result = 'clicked ' + (el.tagName + (el.id ? '#' + el.id : '') + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+            } else {
+              result = 'element not found';
+            }
+            break;
+          }
+
+          case 'type': {
+            let el = params.selector ? document.querySelector(params.selector) : document.activeElement;
+            if (!el) el = document.activeElement;
+            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+              if (el.isContentEditable) {
+                el.focus();
+                document.execCommand('insertText', false, params.text);
+              } else {
+                el.focus();
+                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+                  || Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+                if (nativeInputValueSetter) nativeInputValueSetter.call(el, (el.value || '') + params.text);
+                else el.value = (el.value || '') + params.text;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              result = 'typed: ' + params.text.slice(0, 50);
+            } else {
+              result = 'no editable element focused';
+            }
+            break;
+          }
+
+          case 'key': {
+            const target = document.activeElement || document.body;
+            const keyStr = String(params.key || '');
+            const parts = keyStr.toLowerCase().split('+');
+            const key = parts[parts.length - 1];
+            const keyMap = { enter: 'Enter', tab: 'Tab', escape: 'Escape', backspace: 'Backspace', delete: 'Delete', arrowup: 'ArrowUp', arrowdown: 'ArrowDown', arrowleft: 'ArrowLeft', arrowright: 'ArrowRight', f5: 'F5', home: 'Home', end: 'End', pageup: 'PageUp', pagedown: 'PageDown' };
+            const keyCode = keyMap[key] || key.charAt(0).toUpperCase() + key.slice(1);
+            const opts = { bubbles: true, cancelable: true, key: keyCode, ctrlKey: parts.includes('ctrl'), shiftKey: parts.includes('shift'), altKey: parts.includes('alt'), metaKey: parts.includes('cmd') || parts.includes('meta') };
+            target.dispatchEvent(new KeyboardEvent('keydown', opts));
+            target.dispatchEvent(new KeyboardEvent('keyup', opts));
+            result = 'key: ' + keyStr;
+            break;
+          }
+
+          case 'scroll': {
+            const amount = params.amount || 300;
+            const dir = params.direction || 'down';
+            const dx = dir === 'left' ? -amount : dir === 'right' ? amount : 0;
+            const dy = dir === 'up' ? -amount : dir === 'down' ? amount : 0;
+            if (params.x != null && params.y != null) {
+              const el = document.elementFromPoint(params.x, params.y);
+              (el || window).scrollBy({ left: dx, top: dy, behavior: 'smooth' });
+            } else {
+              window.scrollBy({ left: dx, top: dy, behavior: 'smooth' });
+            }
+            result = 'scrolled ' + dir + ' ' + amount + 'px';
+            break;
+          }
+
+          case 'hover': {
+            let el = params.selector ? document.querySelector(params.selector) : params.x != null ? document.elementFromPoint(params.x, params.y) : null;
+            if (el) {
+              el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, clientX: params.x || 0, clientY: params.y || 0 }));
+              el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+              result = 'hovered ' + el.tagName;
+            } else {
+              result = 'element not found';
+            }
+            break;
+          }
+
+          case 'read_page':
+            result = JSON.stringify({
+              title: document.title,
+              url: window.location.href,
+              text: document.body?.innerText?.slice(0, 10000) || '',
+              links: [...document.links].slice(0, 30).map(a => ({ text: a.innerText.trim().slice(0, 80), href: a.href })),
+              inputs: [...document.querySelectorAll('input,textarea,select')].slice(0, 20).map(el => ({ tag: el.tagName, type: el.type || '', name: el.name || '', placeholder: el.placeholder || '', value: el.value?.slice(0, 100) || '' })),
+            });
+            break;
+
+          case 'find_element': {
+            let found = null;
+            if (params.selector) {
+              found = document.querySelector(params.selector);
+            } else if (params.text) {
+              const allEls = document.querySelectorAll('a,button,input,label,h1,h2,h3,p,span,div,li');
+              for (const el of allEls) {
+                if (el.innerText?.toLowerCase().includes(params.text.toLowerCase()) || el.value?.toLowerCase().includes(params.text.toLowerCase())) {
+                  found = el;
+                  break;
+                }
+              }
+            }
+            if (found) {
+              const rect = found.getBoundingClientRect();
+              result = JSON.stringify({ found: true, tag: found.tagName, text: found.innerText?.slice(0, 100), x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2), rect: { top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width), height: Math.round(rect.height) } });
+            } else {
+              result = JSON.stringify({ found: false });
+            }
+            break;
+          }
+
+          default:
+            result = 'unknown action: ' + action;
+        }
+      } catch (e) {
+        result = 'error: ' + e.message;
+      }
+      sendResponse({ commandId, result });
+      return true;
+    }
+  });
+
   // Listen for messages from the side panel / background
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.type === 'GET_PAGE_CONTENT') {
