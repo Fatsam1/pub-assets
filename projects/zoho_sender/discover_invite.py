@@ -1114,6 +1114,75 @@ def set_survey_button_text(d, portal_id, dept_id, survey_id, button_text):
     return True
 
 
+def disable_intro_page(d, portal_id, dept_id, survey_id):
+    """
+    SETTINGS → Introduction Page → toggle OFF so Zoho does NOT append a 'Begin Survey'
+    button to the email invite. Call this when using our own CTA button in the letter body.
+    Strategy: navigate to Introduction Page settings, find the toggle/checkbox and turn it off.
+    If the toggle is already off → no-op. If CONFIGURE button shows, intro page is already
+    disabled. If a DELETE/DISABLE button exists, click it to turn it off.
+    """
+    settings_url = (f"https://survey.zoho.com/survey/newui"
+                    f"#/portal/{portal_id}/department/{dept_id}"
+                    f"/survey/{survey_id}/settings")
+    L.info("disable_intro_page: navigating to settings")
+    d.get("https://survey.zoho.com/survey/newui"); rw(2, 3)
+    d.get(settings_url); rw(5, 7)
+    # Click "Introduction Page" in sidebar
+    intro_link = d.execute_script("""
+        for(var el of document.querySelectorAll('a,li,span,div')){
+            if((el.innerText||'').trim()==='Introduction Page'&&el.offsetParent) return el;
+        } return null;
+    """)
+    if not intro_link:
+        L.warning("disable_intro_page: Introduction Page sidebar link not found")
+        return False
+    d.execute_script("arguments[0].click();", intro_link); rw(3, 4)
+    # If "CONFIGURE" button is visible → intro page is already disabled (not configured)
+    configure_visible = d.execute_script("""
+        for(var b of document.querySelectorAll('button,a')){
+            var t=(b.innerText||'').trim().toUpperCase();
+            if(t==='CONFIGURE'&&b.offsetParent) return true;
+        } return false;
+    """)
+    if configure_visible:
+        L.info("disable_intro_page: already disabled (CONFIGURE shown) — no action needed")
+        return True
+    # Look for a toggle switch, DELETE or DISABLE button to turn off
+    disabled = d.execute_script("""
+        // Try toggle switch (checked input or .active toggle)
+        var toggles = document.querySelectorAll('input[type=checkbox],input[type=radio]');
+        for(var t of toggles){
+            var lbl=(t.closest('label')||t.parentElement||{innerText:''}).innerText||'';
+            if(lbl.toLowerCase().includes('introduction')&&t.checked){
+                t.click(); return 'toggled off';
+            }
+        }
+        // Try a DELETE / DISABLE / TURN OFF button in the intro page panel
+        for(var b of document.querySelectorAll('button,a')){
+            var txt=(b.innerText||'').trim().toUpperCase();
+            if((txt==='DELETE'||txt==='DISABLE'||txt==='TURN OFF'||txt==='REMOVE')
+               &&b.offsetParent){ b.click(); return 'clicked '+txt; }
+        }
+        return null;
+    """)
+    if disabled:
+        rw(2, 3)
+        L.info(f"disable_intro_page: {disabled}")
+        # Confirm save if a save button appears
+        d.execute_script("""
+            for(var b of document.querySelectorAll('button')){
+                if((b.innerText||'').trim().toUpperCase()==='SAVE'&&b.offsetParent){
+                    b.click(); return;
+                }
+            }
+        """)
+        rw(2, 3)
+        return True
+    L.warning("disable_intro_page: could not find toggle or disable button")
+    return False
+
+
 def set_survey_header_logo(d, portal_id, dept_id, survey_id, logo_url):
     """
     SETTINGS → Header → Survey logo → download logo from URL and upload via file input.
@@ -1995,6 +2064,194 @@ def set_survey_intro_page(d, portal_id, dept_id, survey_id, title, description="
     return True
 
 
+def delete_email_collector(d, portal_id, dept_id, survey_id):
+    """
+    Delete the existing Email Invites collector so next send creates a fresh one.
+    Fresh collector picks up the current survey name and button text.
+    Returns True if deleted or not found, False on error.
+    """
+    launch_url = (f"https://survey.zoho.com/survey/newui"
+                  f"#/portal/{portal_id}/department/{dept_id}"
+                  f"/survey/{survey_id}/launch")
+    d.get("https://survey.zoho.com/survey/newui"); rw(2, 3)
+    d.get(launch_url); rw(5, 7)
+    pg = (d.execute_script("return document.body.innerText") or "").lower()
+    if "my collectors" not in pg and "email invites" not in pg:
+        L.info("delete_email_collector: no collectors page found — nothing to delete")
+        return True
+    # Find 3-dot / kebab menu or Delete button on the existing collector row
+    deleted = d.execute_script("""
+        // Look for a kebab/3-dot menu button in collector rows
+        var btns = document.querySelectorAll('button,div[role="button"],span');
+        for(var b of btns){
+            var t = (b.innerText||b.getAttribute('title')||b.getAttribute('aria-label')||'').trim();
+            if((t==='...'||t==='⋮'||t==='•••'||t.toLowerCase()==='more actions')
+               && b.offsetParent){
+                b.click(); return 'kebab_clicked';
+            }
+        }
+        // Direct Delete button
+        for(var b of document.querySelectorAll('button,a')){
+            var t2=(b.innerText||'').trim().toUpperCase();
+            if(t2==='DELETE'&&b.offsetParent){b.click();return 'delete_clicked';}
+        }
+        return null;
+    """)
+    if not deleted:
+        L.info("delete_email_collector: no kebab/delete found — skipping")
+        return True
+    L.info(f"delete_email_collector: {deleted}"); rw(2, 3)
+    # Confirm dialog if any
+    d.execute_script("""
+        for(var b of document.querySelectorAll('button')){
+            var t=(b.innerText||'').trim().toUpperCase();
+            if((t==='DELETE'||t==='YES'||t==='CONFIRM'||t==='OK')&&b.offsetParent){b.click();return;}
+        }
+    """)
+    rw(2, 3)
+    L.info("delete_email_collector: done")
+    return True
+
+
+def rename_department(d, portal_id, dept_id, new_name):
+    """
+    Change the Zoho Survey department name so it shows in the email invite
+    title bar (the black header).
+
+    Zoho Survey email invites show the department/portal name as the black
+    title bar header. Changing the department name updates this.
+
+    Navigates to My Portals → clicks the dept settings icon or uses the
+    portal manage page to rename the department.
+    Returns True on success, False on failure.
+    """
+    L.info(f"rename_department: setting dept '{dept_id}' name to '{new_name}'")
+
+    # Navigate to portals list — from here we can click department settings
+    portals_url = "https://survey.zoho.com/survey/newui#/portals"
+    d.get("https://survey.zoho.com/survey/newui"); rw(1, 2)
+    d.get(portals_url); rw(4, 6)
+    ss(d, "rename_dept_01_portals.png")
+
+    pg = (d.execute_script("return document.body.innerText") or "").lower()
+    L.info(f"rename_department: portals page (80): {pg[:80]!r}")
+
+    # On portals page, look for the department and its settings/rename action
+    # Departments have a kebab (3-dot) menu or settings gear icon
+    renamed = d.execute_script("""
+        var newName = arguments[0];
+        var deptId = arguments[1];
+        // Find department card — look for settings icon / kebab near any dept
+        // The dept name is usually in a heading; hover/click to get menu
+        var cards = document.querySelectorAll('[class*="dept"],[class*="card"],[class*="portal"]');
+        // Fallback: any element with a settings/gear icon
+        var gears = document.querySelectorAll('[class*="setting"],[class*="gear"],[class*="edit"],[class*="kebab"],[class*="dots"]');
+        if(gears.length){
+            gears[0].click();
+            return 'clicked_gear';
+        }
+        // Try 3-dot (ellipsis) button near department name
+        var btns = document.querySelectorAll('button,div[role="button"],span[role="button"]');
+        for(var b of btns){
+            var txt = (b.innerText||b.textContent||'').trim();
+            if(txt === '...' || txt === '⋮' || txt === '•••') { b.click(); return 'clicked_dots'; }
+        }
+        return 'not_found';
+    """, new_name, dept_id)
+
+    L.info(f"rename_department: gear/dots: {renamed}")
+    rw(1, 2)
+
+    if renamed in ('clicked_gear', 'clicked_dots'):
+        # Menu appeared — look for Rename option
+        ss(d, "rename_dept_02_menu.png")
+        rename_item = d.execute_script("""
+            var newName = arguments[0];
+            for(var el of document.querySelectorAll('li,a,div[role="menuitem"],button')){
+                var t=(el.innerText||'').trim().toLowerCase();
+                if(t.includes('rename')||t.includes('edit name')||t.includes('change name')){
+                    el.click(); return 'clicked_rename';
+                }
+            }
+            return 'no_rename_option';
+        """, new_name)
+        L.info(f"rename_department: rename option: {rename_item}")
+        rw(1, 2)
+
+        if rename_item == 'clicked_rename':
+            # Input field should appear — fill it
+            filled = d.execute_script("""
+                var newName = arguments[0];
+                var inp = document.querySelector('input[type=text]:not([disabled]),input:not([type]):not([disabled])');
+                if(inp){ inp.focus(); inp.select(); inp.value=newName;
+                    inp.dispatchEvent(new Event('input',{bubbles:true}));
+                    inp.dispatchEvent(new Event('change',{bubbles:true}));
+                    return 'filled';
+                }
+                return 'no_input';
+            """, new_name)
+            rw(0.5, 1)
+            if filled == 'filled':
+                d.execute_script("""
+                    for(var b of document.querySelectorAll('button')){
+                        var t=(b.innerText||'').trim().toUpperCase();
+                        if((t==='OK'||t==='SAVE'||t==='RENAME'||t==='DONE')&&b.offsetParent){
+                            b.click(); return;
+                        }
+                    }
+                """)
+                rw(2, 3)
+                ss(d, "rename_dept_03_done.png")
+                L.info("rename_department: success")
+                return True
+
+    # Fallback: try portal manage page direct URL
+    manage_url = f"https://survey.zoho.com/survey/newui#/portal/{portal_id}/manage"
+    d.get(manage_url); rw(4, 6)
+    ss(d, "rename_dept_04_manage.png")
+
+    pg2 = (d.execute_script("return document.body.innerText") or "").lower()
+    L.info(f"rename_department: manage page (80): {pg2[:80]!r}")
+
+    changed = d.execute_script("""
+        var newName = arguments[0];
+        var inputs = document.querySelectorAll('input[type=text],input:not([type])');
+        for(var inp of inputs){
+            var v = (inp.value||'').trim();
+            var ph = (inp.placeholder||inp.name||inp.id||'').toLowerCase();
+            if(v && v.length < 80 && !v.includes('@') && !v.includes('://') &&
+               (ph.includes('name') || ph === '' || ph.includes('dept'))){
+                inp.focus(); inp.select();
+                var old = v;
+                inp.value = newName;
+                inp.dispatchEvent(new InputEvent('input',{bubbles:true,data:newName}));
+                inp.dispatchEvent(new Event('change',{bubbles:true}));
+                return 'changed:' + old;
+            }
+        }
+        return 'not_found';
+    """, new_name)
+    L.info(f"rename_department: manage input: {changed}")
+
+    if changed and changed.startswith('changed:'):
+        saved = d.execute_script("""
+            for(var b of document.querySelectorAll('button')){
+                var t=(b.innerText||'').trim().toUpperCase();
+                if((t==='SAVE'||t==='UPDATE'||t==='APPLY')&&b.offsetParent){
+                    b.click(); return 'saved:'+t;
+                }
+            }
+            return 'no_save';
+        """)
+        rw(2, 3)
+        ss(d, "rename_dept_05_saved.png")
+        L.info(f"rename_department: save: {saved}")
+        return True
+
+    L.warning("rename_department: could not rename — skipping")
+    return False
+
+
 def configure_email_invite(d, portal_id, dept_id, survey_id,
                            subject, body_html, recipients,
                            from_name=None, reply_to=None,
@@ -2017,9 +2274,10 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
 
     L.info(f"configure_email_invite: survey={survey_id} subject={subject!r}")
 
-    # ── Step 0: Rename survey if brand name provided ──────────────────────
+    # ── Step 0: Rename survey + dept so title bar shows brand ─────────────
     if survey_name:
         rename_survey(d, portal_id, dept_id, survey_id, survey_name)
+        rename_department(d, portal_id, dept_id, survey_name)
 
     # ── Step 1: Navigate to launch ───────────────────────────────────────
     launch_url = (f"https://survey.zoho.com/survey/newui"
@@ -2048,9 +2306,18 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
             # State B: "My Collectors" page — "Open" is a <div> near collector name
             # State A: cards page — "Create" is a <button.grayBtn> with child span near Email Invites div
             email_icon = d.execute_script("""
-                // Strategy 1: find "Email Invites" div/text, walk up to card, find Create/Open button
+                // Strategy 0: "Add New Collector" button on My Collectors page → always creates fresh
+                for(var b0 of document.querySelectorAll('button,a,div[role="button"]')){
+                    var t0=(b0.innerText||b0.textContent||'').trim().toLowerCase();
+                    var r0=b0.getBoundingClientRect();
+                    if(r0.width>0&&r0.height>0&&(t0==='add new collector'||t0.includes('add new collector'))){
+                        return b0;
+                    }
+                }
+                // Strategy 1: find "Email Invites" div/text, walk up to card, find Create button
+                // (prefer 'create' over 'open' — 'open' reuses old collector with old name)
                 var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-                var node;
+                var node; var openBtn = null;
                 while (node = walker.nextNode()) {
                     var t = node.textContent.trim().toLowerCase();
                     if (t !== 'email invites' && t !== 'email invites by zoho survey') continue;
@@ -2058,22 +2325,25 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                     for (var d2=0; d2<12&&el; d2++) {
                         var cardText = (el.innerText||el.textContent||'').toLowerCase();
                         if (cardText.includes('email invites') && (cardText.includes('by zoho survey') || cardText.includes('zoho survey'))) {
-                            // Look for button with Create/Open text (check innerText of button itself)
+                            // Prefer Create over Open
                             for (var b of el.querySelectorAll('button')) {
                                 var bt = (b.innerText||b.textContent||'').trim().toLowerCase();
                                 var r = b.getBoundingClientRect();
-                                if ((bt === 'create' || bt === 'open') && r.width > 0 && r.height > 0) return b;
+                                if (bt === 'create' && r.width > 0 && r.height > 0) return b;
+                                if (bt === 'open' && r.width > 0 && r.height > 0) openBtn = b;
                             }
-                            // Fallback: div/span with Open text (My Collectors page)
+                            // Fallback: div/span with Open text (My Collectors page — last resort)
                             for (var b of el.querySelectorAll('div,span')) {
                                 var bt = (b.innerText||b.textContent||'').trim().toLowerCase();
                                 var r = b.getBoundingClientRect();
-                                if ((bt === 'open') && r.width > 0 && r.height > 0) return b;
+                                if (bt === 'open' && r.width > 0 && r.height > 0 && !openBtn) openBtn = b;
                             }
                         }
                         el = el.parentElement;
                     }
                 }
+                // If only Open found (no Create), return it as last resort
+                if(openBtn) return openBtn;
                 // Strategy 2: find all buttons with class grayBtn and Create text near Email Invites
                 for (var b2 of document.querySelectorAll('button.grayBtn')) {
                     var bt2 = (b2.innerText||b2.textContent||'').trim().toLowerCase();
@@ -2134,6 +2404,61 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
     #   Draft → CONTINUE WITH DRAFT → back to Compose
     pg = (d.execute_script("return document.body.innerText") or "").lower()
     ss(d, "ci_02b_state.png")
+
+    def _try_rename_collector(brand_name):
+        """On My Collectors page, rename the first collector to brand_name via the Rename link."""
+        try:
+            rename_link = d.execute_script("""
+                // Find "Rename" link/button near "Email Invites by Zoho Survey" collector name
+                for(var el of document.querySelectorAll('a,button,span,div')){
+                    var t=(el.innerText||'').trim();
+                    if(t==='Rename'&&el.offsetParent){
+                        return el;
+                    }
+                }
+                return null;
+            """)
+            if not rename_link:
+                L.info("_try_rename_collector: no Rename link found")
+                return
+            L.info(f"_try_rename_collector: clicking Rename, new name: {brand_name!r}")
+            d.execute_script("arguments[0].click();", rename_link)
+            time.sleep(1.5)
+            # Fill the rename input
+            filled = d.execute_script("""
+                var name = arguments[0];
+                var inp = document.querySelector('input[type=text]:not([disabled])');
+                if(!inp){
+                    // Try modal/dialog input
+                    inp = document.querySelector('.modal input[type=text],.dialog input[type=text]');
+                }
+                if(inp){
+                    inp.focus(); inp.select();
+                    inp.value = name;
+                    inp.dispatchEvent(new Event('input',{bubbles:true}));
+                    inp.dispatchEvent(new Event('change',{bubbles:true}));
+                    return 'filled:' + inp.value;
+                }
+                return 'no_input';
+            """, brand_name)
+            L.info(f"_try_rename_collector: fill result: {filled}")
+            time.sleep(0.5)
+            if filled and filled.startswith('filled:'):
+                d.execute_script("""
+                    // Click OK/Save/Rename button in modal
+                    for(var b of document.querySelectorAll('button')){
+                        var t=(b.innerText||'').trim().toUpperCase();
+                        if((t==='OK'||t==='SAVE'||t==='RENAME'||t==='UPDATE')&&b.offsetParent){
+                            b.click(); return;
+                        }
+                    }
+                    // Fallback: Enter key
+                    document.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true}));
+                """)
+                time.sleep(1.5)
+                L.info(f"_try_rename_collector: done — collector renamed to {brand_name!r}")
+        except Exception as _rce:
+            L.warning(f"_try_rename_collector error: {_rce}")
 
     def _on_compose():
         return bool(d.execute_script("return !!document.querySelector('input#editorSubject');"))
@@ -2244,6 +2569,9 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
 
         elif "create email" in pg:
             # New Zoho UI 2026: "My Collectors" page with CREATE EMAIL buttons
+            # First rename the collector to brand name so title bar shows it
+            if survey_name:
+                _try_rename_collector(survey_name)
             L.info("New UI: My Collectors page — clicking first CREATE EMAIL")
             _click_create_email()
 
