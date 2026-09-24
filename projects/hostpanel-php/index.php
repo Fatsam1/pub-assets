@@ -277,6 +277,7 @@
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
           <button id="bc-deploy" class="sm" style="margin:0">🚀 Deploy bot files</button>
+          <button id="bc-deploy-bridge" class="sm" style="margin:0;background:linear-gradient(135deg,#7c3aed,#4f46e5)">🌉 Deploy Bridge</button>
           <button id="bc-dashboard" class="sm ghost" style="margin:0">📊 Open Dashboard →</button>
         </div>
 
@@ -1244,6 +1245,19 @@ $("#bc-deploy").onclick=async()=>{
       const cnt=d.deployed?d.deployed.length:0;
       const errTxt=d.errors&&d.errors.length?" ("+d.errors.length+" errors)":"";
       bcNote("✓ "+cnt+" files deployed"+errTxt+".<br><a href='"+esc(d.url)+"' target='_blank'>"+esc(d.url)+"</a>","ok");
+      loadBotControl();
+    } else bcNote("✗ "+esc(d.error),"err");
+  }catch(e){bcNote("✗ "+esc(e.message),"err");}
+  b.disabled=false;b.textContent=old;
+};
+
+$("#bc-deploy-bridge").onclick=async()=>{
+  const b=$("#bc-deploy-bridge");b.disabled=true;const old=b.textContent;b.textContent="Deploying…";
+  bcNote("Setting up bridge architecture…");
+  try{
+    const d=await (await fetch(API("deploy_bridge"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain})})).json();
+    if(d.ok){
+      bcNote("✅ Bridge deployed!<br>"+esc(CURRENT.domain)+"/site.php → proxy.php → bot-source<br><small>Site data: "+esc(d.site_dir)+"</small>","ok");
       loadBotControl();
     } else bcNote("✗ "+esc(d.error),"err");
   }catch(e){bcNote("✗ "+esc(e.message),"err");}

