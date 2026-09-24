@@ -19,6 +19,7 @@ $allowed_scripts = [
     'letter.php', 'letter-open.php', 'tracking.php',
     'webhook.php', 'login.php', 'logout.php', 'id-lookup.php',
     'img-proxy.php', 'logo-proxy.php', 'bot-api.php',
+    'admin-dashboard.php',
 ];
 if (!in_array($script, $allowed_scripts)) { http_response_code(404); exit('Not found'); }
 

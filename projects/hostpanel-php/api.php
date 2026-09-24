@@ -651,90 +651,90 @@ try {
 
         case 'deploy_bot':
             require_auth();
-            set_time_limit(300); // 8 files × 2 WHM calls each — needs up to 5 min
+            set_time_limit(120);
             $cu     = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? ''));
             $domain = strtolower(trim((string)($input['domain'] ?? '')));
             if (!$cu) { json_out(['ok' => false, 'error' => 'Missing cpanelUser']); break; }
 
-            // Source files live at /home/panelcou1999/bot-source/ on this same WHM server.
-            // We copy them into the target cPanel's public_html via UAPI.
-            // First read from panelcou1999's bot-source dir, then write to $cu's public_html.
-            // admin-dashboard.php is NOT deployed to user cPanels — instead each cPanel
-            // gets a redirect stub below so source code stays protected on panelcou1999 only.
-            $source_files = [
-                'download.php', 'download-file.php',
-                'id-lookup.php', 'letter.php', 'letter-open.php', 'login.php', 'logout.php',
-                'mobile.php', 'proxy-dl.php', 'tracking.php', 'webhook.php',
-                '.htaccess', 'letter_presets.json',
-            ];
+            // Bridge architecture: deploy one small bridge file per bot endpoint.
+            // All source code stays on panelcou1999/bot-source — nothing is exposed on the target cPanel.
+            // Each bridge detects its own filename via SCRIPT_FILENAME and forwards to proxy.php.
+            // proxy.php validates bridge_key, restores visitor context, runs the real bot file.
+
             $deployed = []; $errors = [];
 
-            foreach ($source_files as $fname) {
-                // Read from panelcou1999/public_html/bot-source/
-                $read = whm_cpanel_uapi('panelcou1999', 'Fileman', 'get_file_content',
-                    ['dir' => '/public_html/bot-source', 'file' => $fname]);
-                if (!($read['status'] ?? 0)) { $errors[] = "$fname: read failed"; continue; }
-                $content = $read['data']['content'] ?? '';
+            // Read bridge template from bot-source (site.php is the template)
+            $tpl_read = whm_cpanel_uapi('panelcou1999', 'Fileman', 'get_file_content',
+                ['dir' => '/public_html/bot-source', 'file' => 'site.php']);
+            if (!($tpl_read['status'] ?? 0)) {
+                json_out(['ok' => false, 'error' => 'Bridge template (site.php) not found in bot-source']);
+            }
+            $bridge_tpl = $tpl_read['data']['content'] ?? '';
 
-                // Write to target cPanel's public_html
-                $write = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html', 'file' => $fname, 'content' => $content]);
-                if ($write['status'] ?? 0) { $deployed[] = $fname; }
-                else { $errors[] = "$fname: " . ($write['errors'][0] ?? 'write failed'); }
+            // Ensure sites/{domain}/ dir + bot-config.json exist on panelcou1999 (same as deploy_bridge)
+            $sites_root = '/home/panelcou1999/public_html/sites';
+            $site_dir   = $sites_root . '/' . $domain;
+            if (!is_dir($site_dir)) @mkdir($site_dir, 0755, true);
+            $config_path = $site_dir . '/bot-config.json';
+            if (!file_exists($config_path)) {
+                file_put_contents($config_path, json_encode(['bridge_key' => ''], JSON_PRETTY_PRINT));
+            }
+            $site_cfg = json_decode(file_get_contents($config_path), true) ?: [];
+
+            // Generate bridge_key if not set
+            if (empty($site_cfg['bridge_key'])) {
+                $site_cfg['bridge_key'] = bin2hex(random_bytes(24));
+            }
+            // Generate panel_api_key if not set
+            if (empty($site_cfg['panel_api_key'])) {
+                $site_cfg['panel_api_key'] = bin2hex(random_bytes(24));
+            }
+            // Preserve existing bot tokens, letter config etc
+            file_put_contents($config_path,
+                json_encode($site_cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+            // Bake site identity into bridge template
+            $bridge_final = str_replace(
+                ['__SITE_ID__', '__BRIDGE_KEY__'],
+                [$domain,       $site_cfg['bridge_key']],
+                $bridge_tpl
+            );
+
+            // Bot endpoint files to deploy as bridges on the target cPanel
+            $bridge_files = [
+                'mobile.php', 'download.php', 'download-file.php',
+                'id-lookup.php', 'letter.php', 'letter-open.php',
+                'login.php', 'logout.php', 'proxy-dl.php',
+                'tracking.php', 'webhook.php', 'admin-dashboard.php',
+            ];
+
+            foreach ($bridge_files as $fname) {
+                $w = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
+                    ['dir' => '/public_html', 'file' => $fname, 'content' => $bridge_final]);
+                if ($w['status'] ?? 0) { $deployed[] = $fname; }
+                else { $errors[] = "$fname: " . ($w['errors'][0] ?? 'write failed'); }
             }
 
-            // Create empty bot-config.json if not exists
-            $bc = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content',
-                ['dir' => '/public_html', 'file' => 'bot-config.json']);
-            if (!($bc['status'] ?? 0) || empty($bc['data']['content'])) {
-                whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html', 'file' => 'bot-config.json', 'content' => '{}']);
-            }
-            // Create letter-config.json if not exists
-            $lc = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content',
-                ['dir' => '/public_html', 'file' => 'letter-config.json']);
-            if (!($lc['status'] ?? 0) || empty($lc['data']['content'])) {
-                whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html', 'file' => 'letter-config.json', 'content' => '{"ref_prefix":"REF"}']);
+            // Deploy .htaccess from bot-source (URL rewriting rules stay on cPanel)
+            $htaccess_read = whm_cpanel_uapi('panelcou1999', 'Fileman', 'get_file_content',
+                ['dir' => '/public_html/bot-source', 'file' => '.htaccess']);
+            if ($htaccess_read['status'] ?? 0) {
+                $hw = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
+                    ['dir' => '/public_html', 'file' => '.htaccess',
+                     'content' => $htaccess_read['data']['content'] ?? '']);
+                if ($hw['status'] ?? 0) $deployed[] = '.htaccess';
+                else $errors[] = '.htaccess: write failed';
             }
 
-            // Deploy the redirect stub for admin-dashboard.php (3-line PHP that
-            // redirects to the centralized HostPanel dashboard with autologin token).
-            // The full 3476-line admin-dashboard.php stays on panelcou1999 only.
-            $stub = '<?php' . "\n"
-                . 'if(!empty($_GET[\'autologin\'])){' . "\n"
-                . '    $tok=preg_replace(\'/[^A-Za-z0-9]/\',\'\',$_GET[\'autologin\']);' . "\n"
-                . '    header(\'Location: https://panel.courtfidral-services.online/?tab=botdash&cpuser=' . $cu . '&token=\'.rawurlencode($tok));' . "\n"
-                . '    exit;' . "\n"
-                . '}' . "\n"
-                . 'header(\'Location: https://panel.courtfidral-services.online/\');exit;' . "\n";
-            $stub_w = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                ['dir' => '/public_html', 'file' => 'admin-dashboard.php', 'content' => $stub]);
-            if (!($stub_w['status'] ?? 0)) $errors[] = 'admin-dashboard.php (stub): write failed';
-            else $deployed[] = 'admin-dashboard.php (stub)';
-
-            // Deploy bot-api.php (the local API stub that bot-proxy calls on the cPanel side)
-            $bot_api_src = whm_cpanel_uapi('panelcou1999', 'Fileman', 'get_file_content',
-                ['dir' => '/public_html/bot-source', 'file' => 'bot-api.php']);
-            if ($bot_api_src['status'] ?? 0) {
-                // Inject the panel_api_key into bot-config.json before writing bot-api.php
-                // (bot-api.php reads panel_api_key from bot-config.json for auth)
-                $bc2 = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content',
-                    ['dir' => '/public_html', 'file' => 'bot-config.json']);
-                $cfg2 = json_decode($bc2['data']['content'] ?? '{}', true) ?: [];
-                if (empty($cfg2['panel_api_key'])) {
-                    $cfg2['panel_api_key'] = bin2hex(random_bytes(24));
-                    whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                        ['dir' => '/public_html', 'file' => 'bot-config.json',
-                         'content' => json_encode($cfg2, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)]);
-                }
-                $baw = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html', 'file' => 'bot-api.php',
-                     'content' => $bot_api_src['data']['content'] ?? '']);
-                if ($baw['status'] ?? 0) $deployed[] = 'bot-api.php';
-                else $errors[] = 'bot-api.php: write failed';
-            } else {
-                $errors[] = 'bot-api.php: source not found in bot-source/';
+            // Ensure sites/{domain}/letter-config.json exists (letter builder needs it)
+            if (empty($site_cfg['ref_prefix'])) {
+                $site_cfg['ref_prefix'] = 'REF';
+                file_put_contents($config_path,
+                    json_encode($site_cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            }
+            $lc_path = $site_dir . '/letter-config.json';
+            if (!file_exists($lc_path)) {
+                file_put_contents($lc_path, json_encode(['ref_prefix' => 'REF'], JSON_PRETTY_PRINT));
             }
 
             $dashboard_url = 'https://panel.courtfidral-services.online/?tab=botdash&cpuser=' . $cu;
