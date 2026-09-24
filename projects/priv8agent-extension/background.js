@@ -16,13 +16,14 @@ async function startExtLogin() {
   try {
     const r = await fetch(API_BASE + '/api/agent/cli/auth/start', { method: 'POST' });
     if (!r.ok) throw new Error('Server error ' + r.status);
-    const { code, verifyUrl } = await r.json();
-    if (!code || !verifyUrl) throw new Error('Invalid response from server');
+    const { code } = await r.json();
+    if (!code) throw new Error('Invalid response from server');
 
     await chrome.storage.local.set({ pendingAuthCode: code });
 
-    // Open the authorization page in a new tab
-    const tab = await chrome.tabs.create({ url: verifyUrl, active: true });
+    // Open the extension approval page (not the CLI login page)
+    const extLoginUrl = API_BASE + '/ext-login?code=' + encodeURIComponent(code);
+    const tab = await chrome.tabs.create({ url: extLoginUrl, active: true });
     _authTabId = tab.id;
 
     // Poll for token every 2 seconds
