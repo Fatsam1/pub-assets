@@ -7,7 +7,11 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Content-Type: application/json');
 
 // Auth: validate shared secret token from HostPanel
-$config_file = __DIR__ . '/bot-config.json';
+// Use getcwd() so we read from site_dir when called via proxy.php (which chdir's there)
+// Fall back to __DIR__ for standalone (panelcou1999 self-requests)
+$config_file = file_exists(getcwd() . '/bot-config.json')
+    ? getcwd() . '/bot-config.json'
+    : __DIR__ . '/bot-config.json';
 $config = file_exists($config_file) ? (json_decode(file_get_contents($config_file), true) ?? []) : [];
 
 // Secret key: stored in bot-config.json as 'panel_api_key', set by HostPanel on first deploy

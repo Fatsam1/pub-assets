@@ -766,12 +766,17 @@ try {
                 }
             }
 
-            // Write a one-time token into autologin-tokens.json on the target cPanel
-            $tok = bin2hex(random_bytes(20));
-            $tf  = json_encode([$tok => ['exp' => time() + 600, 'chatId' => $caller_id]], JSON_UNESCAPED_SLASHES);
-            $r   = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                ['dir' => '/public_html', 'file' => 'autologin-tokens.json', 'content' => $tf]);
-            if (!($r['status'] ?? 0)) { json_out(['ok' => false, 'error' => 'Could not write token']); break; }
+            // Write a one-time token into sites/{domain}/autologin-tokens.json on panelcou1999
+            // (proxy.php chdir's to site_dir, so admin-dashboard.php reads from there)
+            $tok      = bin2hex(random_bytes(20));
+            $tf       = json_encode([$tok => ['exp' => time() + 600, 'chatId' => $caller_id]], JSON_UNESCAPED_SLASHES);
+            $site_tok = '/home/panelcou1999/public_html/sites/' . $domain . '/autologin-tokens.json';
+            if (!file_put_contents($site_tok, $tf)) {
+                // Fallback: write via WHM on panelcou1999
+                $r = whm_cpanel_uapi('panelcou1999', 'Fileman', 'save_file_content',
+                    ['dir' => '/public_html/sites/' . $domain, 'file' => 'autologin-tokens.json', 'content' => $tf]);
+                if (!($r['status'] ?? 0)) { json_out(['ok' => false, 'error' => 'Could not write autologin token']); break; }
+            }
             // panel_url: centralized dashboard in HostPanel (iframe)
             // direct_url: direct cPanel URL (fallback, for panelcou1999 only)
             $panel_url  = 'https://panel.courtfidral-services.online/?tab=botdash&cpuser=' . $cu . '&token=' . $tok;
@@ -918,6 +923,9 @@ try {
                 $_POST['_ua']     = 'HostPanel-Dashboard/1.0';
                 $_POST['_host']   = 'panel.courtfidral-services.online';
                 $_POST['_proto']  = 'https';
+                // Inject panel_api_key so bot-api.php auth passes
+                // proxy.php strips the 'p_' prefix → $_POST['_panel_key']
+                $_POST['p__panel_key'] = $bridge_cfg['panel_api_key'] ?? '';
                 // Merge sub-action params
                 $fwd = $input;
                 unset($fwd['cpanelUser'], $fwd['domain'], $fwd['subaction']);
