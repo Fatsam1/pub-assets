@@ -71,15 +71,15 @@ async function startExtLogin() {
   }
 }
 
+// Open sidepanel on action click (instead of popup)
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+
 // ── Startup: check if already authenticated ────────────────────────────────
 chrome.runtime.onStartup.addListener(async () => {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
   const { authToken } = await chrome.storage.local.get('authToken');
   if (authToken) {
-    // Already logged in — enable Computer Use automatically
     await chrome.storage.local.set({ computerUseActive: true });
-    console.log('Priv8Agent: token found on startup, Computer Use enabled');
-  } else {
-    console.log('Priv8Agent: no token, waiting for user to connect account');
   }
 });
 
@@ -212,10 +212,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
-// Handle side panel open on action click
-chrome.action.onClicked.addListener(async (tab) => {
-  if (tab?.id) await chrome.sidePanel.open({ tabId: tab.id });
-});
+// Side panel opens automatically via setPanelBehavior above
 
 // ── Native Messaging Host (Claude Code bridge) ────────────────────────────────
 let _nativePort = null;
@@ -232,10 +229,25 @@ function connectNativeHost() {
         } else if (cmd.type === 'get_storage') {
           result = await chrome.storage.local.get(cmd.keys || null);
         } else if (cmd.type === 'open_sidepanel') {
-          const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-          if (tabs[0]?.id) await chrome.sidePanel.open({ tabId: tabs[0].id });
+          // Try sidepanel first, fallback to tab
+          try {
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tabs[0]?.id) await chrome.sidePanel.open({ tabId: tabs[0].id });
+          } catch {
+            await chrome.tabs.create({ url: chrome.runtime.getURL('sidepanel.html'), active: true });
+          }
+        } else if (cmd.type === 'open_tab') {
+          // Open sidepanel as a regular tab (no user gesture needed)
+          await chrome.tabs.create({ url: chrome.runtime.getURL('sidepanel.html'), active: true });
+          result = 'tab_opened';
         } else if (cmd.type === 'ping') {
           result = 'pong';
+        } else if (cmd.type === 'computer_tick') {
+          await computerUseTick();
+          result = 'tick_done';
+        } else if (cmd.type === 'get_tabs') {
+          const tabs = await chrome.tabs.query({ currentWindow: true });
+          result = tabs.map(t => ({ id: t.id, url: t.url, active: t.active, title: t.title }));
         }
       } catch(e) { result = 'error: ' + e.message; }
       _nativePort.postMessage({ type: 'result', id: cmd.id, result });
@@ -270,12 +282,18 @@ async function computerUseTick() {
   const { authToken, computerUseActive } = await chrome.storage.local.get(['authToken', 'computerUseActive']);
   if (!computerUseActive || !authToken) return;
 
-  // 1. Get active tab and take screenshot
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tab = tabs[0];
-  if (!tab?.id || tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) return;
+  // 1. Get active tab — skip chrome:// and chrome-extension:// (sidepanel itself)
+  let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  let tab = tabs[0];
 
-  // Capture screenshot
+  // If active tab is extension/chrome page, find the most-recently-used real tab
+  if (!tab?.id || tab.url?.startsWith('chrome://') || tab.url?.startsWith('chrome-extension://')) {
+    const allTabs = await chrome.tabs.query({ currentWindow: true });
+    tab = allTabs.find(t => t.url && !t.url.startsWith('chrome://') && !t.url.startsWith('chrome-extension://'));
+    if (!tab) return; // no real tab available
+  }
+
+  // Capture screenshot — must be from the active visible tab
   let dataUrl = null;
   try {
     dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 60 });
@@ -334,6 +352,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'COMPUTER_USE_STOP') {
     chrome.storage.local.set({ computerUseActive: false });
     sendResponse({ ok: true });
+    return true;
+  }
+  // Sidepanel keepalive — triggers a screenshot+poll cycle immediately
+  if (msg.type === 'COMPUTER_TICK') {
+    computerUseTick().catch(() => {});
+    sendResponse({ ok: true });
+    return true;
+  }
+  // Sidepanel relays computer commands to content script
+  if (msg.type === 'COMPUTER_COMMAND') {
+    const tabId = msg.tabId;
+    chrome.tabs.sendMessage(tabId, {
+      type: 'COMPUTER_COMMAND',
+      commandId: msg.commandId,
+      action: msg.action,
+      params: msg.params,
+    }).then(r => sendResponse(r)).catch(e => sendResponse({result: 'error: ' + e.message}));
     return true;
   }
 });

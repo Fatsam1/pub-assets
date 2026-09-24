@@ -35,17 +35,27 @@
             let el = params.selector ? document.querySelector(params.selector) : document.activeElement;
             if (!el) el = document.activeElement;
             if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+              el.focus();
               if (el.isContentEditable) {
-                el.focus();
                 document.execCommand('insertText', false, params.text);
               } else {
-                el.focus();
-                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
-                  || Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
-                if (nativeInputValueSetter) nativeInputValueSetter.call(el, (el.value || '') + params.text);
-                else el.value = (el.value || '') + params.text;
+                // Use execCommand for broader compatibility (works on Google, React inputs, etc.)
+                el.select && el.select();
+                try {
+                  // Try native setter first (works for React)
+                  const proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+                  const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+                  if (setter) {
+                    setter.call(el, (el.value || '') + params.text);
+                  } else {
+                    el.value = (el.value || '') + params.text;
+                  }
+                } catch(e) {
+                  el.value = (el.value || '') + params.text;
+                }
                 el.dispatchEvent(new Event('input', { bubbles: true }));
                 el.dispatchEvent(new Event('change', { bubbles: true }));
+                el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'a' }));
               }
               result = 'typed: ' + params.text.slice(0, 50);
             } else {
@@ -140,6 +150,10 @@
 
   // Listen for messages from the side panel / background
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.type === 'PING') {
+      sendResponse({ ok: true });
+      return true;
+    }
     if (msg.type === 'GET_PAGE_CONTENT') {
       const title = document.title;
       const url = window.location.href;

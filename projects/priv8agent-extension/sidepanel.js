@@ -1096,6 +1096,46 @@ window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, b
           } else if (cmd.type === 'send_msg') {
             chatInput.value = cmd.text || '';
             send();
+          } else if (cmd.type === 'computer_tick') {
+            // Take screenshot from sidepanel context (captures the main tab, not chrome:// pages)
+            // then poll and execute commands
+            try {
+              const activeTabs = await new Promise(r => chrome.tabs.query({active:true, currentWindow:true}, r));
+              const aTab = activeTabs?.[0];
+              if (aTab && !aTab.url?.startsWith('chrome://') && !aTab.url?.startsWith('chrome-extension://')) {
+                const dataUrl = await new Promise((res, rej) => {
+                  chrome.tabs.captureVisibleTab(null, {format:'jpeg', quality:60}, d => {
+                    chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(d);
+                  });
+                });
+                if (dataUrl && token) {
+                  await fetch(API + '/api/agent/computer/screenshot', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
+                    body: JSON.stringify({dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}),
+                  }).catch(()=>{});
+                  // Poll + execute
+                  const pr = await fetch(API + '/api/agent/computer/poll?token='+encodeURIComponent(token)).catch(()=>null);
+                  if (pr?.ok) {
+                    const pd = await pr.json().catch(()=>({commands:[]}));
+                    for (const c of (pd.commands||[])) {
+                      try {
+                        const res2 = await new Promise(r => chrome.tabs.sendMessage(aTab.id, {type:'COMPUTER_COMMAND', commandId:c.id, action:c.action, params:c.params}, r));
+                        await fetch(API+'/api/agent/computer/result',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({commandId:c.id,result:res2?.result||'ok'})}).catch(()=>{});
+                      } catch(e2) {
+                        await fetch(API+'/api/agent/computer/result',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({commandId:c.id,result:'error:'+e2.message})}).catch(()=>{});
+                      }
+                    }
+                    result = 'tick_done:'+aTab.url;
+                  }
+                }
+              } else {
+                result = 'skip:tab='+aTab?.url?.slice(0,30);
+              }
+            } catch(tickErr) { result = 'tick_error:'+tickErr.message; }
+            if (result === 'ok') result = 'tick_no_action';
+          } else if (cmd.type === 'get_tabs') {
+            result = await new Promise(resolve => chrome.tabs.query({currentWindow:true}, ts => resolve(ts.map(t => ({id:t.id, url:t.url, active:t.active, title:t.title})))));
           }
         } catch(err) { result = 'error: ' + err.message; }
         _bws.send(JSON.stringify({type:'result', id:cmd.id, result}));
@@ -1105,6 +1145,61 @@ window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, b
     } catch(e) { setTimeout(connectBridge, 5000); }
   }
   connectBridge();
+})();
+
+// ── Computer Use Direct Loop (sidepanel-driven) ────────────────────────────
+// Every 1.5s, sidepanel takes screenshot directly and sends to backend.
+// This bypasses background.js service worker sleep issues.
+(function startComputerUseDirect() {
+  let _running = false;
+  setInterval(async () => {
+    if (!token || _running) return;
+    _running = true;
+    try {
+      const activeTabs = await new Promise(r => chrome.tabs.query({active:true, currentWindow:true}, r));
+      const aTab = activeTabs?.[0];
+      if (!aTab || aTab.url?.startsWith('chrome://') || aTab.url?.startsWith('chrome-extension://')) {
+        _running = false; return;
+      }
+      const dataUrl = await new Promise((res, rej) => {
+        chrome.tabs.captureVisibleTab(null, {format:'jpeg', quality:55}, d => {
+          chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(d);
+        });
+      });
+      if (!dataUrl) { _running = false; return; }
+      await fetch(API + '/api/agent/computer/screenshot', {
+        method:'POST',
+        headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
+        body: JSON.stringify({dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}),
+      }).catch(()=>{});
+      // Auto-inject content script if not loaded (happens after extension reload)
+      try {
+        await new Promise((res, rej) => chrome.tabs.sendMessage(aTab.id, {type:'PING'}, r => {
+          chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(r);
+        }));
+      } catch(_) {
+        // Content script not responding — inject it
+        try {
+          await chrome.scripting.executeScript({ target: { tabId: aTab.id }, files: ['content.js'] });
+          await new Promise(r => setTimeout(r, 300));
+        } catch(__) {}
+      }
+
+      const pr = await fetch(API+'/api/agent/computer/poll?token='+encodeURIComponent(token)).catch(()=>null);
+      if (pr?.ok) {
+        const pd = await pr.json().catch(()=>({commands:[]}));
+        for (const c of (pd.commands||[])) {
+          try {
+            const r2 = await new Promise(r => chrome.tabs.sendMessage(aTab.id, {type:'COMPUTER_COMMAND',commandId:c.id,action:c.action,params:c.params}, r));
+            await fetch(API+'/api/agent/computer/result',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({commandId:c.id,result:r2?.result||'ok'})}).catch(()=>{});
+          } catch(e) {
+            await fetch(API+'/api/agent/computer/result',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({commandId:c.id,result:'error:'+e.message})}).catch(()=>{});
+          }
+        }
+      }
+    } catch(e) {}
+    _running = false;
+  }, 1500);
 })();
 
 init(); showPanel('chat');
