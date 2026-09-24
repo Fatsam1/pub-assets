@@ -115,6 +115,9 @@ window.setTheme=(t)=>{
 
 // ─── Boot ───
 async function boot() {
+  // Auto-enable Computer Use when logged in
+  chrome.storage.local.set({ computerUseActive: true });
+  chrome.runtime.sendMessage({ type: 'COMPUTER_USE_START' }).catch(() => {});
   connectWs();
   const {lastSession} = await chrome.storage.local.get('lastSession');
   if (lastSession) { sessionId = lastSession; await loadHistory(lastSession); }

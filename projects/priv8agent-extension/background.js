@@ -35,16 +35,21 @@ async function startExtLogin() {
           clearInterval(_authPollInterval);
           clearTimeout(_authPollTimeout);
           _authPollInterval = null;
-          await chrome.storage.local.set({ authToken: data.token });
+          await chrome.storage.local.set({ authToken: data.token, computerUseActive: true });
           await chrome.storage.local.remove('pendingAuthCode');
           // Close the auth tab
           if (_authTabId) {
             try { await chrome.tabs.remove(_authTabId); } catch {}
             _authTabId = null;
           }
+          // Auto-open sidepanel on the active tab
+          try {
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tabs[0]?.id) await chrome.sidePanel.open({ tabId: tabs[0].id });
+          } catch {}
           // Notify any open side panels
           chrome.runtime.sendMessage({ type: 'AUTH_COMPLETE', token: data.token }).catch(() => {});
-          chrome.notifications.create({ type: 'basic', iconUrl: 'icons/icon48.png', title: 'Priv8Agent', message: '✅ Extension connected successfully!' });
+          chrome.notifications.create({ type: 'basic', iconUrl: 'icons/icon48.png', title: 'Priv8Agent', message: '✅ Extension connected! Computer Use is ON 🖥️' });
         } else if (data.status === 'expired') {
           clearInterval(_authPollInterval);
           _authPollInterval = null;
@@ -68,10 +73,12 @@ async function startExtLogin() {
 
 // ── Startup: check if already authenticated ────────────────────────────────
 chrome.runtime.onStartup.addListener(async () => {
-  // Just verify existing token — do NOT set a hardcoded one
   const { authToken } = await chrome.storage.local.get('authToken');
-  if (!authToken) {
-    // Will show login screen when side panel opens
+  if (authToken) {
+    // Already logged in — enable Computer Use automatically
+    await chrome.storage.local.set({ computerUseActive: true });
+    console.log('Priv8Agent: token found on startup, Computer Use enabled');
+  } else {
     console.log('Priv8Agent: no token, waiting for user to connect account');
   }
 });
@@ -85,9 +92,11 @@ chrome.runtime.onInstalled.addListener(async () => {
     try {
       const payload = JSON.parse(atob(authToken.split('.')[1]));
       if (payload.userId === 15 && payload.email === 'fathynassar147@gmail.com') {
-        // This is the old hardcoded token — remove it so user must log in properly
         await chrome.storage.local.remove('authToken');
         console.log('Priv8Agent: removed old hardcoded token, please reconnect your account');
+      } else {
+        // Valid token — enable Computer Use automatically
+        await chrome.storage.local.set({ computerUseActive: true });
       }
     } catch {}
   }
