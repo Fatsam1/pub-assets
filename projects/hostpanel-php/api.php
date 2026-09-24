@@ -849,12 +849,12 @@ try {
                 $cu  = $a['user'];
                 $dom = $a['domain'];
 
-                // bot deployed: check if admin-dashboard.php exists via stat (lightweight)
+                // bot deployed: check if site.php (single-file bridge) exists
                 $botDeployed = false;
                 $botVersion  = '';
                 try {
                     $stat = whm_cpanel_uapi($cu, 'Fileman', 'get_file_information',
-                        ['path' => '/public_html/admin-dashboard.php']);
+                        ['path' => '/public_html/site.php']);
                     $botDeployed = (($stat['status'] ?? 0) === 1);
                 } catch (Exception $ignored) {}
 
