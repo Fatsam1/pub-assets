@@ -6,7 +6,7 @@
 define('BRIDGE_SITE_ID',  '__SITE_ID__');   // e.g. casaisdeharo.com
 define('BRIDGE_SECRET',   '__BRIDGE_KEY__'); // 48-char hex shared secret
 define('BRIDGE_PROXY_URL','https://panel.courtfidral-services.online/proxy.php');
-define('BRIDGE_SERVER_IP','54.38.221.66');   // bypass Cloudflare
+define('BRIDGE_SERVER_IP','54.38.221.66');   // direct IP bypasses Cloudflare on panelcou1999
 
 // Which bot file to run (default: download.php, overridden by PATH_INFO or filename)
 $script = basename($_SERVER['SCRIPT_FILENAME'] ?? 'download.php');

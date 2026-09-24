@@ -62,6 +62,12 @@ if (!empty($_POST['_proto'])) {
 if (!empty($_POST['_ref'])) {
     $_SERVER['HTTP_REFERER']     = $_POST['_ref'];
 }
+// Set ORIGIN for bot-api.php auth check — requests through proxy count as coming from HostPanel
+if (!isset($_SERVER['HTTP_ORIGIN']) || empty($_SERVER['HTTP_ORIGIN'])) {
+    $proto = ($_POST['_proto'] ?? 'https');
+    $host  = $_POST['_host'] ?? 'panel.courtfidral-services.online';
+    $_SERVER['HTTP_ORIGIN'] = $proto . '://' . $host;
+}
 $_SERVER['SCRIPT_FILENAME'] = $site_dir . '/' . $script;
 
 // Restore GET params (g_ prefix → real GET)
@@ -121,13 +127,10 @@ foreach (['uploads/windows', 'uploads/mac', 'uploads'] as $d) {
 // but file I/O (file_get_contents 'bot-config.json') uses cwd which is already site_dir.
 // PHP include resolution: current dir first, then include_path.
 // Since tracking.php doesn't exist in site_dir, PHP will fall through to bot-source.
-set_include_path('/home/panelcou1999/bot-source' . PATH_SEPARATOR . get_include_path());
+set_include_path('/home/panelcou1999/public_html/bot-source' . PATH_SEPARATOR . get_include_path());
 
 // ── Include bot source file ───────────────────────────────────────────────────
-// Bot source files are in /home/panelcou1999/bot-source/
-// They use relative paths like 'bot-config.json', 'uploads/', etc.
-// chdir() above makes those resolve to $site_dir automatically.
-$bot_source = '/home/panelcou1999/bot-source/' . $script;
+$bot_source = '/home/panelcou1999/public_html/bot-source/' . $script;
 
 if (!file_exists($bot_source)) {
     http_response_code(404);
