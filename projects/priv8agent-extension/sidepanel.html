@@ -607,11 +607,21 @@
     <div>
       <div class="auth-title">Priv8<span>Agent</span></div>
     </div>
-    <div class="auth-sub">Enter your Bearer Token from <strong>app.privatehash.online</strong> to get started</div>
-    <input id="token-input" type="password" placeholder="Bearer Token..." />
-    <div id="auth-error">❌ Invalid token — please try again</div>
-    <button id="btn-auth">Connect →</button>
-    <div class="auth-link">Don't have an account? <a href="https://app.privatehash.online" target="_blank">Sign up</a></div>
+    <!-- Step 1: Connect button -->
+    <div id="auth-step-connect">
+      <div class="auth-sub">Connect your Priv8Agent account to get started</div>
+      <button id="btn-auth">🔗 Connect Account</button>
+      <div class="auth-link">Don't have an account? <a href="https://app.privatehash.online" target="_blank">Sign up free</a></div>
+    </div>
+    <!-- Step 2: Waiting for browser approval -->
+    <div id="auth-step-waiting" style="display:none">
+      <div class="auth-sub" style="margin-bottom:16px">Opening your browser...<br>Please approve the connection on the page that opens.</div>
+      <div id="auth-spinner" style="width:32px;height:32px;border:3px solid rgba(0,255,65,.15);border-top-color:#00FF41;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+      <div class="auth-sub" style="font-size:11px;opacity:.6">Waiting for approval</div>
+      <button id="btn-auth-cancel" style="margin-top:16px;background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-secondary);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;">Cancel</button>
+    </div>
+    <div id="auth-error">❌ Could not start login. Please try again.</div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
   </div>
 
   <!-- Header -->

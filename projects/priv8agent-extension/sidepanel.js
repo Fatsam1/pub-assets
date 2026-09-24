@@ -28,12 +28,75 @@ async function init() {
   if (s.systemPrompt) $('s-system').value = s.systemPrompt;
   if (s.forceLang) $('s-lang').value = s.forceLang;
   applyTheme(s.theme||'dark');
-  if (!token) { authScreen.classList.add('visible'); return; }
+  if (!token) { showLoginScreen(); return; }
   const ps = await chrome.storage.local.get(['p8Projects']);
   projects = ps.p8Projects || [];
   renderProjectsBar();
   boot();
 }
+
+// ─── Login Screen (device-flow) ───
+let _loginPollTimer = null;
+function showLoginScreen() {
+  authScreen.classList.add('visible');
+  $('auth-step-connect').style.display = '';
+  $('auth-step-waiting').style.display = 'none';
+  $('auth-error').style.display = 'none';
+}
+
+$('btn-auth') && $('btn-auth').addEventListener('click', async () => {
+  $('auth-error').style.display = 'none';
+  $('auth-step-connect').style.display = 'none';
+  $('auth-step-waiting').style.display = '';
+
+  // Tell background to start the device-flow login
+  chrome.runtime.sendMessage({ type: 'EXT_LOGIN_START' }, (r) => {
+    if (!r?.ok) {
+      $('auth-step-waiting').style.display = 'none';
+      $('auth-step-connect').style.display = '';
+      $('auth-error').style.display = '';
+    }
+  });
+
+  // Poll localStorage until token appears (background sets it when approved)
+  clearInterval(_loginPollTimer);
+  _loginPollTimer = setInterval(async () => {
+    const { authToken } = await chrome.storage.local.get('authToken');
+    if (authToken) {
+      clearInterval(_loginPollTimer);
+      _loginPollTimer = null;
+      token = authToken;
+      authScreen.classList.remove('visible');
+      // Resume normal init
+      const ps = await chrome.storage.local.get(['p8Projects']);
+      projects = ps.p8Projects || [];
+      renderProjectsBar();
+      boot();
+    }
+  }, 1500);
+});
+
+$('btn-auth-cancel') && $('btn-auth-cancel').addEventListener('click', () => {
+  clearInterval(_loginPollTimer);
+  _loginPollTimer = null;
+  $('auth-step-waiting').style.display = 'none';
+  $('auth-step-connect').style.display = '';
+});
+
+// Listen for AUTH_COMPLETE from background (fast path)
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'AUTH_COMPLETE' && msg.token && !token) {
+    clearInterval(_loginPollTimer);
+    _loginPollTimer = null;
+    token = msg.token;
+    authScreen.classList.remove('visible');
+    chrome.storage.local.get(['p8Projects']).then(ps => {
+      projects = ps.p8Projects || [];
+      renderProjectsBar();
+      boot();
+    });
+  }
+});
 function applyTheme(t) {
   $('app').dataset.theme=t;
   // update theme buttons active state
@@ -435,15 +498,7 @@ async function checkPending(){
 }
 
 // ─── Events ───
-$('btn-auth').addEventListener('click',async()=>{
-  const t=$('token-input').value.trim(); if(!t)return;
-  $('btn-auth').textContent='Verifying…'; $('btn-auth').disabled=true;
-  try{const r=await fetch(`${API}/api/auth/me`,{headers:{Authorization:`Bearer ${t}`}});
-    if(r.ok){token=t;await chrome.storage.local.set({authToken:t});authScreen.classList.remove('visible');boot();}
-    else{$('auth-error').style.display='block';}
-  }catch{$('auth-error').style.display='block';}
-  $('btn-auth').textContent='Connect →'; $('btn-auth').disabled=false;
-});
+// btn-auth device-flow handler is defined in the init section above
 
 $('btn-new').addEventListener('click',newChat);
 $('btn-sessions-toggle').addEventListener('click',()=>{const open=$('sessions-panel').classList.contains('visible');showPanel(open?'chat':'sessions');if(!open)loadSessions();});
