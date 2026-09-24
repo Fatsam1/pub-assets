@@ -130,7 +130,8 @@
             }
             if (found) {
               const rect = found.getBoundingClientRect();
-              result = JSON.stringify({ found: true, tag: found.tagName, text: found.innerText?.slice(0, 100), x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2), rect: { top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width), height: Math.round(rect.height) } });
+              const elText = found.value !== undefined ? found.value : found.innerText;
+              result = JSON.stringify({ found: true, tag: found.tagName, text: elText?.slice(0, 100), x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2), rect: { top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width), height: Math.round(rect.height) } });
             } else {
               result = JSON.stringify({ found: false });
             }

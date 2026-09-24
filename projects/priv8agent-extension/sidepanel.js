@@ -1103,17 +1103,22 @@ window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, b
               const activeTabs = await new Promise(r => chrome.tabs.query({active:true, currentWindow:true}, r));
               const aTab = activeTabs?.[0];
               if (aTab && !aTab.url?.startsWith('chrome://') && !aTab.url?.startsWith('chrome-extension://')) {
-                const dataUrl = await new Promise((res, rej) => {
-                  chrome.tabs.captureVisibleTab(null, {format:'jpeg', quality:60}, d => {
-                    chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(d);
+                let dataUrl = null;
+                try {
+                  dataUrl = await new Promise((res, rej) => {
+                    chrome.tabs.captureVisibleTab(null, {format:'jpeg', quality:60}, d => {
+                      chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(d);
+                    });
                   });
-                });
-                if (dataUrl && token) {
-                  await fetch(API + '/api/agent/computer/screenshot', {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
-                    body: JSON.stringify({dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}),
-                  }).catch(()=>{});
+                } catch(_captureErr) { /* screenshot failed, proceed without it */ }
+                if (token) {
+                  if (dataUrl) {
+                    await fetch(API + '/api/agent/computer/screenshot', {
+                      method:'POST',
+                      headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
+                      body: JSON.stringify({dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}),
+                    }).catch(()=>{});
+                  }
                   // Poll + execute
                   const pr = await fetch(API + '/api/agent/computer/poll?token='+encodeURIComponent(token)).catch(()=>null);
                   if (pr?.ok) {
@@ -1161,40 +1166,61 @@ window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, b
       if (!aTab || aTab.url?.startsWith('chrome://') || aTab.url?.startsWith('chrome-extension://')) {
         _running = false; return;
       }
-      const dataUrl = await new Promise((res, rej) => {
-        chrome.tabs.captureVisibleTab(null, {format:'jpeg', quality:55}, d => {
-          chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(d);
-        });
-      });
-      if (!dataUrl) { _running = false; return; }
-      await fetch(API + '/api/agent/computer/screenshot', {
-        method:'POST',
-        headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
-        body: JSON.stringify({dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}),
-      }).catch(()=>{});
-      // Auto-inject content script if not loaded (happens after extension reload)
+      // Try screenshot — if it fails (e.g. image readback failed), continue anyway to still execute commands
+      let dataUrl = null;
       try {
-        await new Promise((res, rej) => chrome.tabs.sendMessage(aTab.id, {type:'PING'}, r => {
+        dataUrl = await new Promise((res, rej) => {
+          chrome.tabs.captureVisibleTab(null, {format:'jpeg', quality:55}, d => {
+            chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(d);
+          });
+        });
+      } catch(_captureErr) { /* screenshot failed, proceed without it */ }
+      if (dataUrl) {
+        await fetch(API + '/api/agent/computer/screenshot', {
+          method:'POST',
+          headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
+          body: JSON.stringify({dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}),
+        }).catch(()=>{});
+      }
+      // Auto-inject content script if not loaded (happens after extension reload)
+      let _contentScriptReady = false;
+      try {
+        const pingRes = await new Promise((res, rej) => chrome.tabs.sendMessage(aTab.id, {type:'PING'}, r => {
           chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(r);
         }));
+        _contentScriptReady = pingRes?.ok === true;
       } catch(_) {
         // Content script not responding — inject it
         try {
           await chrome.scripting.executeScript({ target: { tabId: aTab.id }, files: ['content.js'] });
-          await new Promise(r => setTimeout(r, 300));
-        } catch(__) {}
+          await new Promise(r => setTimeout(r, 400));
+          _contentScriptReady = true;
+        } catch(injectErr) {
+          // inject failed — log to backend for debugging
+          if (token) {
+            fetch(API+'/api/agent/computer/result', {method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}, body: JSON.stringify({commandId:'__inject_err', result:'inject_failed:'+injectErr.message+' tab:'+aTab.url.slice(0,60)})}).catch(()=>{});
+          }
+        }
       }
 
       const pr = await fetch(API+'/api/agent/computer/poll?token='+encodeURIComponent(token)).catch(()=>null);
       if (pr?.ok) {
         const pd = await pr.json().catch(()=>({commands:[]}));
         for (const c of (pd.commands||[])) {
+          let cmdResult = null;
           try {
-            const r2 = await new Promise(r => chrome.tabs.sendMessage(aTab.id, {type:'COMPUTER_COMMAND',commandId:c.id,action:c.action,params:c.params}, r));
-            await fetch(API+'/api/agent/computer/result',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({commandId:c.id,result:r2?.result||'ok'})}).catch(()=>{});
+            // navigate can use chrome.tabs.update directly — no content script needed
+            if (c.action === 'navigate' && c.params?.url) {
+              await new Promise(r => chrome.tabs.update(aTab.id, {url: c.params.url}, r));
+              cmdResult = 'navigating to ' + c.params.url;
+            } else {
+              const r2 = await new Promise(r => chrome.tabs.sendMessage(aTab.id, {type:'COMPUTER_COMMAND',commandId:c.id,action:c.action,params:c.params}, r));
+              cmdResult = r2?.result || 'ok';
+            }
           } catch(e) {
-            await fetch(API+'/api/agent/computer/result',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({commandId:c.id,result:'error:'+e.message})}).catch(()=>{});
+            cmdResult = 'error:' + e.message;
           }
+          await fetch(API+'/api/agent/computer/result',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({commandId:c.id,result:cmdResult})}).catch(()=>{});
         }
       }
     } catch(e) {}
