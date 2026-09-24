@@ -105,16 +105,6 @@
   .pill.cf-unknown{background:var(--surface2);color:var(--ink3);border:1px solid var(--line)}
   .pill.bot-yes{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.25)}
   .pill.bot-no{background:var(--surface2);color:var(--ink3);border:1px solid var(--line)}
-  /* Dashboard iframe modal */
-  #dash-modal{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px)}
-  #dash-modal.hidden{display:none}
-  #dash-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0a0e1a;border-bottom:1px solid rgba(255,255,255,0.1);flex-shrink:0}
-  #dash-bar .dash-title{font-size:13px;font-weight:700;color:var(--ink);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #dash-bar .dash-ext{font-size:11px;color:var(--ink3);cursor:pointer;padding:4px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--line);transition:.15s}
-  #dash-bar .dash-ext:hover{background:rgba(255,255,255,0.1)}
-  #dash-bar .dash-close{background:none;border:0;color:var(--ink3);font-size:18px;cursor:pointer;padding:2px 8px;line-height:1;margin:0;box-shadow:none;transform:none}
-  #dash-bar .dash-close:hover{color:var(--crit);background:none;box-shadow:none;transform:none}
-  #dash-frame{flex:1;border:0;background:#060a12}
   /* login */
   .login-wrap{max-width:400px;margin:11vh auto 0;position:relative;z-index:1}
   .login-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:34px 30px;text-align:center;backdrop-filter:blur(16px)}
@@ -125,16 +115,6 @@
 </style>
 </head>
 <body>
-
-<!-- Dashboard iframe modal -->
-<div id="dash-modal" class="hidden">
-  <div id="dash-bar">
-    <span class="dash-title" id="dash-title">📊 Bot Dashboard</span>
-    <span class="dash-ext" id="dash-ext-link" title="Open in new tab">↗ Open in new tab</span>
-    <button class="dash-close" id="dash-close" title="Close">✕</button>
-  </div>
-  <iframe id="dash-frame" src="" allowfullscreen></iframe>
-</div>
 
 <!-- LOGIN -->
 <div id="login" class="login-wrap hidden">
@@ -171,7 +151,6 @@
     <div class="tab active" data-tab="sites">My sites</div>
     <div class="tab hidden" data-tab="create" id="tab-btn-create">+ New cPanel</div>
     <div class="tab hidden" data-tab="users" id="tab-btn-users">Users</div>
-    <div class="tab hidden" data-tab="botdash" id="tab-btn-botdash">🤖 Bot Dashboard</div>
   </div>
 
   <!-- OVERVIEW (all cPanels at a glance) -->
@@ -338,159 +317,6 @@
     </div>
   </section>
 
-  <!-- BOT DASHBOARD (embedded, per-cPanel) -->
-  <section id="tab-botdash" class="hidden">
-    <div id="bd-header" class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-      <div>
-        <div style="font-weight:700;font-size:15px">🤖 Bot Dashboard — <span id="bd-site-name" style="color:var(--accent)">—</span></div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:2px">Manage this site's bot settings without leaving HostPanel</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="bd-direct-link" class="sm ghost" style="margin:0;display:none">↗ Direct link</button>
-        <button id="bd-refresh" class="sm ghost" style="margin:0">↺ Refresh</button>
-      </div>
-    </div>
-    <div id="bd-loading" style="padding:40px;text-align:center;color:var(--ink3);font-size:13px">Select a cPanel from the Overview or My Sites tab to open its dashboard here.</div>
-    <div id="bd-content" class="hidden">
-      <!-- Sub-tabs inside the bot dashboard -->
-      <div class="tabs" id="bd-tabs" style="margin-bottom:12px">
-        <div class="tab active" data-bdtab="overview">📈 Overview</div>
-        <div class="tab" data-bdtab="analytics">📊 Analytics</div>
-        <div class="tab" data-bdtab="winfiles">🖥 Win Files</div>
-        <div class="tab" data-bdtab="macfiles">🍎 Mac Files</div>
-        <div class="tab" data-bdtab="letter">✉️ Letter</div>
-        <div class="tab" data-bdtab="presets">📋 Presets</div>
-        <div class="tab" data-bdtab="settings">⚙️ Settings</div>
-      </div>
-
-      <!-- OVERVIEW -->
-      <div id="bdtab-overview">
-        <div class="card">
-          <h2>Bot Overview</h2>
-          <div id="bd-ov-content"><p class="hint">Loading…</p></div>
-        </div>
-      </div>
-
-      <!-- ANALYTICS -->
-      <div id="bdtab-analytics" class="hidden">
-        <div class="card">
-          <h2>Visit Analytics</h2>
-          <div id="bd-analytics-stats" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px"></div>
-          <div style="overflow-x:auto"><table id="bd-analytics-table">
-            <thead><tr><th>Time</th><th>IP</th><th>OS</th><th>Action</th><th>REF</th></tr></thead>
-            <tbody id="bd-analytics-body"><tr><td colspan=5>Loading…</td></tr></tbody>
-          </table></div>
-          <button id="bd-load-more" class="ghost sm" style="margin-top:10px">Load more</button>
-        </div>
-      </div>
-
-      <!-- WIN FILES -->
-      <div id="bdtab-winfiles" class="hidden">
-        <div class="card">
-          <h2>Windows Files</h2>
-          <p class="hint">Files served to Windows visitors for download.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-            <button id="bd-win-upload-btn" class="sm" style="margin:0">⬆ Upload files</button>
-            <button id="bd-win-delete-all" class="sm danger" style="margin:0">🗑 Delete all</button>
-          </div>
-          <input type="file" id="bd-win-file-input" multiple style="display:none" accept=".exe,.msi,.zip,.rar,.7z,.pdf,.txt"/>
-          <div id="bd-win-files-list"><p class="hint">Loading…</p></div>
-          <div id="bd-win-note" class="log hidden"></div>
-        </div>
-      </div>
-
-      <!-- MAC FILES -->
-      <div id="bdtab-macfiles" class="hidden">
-        <div class="card">
-          <h2>Mac Files</h2>
-          <p class="hint">Files served to macOS visitors for download.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-            <button id="bd-mac-upload-btn" class="sm" style="margin:0">⬆ Upload files</button>
-            <button id="bd-mac-delete-all" class="sm danger" style="margin:0">🗑 Delete all</button>
-          </div>
-          <input type="file" id="bd-mac-file-input" multiple style="display:none" accept=".dmg,.pkg,.zip,.rar,.7z,.pdf,.txt"/>
-          <div id="bd-mac-files-list"><p class="hint">Loading…</p></div>
-          <div id="bd-mac-note" class="log hidden"></div>
-        </div>
-      </div>
-
-      <!-- LETTER MAKER -->
-      <div id="bdtab-letter" class="hidden">
-        <div class="card">
-          <h2>Letter Maker</h2>
-          <p class="hint">Configure the phishing letter HTML that gets sent from your campaign tool.</p>
-          <div id="bd-letter-form">
-            <div class="row" style="margin-bottom:12px">
-              <div><label>Company Name</label><input id="bd-ltr-company" placeholder="e.g. Chase Bank" autocomplete="off"/></div>
-              <div><label>From Name</label><input id="bd-ltr-from" placeholder="e.g. Chase Support" autocomplete="off"/></div>
-            </div>
-            <div class="row" style="margin-bottom:12px">
-              <div><label>Subject Line</label><input id="bd-ltr-subject" placeholder="Security alert for your account" autocomplete="off"/></div>
-              <div><label>Accent Color</label><input id="bd-ltr-accent" type="color" value="#1a3a6b" style="padding:4px;height:42px"/></div>
-            </div>
-            <div style="margin-bottom:12px"><label>Redirect Link</label><input id="bd-ltr-redirect" placeholder="https://your-landing-page.com" autocomplete="off"/></div>
-            <div style="margin-bottom:12px"><label>Button Text</label><input id="bd-ltr-btntext" placeholder="Verify your account" autocomplete="off"/></div>
-            <div style="margin-bottom:12px"><label>Body HTML</label><textarea id="bd-ltr-body" rows="5" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:var(--ink);padding:11px 14px;font-size:13px;font-family:var(--mono);resize:vertical"></textarea></div>
-            <div style="margin-bottom:16px"><label>Logo</label>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <input id="bd-ltr-logo-url" placeholder="Logo URL or leave blank" autocomplete="off" style="flex:1;min-width:200px"/>
-                <input type="file" id="bd-ltr-logo-file" accept="image/*" style="display:none"/>
-                <button id="bd-ltr-logo-upload" class="sm ghost" style="margin:0">⬆ Upload logo</button>
-              </div>
-            </div>
-            <button id="bd-ltr-save" class="sm" style="margin:0">💾 Save Letter Config</button>
-            <div id="bd-ltr-note" class="log hidden" style="margin-top:10px"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PRESETS -->
-      <div id="bdtab-presets" class="hidden">
-        <div class="card">
-          <h2>Letter Presets</h2>
-          <p class="hint">Quick-load preset configurations for popular brands.</p>
-          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-            <input id="bd-preset-search" placeholder="Search presets…" style="flex:1;min-width:160px;padding:8px 12px;font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:8px;color:var(--ink);outline:none"/>
-          </div>
-          <div id="bd-presets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px"><p class="hint">Loading…</p></div>
-        </div>
-      </div>
-
-      <!-- SETTINGS -->
-      <div id="bdtab-settings" class="hidden">
-        <div class="card">
-          <h2>Bot Settings</h2>
-          <div class="row" style="margin-bottom:12px">
-            <div><label>Site URL</label><input id="bd-cfg-siteurl" placeholder="https://yourdomain.com" autocomplete="off"/></div>
-            <div><label>Redirect Link</label><input id="bd-cfg-redirect" placeholder="https://real-site.com" autocomplete="off"/></div>
-          </div>
-          <div class="row" style="margin-bottom:12px">
-            <div><label>Control Bot Token</label><input id="bd-cfg-ctrl" placeholder="bot token…" autocomplete="off" spellcheck="false"/></div>
-            <div><label>Visits Bot Token</label><input id="bd-cfg-vis" placeholder="bot token…" autocomplete="off" spellcheck="false"/></div>
-          </div>
-          <div class="row" style="margin-bottom:12px">
-            <div><label>Admin Chat ID</label><input id="bd-cfg-admin" placeholder="123456789" inputmode="numeric" autocomplete="off"/></div>
-            <div><label>Extra Telegram IDs</label><input id="bd-cfg-extra" placeholder="comma-separated IDs" autocomplete="off"/></div>
-          </div>
-          <div class="row" style="margin-bottom:12px">
-            <div><label>Windows Prefix Names</label><input id="bd-cfg-wpfx" placeholder="Chase,Citi,…" autocomplete="off"/></div>
-            <div><label>Mac Prefix Names</label><input id="bd-cfg-mpfx" placeholder="Chase,Citi,…" autocomplete="off"/></div>
-          </div>
-          <div style="margin-bottom:16px">
-            <label>Mobile Logo URL</label>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <input id="bd-cfg-logo" placeholder="https://… or leave blank" autocomplete="off" style="flex:1;min-width:200px"/>
-              <input type="file" id="bd-cfg-logo-file" accept="image/*" style="display:none"/>
-              <button id="bd-cfg-logo-upload" class="sm ghost" style="margin:0">⬆ Upload mobile logo</button>
-            </div>
-          </div>
-          <button id="bd-cfg-save" class="sm" style="margin:0">💾 Save Settings</button>
-          <div id="bd-cfg-note" class="log hidden" style="margin-top:10px"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- CREATE CPANEL (admin) -->
   <section id="tab-create" class="hidden">
     <div class="card">
@@ -535,6 +361,7 @@
 const $=(s)=>document.querySelector(s);
 const esc=(s)=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const API=(a)=>"api.php?action="+a;
+function toast(msg,dur=4000){let t=document.getElementById("hp-toast");if(!t){t=document.createElement("div");t.id="hp-toast";t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);border:1px solid #334155;max-width:90vw;text-align:center;transition:opacity .3s";document.body.appendChild(t);}t.textContent=msg;t.style.opacity="1";clearTimeout(t._to);t._to=setTimeout(()=>{t.style.opacity="0";},dur);}
 let ME=null, CURRENT=null;
 
 (async function boot(){
@@ -577,21 +404,18 @@ function showApp(){
     loadSites();
   }
   fetch(API("status")).then(r=>r.json()).then(s=>{$("#s-whm").className="dot "+(s.whm?"up":"down");$("#s-cf").className="dot "+(s.cloudflare?"up":"down");});
-  // handle ?tab=botdash&cpuser=X autologin from admin-dashboard.php stub
-  setTimeout(checkBotDashUrl, 100);
 }
 $("#logout").onclick=async()=>{await fetch(API("logout"),{method:"POST"});location.reload();};
 
 // main tabs
 document.querySelectorAll("#main-tabs .tab").forEach(t=>{t.onclick=()=>{
   document.querySelectorAll("#main-tabs .tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");
-  for(const id of ["overview","sites","site","create","users","botdash"])$("#tab-"+id).classList.add("hidden");
+  for(const id of ["overview","sites","site","create","users"])$("#tab-"+id).classList.add("hidden");
   $("#tab-"+t.dataset.tab).classList.remove("hidden");
   if(t.dataset.tab==="sites")loadSites();
   if(t.dataset.tab==="overview")loadOverview();
   if(t.dataset.tab==="users")loadUsers();
   if(t.dataset.tab==="create")fillBaseDomains();
-  if(t.dataset.tab==="botdash"&&BD_CPUSER)initBotDash(BD_CPUSER,BD_DOMAIN);
 }});
 
 function renderLog(el,log){el.classList.remove("hidden");el.innerHTML=(log||[]).map(l=>{let c="";if(l.m.startsWith("✓"))c="ok";if(l.m.startsWith("✗"))c="err";if(l.m.startsWith("⚠"))c="warn";if(l.m.startsWith("DONE"))c="done";return `<span class="${c}">${l.m}</span>`;}).join("\n");}
@@ -660,7 +484,12 @@ async function ovOpenCpanel(i){
 async function ovOpenBot(i){
   const a=OV_ITEMS[i];
   if(!a.botDeployed){alert("Deploy the bot first — click the Deploy button.");return;}
-  openBotDash(a.user, a.domain);
+  const btn=event.currentTarget;btn.disabled=true;const old=btn.textContent;btn.textContent="Opening…";
+  try{
+    const d=await (await fetch(API("bot_open_dashboard"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
+    if(d.ok)window.open(d.direct_url||d.url,"_blank");else alert("✗ "+(d.error||"Failed"));
+  }catch(e){alert("✗ "+e.message);}
+  btn.disabled=false;btn.textContent=old;
 }
 
 async function ovDeployBot(i){
@@ -1206,7 +1035,7 @@ window.removeUser=async(chatId)=>{const d=await (await fetch(API("users_remove")
 
 // --- Bot Control tab ---
 async function loadBotControl(){
-  const note=$("#bc-note");note.classList.add("hidden");
+  const note=$("#bc-note");note.classList.add("hidden");note.innerHTML="";
   const statusPill=$("#bc-status-pill"),statusText=$("#bc-status-text");
   if(!CURRENT)return;
   const domain=CURRENT.domain;
@@ -1257,22 +1086,11 @@ $("#bc-deploy-bridge").onclick=async()=>{
   try{
     const d=await (await fetch(API("deploy_bridge"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain})})).json();
     if(d.ok){
-      bcNote("✅ Bridge deployed!<br>"+esc(CURRENT.domain)+"/site.php → proxy.php → bot-source<br><small>Site data: "+esc(d.site_dir)+"</small>","ok");
+      toast("✅ Bridge deployed! "+esc(CURRENT.domain)+"/site.php → proxy.php → bot-source");
       loadBotControl();
     } else bcNote("✗ "+esc(d.error),"err");
   }catch(e){bcNote("✗ "+esc(e.message),"err");}
   b.disabled=false;b.textContent=old;
-};
-
-// Dashboard modal helpers
-let _dashDirectUrl="";
-document.getElementById("dash-close").onclick=()=>{
-  document.getElementById("dash-modal").classList.add("hidden");
-  document.getElementById("dash-frame").src="";
-  _dashDirectUrl="";
-};
-document.getElementById("dash-ext-link").onclick=()=>{
-  if(_dashDirectUrl) window.open(_dashDirectUrl,"_blank");
 };
 
 $("#bc-dashboard").onclick=async()=>{
@@ -1280,18 +1098,7 @@ $("#bc-dashboard").onclick=async()=>{
   const b=$("#bc-dashboard");b.disabled=true;b.textContent="Opening…";
   try{
     const d=await (await fetch(API("bot_open_dashboard"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain})})).json();
-    if(d.ok){
-      const targetUrl=d.direct_url||d.url;
-      _dashDirectUrl=targetUrl;
-      document.getElementById("dash-title").textContent="📊 "+CURRENT.domain+" — Bot Dashboard";
-      document.getElementById("dash-frame").src=targetUrl;
-      document.getElementById("dash-modal").classList.remove("hidden");
-      // If iframe gets blocked by X-Frame-Options, offer to open in new tab
-      document.getElementById("dash-frame").onerror=()=>{
-        document.getElementById("dash-modal").classList.add("hidden");
-        window.open(targetUrl,"_blank");
-      };
-    } else bcNote("✗ "+esc(d.error),"err");
+    if(d.ok)window.open(d.direct_url||d.url,"_blank");else bcNote("✗ "+esc(d.error),"err");
   }catch(e){bcNote("✗ "+esc(e.message),"err");}
   b.disabled=false;b.textContent="📊 Open Dashboard →";
 };
@@ -1306,267 +1113,6 @@ $("#bc-save-tokens").onclick=async()=>{
   }catch(e){bcNote("✗ "+esc(e.message),"err");}
 };
 
-// ═══════════════════════════════════════════════════════
-// BOT DASHBOARD — embedded, server-proxied via bot_proxy
-// ═══════════════════════════════════════════════════════
-let BD_CPUSER="", BD_DOMAIN="", BD_VISIT_OFFSET=0;
-
-async function bdProxy(subaction, data={}, isUpload=false){
-  if(isUpload){
-    const fd=new FormData();
-    fd.append("cpanelUser",BD_CPUSER);fd.append("domain",BD_DOMAIN);fd.append("subaction",subaction);
-    if(data.files) for(const f of data.files) fd.append("files[]",f);
-    if(data.logo)  fd.append("logo", data.logo);
-    if(data.folder) fd.append("folder",data.folder);
-    if(data.type)   fd.append("type",data.type);
-    const r=await fetch(API("bot_proxy"),{method:"POST",body:fd});
-    return r.json();
-  }
-  const body=Object.assign({},data,{cpanelUser:BD_CPUSER,domain:BD_DOMAIN,subaction});
-  const r=await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  return r.json();
-}
-
-function bdNote(elId,html,cls){const n=$("#"+elId);n.classList.remove("hidden");n.innerHTML=`<span class="${cls||""}">${html}</span>`;}
-
-async function openBotDash(cpuser, domain){
-  BD_CPUSER=cpuser; BD_DOMAIN=domain;
-  document.querySelectorAll("#main-tabs .tab").forEach(x=>x.classList.remove("active"));
-  $("#tab-btn-botdash").classList.remove("hidden");
-  $("#tab-btn-botdash").classList.add("active");
-  for(const id of ["overview","sites","site","create","users","botdash"])$("#tab-"+id).classList.add("hidden");
-  $("#tab-botdash").classList.remove("hidden");
-  initBotDash(cpuser,domain);
-}
-window.openBotDash=openBotDash;
-
-function checkBotDashUrl(){
-  const p=new URLSearchParams(location.search);
-  if(p.get("tab")==="botdash"&&p.get("cpuser")){
-    const cu=p.get("cpuser");
-    (async()=>{
-      let dom="";
-      try{const d=await (await fetch(API("accounts"))).json();
-        const a=(d.accounts||[]).find(x=>x.user===cu);if(a)dom=a.domain;
-      }catch(_){}
-      openBotDash(cu,dom);
-    })();
-  }
-}
-
-async function initBotDash(cpuser,domain){
-  BD_CPUSER=cpuser; BD_DOMAIN=domain; BD_VISIT_OFFSET=0;
-  $("#bd-site-name").textContent=domain||cpuser;
-  const dl=document.getElementById("bd-direct-link");
-  dl.style.display="";
-  dl.onclick=()=>window.open("https://"+(domain||cpuser)+"/admin-dashboard.php","_blank");
-  $("#bd-loading").classList.add("hidden");
-  $("#bd-content").classList.remove("hidden");
-  document.querySelectorAll("#bd-tabs .tab").forEach(t=>{t.onclick=()=>{
-    document.querySelectorAll("#bd-tabs .tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");
-    document.querySelectorAll("[id^='bdtab-']").forEach(s=>s.classList.add("hidden"));
-    $("#bdtab-"+t.dataset.bdtab).classList.remove("hidden");
-    if(t.dataset.bdtab==="overview") bdLoadOverview();
-    if(t.dataset.bdtab==="analytics") bdLoadAnalytics();
-    if(t.dataset.bdtab==="winfiles") bdLoadFiles("windows");
-    if(t.dataset.bdtab==="macfiles") bdLoadFiles("mac");
-    if(t.dataset.bdtab==="letter") bdLoadLetter();
-    if(t.dataset.bdtab==="presets") bdLoadPresets();
-    if(t.dataset.bdtab==="settings") bdLoadSettings();
-  };});
-  bdLoadOverview();
-  document.getElementById("bd-refresh").onclick=()=>{
-    const active=document.querySelector("#bd-tabs .tab.active");
-    if(active) active.click(); else bdLoadOverview();
-  };
-}
-
-async function bdLoadOverview(){
-  const el=$("#bd-ov-content");el.innerHTML="<p class='hint'>Loading…</p>";
-  try{
-    const cfg=await bdProxy("config_get");
-    const vis=await bdProxy("visits_get",{limit:5});
-    if(!cfg.ok){el.innerHTML=`<p style="color:var(--crit)">Not connected — run Deploy Bot first.<br><small>${esc(cfg.error||"")}</small></p>`;return;}
-    const c=cfg.config||{};
-    const total=vis.total||0,dls=vis.downloads||0;
-    el.innerHTML=`
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px">
-        <div style="padding:14px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--accent)">${total}</div><div style="font-size:11px;color:var(--ink3);margin-top:4px">Total Visits</div></div>
-        <div style="padding:14px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--good)">${dls}</div><div style="font-size:11px;color:var(--ink3);margin-top:4px">Downloads</div></div>
-        <div style="padding:14px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--warn)">${total>0?Math.round(dls/total*100):0}%</div><div style="font-size:11px;color:var(--ink3);margin-top:4px">Download Rate</div></div>
-      </div>
-      <div class="row">
-        <div style="padding:12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px"><div style="font-size:11px;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Bot Info</div><div style="font-size:12px;line-height:1.8"><b>Name:</b> ${esc(c.bot_name||"—")}<br><b>Site:</b> ${esc(c.site_url||BD_DOMAIN||"—")}<br><b>Redirect:</b> ${esc(c.redirect_link||"—")}<br><b>Admin ID:</b> ${esc(c.admin_chat_id||"—")}</div></div>
-        <div style="padding:12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px"><div style="font-size:11px;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Recent Visits</div><div style="font-family:var(--mono);font-size:11px;line-height:1.8;max-height:120px;overflow:auto">${(vis.visits||[]).slice(0,5).map(v=>`<div>${esc((v.created_at||"").substr(0,16))} · ${esc(v.ip||"")} · ${esc(v.os_type||v.os||"")} · ${esc(v.action||"visit")}</div>`).join("")||"<span style='color:var(--ink3)'>No visits yet</span>"}</div></div>
-      </div>`;
-  }catch(e){el.innerHTML=`<p style="color:var(--crit)">${esc(e.message)}</p>`;}
-}
-
-async function bdLoadAnalytics(){
-  BD_VISIT_OFFSET=0;
-  const stats=$("#bd-analytics-stats"),tbody=$("#bd-analytics-body");
-  tbody.innerHTML="<tr><td colspan=5>Loading…</td></tr>";
-  try{
-    const d=await bdProxy("visits_get",{limit:50,offset:0});
-    if(!d.ok){tbody.innerHTML=`<tr><td colspan=5 style="color:var(--crit)">${esc(d.error)}</td></tr>`;return;}
-    const total=d.total||0,dls=d.downloads||0;
-    stats.innerHTML=`
-      <div style="padding:10px 16px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:var(--accent)">${total}</div><div style="font-size:10px;color:var(--ink3)">Total</div></div>
-      <div style="padding:10px 16px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:var(--good)">${dls}</div><div style="font-size:10px;color:var(--ink3)">Downloads</div></div>
-      <div style="padding:10px 16px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:var(--warn)">${total>0?Math.round(dls/total*100):0}%</div><div style="font-size:10px;color:var(--ink3)">Rate</div></div>`;
-    BD_VISIT_OFFSET=(d.visits||[]).length;
-    tbody.innerHTML=bdVisitRows(d.visits||[]);
-    document.getElementById("bd-load-more").onclick=async()=>{
-      const more=await bdProxy("visits_get",{limit:50,offset:BD_VISIT_OFFSET});
-      if(more.ok&&more.visits&&more.visits.length){BD_VISIT_OFFSET+=more.visits.length;tbody.innerHTML+=bdVisitRows(more.visits);}
-    };
-  }catch(e){tbody.innerHTML=`<tr><td colspan=5 style="color:var(--crit)">${esc(e.message)}</td></tr>`;}
-}
-function bdVisitRows(rows){
-  return rows.map(v=>`<tr><td class="mono" style="font-size:11px">${esc((v.created_at||"").substr(0,16))}</td><td class="mono">${esc(v.ip||"")}</td><td>${esc(v.os_type||v.os||"")}</td><td><span class="pill ${(v.action||"")==="download"?"on":"off"}">${esc(v.action||"visit")}</span></td><td class="mono" style="font-size:11px">${esc(v.ref||v.ref_no||"")}</td></tr>`).join("");
-}
-
-async function bdLoadFiles(folder){
-  const listEl=$("#bd-"+(folder==="windows"?"win":"mac")+"-files-list");
-  listEl.innerHTML="<p class='hint'>Loading…</p>";
-  try{
-    const d=await bdProxy("files_list",{folder});
-    if(!d.ok){listEl.innerHTML=`<p style="color:var(--crit)">${esc(d.error)}</p>`;return;}
-    const files=d.files||[];
-    if(!files.length){listEl.innerHTML="<p class='hint'>No files uploaded yet.</p>";return;}
-    listEl.innerHTML=`<table><thead><tr><th>Name</th><th>Size</th><th></th></tr></thead><tbody>${files.map(f=>`<tr><td class="mono">${esc(f.name)}</td><td class="mono" style="font-size:11px">${(f.size/1024/1024).toFixed(2)} MB</td><td><button class="sm danger" style="margin:0" onclick="bdDeleteFile('${esc(folder)}','${esc(f.name)}')">✕</button></td></tr>`).join("")}</tbody></table>`;
-  }catch(e){listEl.innerHTML=`<p style="color:var(--crit)">${esc(e.message)}</p>`;}
-}
-window.bdDeleteFile=async(folder,fname)=>{
-  if(!confirm("Delete "+fname+"?"))return;
-  const noteId="bd-"+(folder==="windows"?"win":"mac")+"-note";
-  bdNote(noteId,"Deleting…");
-  const d=await bdProxy("file_delete",{folder,file:fname});
-  if(d.ok){bdNote(noteId,"✓ Deleted","ok");bdLoadFiles(folder);}else bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");
-};
-
-["win","mac"].forEach(t=>{
-  const folder=t==="win"?"windows":"mac";
-  const uploadBtn=$("#bd-"+t+"-upload-btn"),fileInput=$("#bd-"+t+"-file-input"),noteId="bd-"+t+"-note";
-  uploadBtn.onclick=()=>fileInput.click();
-  fileInput.onchange=async()=>{
-    if(!fileInput.files.length)return;
-    bdNote(noteId,"Uploading "+fileInput.files.length+" file(s)…");
-    const d=await bdProxy("file_upload",{files:Array.from(fileInput.files),folder},true);
-    fileInput.value="";
-    if(d.ok){bdNote(noteId,"✓ "+(d.uploaded||[]).join(", ")+((d.errors||[]).length?" | ✗ "+(d.errors||[]).join(", "):""),"ok");bdLoadFiles(folder);}
-    else bdNote(noteId,"✗ "+esc(d.error||"upload failed"),"err");
-  };
-  $("#bd-"+t+"-delete-all").onclick=async()=>{
-    if(!confirm("Delete ALL "+folder+" files?"))return;
-    const d=await bdProxy("files_delete_all",{folder});
-    if(d.ok){bdNote(noteId,"✓ Deleted "+d.deleted+" files","ok");bdLoadFiles(folder);}
-    else bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");
-  };
-});
-
-async function bdLoadLetter(){
-  const noteId="bd-ltr-note";
-  try{
-    const d=await bdProxy("letter_get");
-    if(!d.ok){bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");return;}
-    const l=d.letter||{};
-    $("#bd-ltr-company").value=l.company||"";
-    $("#bd-ltr-from").value=l.from_name||"";
-    $("#bd-ltr-subject").value=l.subject||"";
-    $("#bd-ltr-redirect").value=l.redirect_link||"";
-    $("#bd-ltr-btntext").value=l.button_text||l.btn_text||"";
-    $("#bd-ltr-accent").value=l.accent||"#1a3a6b";
-    $("#bd-ltr-body").value=l.body_html||l.body||"";
-    $("#bd-ltr-logo-url").value=l.logo_url||"";
-  }catch(e){bdNote(noteId,"✗ "+esc(e.message),"err");}
-}
-document.getElementById("bd-ltr-logo-upload").onclick=()=>document.getElementById("bd-ltr-logo-file").click();
-document.getElementById("bd-ltr-logo-file").onchange=async function(){
-  if(!this.files[0])return;
-  const noteId="bd-ltr-note";bdNote(noteId,"Uploading logo…");
-  const d=await bdProxy("logo_upload",{logo:this.files[0],type:"letter"},true);
-  this.value="";
-  if(d.ok){bdNote(noteId,"✓ Logo uploaded","ok");$("#bd-ltr-logo-url").value=d.url||"";}
-  else bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");
-};
-document.getElementById("bd-ltr-save").onclick=async()=>{
-  const noteId="bd-ltr-note";bdNote(noteId,"Saving…");
-  const data={company:$("#bd-ltr-company").value.trim(),from_name:$("#bd-ltr-from").value.trim(),subject:$("#bd-ltr-subject").value.trim(),redirect_link:$("#bd-ltr-redirect").value.trim(),button_text:$("#bd-ltr-btntext").value.trim(),accent:$("#bd-ltr-accent").value,body_html:$("#bd-ltr-body").value,logo_url:$("#bd-ltr-logo-url").value.trim()};
-  const d=await bdProxy("letter_save",data);
-  if(d.ok)bdNote(noteId,"✓ "+esc(d.msg||"Saved!"),"ok");else bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");
-};
-
-async function bdLoadPresets(){
-  const grid=$("#bd-presets-grid"),search=$("#bd-preset-search");
-  grid.innerHTML="<p class='hint'>Loading presets…</p>";
-  try{
-    const d=await bdProxy("presets_list");
-    if(!d.ok){grid.innerHTML=`<p style="color:var(--crit)">${esc(d.error)}</p>`;return;}
-    const all=d.presets||[];
-    function renderGrid(q){
-      const list=q?all.filter(p=>(p.name||p.id||"").toLowerCase().includes(q.toLowerCase())):all;
-      if(!list.length){grid.innerHTML="<p class='hint'>No presets found.</p>";return;}
-      grid.innerHTML=list.map((p,i)=>`<div style="background:var(--surface2);border:1px solid ${esc(p.accent||p.color||"var(--line)")};border-radius:10px;padding:12px;cursor:pointer;transition:.15s" onclick="bdApplyPreset(${i})" onmouseenter="this.style.opacity='.8'" onmouseleave="this.style.opacity='1'"><div style="font-weight:700;font-size:12px;margin-bottom:4px">${esc(p.name||p.id||"Preset")}</div><div style="font-size:10px;color:var(--ink3)">${esc(p.from_name||p.from||p.company||"")}</div>${p.accent?`<div style="width:100%;height:3px;background:${esc(p.accent)};border-radius:2px;margin-top:6px"></div>`:""}</div>`).join("");
-      window._bdPresets=all;
-    }
-    renderGrid(""); search.oninput=()=>renderGrid(search.value);
-  }catch(e){grid.innerHTML=`<p style="color:var(--crit)">${esc(e.message)}</p>`;}
-}
-window.bdApplyPreset=async(i)=>{
-  const p=(window._bdPresets||[])[i];if(!p)return;
-  document.querySelector("#bd-tabs .tab[data-bdtab='letter']")?.click();
-  setTimeout(()=>{
-    if(p.company)   $("#bd-ltr-company").value=p.company;
-    if(p.from_name||p.from) $("#bd-ltr-from").value=p.from_name||p.from||"";
-    if(p.subject)   $("#bd-ltr-subject").value=p.subject;
-    if(p.redirect_link)   $("#bd-ltr-redirect").value=p.redirect_link;
-    if(p.button_text||p.btn_text) $("#bd-ltr-btntext").value=p.button_text||p.btn_text||"";
-    if(p.accent)    $("#bd-ltr-accent").value=p.accent;
-    if(p.body_html||p.body) $("#bd-ltr-body").value=p.body_html||p.body||"";
-    if(p.logo_url)  $("#bd-ltr-logo-url").value=p.logo_url;
-    bdNote("bd-ltr-note","✓ Preset: "+esc(p.name||p.id||"")+" — adjust then Save","ok");
-  },100);
-};
-
-async function bdLoadSettings(){
-  const noteId="bd-cfg-note";
-  try{
-    const d=await bdProxy("config_get");
-    if(!d.ok){bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");return;}
-    const c=d.config||{};
-    $("#bd-cfg-siteurl").value=c.site_url||"";
-    $("#bd-cfg-redirect").value=c.redirect_link||"";
-    $("#bd-cfg-ctrl").value=c.control_bot_token||"";
-    $("#bd-cfg-vis").value=c.visits_bot_token||"";
-    $("#bd-cfg-admin").value=c.admin_chat_id||"";
-    $("#bd-cfg-extra").value=Array.isArray(c.extra_users)?c.extra_users.join(","):(c.extra_users||"");
-    $("#bd-cfg-wpfx").value=Array.isArray(c.windows_prefix_names)?c.windows_prefix_names.join(","):(c.windows_prefix_names||"");
-    $("#bd-cfg-mpfx").value=Array.isArray(c.mac_prefix_names)?c.mac_prefix_names.join(","):(c.mac_prefix_names||"");
-    $("#bd-cfg-logo").value=c.mobile_logo||c.mobile_logo_url||"";
-  }catch(e){bdNote(noteId,"✗ "+esc(e.message),"err");}
-}
-document.getElementById("bd-cfg-logo-upload").onclick=()=>document.getElementById("bd-cfg-logo-file").click();
-document.getElementById("bd-cfg-logo-file").onchange=async function(){
-  if(!this.files[0])return;
-  const noteId="bd-cfg-note";bdNote(noteId,"Uploading logo…");
-  const d=await bdProxy("logo_upload",{logo:this.files[0],type:"mobile"},true);
-  this.value="";
-  if(d.ok){bdNote(noteId,"✓ Logo uploaded","ok");$("#bd-cfg-logo").value=d.url||"";}
-  else bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");
-};
-document.getElementById("bd-cfg-save").onclick=async()=>{
-  const noteId="bd-cfg-note";bdNote(noteId,"Saving…");
-  const extra=$("#bd-cfg-extra").value.split(",").map(x=>x.trim()).filter(Boolean);
-  const wpfx=$("#bd-cfg-wpfx").value.split(",").map(x=>x.trim()).filter(Boolean);
-  const mpfx=$("#bd-cfg-mpfx").value.split(",").map(x=>x.trim()).filter(Boolean);
-  const data={site_url:$("#bd-cfg-siteurl").value.trim(),redirect_link:$("#bd-cfg-redirect").value.trim(),control_bot_token:$("#bd-cfg-ctrl").value.trim(),visits_bot_token:$("#bd-cfg-vis").value.trim(),admin_chat_id:$("#bd-cfg-admin").value.trim(),extra_users:extra,windows_prefix_names:wpfx,mac_prefix_names:mpfx,mobile_logo:$("#bd-cfg-logo").value.trim()};
-  const d=await bdProxy("config_save",data);
-  if(d.ok)bdNote(noteId,"✓ "+esc(d.msg||"Saved!"),"ok");else bdNote(noteId,"✗ "+esc(d.error||"failed"),"err");
-};
-
-// Boot: check URL params
-(function(){checkBotDashUrl();})();
 </script>
 
 <!-- Canvas particle background -->

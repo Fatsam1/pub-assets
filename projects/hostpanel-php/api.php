@@ -771,11 +771,11 @@ try {
             $tok      = bin2hex(random_bytes(20));
             $tf       = json_encode([$tok => ['exp' => time() + 600, 'chatId' => $caller_id]], JSON_UNESCAPED_SLASHES);
             $site_tok = '/home/panelcou1999/public_html/sites/' . $domain . '/autologin-tokens.json';
-            if (!file_put_contents($site_tok, $tf)) {
-                // Fallback: write via WHM on panelcou1999
-                $r = whm_cpanel_uapi('panelcou1999', 'Fileman', 'save_file_content',
-                    ['dir' => '/public_html/sites/' . $domain, 'file' => 'autologin-tokens.json', 'content' => $tf]);
-                if (!($r['status'] ?? 0)) { json_out(['ok' => false, 'error' => 'Could not write autologin token']); break; }
+            $site_dir_tok = dirname($site_tok);
+            if (!is_dir($site_dir_tok)) @mkdir($site_dir_tok, 0755, true);
+            if (file_put_contents($site_tok, $tf) === false) {
+                json_out(['ok' => false, 'error' => 'Could not write autologin token']);
+                break;
             }
             // panel_url: centralized dashboard in HostPanel (iframe)
             // direct_url: direct cPanel URL (fallback, for panelcou1999 only)
@@ -788,6 +788,15 @@ try {
             $cu = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? $_GET['cpanelUser'] ?? ''));
             $domain = strtolower(trim((string)($input['domain'] ?? $_GET['domain'] ?? '')));
             if (!$cu || !$domain) { json_out(['ok' => true, 'deployed' => false, 'reason' => 'missing params']); break; }
+            // Bridge mode: check sites/{domain}/bot-config.json on panelcou1999
+            $bridge_cfg_path = '/home/panelcou1999/public_html/sites/' . $domain . '/bot-config.json';
+            if (file_exists($bridge_cfg_path)) {
+                $bcfg = json_decode(file_get_contents($bridge_cfg_path), true) ?: [];
+                $deployed = !empty($bcfg['bridge_key']);
+                json_out(['ok' => true, 'deployed' => $deployed, 'bridge' => true, 'url' => 'https://' . $domain . '/admin-dashboard.php']);
+                break;
+            }
+            // Classic mode: check admin-dashboard.php on target cPanel
             $r = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content',
                 ['dir' => '/public_html', 'file' => 'admin-dashboard.php']);
             $deployed = ($r['status'] ?? 0) && !empty($r['data']['content']);
