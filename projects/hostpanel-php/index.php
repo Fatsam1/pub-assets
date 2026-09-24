@@ -462,9 +462,9 @@ async function loadOverview(){
         </div>
         ${diskBar}
         <div class="ov-actions">
-          <button onclick="ovOpenCpanel(${i})" class="ghost">cPanel →</button>
-          <button onclick="ovOpenBot(${i})" class="${a.botDeployed?'ghost':'danger'}" ${a.botDeployed?"":"title='Deploy bot first'"}>Bot →</button>
-          <button onclick="ovDeployBot(${i})" class="ghost">Deploy</button>
+          <button onclick="ovOpenCpanel(${i},this)" class="ghost">cPanel →</button>
+          <button onclick="ovOpenBot(${i},this)" class="${a.botDeployed?'ghost':'danger'}" ${a.botDeployed?"":"title='Deploy bot first'"}>Bot →</button>
+          <button onclick="ovDeployBot(${i},this)" class="ghost">Deploy</button>
           <button onclick="ovGoManage(${i})">Manage</button>
         </div>
       </div>`;
@@ -472,29 +472,30 @@ async function loadOverview(){
   }catch(e){grid.innerHTML=`<p style="color:var(--crit)">${esc(e.message)}</p>`;sum.textContent="Error";}
 }
 
-async function ovOpenCpanel(i){
+async function ovOpenCpanel(i,btn){
   const a=OV_ITEMS[i];
-  const btn=event.currentTarget;btn.disabled=true;const old=btn.textContent;btn.textContent="…";
+  btn.disabled=true;const old=btn.textContent;btn.textContent="…";
   try{const d=await (await fetch(API("cpanel_login"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user})})).json();
     if(d.ok&&d.url)window.open(d.url,"_blank");else alert("✗ "+d.error);
   }catch(e){alert("✗ "+e.message);}
   btn.disabled=false;btn.textContent=old;
 }
 
-async function ovOpenBot(i){
+async function ovOpenBot(i,btn){
   const a=OV_ITEMS[i];
   if(!a.botDeployed){alert("Deploy the bot first — click the Deploy button.");return;}
-  const btn=event.currentTarget;btn.disabled=true;const old=btn.textContent;btn.textContent="Opening…";
+  btn.disabled=true;const old=btn.textContent;btn.textContent="Opening…";
+  const win=window.open("","_blank");
   try{
     const d=await (await fetch(API("bot_open_dashboard"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
-    if(d.ok)window.open(d.direct_url||d.url,"_blank");else alert("✗ "+(d.error||"Failed"));
-  }catch(e){alert("✗ "+e.message);}
+    if(d.ok&&win){win.location.href=d.direct_url||d.url;}else if(!d.ok){if(win)win.close();alert("✗ "+(d.error||"Failed"));}
+  }catch(e){if(win)win.close();alert("✗ "+e.message);}
   btn.disabled=false;btn.textContent=old;
 }
 
-async function ovDeployBot(i){
+async function ovDeployBot(i,btn){
   const a=OV_ITEMS[i];
-  const btn=event.currentTarget;btn.disabled=true;const old=btn.textContent;btn.textContent="Deploying…";
+  btn.disabled=true;const old=btn.textContent;btn.textContent="Deploying…";
   try{const d=await (await fetch(API("deploy_bot"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
     if(d.ok){OV_ITEMS[i].botDeployed=true;btn.textContent="✓ Done";loadOverview();}
     else{btn.textContent="✗ Failed";setTimeout(()=>{btn.disabled=false;btn.textContent=old;},2000);}
@@ -1096,10 +1097,11 @@ $("#bc-deploy-bridge").onclick=async()=>{
 $("#bc-dashboard").onclick=async()=>{
   if(!CURRENT)return;
   const b=$("#bc-dashboard");b.disabled=true;b.textContent="Opening…";
+  const win=window.open("","_blank");
   try{
     const d=await (await fetch(API("bot_open_dashboard"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain})})).json();
-    if(d.ok)window.open(d.direct_url||d.url,"_blank");else bcNote("✗ "+esc(d.error),"err");
-  }catch(e){bcNote("✗ "+esc(e.message),"err");}
+    if(d.ok&&win){win.location.href=d.direct_url||d.url;}else if(!d.ok){if(win)win.close();bcNote("✗ "+esc(d.error),"err");}
+  }catch(e){if(win)win.close();bcNote("✗ "+esc(e.message),"err");}
   b.disabled=false;b.textContent="📊 Open Dashboard →";
 };
 
