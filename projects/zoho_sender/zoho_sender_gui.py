@@ -2148,11 +2148,13 @@ def _build_email_html(cfg, template=None, custom_link=None):
     footer_text  = (src.get("footer_text") or cfg.get("footer_text") or "").strip()
     landing_url  = (src.get("landing_url") or cfg.get("landing_url") or "").strip()
 
-    # ── CTA button (replaces Zoho's "Begin Survey" if link provided) ─────────
-    # Zoho Summernote strips all CSS styling from HTML — custom styled buttons don't survive.
-    # Zoho auto-adds a "Begin Survey" button using the template's banner color, so we don't need a custom CTA.
+    # ── CTA button — plain <a href> survives Summernote stripping ────────────
+    # Summernote strips inline CSS from buttons/divs but keeps <a href> intact.
+    # We use a table-based button (the only reliable email button technique) with
+    # bgcolor attribute (HTML4 attr, not CSS — Summernote cannot strip it).
+    # Zoho's own "Begin Survey" button IS the CTA — its text is renamed via
+    # set_survey_button_text in the send flow. No extra button in the body.
     cta_block = ""
-    # cta_link kept for future use if a non-Zoho send path is added
 
     # ── Zoho topbar negative-margin offset ────────────────────────────────────
     # Zoho always prepends a black survey-name banner (~65px) above our body HTML.
@@ -2191,26 +2193,54 @@ def _build_email_html(cfg, template=None, custom_link=None):
 
 
 def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
-    """Banking / Payment — bold colored header, text logo, professional layout. No img tags (Summernote strips them)."""
+    """Banking / Payment — Zoho-integrated design.
+    Strategy: Zoho always shows a black title bar (collector name) above our HTML.
+    We make our header BLACK too so it blends seamlessly with Zoho's bar,
+    then add a brand-colored accent strip below it. Visually looks like one unified header.
+    Logo img supported when logo_url is provided (hosted HTTPS image).
+    """
     footer_row = (
         f'<tr><td style="padding:14px 28px;background:#f5f5f5;border-top:3px solid {b1};'
         f'font-size:10px;color:#888;font-family:Arial,sans-serif;line-height:1.7;text-align:center">'
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
-    name_html = (
-        f'<div style="font-size:22px;font-weight:900;color:#fff;font-family:Arial,sans-serif;'
-        f'letter-spacing:0.5px;line-height:1.1">{org_name}</div>'
-        f'<div style="font-size:11px;color:rgba(255,255,255,0.75);font-family:Arial,sans-serif;'
-        f'margin-top:3px;letter-spacing:0.3px">{org_sub}</div>'
-    )
-    inner_html = (
-        f'<a href="{landing_url}" style="display:block;text-decoration:none">{name_html}</a>'
-        if landing_url else name_html
-    )
-    header_block = (
-        f'<tr><td style="background:{b1};padding:20px 28px 18px">{inner_html}</td></tr>'
+    # Logo: use img if URL provided, else bold letter avatar
+    if logo_url:
+        logo_el = (
+            f'<img src="{logo_url}" alt="{org_name}" '
+            f'style="height:40px;max-width:160px;object-fit:contain;vertical-align:middle;display:inline-block">'
+        )
+    else:
+        logo_el = (
+            f'<span style="display:inline-block;width:42px;height:42px;border-radius:4px;'
+            f'background:{b1};text-align:center;line-height:42px;'
+            f'font-size:20px;font-weight:900;color:#fff;font-family:Arial,sans-serif;'
+            f'vertical-align:middle">{logo_letter}</span>'
+        )
+
+    name_block = (
+        f'<span style="display:inline-block;vertical-align:middle;margin-left:12px">'
+        f'<span style="display:block;font-size:18px;font-weight:900;color:#fff;'
+        f'font-family:Arial,sans-serif;letter-spacing:0.3px;line-height:1.1">{org_name}</span>'
+        f'</span>'
     ) if org_name else ""
+
+    header_inner = f'{logo_el}{name_block}'
+    if landing_url:
+        header_inner = f'<a href="{landing_url}" style="text-decoration:none">{header_inner}</a>'
+
+    # Black header blends with Zoho's black title bar above
+    # Brand-colored accent strip below creates visual separation
+    header_block = (
+        f'<tr><td style="background:#000000;padding:16px 24px 14px">{header_inner}</td></tr>'
+        f'<tr><td style="background:{b1};padding:10px 24px 10px">'
+        f'<span style="font-size:13px;font-weight:700;color:#fff;font-family:Arial,sans-serif;'
+        f'letter-spacing:0.2px">{org_sub}</span>'
+        f'</td></tr>'
+    ) if org_name else (
+        f'<tr><td style="background:{b1};height:6px;padding:0"></td></tr>'
+    )
 
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
@@ -2224,29 +2254,38 @@ def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_bloc
 
 
 def _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
-    """Government / Court — dark banner header, official seal, formal tone."""
+    """Government / Court — black header blends with Zoho bar, brand accent strip, official seal."""
     footer_row = (
         f'<tr><td style="padding:12px 28px;background:#1a1a1a;'
         f'font-size:10px;color:#888;font-family:Georgia,serif;line-height:1.6;text-align:center">'
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
-    seal = (
-        f'<div style="width:52px;height:52px;border-radius:50%;background:{b1};'
-        f'border:3px solid {b2};text-align:center;line-height:46px;'
-        f'font-size:22px;font-weight:900;color:#fff;font-family:Georgia,serif;'
-        f'display:inline-block;margin-right:14px;vertical-align:middle">{logo_letter}</div>'
-    )
+    if logo_url:
+        seal = f'<img src="{logo_url}" alt="{org_name}" style="height:38px;max-width:140px;object-fit:contain;vertical-align:middle;display:inline-block">'
+    else:
+        seal = (
+            f'<div style="width:42px;height:42px;border-radius:50%;background:{b1};'
+            f'border:2px solid rgba(255,255,255,0.4);text-align:center;line-height:38px;'
+            f'font-size:20px;font-weight:900;color:#fff;font-family:Georgia,serif;'
+            f'display:inline-block;vertical-align:middle">{logo_letter}</div>'
+        )
+
+    name_part = (
+        f'<span style="display:inline-block;vertical-align:middle;margin-left:12px">'
+        f'<span style="display:block;font-size:18px;font-weight:700;color:#fff;font-family:Georgia,serif;line-height:1.2">{org_name}</span>'
+        f'</span>'
+    ) if org_name else ""
+
+    header_inner = f'{seal}{name_part}'
+    if landing_url:
+        header_inner = f'<a href="{landing_url}" style="text-decoration:none">{header_inner}</a>'
 
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
-        f'<tr><td style="background:{b1};padding:20px 28px">'
-        f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-        f'<td style="vertical-align:middle">{seal}</td>'
-        f'<td style="vertical-align:middle;padding-left:4px">'
-        f'<div style="font-size:20px;font-weight:700;color:#fff;font-family:Georgia,serif;line-height:1.2">{org_name}</div>'
-        f'<div style="font-size:11px;color:rgba(255,255,255,0.75);font-family:Georgia,serif;margin-top:2px">{org_sub}</div>'
-        f'</td></tr></table>'
+        f'<tr><td style="background:#000000;padding:16px 24px 14px">{header_inner}</td></tr>'
+        f'<tr><td style="background:{b1};padding:8px 24px">'
+        f'<span style="font-size:12px;font-weight:700;color:#fff;font-family:Georgia,serif;letter-spacing:0.3px">{org_sub}</span>'
         f'</td></tr>'
         f'<tr><td style="padding:22px 28px 16px;background:#fff">'
         f'{body_text}{cta_block}'
@@ -2257,27 +2296,37 @@ def _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block
 
 
 def _style_dark_modern(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
-    """Crypto / Tech — dark header (#0d0d0d), accent color text, modern card."""
-    dark = "#0d0d0d"
+    """Crypto / Tech — dark header blends with Zoho bar, accent color text, modern card."""
+    dark = "#000000"
     footer_row = (
         f'<tr><td style="padding:12px 28px;background:#0d0d0d;'
         f'font-size:10px;color:#555;font-family:Arial,sans-serif;line-height:1.6;text-align:center">'
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
+    if logo_url:
+        logo_el = f'<img src="{logo_url}" alt="{org_name}" style="height:36px;max-width:140px;object-fit:contain;vertical-align:middle;display:inline-block">'
+    else:
+        logo_el = (
+            f'<div style="width:38px;height:38px;border-radius:50%;background:{b1};'
+            f'text-align:center;line-height:38px;font-size:18px;font-weight:900;'
+            f'color:#fff;font-family:Arial,sans-serif;display:inline-block;vertical-align:middle">{logo_letter}</div>'
+        )
+
+    name_part = (
+        f'<span style="display:inline-block;vertical-align:middle;margin-left:12px">'
+        f'<span style="display:block;font-size:18px;font-weight:700;color:{b1};font-family:Arial,sans-serif">{org_name}</span>'
+        f'<span style="display:block;font-size:11px;color:#666;font-family:Arial,sans-serif;margin-top:1px">{org_sub}</span>'
+        f'</span>'
+    ) if org_name else ""
+
+    header_inner = f'{logo_el}{name_part}'
+    if landing_url:
+        header_inner = f'<a href="{landing_url}" style="text-decoration:none">{header_inner}</a>'
+
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
-        f'<tr><td style="background:{dark};padding:18px 28px">'
-        f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-        f'<td style="vertical-align:middle;width:42px">'
-        f'<div style="width:38px;height:38px;border-radius:50%;background:{b1};'
-        f'text-align:center;line-height:38px;font-size:18px;font-weight:900;'
-        f'color:#fff;font-family:Arial,sans-serif">{logo_letter}</div></td>'
-        f'<td style="vertical-align:middle;padding-left:12px">'
-        f'<div style="font-size:18px;font-weight:700;color:{b1};font-family:Arial,sans-serif">{org_name}</div>'
-        f'<div style="font-size:11px;color:#666;font-family:Arial,sans-serif;margin-top:1px">{org_sub}</div>'
-        f'</td></tr></table>'
-        f'</td></tr>'
+        f'<tr><td style="background:{dark};padding:18px 24px">{header_inner}</td></tr>'
         f'<tr><td style="padding:22px 28px 16px;background:#fff">'
         f'{body_text}{cta_block}'
         f'</td></tr>'
@@ -2497,7 +2546,24 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 d, cfg["portal"], cfg["dept"], cfg["survey"],
                 _ep_type, cfg.get("end_page_url", ""),
                 cfg.get("end_page_msg", ""))
-        # Apply CTA button text — GUI field takes priority, else use first template's btn_text
+        # Create a fresh survey named after the brand — collector picks up the name from creation
+        _brand_name = ""
+        if templates:
+            _brand_name = templates[0].get("org_name", "").strip()
+        if not _brand_name:
+            _brand_name = cfg.get("survey_name", "").strip()
+        if not _brand_name:
+            _brand_name = "Survey"
+        SEND_LOG.put(("info", f"  Creating fresh survey: '{_brand_name}'"))
+        _new_survey_id = _create_blank_survey(d, cfg["portal"], cfg["dept"], survey_name=_brand_name)
+        if _new_survey_id:
+            cfg["survey"] = _new_survey_id
+            SEND_LOG.put(("ok", f"  New survey ID: {_new_survey_id}"))
+            _add_dummy_question(d, cfg["portal"], cfg["dept"], _new_survey_id)
+        else:
+            SEND_LOG.put(("warn", "  Survey creation failed — using old survey ID"))
+        # Always set Zoho's "Begin Survey" button text to the template's btn_text
+        # (Zoho's button IS the only CTA — no extra button in the body HTML)
         _btn_text = cfg.get("survey_button_text", "").strip()
         if not _btn_text and templates:
             _btn_text = templates[0].get("btn_text", "").strip()
