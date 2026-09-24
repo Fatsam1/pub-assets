@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priv8Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #0a0d13;
+    --bg-input: #1c2128;
+    --border: rgba(0, 255, 65, 0.12);
+    --border-hover: rgba(0, 255, 65, 0.35);
+    --accent: #00FF41;
+    --accent-dim: rgba(0, 255, 65, 0.08);
+    --accent-glow: rgba(0, 255, 65, 0.2);
+    --green: #00FF41;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #484f58;
+    --user-bubble: #0d2612;
+    --user-border: rgba(0, 255, 65, 0.25);
+    --ai-bubble: #161b22;
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%; overflow: hidden;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app { display: flex; flex-direction: column; height: 100%; }
+
+  /* ── Header ── */
+  #header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px 11px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .logo-mark {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(0, 255, 65, 0.08);
+    border: 1px solid rgba(0, 255, 65, 0.25);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
+  }
+  .logo-text { font-size: 15px; font-weight: 700; flex: 1; letter-spacing: -0.3px; }
+  .logo-text em { color: var(--accent); font-style: normal; }
+
+  #status-pill {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    transition: all 0.3s;
+  }
+  #status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: all 0.3s; }
+  #status-pill.online { border-color: rgba(0,255,65,0.3); color: var(--green); }
+  #status-pill.online .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  .hdr-btn {
+    width: 28px; height: 28px; border-radius: var(--radius-sm);
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .hdr-btn:hover { background: var(--accent-dim); color: var(--text-primary); }
+  .hdr-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+  #btn-new {
+    height: 28px; padding: 0 11px; border-radius: var(--radius-sm);
+    background: var(--accent-dim); border: 1px solid rgba(0,255,65,0.25);
+    color: var(--accent); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    font-family: inherit;
+  }
+  #btn-new:hover { background: var(--accent); color: #0a0d13; border-color: var(--accent); }
+
+  /* ── Mode Tabs (Chat / Code) ── */
+  #mode-tabs {
+    display: flex; gap: 0; padding: 6px 14px 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .mode-tab {
+    padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+    background: none; border: none; color: var(--text-muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .15s, border-color .15s; font-family: inherit;
+  }
+  .mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .mode-tab:hover:not(.active) { color: var(--text-primary); }
+
+  /* ── Model Bar ── */
+  #model-bar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #model-select {
+    flex: 1; background: var(--bg-input); border: 1px solid var(--border);
+    color: var(--text-secondary); padding: 5px 10px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; cursor: pointer; outline: none;
+    font-family: inherit; transition: border-color 0.15s;
+  }
+  #model-select:focus { border-color: var(--accent); color: var(--text-primary); }
+  #quality-select {
+    background: var(--bg-input); border: 1px solid var(--border);
+    color: var(--text-muted); padding: 5px 7px; border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 500; cursor: pointer; outline: none;
+    font-family: inherit; transition: border-color .15s; width: 72px;
+  }
+  #quality-select:focus { border-color: var(--accent); }
+  .model-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+    background: rgba(0,255,65,0.1); color: var(--green); border: 1px solid rgba(0,255,65,0.2);
+  }
+
+  /* ── Sessions Panel ── */
+  #sessions-panel {
+    display: none; flex-direction: column; flex: 1; overflow: hidden;
+    background: var(--bg-tertiary);
+  }
+  #sessions-panel.visible { display: flex; }
+  #sessions-header {
+    padding: 10px 14px; font-size: 11px; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border);
+  }
+  #sessions-list { flex: 1; overflow-y: auto; padding: 6px; }
+  .session-item {
+    padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer;
+    margin-bottom: 2px; border: 1px solid transparent; transition: all 0.15s;
+  }
+  .session-item:hover { background: var(--bg-secondary); border-color: var(--border); }
+  .session-item.current { background: var(--accent-dim); border-color: rgba(0,255,65,0.25); }
+  .si-title { font-size: 13px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex:1; min-width:0; }
+  .si-title input { background:var(--bg-input);border:1px solid var(--accent);color:var(--text-primary);border-radius:4px;padding:1px 6px;font-size:13px;font-family:inherit;width:100%;outline:none; }
+  .si-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .si-del { background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0;opacity:0;transition:opacity .15s; }
+  .session-item:hover .si-del { opacity:1; }
+  .si-del:hover { color:var(--red); }
+
+  /* Timestamps */
+  .msg-time { font-size:10px;color:var(--text-muted);padding:0 4px;margin-top:2px;text-align:right; }
+  .msg-group.ai .msg-time { text-align:left; }
+
+  /* Reactions */
+  .msg-reactions { display:flex;gap:3px;padding:0 4px;margin-top:3px; }
+  .react-btn { background:none;border:1px solid transparent;border-radius:5px;cursor:pointer;font-size:13px;padding:1px 5px;color:var(--text-muted);transition:all .15s;font-family:inherit; }
+  .react-btn:hover { border-color:var(--border);background:var(--accent-dim); }
+  .react-btn.active { border-color:rgba(0,255,65,.35);background:var(--accent-dim);color:var(--green); }
+
+  /* ── Chat ── */
+  #chat-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; }
+
+  #welcome {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 28px 20px; gap: 20px; text-align: center;
+  }
+  .welcome-logo {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: rgba(0, 255, 65, 0.08);
+    border: 1px solid rgba(0, 255, 65, 0.25);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 32px rgba(0, 255, 65, 0.15);
+  }
+  .welcome-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .welcome-title span { color: var(--accent); }
+  .welcome-sub { font-size: 13px; color: var(--text-secondary); max-width: 220px; line-height: 1.6; }
+
+  .suggestions { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .sug {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    cursor: pointer; text-align: left; font-size: 12.5px;
+    color: var(--text-secondary); transition: all 0.15s;
+    display: flex; align-items: center; gap: 8px; font-family: inherit;
+  }
+  .sug:hover { border-color: var(--border-hover); color: var(--text-primary); background: var(--accent-dim); }
+  .sug .sug-icon { font-size: 15px; flex-shrink: 0; }
+
+  #messages {
+    flex: 1; overflow-y: auto; padding: 16px 12px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  #messages::-webkit-scrollbar { width: 3px; }
+  #messages::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.15); border-radius: 2px; }
+
+  /* Message groups */
+  .msg-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+  .msg-group.user { align-items: flex-end; }
+  .msg-group.ai { align-items: flex-start; }
+
+  .msg-sender {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    padding: 0 4px; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .msg-sender .sender-avatar {
+    width: 18px; height: 18px; border-radius: 5px;
+    background: rgba(0, 255, 65, 0.12);
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+  .msg-group.user .msg-sender { flex-direction: row-reverse; }
+
+  .bubble {
+    max-width: 88%; padding: 10px 14px; border-radius: var(--radius);
+    font-size: 13.5px; line-height: 1.65; word-wrap: break-word;
+  }
+  .msg-group.user .bubble {
+    background: var(--user-bubble); border: 1px solid var(--user-border);
+    border-bottom-right-radius: 4px; color: var(--text-primary);
+  }
+  .msg-group.ai .bubble {
+    background: var(--ai-bubble); border: 1px solid var(--border);
+    border-bottom-left-radius: 4px; color: var(--text-primary);
+  }
+
+  /* Markdown in AI bubbles */
+  .bubble h1,.bubble h2,.bubble h3 { font-weight: 600; margin: 10px 0 4px; color: #00FF41; }
+  .bubble h1 { font-size: 16px; } .bubble h2 { font-size: 15px; } .bubble h3 { font-size: 14px; }
+  .bubble p { margin: 4px 0; }
+  .bubble strong { color: #a8f7c0; font-weight: 600; }
+  .bubble em { color: #00cc35; font-style: italic; }
+  .bubble a { color: var(--accent); text-decoration: none; }
+  .bubble a:hover { text-decoration: underline; }
+  .bubble ul, .bubble ol { padding-left: 18px; margin: 6px 0; }
+  .bubble li { margin: 2px 0; }
+  .bubble code {
+    background: rgba(0,255,65,0.1); color: #00FF41;
+    padding: 1px 6px; border-radius: 4px; font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+  .bubble pre {
+    background: #0a0d13; border: 1px solid rgba(0,255,65,0.15);
+    border-radius: var(--radius-sm); padding: 12px; overflow-x: auto;
+    margin: 8px 0; position: relative;
+  }
+  .bubble pre code { background: none; padding: 0; color: #e2e8f0; font-size: 12.5px; }
+  .copy-btn {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.2);
+    color: var(--text-muted); padding: 2px 8px; border-radius: 5px;
+    font-size: 10px; cursor: pointer; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: var(--accent); color: #0a0d13; border-color: var(--accent); }
+
+  /* Typing */
+  .typing {
+    display: flex; align-items: center; gap: 4px; padding: 12px 14px;
+  }
+  .typing span {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,60%,100% { opacity:0.3; transform:scale(0.8); } 30% { opacity:1; transform:scale(1.2); } }
+
+  /* ── Toolbar chips ── */
+  #toolbar {
+    display: flex; gap: 5px; padding: 8px 12px 6px;
+    flex-wrap: wrap; flex-shrink: 0;
+  }
+  .chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 11px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: inherit; white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--border-hover); color: var(--text-primary); background: var(--accent-dim); }
+
+  /* ── Input ── */
+  #input-wrap {
+    padding: 0 12px 12px; flex-shrink: 0;
+  }
+  #input-box {
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #input-box:focus-within {
+    border-color: rgba(0,255,65,0.4);
+    box-shadow: 0 0 0 3px rgba(0,255,65,0.08);
+  }
+  #chat-input {
+    width: 100%; background: none; border: none; outline: none;
+    color: var(--text-primary); font-size: 13.5px; font-family: inherit;
+    padding: 11px 14px 4px; resize: none; min-height: 44px; max-height: 140px;
+    line-height: 1.5;
+  }
+  #chat-input::placeholder { color: var(--text-muted); }
+  #input-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px 8px;
+  }
+  .input-actions { display: flex; gap: 4px; }
+  .ia-btn {
+    width: 26px; height: 26px; border-radius: 6px; background: none;
+    border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s; font-family: inherit;
+  }
+  .ia-btn:hover { background: var(--accent-dim); color: var(--accent); }
+  #btn-send {
+    width: 32px; height: 32px; border-radius: var(--radius-sm);
+    background: var(--accent); border: none; color: #0a0d13; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    transition: opacity 0.15s, transform 0.1s; flex-shrink: 0; font-weight: 700;
+  }
+  #btn-send:hover { opacity: 0.9; transform: scale(1.05); }
+  #btn-send:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+  #btn-stop {
+    display: none; width: 32px; height: 32px; border-radius: var(--radius-sm);
+    background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3);
+    color: var(--red); cursor: pointer; font-size: 13px;
+    align-items: center; justify-content: center;
+  }
+  #btn-stop.show { display: flex; }
+
+  /* ── Settings ── */
+  #settings-panel {
+    display: none; flex-direction: column; flex: 1;
+    overflow-y: auto; padding: 16px; gap: 14px;
+    background: var(--bg-tertiary);
+  }
+  #settings-panel.visible { display: flex; }
+  .setting-group { display: flex; flex-direction: column; gap: 6px; }
+  .setting-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; }
+  .setting-input {
+    background: var(--bg-input); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 9px 12px; border-radius: var(--radius-sm);
+    font-size: 13px; outline: none; width: 100%; font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .setting-input:focus { border-color: rgba(0,255,65,0.4); }
+  .setting-hint { font-size: 11px; color: var(--text-muted); }
+  .setting-hint a { color: var(--accent); text-decoration: none; }
+  #btn-save {
+    background: var(--accent); border: none; color: #0a0d13;
+    padding: 10px; border-radius: var(--radius-sm); font-size: 13px;
+    font-weight: 700; cursor: pointer; width: 100%; font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  #btn-save:hover { opacity: 0.9; }
+  #btn-logout {
+    background: none; border: 1px solid rgba(248,113,113,0.25);
+    color: var(--red); padding: 9px; border-radius: var(--radius-sm);
+    font-size: 12px; cursor: pointer; width: 100%; font-family: inherit;
+    transition: all 0.15s;
+  }
+  #btn-logout:hover { background: rgba(248,113,113,0.1); }
+  .setting-divider { border: none; border-top: 1px solid var(--border); }
+
+  /* ── Auth ── */
+  #auth-screen {
+    display: none; position: absolute; inset: 0; z-index: 200;
+    background: var(--bg-tertiary); flex-direction: column;
+    align-items: center; justify-content: center; padding: 28px; gap: 18px;
+    text-align: center;
+  }
+  #auth-screen.visible { display: flex; }
+  .auth-logo {
+    width: 64px; height: 64px; border-radius: 18px;
+    background: rgba(0, 255, 65, 0.08);
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 12px 40px rgba(0, 255, 65, 0.2); margin-bottom: 4px;
+  }
+  .auth-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .auth-title span { color: var(--accent); }
+  .auth-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.6; max-width: 240px; }
+  #token-input {
+    background: var(--bg-input); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 11px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; outline: none; width: 100%; font-family: 'JetBrains Mono', monospace;
+    transition: border-color 0.15s; letter-spacing: 0.5px;
+  }
+  #token-input:focus { border-color: rgba(0,255,65,0.4); }
+  #token-input::placeholder { font-family: inherit; letter-spacing: 0; color: var(--text-muted); }
+  #auth-error { font-size: 12px; color: var(--red); display: none; }
+  #btn-auth {
+    background: var(--accent); border: none; color: #0a0d13;
+    padding: 12px; border-radius: var(--radius-sm); font-size: 14px;
+    font-weight: 700; cursor: pointer; width: 100%; font-family: inherit;
+    transition: opacity 0.15s; letter-spacing: 0.2px;
+  }
+  #btn-auth:hover { opacity: 0.9; }
+  .auth-link { font-size: 12px; color: var(--text-muted); }
+  .auth-link a { color: var(--accent); text-decoration: none; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 7px 16px; border-radius: 20px;
+    font-size: 12px; opacity: 0; transition: opacity 0.25s;
+    pointer-events: none; z-index: 999; white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  #toast.show { opacity: 1; }
+
+  #messages::-webkit-scrollbar { width: 3px; }
+  #sessions-list::-webkit-scrollbar { width: 3px; }
+  #sessions-list::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.15); border-radius: 2px; }
+
+  /* Search highlight */
+  .search-hit { background: rgba(0,255,65,0.25); border-radius: 2px; padding: 0 1px; }
+  .search-hit.current { background: rgba(0,255,65,0.55); color: #0a0d13; }
+
+  /* Drop zone active */
+  #input-box.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  /* ── Incognito badge ── */
+  #incognito-badge {
+    display:none; align-items:center; gap:5px;
+    padding:3px 8px; border-radius:20px; font-size:10px; font-weight:600;
+    background:rgba(251,191,36,0.12); color:#fbbf24;
+    border:1px solid rgba(251,191,36,0.25); flex-shrink:0;
+  }
+  #incognito-badge.on { display:flex; }
+  #btn-incognito.active { color: #fbbf24; }
+
+  /* ── Global search panel ── */
+  #global-search {
+    display:none; flex-direction:column; flex:1; overflow:hidden;
+    background:var(--bg-tertiary);
+  }
+  #global-search.visible { display:flex; }
+  #gs-wrap { padding:10px 12px; background:var(--bg-secondary); border-bottom:1px solid var(--border); }
+  #gs-input {
+    width:100%; background:var(--bg-input); border:1px solid var(--border);
+    color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm);
+    font-size:13px; outline:none; font-family:inherit;
+  }
+  #gs-input:focus { border-color:var(--accent); }
+  #gs-results { flex:1; overflow-y:auto; padding:6px; }
+  .gs-item {
+    padding:9px 12px; border-radius:var(--radius-sm); cursor:pointer;
+    margin-bottom:2px; border:1px solid transparent; transition:all .15s;
+  }
+  .gs-item:hover { background:var(--bg-secondary); border-color:var(--border); }
+  .gs-title { font-size:13px; font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gs-snippet { font-size:11px; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gs-hit { color:var(--accent); font-weight:600; }
+
+  /* ── Plus menu ── */
+  #plus-menu {
+    display:none; position:absolute; bottom:52px; left:10px; z-index:100;
+    background:var(--bg-secondary); border:1px solid var(--border);
+    border-radius:var(--radius); padding:5px; min-width:180px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  }
+  #plus-menu.open { display:block; }
+  .pm-item {
+    display:flex; align-items:center; gap:9px; padding:8px 10px;
+    border-radius:var(--radius-sm); cursor:pointer; font-size:12.5px;
+    color:var(--text-secondary); transition:all .15s; background:none;
+    border:none; width:100%; text-align:left; font-family:inherit;
+  }
+  .pm-item:hover { background:var(--accent-dim); color:var(--text-primary); }
+  .pm-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+
+  /* ── Template chips on welcome ── */
+  .template-chips { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:4px; }
+  .t-chip {
+    padding:5px 12px; border-radius:20px; font-size:11.5px; font-weight:500;
+    background:var(--bg-secondary); border:1px solid var(--border);
+    color:var(--text-muted); cursor:pointer; transition:all .15s; font-family:inherit;
+    display:flex; align-items:center; gap:5px;
+  }
+  .t-chip:hover { border-color:var(--border-hover); color:var(--text-primary); background:var(--accent-dim); }
+
+  /* ── Voice recording active ── */
+  #ia-voice.recording {
+    color: var(--red);
+    animation: voicePulse 0.8s ease-in-out infinite;
+  }
+  @keyframes voicePulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  /* ── Input wrap (relative for plus-menu positioning) ── */
+  #input-wrap { position: relative; }
+
+  /* ── Thinking block ── */
+  .think-block {
+    border:1px solid rgba(0,255,65,0.15);
+    border-radius:var(--radius-sm);
+    margin-bottom:8px;
+    background:rgba(0,255,65,0.04);
+  }
+  .think-block summary {
+    padding:6px 10px;
+    font-size:11px;
+    color:var(--text-muted);
+    cursor:pointer;
+    user-select:none;
+    list-style:none;
+  }
+  .think-block summary::-webkit-details-marker { display:none; }
+  .think-block[open] summary { color:var(--accent); }
+  .think-block .think-content {
+    padding:8px 10px;
+    font-size:12px;
+    color:var(--text-muted);
+    border-top:1px solid rgba(0,255,65,0.1);
+    white-space:pre-wrap;
+    line-height:1.5;
+  }
+
+  /* ── Code mode input indicator ── */
+  #input-box.code-mode { border-color:rgba(251,191,36,0.3); }
+  #input-box.code-mode:focus-within { border-color:rgba(251,191,36,0.6); box-shadow:0 0 0 3px rgba(251,191,36,0.08); }
+
+  /* ── Status error state ── */
+  #status-pill.error { border-color:rgba(248,113,113,0.3); color:var(--red); }
+  #status-pill.error .dot { background:var(--red); box-shadow:0 0 6px var(--red); }
+
+  /* ── Min width ── */
+  body { min-width: 320px; }
+
+  /* ── Skeleton loading ── */
+  @keyframes skel {
+    0%,100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  /* ── Light theme ── */
+  #app[data-theme="light"] {
+    --bg-primary: #f6f8fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #eef0f3;
+    --bg-input: #f0f2f5;
+    --border: rgba(0,0,0,0.1);
+    --border-hover: rgba(0,150,30,0.4);
+    --accent: #007a20;
+    --accent-dim: rgba(0,122,32,0.08);
+    --accent-glow: rgba(0,122,32,0.15);
+    --green: #007a20;
+    --text-primary: #1a1e26;
+    --text-secondary: #4a5568;
+    --text-muted: #9aa3b0;
+    --user-bubble: #e6f4ec;
+    --user-border: rgba(0,122,32,0.2);
+    --ai-bubble: #ffffff;
+  }
+  #app[data-theme="light"] .bubble h1,
+  #app[data-theme="light"] .bubble h2,
+  #app[data-theme="light"] .bubble h3 { color: #007a20; }
+  #app[data-theme="light"] .bubble strong { color: #1a6b2e; }
+  #app[data-theme="light"] .bubble em { color: #007a20; }
+  #app[data-theme="light"] .bubble code { color: #007a20; }
+  #app[data-theme="light"] #btn-theme-light { background: var(--accent-dim); border-color: rgba(0,122,32,.3); color: var(--accent); }
+  #app[data-theme="light"] #btn-theme-dark { background: var(--bg-input); border-color: var(--border); color: var(--text-secondary); }
+
+  /* ── Message edit button ── */
+  .msg-edit-btn {
+    background:none; border:none; cursor:pointer; font-size:11px;
+    opacity:0; transition:opacity .15s; padding:0 2px; margin-left:4px;
+    vertical-align:middle;
+  }
+  .msg-group.user:hover .msg-edit-btn { opacity:0.6; }
+  .msg-edit-btn:hover { opacity:1 !important; }
+  .msg-edit-btns { display:flex; gap:6px; margin-top:6px; }
+  .msg-edit-save, .msg-edit-cancel {
+    padding:3px 10px; border-radius:5px; font-size:11px; cursor:pointer;
+    font-family:inherit; border:none;
+  }
+  .msg-edit-save { background:var(--accent); color:#0a0d13; font-weight:600; }
+  .msg-edit-cancel { background:var(--bg-input); color:var(--text-muted); border:1px solid var(--border); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Auth -->
+  <div id="auth-screen">
+    <div class="auth-logo"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M18 2L32 10V26L18 34L4 26V10L18 2Z" fill="#00FF41" opacity="0.15"/><path d="M18 2L32 10V26L18 34L4 26V10L18 2Z" stroke="#00FF41" stroke-width="1.5"/><text x="18" y="23" text-anchor="middle" font-size="11" font-weight="700" fill="#00FF41" font-family="Inter,sans-serif">P8</text></svg></div>
+    <div>
+      <div class="auth-title">Priv8<span>Agent</span></div>
+    </div>
+    <!-- Step 1: Connect button -->
+    <div id="auth-step-connect">
+      <div class="auth-sub">Connect your Priv8Agent account to get started</div>
+      <button id="btn-auth">🔗 Connect Account</button>
+      <div class="auth-link">Don't have an account? <a href="https://app.privatehash.online" target="_blank">Sign up free</a></div>
+    </div>
+    <!-- Step 2: Waiting for browser approval -->
+    <div id="auth-step-waiting" style="display:none">
+      <div class="auth-sub" style="margin-bottom:16px">Opening your browser...<br>Please approve the connection on the page that opens.</div>
+      <div id="auth-spinner" style="width:32px;height:32px;border:3px solid rgba(0,255,65,.15);border-top-color:#00FF41;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+      <div class="auth-sub" style="font-size:11px;opacity:.6">Waiting for approval</div>
+      <button id="btn-auth-cancel" style="margin-top:16px;background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--text-secondary);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;">Cancel</button>
+    </div>
+    <div id="auth-error">❌ Could not start login. Please try again.</div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+
+  <!-- Header -->
+  <div id="header">
+    <div class="logo-mark"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" fill="#00FF41" opacity="0.15"/><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="#00FF41" stroke-width="1"/><text x="8" y="11" text-anchor="middle" font-size="6" font-weight="700" fill="#00FF41" font-family="Inter,sans-serif">P8</text></svg></div>
+    <span class="logo-text">Priv8<em>Agent</em></span>
+    <div id="incognito-badge">🕶 Incognito</div>
+    <div id="status-pill" title="Disconnected"><div class="dot"></div><span id="status-text">Offline</span></div>
+    <button class="hdr-btn" id="btn-search-global" title="Search chats">🔎</button>
+    <button class="hdr-btn" id="btn-incognito" title="Incognito mode (no history)">🕶</button>
+    <button class="hdr-btn" id="btn-computer-use" title="Computer Use — let agent control this browser tab" style="position:relative">🖥️</button>
+    <button class="hdr-btn" id="btn-sessions-toggle" title="Conversations">☰</button>
+    <button id="btn-new">+ New</button>
+    <button class="hdr-btn" id="btn-settings-toggle" title="Settings">⚙</button>
+  </div>
+
+  <!-- Mode Tabs -->
+  <div id="mode-tabs">
+    <button class="mode-tab active" id="tab-chat" data-mode="chat">💬 Chat</button>
+    <button class="mode-tab" id="tab-code" data-mode="code">⚡ Code</button>
+    <button class="mode-tab" id="tab-artifacts" data-mode="artifacts">🎨 Artifacts</button>
+  </div>
+
+  <!-- Model bar -->
+  <div id="model-bar">
+    <select id="model-select">
+      <option value="">⚡ Priv8 Brain · Auto</option>
+      <option value="deepseek-reasoner">🔮 Priv8 Think · Master</option>
+      <option value="groq/llama-4-scout">🚀 Priv8 Scout · Worker</option>
+      <option value="groq/llama-3.3-70b">💪 Priv8 Boost · Worker</option>
+      <option value="openai/gpt-4o-mini">🤖 Priv8 Quick · Worker</option>
+      <option value="or/codestral">💻 Priv8 Code · Worker</option>
+      <option value="or/gemini-2.5-flash">🌟 Priv8 Flash · Worker</option>
+      <option value="or/gemini-2.5-flash-lite">⚡ Priv8 Micro · Worker</option>
+      <option value="or/llama-4-maverick">🦁 Priv8 Maverick · Worker</option>
+      <option value="gemini/flash">✨ Priv8 Flash Pro · Worker</option>
+      <option value="gemini/flash-lite">💨 Priv8 Lite · Worker</option>
+      <option value="or/llama-3.3-70b-free">🆓 Priv8 Free</option>
+      <option value="or/gemini-2.5-pro-free">🆓 Cloud Vision Pro</option>
+      <option value="or/qwen3-next-free">🆓 Priv8 Free Max</option>
+      <option value="or/deepseek-v3-free">🆓 Cloud Neural</option>
+      <option value="or/qwen3-coder-free">🆓 Priv8 Free Code</option>
+      <option value="or/deepseek-r1-free">🆓 Cloud Reason</option>
+      <option value="or/qwen3-235b-free">🆓 Cloud Titan Free</option>
+      <option value="or/grok-3-mini-free">🆓 Cloud Rapid</option>
+    </select>
+    <select id="quality-select" title="Response quality">
+      <option value="low">🟢 Low</option>
+      <option value="normal" selected>🟡 Normal</option>
+      <option value="high">🔴 High</option>
+    </select>
+    <span class="model-badge">P8 PRO</span>
+  </div>
+
+  <!-- Sessions -->
+  <div id="sessions-panel">
+    <div id="sessions-header">Recent Conversations</div>
+    <div id="projects-bar" style="display:flex;gap:4px;padding:4px 8px 0;flex-wrap:wrap;min-height:24px;"></div>
+    <div id="sessions-list"></div>
+  </div>
+
+  <!-- Global Search -->
+  <div id="global-search">
+    <div id="gs-wrap"><input id="gs-input" placeholder="Search all conversations…" /></div>
+    <div id="gs-results"></div>
+  </div>
+
+  <!-- Artifacts panel — split pane -->
+  <div id="artifacts-panel" style="display:none;flex-direction:column;flex:1;overflow:hidden;background:var(--bg-tertiary);">
+    <div style="display:flex;height:100%;overflow:hidden;">
+      <div id="artifacts-list-wrap" style="width:160px;min-width:130px;border-right:1px solid var(--border);overflow-y:auto;padding:6px;flex-shrink:0;">
+        <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;padding:4px 4px 6px;">Artifacts</div>
+        <div id="artifacts-list" style="display:flex;flex-direction:column;gap:3px;"></div>
+      </div>
+      <div id="artifact-preview" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div id="artifact-preview-toolbar" style="display:none;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg-secondary);flex-shrink:0;">
+          <span id="artifact-preview-title" style="flex:1;font-size:12px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          <button id="btn-artifact-copy" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">📋 Copy</button>
+          <button id="btn-artifact-tab" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;">🖥️ Tab</button>
+        </div>
+        <div id="artifact-preview-body" style="flex:1;overflow:auto;padding:0;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div id="chat-panel">
+    <div id="welcome">
+      <div class="welcome-logo"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" fill="#00FF41" opacity="0.15"/><path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" stroke="#00FF41" stroke-width="1.5"/><text x="16" y="21" text-anchor="middle" font-size="10" font-weight="700" fill="#00FF41" font-family="Inter,sans-serif">P8</text></svg></div>
+      <div>
+        <div class="welcome-title">Priv8<span>Agent</span></div>
+      </div>
+      <div class="welcome-sub">Your private AI — more powerful than Claude, no restrictions</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:-10px;">Ctrl+Shift+P to open · Ctrl+Shift+S to capture page</div>
+      <div class="template-chips">
+        <button class="t-chip" data-tpl="write">✍️ Write</button>
+        <button class="t-chip" data-tpl="code">💻 Code</button>
+        <button class="t-chip" data-tpl="learn">📚 Learn</button>
+        <button class="t-chip" data-tpl="analyze">🔍 Analyze</button>
+        <button class="t-chip" data-tpl="translate">🌐 Translate</button>
+        <button class="t-chip" data-tpl="summarize">📄 Summarize</button>
+      </div>
+      <div class="suggestions">
+        <button class="sug" data-prompt="Summarize this page for me"><span class="sug-icon">📄</span> Summarize this page</button>
+        <button class="sug" data-prompt="Write a Python script that"><span class="sug-icon">💻</span> Write code</button>
+        <button class="sug" data-prompt="Explain and analyze the selected text"><span class="sug-icon">🔍</span> Analyze selection</button>
+        <button class="sug" data-prompt="Translate the content on this page to English"><span class="sug-icon">🌐</span> Translate page</button>
+      </div>
+    </div>
+
+    <!-- Search bar (hidden by default) -->
+    <div id="search-bar" style="display:none;padding:6px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="search-input" placeholder="Search messages…" style="flex:1;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:5px 10px;border-radius:var(--radius-sm);font-size:12px;outline:none;font-family:inherit;" />
+        <span id="search-count" style="font-size:11px;color:var(--text-muted);white-space:nowrap;"></span>
+        <button id="search-prev" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 5px;">▲</button>
+        <button id="search-next" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 5px;">▼</button>
+        <button id="search-close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 5px;">✕</button>
+      </div>
+    </div>
+
+    <div id="messages" style="display:none"></div>
+    <button id="btn-scroll-bot" title="Scroll to bottom" style="display:none;position:absolute;bottom:180px;right:14px;z-index:50;width:30px;height:30px;border-radius:50%;background:var(--bg-secondary);border:1px solid var(--border);color:var(--accent);font-size:14px;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:opacity .15s;">↓</button>
+
+    <!-- Image preview strip (shown when images attached) -->
+    <div id="img-preview" style="display:none;padding:6px 12px;background:var(--bg-secondary);border-top:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div id="img-thumbs" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;align-items:center;"></div>
+        <button id="img-remove" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,0.25);white-space:nowrap;">Clear all</button>
+      </div>
+    </div>
+
+    <!-- Quick chips -->
+    <div id="toolbar">
+      <button class="chip" id="chip-page">📄 Capture Page</button>
+      <button class="chip" id="chip-sel">✂️ Selection</button>
+      <button class="chip" id="chip-shot">📸 Screenshot</button>
+      <button class="chip" id="chip-export">💾 Export</button>
+      <button class="chip" id="chip-search">🔍 Search</button>
+    </div>
+
+    <!-- Plus menu -->
+    <div id="plus-menu">
+      <button class="pm-item" id="pm-file"><span class="pm-icon">📎</span>Attach file / image</button>
+      <button class="pm-item" id="pm-shot"><span class="pm-icon">📸</span>Screenshot</button>
+      <button class="pm-item" id="pm-page"><span class="pm-icon">📄</span>Capture page</button>
+      <button class="pm-item" id="pm-sel"><span class="pm-icon">✂️</span>Selected text</button>
+      <button class="pm-item" id="pm-export"><span class="pm-icon">💾</span>Export chat</button>
+    </div>
+
+    <!-- Input -->
+    <div id="input-wrap">
+      <div id="input-box">
+        <textarea id="chat-input" placeholder="Message Priv8Agent… (paste image or drop file)" rows="1"></textarea>
+        <div id="input-footer">
+          <div class="input-actions">
+            <button class="ia-btn" id="ia-plus" title="More actions">+</button>
+            <button class="ia-btn" id="ia-page" title="Capture current page">📄</button>
+            <button class="ia-btn" id="ia-sel" title="Send selection">✂️</button>
+            <button class="ia-btn" id="ia-shot" title="Screenshot">📸</button>
+            <button class="ia-btn" id="ia-img" title="Attach image">🖼️</button>
+            <button class="ia-btn" id="ia-voice" title="Voice input (hold to record)">🎤</button>
+            <input type="file" id="file-input" accept="image/*" multiple style="display:none" />
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button id="btn-stop">⏹</button>
+            <button id="btn-send">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings-panel">
+    <div class="setting-group">
+      <div class="setting-label">Bearer Token</div>
+      <input class="setting-input" id="s-token" type="password" placeholder="Your auth token..." />
+      <div class="setting-hint">From <a href="https://app.privatehash.online" target="_blank">app.privatehash.online</a> → Profile → API Token</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Server URL</div>
+      <input class="setting-input" id="s-server" placeholder="https://app.privatehash.online" />
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Default Model</div>
+      <select class="setting-input" id="s-model">
+        <option value="">⚡ Priv8 Brain · Auto</option>
+        <option value="deepseek-reasoner">🔮 Priv8 Think · Master</option>
+        <option value="groq/llama-4-scout">🚀 Priv8 Scout · Worker</option>
+        <option value="groq/llama-3.3-70b">💪 Priv8 Boost · Worker</option>
+        <option value="openai/gpt-4o-mini">🤖 Priv8 Quick · Worker</option>
+        <option value="or/codestral">💻 Priv8 Code · Worker</option>
+        <option value="or/gemini-2.5-flash">🌟 Priv8 Flash · Worker</option>
+        <option value="or/gemini-2.5-flash-lite">⚡ Priv8 Micro · Worker</option>
+        <option value="or/llama-4-maverick">🦁 Priv8 Maverick · Worker</option>
+        <option value="gemini/flash">✨ Priv8 Flash Pro · Worker</option>
+        <option value="gemini/flash-lite">💨 Priv8 Lite · Worker</option>
+        <option value="or/llama-3.3-70b-free">🆓 Priv8 Free</option>
+        <option value="or/gemini-2.5-pro-free">🆓 Cloud Vision Pro</option>
+        <option value="or/qwen3-next-free">🆓 Priv8 Free Max</option>
+        <option value="or/deepseek-v3-free">🆓 Cloud Neural</option>
+        <option value="or/qwen3-coder-free">🆓 Priv8 Free Code</option>
+        <option value="or/deepseek-r1-free">🆓 Cloud Reason</option>
+        <option value="or/qwen3-235b-free">🆓 Cloud Titan Free</option>
+        <option value="or/grok-3-mini-free">🆓 Cloud Rapid</option>
+      </select>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">System Prompt (Project Memory)</div>
+      <textarea class="setting-input" id="s-system" rows="4" placeholder="You are a helpful assistant. Custom instructions for every conversation…" style="resize:vertical;min-height:80px;"></textarea>
+      <div class="setting-hint">Applied to every new chat — like Claude's "Projects" system prompt</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Language</div>
+      <select class="setting-input" id="s-lang">
+        <option value="">Auto-detect</option>
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="es">Español</option>
+      </select>
+      <div class="setting-hint">Force AI to always reply in this language</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Keyboard Shortcuts</div>
+      <div class="setting-hint" style="line-height:1.9">
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+Shift+P</kbd> Open panel<br>
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+Shift+K</kbd> Quick chat<br>
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Ctrl+Shift+S</kbd> Capture page<br>
+        <kbd style="background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px">Alt+P</kbd> Toggle floating button
+      </div>
+    </div>
+    <hr class="setting-divider">
+    <div class="setting-group">
+      <div class="setting-label">Theme</div>
+      <div style="display:flex;gap:8px;">
+        <button id="btn-theme-light" style="flex:1;padding:8px;border-radius:var(--radius-sm);background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;" onclick="setTheme('light')">☀️ Light</button>
+        <button id="btn-theme-dark" style="flex:1;padding:8px;border-radius:var(--radius-sm);background:var(--accent-dim);border:1px solid rgba(0,255,65,.25);color:var(--accent);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;" onclick="setTheme('dark')">🌙 Dark</button>
+      </div>
+    </div>
+    <hr class="setting-divider">
+    <button id="btn-save">Save Settings</button>
+    <button id="btn-logout">Sign Out</button>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px">Priv8Agent Extension v1.3.6</div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="sidepanel.js"></script>
+</body>
+</html>
