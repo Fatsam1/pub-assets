@@ -3198,6 +3198,17 @@ class API:
             tpls = [t for t in tpls if t.get("category") == category]
         return tpls
 
+    def get_email_preview_html(self, template_id):
+        """Return the real _build_email_html() output for a template — for live preview."""
+        tpls = _load_templates()
+        tmpl = next((t for t in tpls if t.get("id") == template_id), None)
+        if not tmpl:
+            return "<p style='color:red'>Template not found</p>"
+        try:
+            return _build_email_html(tmpl)
+        except Exception as e:
+            return f"<p style='color:red'>Preview error: {e}</p>"
+
     def fetch_proxies(self, count=10):
         """Fetch HTTP proxies from ProxyScrape Premium API (serviceId-based)."""
         import urllib.request as _ur
@@ -4823,7 +4834,7 @@ function selectTemplate(idx){
   _selectedTplIdx=idx;
   document.querySelectorAll('.tpl-card').forEach(c=>c.classList.remove('selected'));
   const card=document.getElementById('tcard-'+idx);
-  if(card)card.classList.add('selected');
+  if(card){card.classList.add('selected');card.scrollIntoView({block:'nearest'});}
   const t=_allTemplates[idx];
   if(!t)return;
   const info=document.getElementById('tpl-selected-info');
@@ -4834,6 +4845,23 @@ function selectTemplate(idx){
     if(n)n.textContent=t.name||t.id||'';
     if(s)s.textContent=(t.subject||'').substring(0,60);
   }
+  // Auto-preview immediately on click — use real _build_email_html output
+  _previewTemplate(t);
+}
+
+async function _previewTemplate(t){
+  if(!t)return;
+  const iframe=document.getElementById('pf');
+  if(!iframe)return;
+  // Show loading state
+  iframe.srcdoc='<body style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;height:100%;font-family:Arial;color:#888;font-size:12px">Loading preview…</body>';
+  try{
+    const html=await pywebview.api.get_email_preview_html(t.id);
+    iframe.srcdoc=html;
+  }catch(e){
+    // Fallback to generic rp() preview
+    applySelectedTemplate();
+  }
 }
 
 function applySelectedTemplate(){
@@ -4841,7 +4869,7 @@ function applySelectedTemplate(){
   const t=_allTemplates[_selectedTplIdx];
   sv('banner1',t.banner1||t.color_primary||'#0057b8');
   sv('banner2',t.banner2||t.color_secondary||'#00a3e0');
-  sv('logo_url',t.logo_src||'');
+  sv('logo_url',t.logo_url||t.logo_src||'');
   sv('logo_bg',t.logo_bg||'#ffffff');
   sv('org_name',t.org_name||t.title||'');
   sv('org_sub',t.org_sub||t.subtitle||'');
