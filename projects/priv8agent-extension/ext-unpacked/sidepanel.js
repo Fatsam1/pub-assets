@@ -266,11 +266,15 @@ function send(content) {
     const langNames = {ar:'Arabic',en:'English',fr:'French',de:'German',es:'Spanish'};
     effectiveContent = (effectiveContent ? effectiveContent + '\n\n' : '') + `[Please reply in ${langNames[forceLang]||forceLang}]`;
   }
+  // Detect browser-control requests (YouTube play, open URL, etc.) → force Claude model
+  const isBrowserControl = /(play|open|browse|navigate|افتح|شغّل|شغّلي|شغل|يوتيوب|تصفح|روّح على)/i.test(effectiveContent);
+  const effectiveModel = isBrowserControl ? 'or/claude-sonnet-4-6' : (model || undefined);
+  console.log('[P8A]', isBrowserControl ? '🤖 BROWSER-CONTROL → claude-sonnet-4-6' : '💬 normal → ' + (model || 'auto'), '| content:', effectiveContent?.slice(0,60));
   const payload = {
     type:'user_message',
     content: effectiveContent || '',
     ...(sessionId?{sessionId}:{}),
-    ...(model?{model}:{}),
+    ...(effectiveModel?{model:effectiveModel}:{}),
     ...(systemPrompt&&!sessionId?{systemPrompt}:{}),
     ...(quality&&quality!=='normal'?{quality}:{}),
     ...(currentMode==='code'?{mode:'code'}:{}),
