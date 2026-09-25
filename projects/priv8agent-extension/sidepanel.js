@@ -1141,6 +1141,9 @@ window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, b
             if (result === 'ok') result = 'tick_no_action';
           } else if (cmd.type === 'get_tabs') {
             result = await new Promise(resolve => chrome.tabs.query({currentWindow:true}, ts => resolve(ts.map(t => ({id:t.id, url:t.url, active:t.active, title:t.title})))));
+          } else if (cmd.type === 'activate_tab' && cmd.tabId) {
+            await new Promise(r => chrome.tabs.update(cmd.tabId, {active:true}, r));
+            result = 'activated:' + cmd.tabId;
           }
         } catch(err) { result = 'error: ' + err.message; }
         _bws.send(JSON.stringify({type:'result', id:cmd.id, result}));
