@@ -81,6 +81,14 @@ chrome.runtime.onStartup.addListener(async () => {
   if (authToken) {
     await chrome.storage.local.set({ computerUseActive: true });
   }
+  // If active tab is local/chrome page, open a real HTTPS tab so sidepanel loop works
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const t = tabs[0];
+    if (t && (!t.url || t.url.startsWith('file://') || t.url.startsWith('chrome://') || t.url.startsWith('http://work/'))) {
+      await chrome.tabs.create({ url: 'https://example.com', active: true });
+    }
+  } catch {}
 });
 
 // Install: set up context menus only
@@ -293,18 +301,21 @@ async function computerUseTick() {
     if (!tab) return; // no real tab available
   }
 
-  // Capture screenshot — must be from the active visible tab
+  // Capture screenshot — fails on DRM/protected sites (YouTube etc), continue without it
   let dataUrl = null;
   try {
     dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 60 });
-  } catch { return; }
+  } catch { /* screenshot failed (DRM or minimized) — proceed with URL-only ping */ }
 
-  // Send screenshot to backend
+  // Send screenshot (or URL-only ping) to backend to keep connected:true
   try {
+    const body = dataUrl
+      ? { dataUrl, width: tab.width || 1280, height: tab.height || 720, url: tab.url }
+      : { url: tab.url };
     await fetch(API_BASE + '/api/agent/computer/screenshot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
-      body: JSON.stringify({ dataUrl, width: tab.width || 1280, height: tab.height || 720, url: tab.url }),
+      body: JSON.stringify(body),
     });
   } catch { return; }
 
@@ -316,29 +327,42 @@ async function computerUseTick() {
     commands = data.commands || [];
   } catch { return; }
 
-  // 3. Execute each command via content script
+  // 3. Execute each command
   for (const cmd of commands) {
+    let cmdResult = 'ok';
     try {
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        type: 'COMPUTER_COMMAND',
-        commandId: cmd.id,
-        action: cmd.action,
-        params: cmd.params,
-      });
+      if (cmd.action === 'navigate' && cmd.params?.url) {
+        // Use tabs.update directly — works even without content script (YouTube, DRM sites)
+        await new Promise(r => chrome.tabs.update(tab.id, { url: cmd.params.url }, r));
+        cmdResult = 'navigating to ' + cmd.params.url;
+      } else {
+        // Auto-inject content script if not present
+        try {
+          await new Promise((res, rej) => chrome.tabs.sendMessage(tab.id, { type: 'PING' }, r => {
+            chrome.runtime.lastError ? rej(chrome.runtime.lastError) : res(r);
+          }));
+        } catch {
+          try {
+            await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+            await new Promise(r => setTimeout(r, 400));
+          } catch {}
+        }
+        const response = await chrome.tabs.sendMessage(tab.id, {
+          type: 'COMPUTER_COMMAND',
+          commandId: cmd.id,
+          action: cmd.action,
+          params: cmd.params,
+        });
+        cmdResult = response?.result || 'ok';
+      }
+    } catch (e) { cmdResult = 'error: ' + e.message; }
+    try {
       await fetch(API_BASE + '/api/agent/computer/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
-        body: JSON.stringify({ commandId: cmd.id, result: response?.result || 'ok' }),
+        body: JSON.stringify({ commandId: cmd.id, result: cmdResult }),
       });
-    } catch (e) {
-      try {
-        await fetch(API_BASE + '/api/agent/computer/result', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
-          body: JSON.stringify({ commandId: cmd.id, result: 'error: ' + e.message }),
-        });
-      } catch {}
-    }
+    } catch {}
   }
 }
 
