@@ -1164,11 +1164,16 @@ window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, b
     if (!token || _running) return;
     _running = true;
     try {
-      const activeTabs = await new Promise(r => chrome.tabs.query({active:true, currentWindow:true}, r));
-      const aTab = activeTabs?.[0];
-      if (!aTab || aTab.url?.startsWith('chrome://') || aTab.url?.startsWith('chrome-extension://')) {
-        _running = false; return;
+      // Try active tab first; if it's chrome:// or local file, find any real HTTPS tab
+      let activeTabs = await new Promise(r => chrome.tabs.query({active:true, currentWindow:true}, r));
+      let aTab = activeTabs?.[0];
+      const _isUnusable = t => !t?.url || t.url.startsWith('chrome://') || t.url.startsWith('chrome-extension://') || t.url.startsWith('file://') || t.url.startsWith('http://work/');
+      if (_isUnusable(aTab)) {
+        // Fallback: find the most recently used real HTTPS tab
+        const allTabs = await new Promise(r => chrome.tabs.query({currentWindow:true}, r));
+        aTab = allTabs.filter(t => t.url?.startsWith('https://')).sort((a,b) => (b.lastAccessed||0)-(a.lastAccessed||0))[0];
       }
+      if (!aTab) { _running = false; return; }
       // Try screenshot — if it fails (e.g. image readback failed), continue anyway to still execute commands
       let dataUrl = null;
       try {
@@ -1178,13 +1183,14 @@ window.__p8 = { get token(){return token;}, set token(v){token=v;}, connectWs, b
           });
         });
       } catch(_captureErr) { /* screenshot failed, proceed without it */ }
-      if (dataUrl) {
-        await fetch(API + '/api/agent/computer/screenshot', {
-          method:'POST',
-          headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
-          body: JSON.stringify({dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}),
-        }).catch(()=>{});
-      }
+      // Always POST to screenshot endpoint — with dataUrl if available, or just url to keep extConnectedAt alive
+      await fetch(API + '/api/agent/computer/screenshot', {
+        method:'POST',
+        headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
+        body: JSON.stringify(dataUrl
+          ? {dataUrl, width:aTab.width||1280, height:aTab.height||720, url:aTab.url}
+          : {url:aTab.url}),
+      }).catch(()=>{});
       // Auto-inject content script if not loaded (happens after extension reload)
       let _contentScriptReady = false;
       try {
