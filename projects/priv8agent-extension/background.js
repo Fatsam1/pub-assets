@@ -1,6 +1,8 @@
 // Priv8Agent Background Service Worker
 const API_BASE = 'https://app.privatehash.online';
 const WS_URL = 'wss://app.privatehash.online/ws';
+// Direct VPS endpoint for computer-use relay (bypasses Cloudflare WAF which blocks POST from extensions)
+const COMPUTER_API = 'http://37.60.232.250:3002';
 
 // ── Auth: device-flow login ────────────────────────────────────────────────
 let _authTabId = null;
@@ -312,7 +314,7 @@ async function computerUseTick() {
     const body = dataUrl
       ? { dataUrl, width: tab.width || 1280, height: tab.height || 720, url: tab.url }
       : { url: tab.url };
-    await fetch(API_BASE + '/api/agent/computer/screenshot', {
+    await fetch(COMPUTER_API + '/api/computer/screenshot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
       body: JSON.stringify(body),
@@ -322,7 +324,7 @@ async function computerUseTick() {
   // 2. Poll for pending commands
   let commands = [];
   try {
-    const r = await fetch(API_BASE + '/api/agent/computer/poll?token=' + encodeURIComponent(authToken));
+    const r = await fetch(COMPUTER_API + '/api/computer/poll?token=' + encodeURIComponent(authToken));
     const data = await r.json();
     commands = data.commands || [];
   } catch { return; }
@@ -357,7 +359,7 @@ async function computerUseTick() {
       }
     } catch (e) { cmdResult = 'error: ' + e.message; }
     try {
-      await fetch(API_BASE + '/api/agent/computer/result', {
+      await fetch(COMPUTER_API + '/api/computer/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
         body: JSON.stringify({ commandId: cmd.id, result: cmdResult }),
