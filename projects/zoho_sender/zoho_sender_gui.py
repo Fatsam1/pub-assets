@@ -1862,9 +1862,9 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
 
         #  Wait for OTP or verification link 
         CHECK_LOG.put(("info", f"  Waiting for Zoho verification email in {email}..."))
-        otp = _imap_get_otp(email, password, after_ts=reg_ts, timeout=120)
+        otp = _imap_get_otp(email, password, after_ts=reg_ts, timeout=300)
         if not otp:
-            CHECK_LOG.put(("err", "  Verification not received within 120s"))
+            CHECK_LOG.put(("err", "  Verification not received within 300s"))
             try:
                 snap = os.path.join(DIR, f"err_profile{profile_idx}_otp.png")
                 d.save_screenshot(snap)
@@ -2148,13 +2148,24 @@ def _build_email_html(cfg, template=None, custom_link=None):
     footer_text  = (src.get("footer_text") or cfg.get("footer_text") or "").strip()
     landing_url  = (src.get("landing_url") or cfg.get("landing_url") or "").strip()
 
-    # ── CTA button — plain <a href> survives Summernote stripping ────────────
-    # Summernote strips inline CSS from buttons/divs but keeps <a href> intact.
-    # We use a table-based button (the only reliable email button technique) with
-    # bgcolor attribute (HTML4 attr, not CSS — Summernote cannot strip it).
-    # Zoho's own "Begin Survey" button IS the CTA — its text is renamed via
-    # set_survey_button_text in the send flow. No extra button in the body.
-    cta_block = ""
+    # ── CTA button ────────────────────────────────────────────────────────────
+    # Use a simple <a> tag — Summernote preserves href and bgcolor on <a> but strips
+    # nested tables. bgcolor on <a> is non-standard but Gmail/Outlook ignore it; the
+    # background CSS property on the <a> style is what renders the color in email clients.
+    _btn_bg = (b1 or "#003366")
+    cta_block = (
+        f'<p style="text-align:center;padding:24px 0 12px;margin:0">'
+        f'<a href="{{{{Survey Link}}}}" target="_blank" '
+        f'style="display:inline-block;font-family:Arial,sans-serif;'
+        f'font-size:16px;font-weight:bold;color:#ffffff !important;'
+        f'text-decoration:none;padding:14px 32px;'
+        f'background-color:{_btn_bg};background:{_btn_bg};'
+        f'border-radius:4px;-webkit-border-radius:4px;'
+        f'border:2px solid {_btn_bg}">'
+        f'{btn_text}'
+        f'</a>'
+        f'</p>'
+    )
 
     # ── Zoho topbar negative-margin offset ────────────────────────────────────
     # Zoho always prepends a black survey-name banner (~65px) above our body HTML.
@@ -2164,32 +2175,41 @@ def _build_email_html(cfg, template=None, custom_link=None):
     MT = 'margin-top:-65px;'
 
     # ── Style dispatch by category ───────────────────────────────────────────
-    if category in ("banking", "payment"):
+    if category in ("banking", "payment", "custom"):
         html = _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
-    elif category in ("government", "court"):
+    elif category in ("government", "court", "legal"):
         html = _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
     elif category in ("crypto", "tech"):
         html = _style_dark_modern(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
     elif category in ("streaming", "social"):
         html = _style_media(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
-    elif category in ("shipping", "retail"):
+    elif category in ("shipping", "retail", "ecommerce", "delivery"):
         html = _style_practical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
     elif category in ("healthcare", "insurance"):
         html = _style_medical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
-    elif category == "telco":
+    elif category in ("telco", "telecom"):
         html = _style_telco(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
     elif category == "notifications":
         html = _style_notification(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
     else:
         html = _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
 
-    # Zoho prepends a black "survey name" banner above our HTML body.
-    # We prepend a white 4px accent bar row matching the brand color so it blends
-    # seamlessly — the Zoho black bar sits ABOVE the email iframe content area,
-    # so we can't hide it via CSS. Instead we make our email START immediately
-    # with a strong branded header that dominates visually.
-    # The real fix: survey_name=" " (space) so bar shows blank text.
-    return html
+    # Prepend a <style> block that overrides Zoho Survey's built-in CTA button color.
+    # Zoho's email renderer injects its own "Continue" button AFTER our body HTML.
+    # Gmail (and most modern email clients) support <style> tags in email bodies.
+    # Selector targets Zoho's CTA anchor by its typical background-color value (#f93468).
+    # Using broad selectors with !important to override any inline style.
+    _style_override = (
+        f'<style type="text/css">'
+        f'a[style*="background"][href*="zoho"],a[style*="background"][href*="survey"],'
+        f'a.zp-cta,a.zohoCTA,.zpButton a,.zp-btn a,'
+        f'table[class*="btn"] a,td[class*="btn"] a,'
+        f'a[style*="f93468"],a[bgcolor]'
+        f'{{background-color:{_btn_bg} !important;background:{_btn_bg} !important;'
+        f'border-color:{_btn_bg} !important;}}'
+        f'</style>'
+    )
+    return _style_override + html
 
 
 def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
@@ -2226,25 +2246,40 @@ def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_bloc
         f'</span>'
     ) if org_name else ""
 
-    header_inner = f'{logo_el}{name_block}'
-    if landing_url:
-        header_inner = f'<a href="{landing_url}" style="text-decoration:none">{header_inner}</a>'
+    # Black header row mirrors Zoho's own title bar color (#1a1a1a) so they merge visually.
+    # Logo image + org_name inside — looks like a real branded email header.
+    sub_part = (
+        f'<span style="display:block;font-size:11px;font-weight:400;color:rgba(255,255,255,0.65);'
+        f'font-family:Arial,sans-serif;margin-top:2px;letter-spacing:0.3px">{org_sub}</span>'
+    ) if org_sub else ""
 
-    # Black header blends with Zoho's black title bar above
-    # Brand-colored accent strip below creates visual separation
-    header_block = (
-        f'<tr><td style="background:#000000;padding:16px 24px 14px">{header_inner}</td></tr>'
-        f'<tr><td style="background:{b1};padding:10px 24px 10px">'
-        f'<span style="font-size:13px;font-weight:700;color:#fff;font-family:Arial,sans-serif;'
-        f'letter-spacing:0.2px">{org_sub}</span>'
-        f'</td></tr>'
-    ) if org_name else (
-        f'<tr><td style="background:{b1};height:6px;padding:0"></td></tr>'
-    )
+    # Always use styled text brand mark — img from external URLs often blocked by proxies.
+    # For a real logo, use cid: attachment or embed base64 — external URL is unreliable.
+    if logo_url:
+        # Try img first; wraps org_name text as fallback via alt= so it renders something either way
+        logo_inner = (
+            f'<img src="{logo_url}" alt="{org_name}" width="auto" height="36" '
+            f'style="height:36px;max-width:160px;vertical-align:middle;display:inline-block;border:0">'
+            f'<span style="display:inline-block;vertical-align:middle;margin-left:12px">'
+            f'<span style="display:block;font-size:18px;font-weight:900;color:#fff;'
+            f'font-family:Arial,sans-serif;letter-spacing:1px;line-height:1">{org_name}</span>'
+            f'{sub_part}</span>'
+        )
+    else:
+        # Pure text mark — always renders, looks clean
+        logo_inner = (
+            f'<span style="display:inline-block;vertical-align:middle">'
+            f'<span style="display:block;font-size:22px;font-weight:900;color:#fff;'
+            f'font-family:Arial,sans-serif;letter-spacing:2px;line-height:1">{org_name}</span>'
+            f'{sub_part}</span>'
+        )
+
+    # Brand-colored thin accent line (no HTML header — Zoho's own title bar is the header)
+    accent_line = f'<tr><td style="background:{b1};height:5px;font-size:0;line-height:0">&nbsp;</td></tr>'
 
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
-        f'{header_block}'
+        f'{accent_line}'
         f'<tr><td style="padding:24px 28px 20px;background:#fff">'
         f'{body_text}{cta_block}'
         f'</td></tr>'
@@ -2277,16 +2312,19 @@ def _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block
         f'</span>'
     ) if org_name else ""
 
-    header_inner = f'{seal}{name_part}'
-    if landing_url:
-        header_inner = f'<a href="{landing_url}" style="text-decoration:none">{header_inner}</a>'
+    # No black header — Zoho collector bar is the header (named = brand name).
+    sub_part = (
+        f'<span style="font-size:12px;font-weight:700;color:#fff;font-family:Georgia,serif;'
+        f'letter-spacing:0.3px;vertical-align:middle;margin-left:10px">{org_sub}</span>'
+    ) if org_sub else ""
+
+    seal_strip = f'{seal}{sub_part}' if org_name else ""
+    if landing_url and seal_strip:
+        seal_strip = f'<a href="{landing_url}" style="text-decoration:none">{seal_strip}</a>'
 
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
-        f'<tr><td style="background:#000000;padding:16px 24px 14px">{header_inner}</td></tr>'
-        f'<tr><td style="background:{b1};padding:8px 24px">'
-        f'<span style="font-size:12px;font-weight:700;color:#fff;font-family:Georgia,serif;letter-spacing:0.3px">{org_sub}</span>'
-        f'</td></tr>'
+        f'<tr><td style="background:{b1};padding:10px 24px">{seal_strip}</td></tr>'
         f'<tr><td style="padding:22px 28px 16px;background:#fff">'
         f'{body_text}{cta_block}'
         f'</td></tr>'
@@ -3161,36 +3199,36 @@ class API:
         return tpls
 
     def fetch_proxies(self, count=10):
-        """Fetch SOCKS5 proxies from ProxyScrape v3 (free) API."""
+        """Fetch HTTP proxies from ProxyScrape Premium API (serviceId-based)."""
         import urllib.request as _ur
         PS_USER = "alv68pcvy8kb"
         PS_PASS = "u0qd0imgg1i4nj4"
+        PS_SID  = "46e83e28-7c12-4c65-aa52-ef3e82f317d8"
+        PS_PORT = "3129"
         proxies = []
-        # v3 free endpoints — no API key needed, format=text works
-        urls = [
-            "https://api.proxyscrape.com/v3/free-proxy-list/get?request=getproxies&protocol=socks5&format=text&timeout=10000&country=all",
-            "https://api.proxyscrape.com/v3/free-proxy-list/get?request=getproxies&protocol=socks4&format=text&timeout=10000&country=all",
-            "https://api.proxyscrape.com/v3/free-proxy-list/get?request=getproxies&protocol=http&format=text&timeout=10000&anonymity=elite",
-        ]
-        for url in urls:
-            try:
-                req = _ur.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-                ctx = ssl._create_unverified_context()
-                resp = _ur.urlopen(req, context=ctx, timeout=15)
-                txt = resp.read().decode("utf-8").strip()
-                lines = [l.strip() for l in txt.splitlines() if ":" in l.strip() and not l.startswith("#")]
-                for line in lines:
-                    parts = line.split(":")
-                    if len(parts) == 2:
-                        proxies.append(f"{PS_USER}:{PS_PASS}@{line}")
-                if proxies:
-                    break
-            except Exception as _e:
-                CHECK_LOG.put(("warn", f"  ProxyScrape fetch error: {_e}"))
+        url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
+               f"&protocol=http&serviceId={PS_SID}&simplified=true")
+        try:
+            req = _ur.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            ctx = ssl._create_unverified_context()
+            resp = _ur.urlopen(req, context=ctx, timeout=15)
+            txt = resp.read().decode("utf-8").strip()
+            lines = [l.strip() for l in txt.splitlines() if l.strip() and ":" not in l.strip().split(".")[-1]]
+            # Lines are "ip:port" — replace port with premium port 3129
+            for line in txt.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split(":")
+                ip = parts[0]
+                proxies.append(f"{PS_USER}:{PS_PASS}@{ip}:{PS_PORT}")
+        except Exception as _e:
+            CHECK_LOG.put(("warn", f"  ProxyScrape Premium fetch error: {_e}"))
         if not proxies:
-            return {"ok": False, "error": "No proxies fetched", "proxies": []}
+            return {"ok": False, "error": "No proxies fetched from Premium API", "proxies": []}
         import random
-        sample = random.sample(proxies, min(count, len(proxies)))
+        random.shuffle(proxies)
+        sample = proxies[:min(count, len(proxies))]
         return {"ok": True, "proxies": sample, "total": len(proxies)}
 
     def assign_proxies_to_profiles(self, proxies):
@@ -3202,12 +3240,26 @@ class API:
                 prof["proxy"] = proxies[i]
                 assigned.append({"idx": prof["idx"], "proxy": proxies[i]})
         _save_profiles(profiles)
-        # Also update sender_cfg.json proxy_str with first proxy
+        # Update sender_cfg.json proxy_str with first proxy
         if proxies:
             cfg = _load_cfg()
             cfg["proxy_str"] = proxies[0]
             json.dump(cfg, open(CFG_FILE,"w",encoding="utf-8"), indent=2)
         return {"ok": True, "assigned": assigned}
+
+    def fetch_and_assign_proxies(self):
+        """Fetch Premium IPs from ProxyScrape and assign one unique IP per profile."""
+        profiles = _load_profiles()
+        n = len(profiles)
+        r = self.fetch_proxies(count=max(n, 10))
+        if not r.get("ok"):
+            return {"ok": False, "error": r.get("error", "Fetch failed"), "assigned": []}
+        proxies = r["proxies"]
+        if len(proxies) < n:
+            return {"ok": False, "error": f"Only {len(proxies)} IPs fetched, need {n}", "assigned": []}
+        result = self.assign_proxies_to_profiles(proxies[:n])
+        result["total_available"] = r["total"]
+        return result
 
     def get_send_options(self):
         return _load_send_options()
@@ -3684,8 +3736,13 @@ textarea{resize:vertical;min-height:65px}
 <div class="card">
   <div class="ch"><span class="ci"></span>
     <span class="ct">Browser Profiles</span>
+    <button onclick="autoAssignProxies()" id="btn-assign-proxy"
+      style="margin-left:auto;padding:5px 12px;background:#0d3320;color:#4ade80;
+        border:1px solid #166534;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700"
+      title="Fetch ProxyScrape Premium IPs and assign one unique IP per profile">
+       Auto-Assign IPs</button>
     <button onclick="checkSessionsHealth()" id="btn-health"
-      style="margin-left:auto;padding:5px 12px;background:#0f3460;color:#60a5fa;
+      style="margin-left:6px;padding:5px 12px;background:#0f3460;color:#60a5fa;
         border:1px solid #1e5a9c;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700">
        Refresh & Check Sessions</button>
     <button onclick="sendTgStatus()"
@@ -4489,6 +4546,25 @@ async function saveProxy(idx){
   if(!prxEl)return;
   const r=await pywebview.api.save_profile_proxy({idx,proxy:prxEl.value});
   if(r&&r.ok){addLog('ok','  Proxy saved for Profile '+idx);refreshProfiles();}
+}
+
+async function autoAssignProxies(){
+  const btn=document.getElementById('btn-assign-proxy');
+  if(btn){btn.disabled=true;btn.textContent='Fetching...';}
+  addLog('info','Fetching ProxyScrape Premium IPs...');
+  const r=await pywebview.api.fetch_and_assign_proxies();
+  if(btn){btn.disabled=false;btn.textContent=' Auto-Assign IPs';}
+  if(r&&r.ok){
+    const n=r.assigned?r.assigned.length:0;
+    addLog('ok',` Assigned ${n} unique IPs (${r.total_available||'?'} available). Each profile now uses a different IP.`);
+    r.assigned&&r.assigned.forEach(a=>{
+      const short=a.proxy?a.proxy.split('@')[1]:'?';
+      addLog('info',`  Profile #${a.idx} → ${short}`);
+    });
+    refreshProfiles();
+  } else {
+    addLog('err','  Auto-assign failed: '+(r&&r.error||'unknown error'));
+  }
 }
 
 async function addProfile(){
