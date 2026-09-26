@@ -18,48 +18,79 @@
           case 'click': {
             let el = null;
             if (params.selector) {
-              el = document.querySelector(params.selector);
+              const selectors = params.selector.split(',').map(s => s.trim());
+              for (const sel of selectors) {
+                try { el = document.querySelector(sel); } catch(e) {}
+                if (el) break;
+              }
             } else if (params.x != null && params.y != null) {
               el = document.elementFromPoint(params.x, params.y);
             }
             if (el) {
-              el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: params.x || 0, clientY: params.y || 0 }));
+              el.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+              const rect = el.getBoundingClientRect();
+              const cx = params.x || Math.round(rect.left + rect.width / 2);
+              const cy = params.y || Math.round(rect.top + rect.height / 2);
+              el.focus && el.focus();
+              el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, clientX: cx, clientY: cy }));
+              el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: cx, clientY: cy }));
+              el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, clientX: cx, clientY: cy }));
+              el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: cx, clientY: cy }));
               result = 'clicked ' + (el.tagName + (el.id ? '#' + el.id : '') + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
             } else {
-              result = 'element not found';
+              result = 'element not found at (' + params.x + ',' + params.y + ')';
             }
             break;
           }
 
           case 'type': {
-            let el = params.selector ? document.querySelector(params.selector) : document.activeElement;
+            let el = null;
+            if (params.selector) {
+              const selectors = params.selector.split(',').map(s => s.trim());
+              for (const sel of selectors) {
+                try { el = document.querySelector(sel); } catch(e) {}
+                if (el) break;
+              }
+            }
             if (!el) el = document.activeElement;
-            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+            if (el && el !== document.body && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+              el.scrollIntoView({ block: 'nearest', behavior: 'instant' });
               el.focus();
               if (el.isContentEditable) {
-                document.execCommand('insertText', false, params.text);
-              } else {
-                // Use execCommand for broader compatibility (works on Google, React inputs, etc.)
-                el.select && el.select();
-                try {
-                  // Try native setter first (works for React)
-                  const proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
-                  const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-                  if (setter) {
-                    setter.call(el, (el.value || '') + params.text);
-                  } else {
-                    el.value = (el.value || '') + params.text;
-                  }
-                } catch(e) {
-                  el.value = (el.value || '') + params.text;
+                // For contenteditable (Gmail body, rich editors): use clipboard paste
+                // This is the most reliable method across all modern sites
+                el.focus();
+                const sel2 = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                sel2.removeAllRanges();
+                sel2.addRange(range);
+                // Try execCommand insertText (works in most cases)
+                const inserted = document.execCommand('insertText', false, params.text);
+                if (!inserted) {
+                  // Fallback: set innerText directly
+                  el.innerText = (el.innerText || '') + params.text;
+                  el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: params.text }));
                 }
+              } else {
+                // INPUT/TEXTAREA: React-compatible native setter
+                const proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+                const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+                const newVal = (el.value || '') + params.text;
+                try { setter ? setter.call(el, newVal) : (el.value = newVal); }
+                catch(e) { el.value = newVal; }
                 el.dispatchEvent(new Event('input', { bubbles: true }));
                 el.dispatchEvent(new Event('change', { bubbles: true }));
-                el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'a' }));
+                // Fire keydown/keyup for last char so frameworks notice
+                const lastChar = params.text.slice(-1);
+                el.dispatchEvent(new KeyboardEvent('keydown', { key: lastChar, bubbles: true }));
+                el.dispatchEvent(new KeyboardEvent('keyup', { key: lastChar, bubbles: true }));
               }
-              result = 'typed: ' + params.text.slice(0, 50);
+              result = 'typed into ' + el.tagName + (el.name ? '['+el.name+']' : '') + ': ' + params.text.slice(0, 50);
             } else {
-              result = 'no editable element focused';
+              const active = document.activeElement;
+              result = 'no editable element (active: ' + (active ? active.tagName + (active.id ? '#'+active.id : '') : 'none') + ') — use javascript_execute to set value directly';
             }
             break;
           }
@@ -118,7 +149,12 @@
           case 'find_element': {
             let found = null;
             if (params.selector) {
-              found = document.querySelector(params.selector);
+              // Try multiple selectors split by comma
+              const selectors = params.selector.split(',').map(s => s.trim());
+              for (const sel of selectors) {
+                try { found = document.querySelector(sel); } catch(e) {}
+                if (found) break;
+              }
             } else if (params.text) {
               const allEls = document.querySelectorAll('a,button,input,label,h1,h2,h3,p,span,div,li');
               for (const el of allEls) {
@@ -129,11 +165,28 @@
               }
             }
             if (found) {
+              // Scroll element into view so getBoundingClientRect gives real coords
+              found.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
               const rect = found.getBoundingClientRect();
+              const cx = Math.round(rect.left + rect.width / 2);
+              const cy = Math.round(rect.top + rect.height / 2);
               const elText = found.value !== undefined ? found.value : found.innerText;
-              result = JSON.stringify({ found: true, tag: found.tagName, text: elText?.slice(0, 100), x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2), rect: { top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width), height: Math.round(rect.height) } });
+              // If still off-screen (zero rect), report that
+              const offScreen = rect.width === 0 && rect.height === 0;
+              result = JSON.stringify({ found: true, tag: found.tagName, text: elText?.slice(0, 100), x: cx, y: cy, offScreen, rect: { top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width), height: Math.round(rect.height) } });
             } else {
               result = JSON.stringify({ found: false });
+            }
+            break;
+          }
+
+          case 'javascript_execute': {
+            try {
+              const fn = new Function(params.code || '');
+              const ret = fn();
+              result = ret !== undefined ? String(ret).slice(0, 500) : 'executed ok';
+            } catch (e) {
+              result = 'js error: ' + e.message;
             }
             break;
           }

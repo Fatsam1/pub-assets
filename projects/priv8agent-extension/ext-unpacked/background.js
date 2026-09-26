@@ -23,8 +23,8 @@ async function startExtLogin() {
 
     await chrome.storage.local.set({ pendingAuthCode: code });
 
-    // Open the extension approval page (not the CLI login page)
-    const extLoginUrl = API_BASE + '/ext-login?code=' + encodeURIComponent(code);
+    // Open the CLI login page where the user approves the connection
+    const extLoginUrl = API_BASE + '/cli-login?code=' + encodeURIComponent(code);
     const tab = await chrome.tabs.create({ url: extLoginUrl, active: true });
     _authTabId = tab.id;
 
