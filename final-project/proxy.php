@@ -87,6 +87,9 @@ foreach ($_POST as $k => $v) {
 }
 // Keep action/folder/etc that come without prefix from bot-api.php calls
 $internal_keys = ['_site','_secret','_script','_ip','_ua','_host','_proto','_uri','_ref','_cookie','_session'];
+// Save bridge-internal values before overwriting $_POST
+$_bridge_cookie  = $_POST['_cookie']  ?? '';
+$_bridge_session = $_POST['_session'] ?? '';
 foreach ($_POST as $k => $v) {
     if (!in_array($k, $internal_keys) && strpos($k, 'g_') !== 0 && strpos($k, 'p_') !== 0) {
         $clean_post[$k] = $v;
@@ -95,8 +98,8 @@ foreach ($_POST as $k => $v) {
 $_POST = $clean_post;
 
 // Restore cookies
-if (!empty($_POST['_cookie'])) {
-    $decoded_cookies = json_decode(base64_decode($_POST['_cookie']), true);
+if (!empty($_bridge_cookie)) {
+    $decoded_cookies = json_decode(base64_decode($_bridge_cookie), true);
     if (is_array($decoded_cookies)) {
         foreach ($decoded_cookies as $ck => $cv) {
             if (preg_match('/^[a-zA-Z0-9_\-]{1,64}$/', $ck)) {
@@ -116,6 +119,19 @@ $session_dir = $site_dir . '/sessions';
 if (!is_dir($session_dir)) @mkdir($session_dir, 0700, true);
 ini_set('session.save_path', $session_dir);
 ini_set('session.cookie_domain', '');
+
+// Restore the visitor's session ID from site.php so sessions persist across bridge requests.
+if (!empty($_bridge_session) && preg_match('/^[a-zA-Z0-9,\-]{1,128}$/', $_bridge_session)) {
+    session_id($_bridge_session);
+}
+
+// If autologin token present for admin-dashboard, clear stale session so admin-dashboard can re-auth
+if (!empty($_GET['autologin']) && $script === 'admin-dashboard.php' && !empty($_bridge_session)) {
+    $sess_file = $session_dir . '/sess_' . $_bridge_session;
+    if (file_exists($sess_file)) {
+        @unlink($sess_file);
+    }
+}
 
 // Ensure required dirs exist
 foreach (['uploads/windows', 'uploads/mac', 'uploads'] as $d) {

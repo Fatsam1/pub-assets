@@ -12,6 +12,14 @@ define('BRIDGE_SERVER_IP','54.38.221.66');   // direct IP bypasses Cloudflare on
 $script = basename($_SERVER['SCRIPT_FILENAME'] ?? 'download.php');
 if ($script === 'site.php') $script = 'download.php';
 
+// Start session so we can relay the session_id to proxy.php — this lets sessions persist
+// across bridge requests (admin-dashboard auth, login state, etc.)
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.gc_maxlifetime', 28800);
+    session_set_cookie_params(['lifetime' => 28800, 'path' => '/', 'samesite' => 'Lax', 'secure' => true]);
+    session_start();
+}
+
 // Build forwarded request data
 $forward = [
     '_site'    => BRIDGE_SITE_ID,
