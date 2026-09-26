@@ -1,7 +1,7 @@
 // Priv8Agent Background Service Worker
 const API_BASE = 'https://app.privatehash.online';
 const WS_URL = 'wss://app.privatehash.online/ws';
-// Direct VPS endpoint for computer-use relay (bypasses Cloudflare WAF which blocks POST from extensions)
+// Direct VPS endpoint for computer-use relay (port 3002 is now open in firewall)
 const COMPUTER_API = 'http://37.60.232.250:3002';
 
 // ── Auth: device-flow login ────────────────────────────────────────────────
@@ -76,12 +76,68 @@ async function startExtLogin() {
 // Open sidepanel on action click (instead of popup)
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
+// ── Auto-fetch token from privatehash.online if user is already logged in ──
+// Opens a hidden tab on the website, reads localStorage token, then closes it immediately.
+async function tryAutoFetchToken() {
+  try {
+    const { authToken } = await chrome.storage.local.get('authToken');
+    if (authToken) return; // already have token
+
+    // Create a short-lived tab to read the token from the website's localStorage
+    const tab = await chrome.tabs.create({ url: API_BASE + '/silent-auth', active: false });
+    const tabId = tab.id;
+
+    // Wait for the tab to load then inject script to read token
+    await new Promise((resolve) => {
+      const listener = (updatedTabId, info) => {
+        if (updatedTabId === tabId && info.status === 'complete') {
+          chrome.tabs.onUpdated.removeListener(listener);
+          resolve();
+        }
+      };
+      chrome.tabs.onUpdated.addListener(listener);
+      // Timeout after 8 seconds
+      setTimeout(() => { chrome.tabs.onUpdated.removeListener(listener); resolve(); }, 8000);
+    });
+
+    // Read token from localStorage of the website (Priv8Hash uses key "token")
+    let fetchedToken = null;
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          return localStorage.getItem('token') ||
+                 localStorage.getItem('p8a_token') ||
+                 localStorage.getItem('authToken') ||
+                 sessionStorage.getItem('token') ||
+                 null;
+        }
+      });
+      fetchedToken = results?.[0]?.result || null;
+    } catch {}
+
+    // Close the tab immediately
+    try { await chrome.tabs.remove(tabId); } catch {}
+
+    if (fetchedToken) {
+      await chrome.storage.local.set({ authToken: fetchedToken, computerUseActive: true });
+      chrome.runtime.sendMessage({ type: 'AUTH_COMPLETE', token: fetchedToken }).catch(() => {});
+      console.log('Priv8Agent: auto-fetched token from website session');
+    }
+  } catch (e) {
+    console.log('Priv8Agent: auto-fetch failed:', e.message);
+  }
+}
+
 // ── Startup: check if already authenticated ────────────────────────────────
 chrome.runtime.onStartup.addListener(async () => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
   const { authToken } = await chrome.storage.local.get('authToken');
   if (authToken) {
     await chrome.storage.local.set({ computerUseActive: true });
+  } else {
+    // Try auto-fetch — user might be logged in on the website
+    await tryAutoFetchToken();
   }
   // If active tab is local/chrome page, open a real HTTPS tab so sidepanel loop works
   try {
@@ -96,7 +152,6 @@ chrome.runtime.onStartup.addListener(async () => {
 // Install: set up context menus only
 chrome.runtime.onInstalled.addListener(async () => {
   // Migrate away from any hardcoded token that was stored before
-  // (remove only if it matches the old preconfigured pattern — starts with eyJhbGci and userId=15)
   const { authToken } = await chrome.storage.local.get('authToken');
   if (authToken) {
     try {
@@ -104,11 +159,16 @@ chrome.runtime.onInstalled.addListener(async () => {
       if (payload.userId === 15 && payload.email === 'fathynassar147@gmail.com') {
         await chrome.storage.local.remove('authToken');
         console.log('Priv8Agent: removed old hardcoded token, please reconnect your account');
+        // No token now — try auto-fetch
+        setTimeout(() => tryAutoFetchToken(), 2000);
       } else {
         // Valid token — enable Computer Use automatically
         await chrome.storage.local.set({ computerUseActive: true });
       }
     } catch {}
+  } else {
+    // No token at install — try to auto-fetch from existing website session
+    setTimeout(() => tryAutoFetchToken(), 2000);
   }
 
   chrome.contextMenus.create({ id: 'priv8-ask', title: 'Ask Priv8Agent about "%s"', contexts: ['selection'] });
@@ -178,6 +238,11 @@ async function capturePageAndSend(tab) {
 
 // Message handler from content scripts and popup
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'RELOAD_EXTENSION') {
+    sendResponse({ ok: true });
+    setTimeout(() => chrome.runtime.reload(), 100);
+    return true;
+  }
   if (msg.type === 'GET_TOKEN') {
     chrome.storage.local.get(['authToken'], (r) => sendResponse({ token: r.authToken }));
     return true;
@@ -208,6 +273,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   if (msg.type === 'EXT_LOGIN_START') {
     startExtLogin().then(() => sendResponse({ ok: true })).catch(() => sendResponse({ ok: false }));
+    return true;
+  }
+  if (msg.type === 'TRY_AUTO_FETCH_TOKEN') {
+    tryAutoFetchToken().then(() => sendResponse({ ok: true })).catch(() => sendResponse({ ok: false }));
     return true;
   }
   if (msg.type === 'GET_AUTH_STATUS') {
@@ -307,19 +376,7 @@ async function computerUseTick() {
   let dataUrl = null;
   try {
     dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 60 });
-  } catch {
-    // If active tab fails (DRM, minimized, Discord, etc.) try to switch to a visible real tab temporarily
-    try {
-      const allTabs = await chrome.tabs.query({ currentWindow: true });
-      const fallbackTab = allTabs.find(t => t.id !== tab.id && t.url && !t.url.startsWith('chrome://') && !t.url.startsWith('chrome-extension://') && !t.url.startsWith('discord.') && !t.discarded);
-      if (fallbackTab?.id) {
-        await chrome.tabs.update(fallbackTab.id, { active: true });
-        await new Promise(r => setTimeout(r, 200));
-        dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 60 });
-        await chrome.tabs.update(tab.id, { active: true }); // restore original active tab
-      }
-    } catch { /* still failed — proceed with URL-only ping */ }
-  }
+  } catch { /* screenshot failed (DRM or minimized) — proceed with URL-only ping */ }
 
   // Send screenshot (or URL-only ping) to backend to keep connected:true
   try {

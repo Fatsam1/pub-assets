@@ -28,7 +28,23 @@ async function init() {
   if (s.systemPrompt) $('s-system').value = s.systemPrompt;
   if (s.forceLang) $('s-lang').value = s.forceLang;
   applyTheme(s.theme||'dark');
-  if (!token) { showLoginScreen(); return; }
+  if (!token) {
+    // Try auto-fetch first before showing login screen
+    try {
+      await chrome.runtime.sendMessage({ type: 'TRY_AUTO_FETCH_TOKEN' });
+      const fresh = await chrome.storage.local.get('authToken');
+      if (fresh.authToken) {
+        token = fresh.authToken;
+        // Fall through to boot
+      } else {
+        showLoginScreen();
+        return;
+      }
+    } catch {
+      showLoginScreen();
+      return;
+    }
+  }
   const ps = await chrome.storage.local.get(['p8Projects']);
   projects = ps.p8Projects || [];
   renderProjectsBar();
@@ -115,6 +131,8 @@ window.setTheme=(t)=>{
 
 // ─── Boot ───
 async function boot() {
+  // Reset scroll position to top to prevent scroll glitch on first open
+  if (messagesEl) messagesEl.scrollTop = 0;
   // Auto-enable Computer Use when logged in
   chrome.storage.local.set({ computerUseActive: true });
   chrome.runtime.sendMessage({ type: 'COMPUTER_USE_START' }).catch(() => {});
@@ -152,10 +170,10 @@ function scheduleRecon() {
 let _streamTimeout = null;
 function resetStreamTimeout() {
   if(_streamTimeout) clearTimeout(_streamTimeout);
-  // If server doesn't respond in 45s, unfreeze the UI
+  // If server doesn't respond in 90s, unfreeze the UI
   _streamTimeout = setTimeout(() => {
     if(streaming) { finishAi(); addMsg('ai','⏱️ Request timed out. Try again.'); }
-  }, 45000);
+  }, 90000);
 }
 function clearStreamTimeout() {
   if(_streamTimeout) { clearTimeout(_streamTimeout); _streamTimeout = null; }
@@ -278,15 +296,25 @@ function newChat() {
 function send(content) {
   if((!content.trim()&&!attachedImages.length)||streaming) return;
   if(!token){authScreen.classList.add('visible');return;}
-  if(!ws||ws.readyState!==1){connectWs();setTimeout(()=>send(content),600);return;}
+  if(!ws||ws.readyState!==1){
+    connectWs();
+    // Wait for ws to open (max 5s) then retry
+    let waited=0;
+    const waitWs=setInterval(()=>{
+      waited+=200;
+      if(ws?.readyState===1){clearInterval(waitWs);send(content);}
+      else if(waited>=5000){clearInterval(waitWs);toast('⚠️ Connection failed. Please try again.');}
+    },200);
+    return;
+  }
 
   let effectiveContent = content.trim();
   if(forceLang) {
     const langNames = {ar:'Arabic',en:'English',fr:'French',de:'German',es:'Spanish'};
     effectiveContent = (effectiveContent ? effectiveContent + '\n\n' : '') + `[Please reply in ${langNames[forceLang]||forceLang}]`;
   }
-  // Detect browser-control requests (YouTube play, open URL, etc.) → force Claude model
-  const isBrowserControl = /(play|open|browse|navigate|افتح|شغّل|شغّلي|شغل|شغلي|شغله|شغلها|شغلهم|يوتيوب|تصفح|روّح على|ابحث عن|افتح لي|دور على)/i.test(effectiveContent);
+  // Detect browser-control requests (YouTube play, open URL, Gmail, etc.) → force Claude model
+  const isBrowserControl = /(play|open|browse|navigate|gmail|mail|email|compose|send.*mail|send.*email|بعت.*ميل|بعت.*إيميل|ابعت|بعّت|بعت|ابعتلي|شوف.*ميل|افتح|شغّل|شغّلي|شغل|شغلي|شغله|شغلها|شغلهم|يوتيوب|تصفح|روّح على|ابحث عن|افتح لي|دور على|ميل|إيميل|جيميل|اوتلوك|رسالة.*بريد)/i.test(effectiveContent);
   const effectiveModel = isBrowserControl ? 'or/claude-sonnet-4-6' : (model || undefined);
   console.log('[P8A]', isBrowserControl ? '🤖 BROWSER-CONTROL → claude-sonnet-4-6' : '💬 normal → ' + (model || 'auto'), '| content:', effectiveContent?.slice(0,60));
   const payload = {
@@ -724,6 +752,10 @@ $('btn-save').addEventListener('click',async()=>{
   await chrome.storage.local.set({authToken:t||token,serverUrl:srv||API,defaultModel:m,systemPrompt:sp,forceLang:lang,quality:q});
   toast('✅ Settings saved'); showPanel('chat');
   if(t&&!ws)boot();
+});
+$('btn-reload-ext').addEventListener('click',()=>{
+  toast('🔄 Reloading extension...');
+  setTimeout(()=>chrome.runtime.reload(),500);
 });
 $('btn-logout').addEventListener('click',async()=>{
   token=''; await chrome.storage.local.remove(['authToken','lastSession']);
