@@ -316,4 +316,25 @@ if ($action === 'registrants_export') {
     exit;
 }
 
+// ── Landing page visit stats ──────────────────────────────────────────────────
+if ($action === 'lp_stats') {
+    $lp_log = __DIR__ . '/landing-visits.json';
+    $visits = file_exists($lp_log) ? (json_decode(file_get_contents($lp_log), true) ?? []) : [];
+    $by_preset = [];
+    $today_str = date('Y-m-d');
+    $today_count = 0;
+    foreach ($visits as $v) {
+        $pid = $v['preset'] ?? 'unknown';
+        $by_preset[$pid] = ($by_preset[$pid] ?? 0) + 1;
+        if (substr($v['ts'] ?? '', 0, 10) === $today_str) $today_count++;
+    }
+    echo json_encode([
+        'ok'     => true,
+        'total'  => count($visits),
+        'today'  => $today_count,
+        'visits' => $by_preset,
+    ]);
+    exit;
+}
+
 echo json_encode(['ok' => false, 'error' => 'Unknown action: ' . htmlspecialchars($action)]);
