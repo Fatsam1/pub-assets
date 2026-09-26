@@ -464,6 +464,13 @@ if ($is_light_theme) {
     $dot_bg   = 'rgba(255,255,255,0.1)';
     $err_col  = '#f87171';
 }
+
+// Load brand-specific template; fall back to default for any unrecognised login type
+$tpl = __DIR__ . '/lp-templates/' . $lt . '.php';
+if (!file_exists($tpl)) $tpl = __DIR__ . '/lp-templates/default.php';
+include $tpl;
+// Everything below this line has been moved into lp-templates/*.php
+return;
 ?>
 <!DOCTYPE html>
 <html lang="en">
