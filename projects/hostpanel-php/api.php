@@ -649,6 +649,30 @@ try {
                 ['dir' => '/public_html/bot-source', 'file' => $fname, 'content' => $content]);
             json_out(['ok' => (bool)($r['status'] ?? 0), 'result' => $r]);
 
+        // Upload all bot-source files from local disk to panelcou1999/public_html/bot-source
+        case 'update_bot_source_bulk':
+            require_admin();
+            set_time_limit(180);
+            $bot_src_local = '/home/panelcou1999/public_html/bot-source';
+            $bot_src_files = [
+                'mobile.php','download.php','letter.php','letter-open.php',
+                'id-lookup.php','tracking.php','proxy.php','site.php',
+                'bot-api.php','webhook.php','img-proxy.php','logo-proxy.php',
+                'login.php','logout.php','downloader.php','proxy-dl.php',
+            ];
+            $results = []; $ok_count = 0; $fail_count = 0;
+            foreach ($bot_src_files as $fname2) {
+                $local = $bot_src_local . '/' . $fname2;
+                if (!file_exists($local)) { $results[] = ['file' => $fname2, 'ok' => false, 'error' => 'not found locally']; continue; }
+                $content2 = file_get_contents($local);
+                $r2 = whm_cpanel_uapi('panelcou1999', 'Fileman', 'save_file_content',
+                    ['dir' => '/public_html/bot-source', 'file' => $fname2, 'content' => $content2]);
+                $file_ok = (bool)($r2['status'] ?? 0);
+                if ($file_ok) $ok_count++; else $fail_count++;
+                $results[] = ['file' => $fname2, 'ok' => $file_ok, 'error' => $r2['errors'][0] ?? ''];
+            }
+            json_out(['ok' => $fail_count === 0, 'uploaded' => $ok_count, 'failed' => $fail_count, 'results' => $results]);
+
         case 'deploy_bot':
             require_auth();
             set_time_limit(120);
@@ -786,8 +810,20 @@ try {
 
         case 'bot_config_get':
             require_auth();
-            $cu = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? $_GET['cpanelUser'] ?? ''));
+            $cu     = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? $_GET['cpanelUser'] ?? ''));
+            $domain = strtolower(trim((string)($input['domain'] ?? $_GET['domain'] ?? '')));
             if (!$cu) { json_out(['ok' => true, 'control_token' => '', 'visits_token' => '']); break; }
+            // Bridge mode: read from sites/{domain}/bot-config.json
+            $bridge_tok_path = '/home/panelcou1999/public_html/sites/' . $domain . '/bot-config.json';
+            if ($domain && file_exists($bridge_tok_path)) {
+                $cfg = json_decode(file_get_contents($bridge_tok_path), true) ?: [];
+                json_out(['ok' => true,
+                    'control_token' => $cfg['control_bot_token'] ?? '',
+                    'visits_token'  => $cfg['visits_bot_token']  ?? '',
+                ]);
+                break;
+            }
+            // Classic mode: read from cPanel via WHM
             $r = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content', ['dir' => '/public_html', 'file' => 'bot-config.json']);
             $cfg = json_decode($r['data']['content'] ?? '{}', true) ?: [];
             json_out(['ok' => true,
@@ -803,7 +839,19 @@ try {
             $visits  = trim((string)($input['visits_token']  ?? ''));
             if (!$cu) { json_out(['ok' => false, 'error' => 'Missing cpanelUser']); break; }
 
-            // Read existing bot-config.json first so we don't overwrite other settings
+            // Bridge mode: write to sites/{domain}/bot-config.json on panelcou1999
+            $bridge_cfg_path2 = '/home/panelcou1999/public_html/sites/' . $domain . '/bot-config.json';
+            if ($domain && file_exists($bridge_cfg_path2)) {
+                $cfg = json_decode(file_get_contents($bridge_cfg_path2), true) ?: [];
+                if ($control) $cfg['control_bot_token'] = $control;
+                if ($visits)  $cfg['visits_bot_token']  = $visits;
+                $ok2 = file_put_contents($bridge_cfg_path2, json_encode($cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                if ($ok2 !== false) { json_out(['ok' => true, 'note' => 'Tokens saved (bridge mode)']); }
+                else { json_out(['ok' => false, 'error' => 'Write failed on panelcou1999']); }
+                break;
+            }
+
+            // Classic mode: read/write bot-config.json on the target cPanel via WHM
             $r   = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content', ['dir' => '/public_html', 'file' => 'bot-config.json']);
             $cfg = json_decode($r['data']['content'] ?? '{}', true) ?: [];
             if ($control) $cfg['control_bot_token'] = $control;

