@@ -130,7 +130,12 @@ function connectWs() {
   if (ws && ws.readyState <= 1) return;
   const url = API.replace('https://','wss://').replace('http://','ws://') + WS_PATH + '?token=' + encodeURIComponent(token);
   try { ws = new WebSocket(url); } catch { scheduleRecon(); return; }
-  ws.onopen = () => { statusPill.className='online'; statusText.textContent='Connected'; reconnects=0; if(sessionId) ws.send(JSON.stringify({type:'hello',sessionId})); };
+  ws.onopen = () => {
+    statusPill.className='online'; statusText.textContent='Connected'; reconnects=0;
+    // Always send hello — with sessionId to restore existing, without to pre-create a new session
+    // (server creates sandbox on hello so first user_message doesn't wait for container startup)
+    ws.send(JSON.stringify({type:'hello', ...(sessionId?{sessionId}:{})}));
+  };
   ws.onclose = () => {
     statusPill.className = reconnects >= 3 ? 'error' : '';
     statusText.textContent = reconnects >= 3 ? 'Error' : 'Offline';
@@ -144,16 +149,30 @@ function scheduleRecon() {
   reconnects++;
   reconnTimer = setTimeout(() => { reconnTimer=null; connectWs(); }, Math.min(1000*Math.pow(1.5,reconnects),30000));
 }
+let _streamTimeout = null;
+function resetStreamTimeout() {
+  if(_streamTimeout) clearTimeout(_streamTimeout);
+  // If server doesn't respond in 45s, unfreeze the UI
+  _streamTimeout = setTimeout(() => {
+    if(streaming) { finishAi(); addMsg('ai','⏱️ Request timed out. Try again.'); }
+  }, 45000);
+}
+function clearStreamTimeout() {
+  if(_streamTimeout) { clearTimeout(_streamTimeout); _streamTimeout = null; }
+}
+
 function onWsEvent(ev) {
   switch(ev.type) {
     case 'token': case 'text_delta': case 'assistant_token':
     case 'assistant_text_delta': appendToken(ev.content||ev.delta||ev.token||''); break;
-    case 'turn_start': case 'step_status': if(!pendingMsg) startAi(); break;
+    case 'turn_start': case 'step_status':
+      resetStreamTimeout(); // reset on any activity
+      if(!pendingMsg) startAi(); break;
     case 'turn_end': case 'done': case 'turn_complete':
-    case 'assistant_message_done': finishAi(); break;
+    case 'assistant_message_done': clearStreamTimeout(); finishAi(); break;
     case 'thinking': case 'thinking_delta': showThink(ev.content||ev.delta||''); break;
-    case 'error': finishAi(); addMsg('ai',`❌ ${ev.message||'An error occurred'}`); break;
-    case 'session_created': case 'session_id':
+    case 'error': clearStreamTimeout(); finishAi(); addMsg('ai',`❌ ${ev.message||'An error occurred'}`); break;
+    case 'session_ready': case 'session_created': case 'session_id':
       if(ev.sessionId){sessionId=ev.sessionId;chrome.storage.local.set({lastSession:ev.sessionId});}
       break;
     case 'media': if(ev.url||ev.dataUrl) addImage(ev.url||ev.dataUrl); break;
@@ -305,6 +324,7 @@ function send(content) {
   try { ws.send(JSON.stringify(payload)); } catch { toast('⚠️ Send failed — reconnecting…'); finishAi(); connectWs(); return; }
   userScrolled=false;
   streaming=true; btnSend.disabled=true; btnStop.classList.add('show'); startAi();
+  resetStreamTimeout();
 }
 function startAi() {
   if(pendingMsg) return;
@@ -353,6 +373,7 @@ function finishAi() {
       chrome.notifications.create({type:'basic',iconUrl:'icons/icon48.png',title:'Priv8Agent',message:snippet});
     }
   }
+  clearStreamTimeout();
   streaming=false; btnSend.disabled=false; btnStop.classList.remove('show'); scrollBot(); loadSessions();
 }
 function fmtTime(d=new Date()){return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
