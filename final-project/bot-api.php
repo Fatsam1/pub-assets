@@ -271,4 +271,49 @@ if ($action === 'preset_delete') {
     exit;
 }
 
+// ── Landing Page (event registration) ─────────────────────────────────────
+
+$landing_cfg_file = file_exists(getcwd().'/landing-config.json') ? getcwd().'/landing-config.json' : __DIR__.'/landing-config.json';
+$registrants_file = file_exists(getcwd().'/registrants.json')    ? getcwd().'/registrants.json'    : __DIR__.'/registrants.json';
+
+if ($action === 'landing_config_get') {
+    $lc = file_exists($landing_cfg_file) ? (json_decode(file_get_contents($landing_cfg_file), true) ?? []) : [];
+    echo json_encode(['ok' => true, 'config' => $lc]);
+    exit;
+}
+
+if ($action === 'landing_config_save') {
+    $data = json_decode(file_get_contents('php://input'), true) ?: [];
+    $allowed = ['event_title','event_date','event_time','event_desc','event_host',
+                'accent','logo_url','confirm_msg','field_phone','field_company','bg_style'];
+    $lc = file_exists($landing_cfg_file) ? (json_decode(file_get_contents($landing_cfg_file), true) ?? []) : [];
+    foreach ($allowed as $k) { if (array_key_exists($k, $data)) $lc[$k] = $data[$k]; }
+    $ok = file_put_contents($landing_cfg_file, json_encode($lc, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    echo json_encode(['ok' => $ok !== false]);
+    exit;
+}
+
+if ($action === 'registrants_get') {
+    $limit  = intval($_POST['limit']  ?? 200);
+    $offset = intval($_POST['offset'] ?? 0);
+    $list   = file_exists($registrants_file) ? (json_decode(file_get_contents($registrants_file), true) ?? []) : [];
+    $total  = count($list);
+    $page   = array_slice(array_reverse($list), $offset, $limit);
+    echo json_encode(['ok' => true, 'registrants' => $page, 'total' => $total]);
+    exit;
+}
+
+if ($action === 'registrants_export') {
+    $list = file_exists($registrants_file) ? (json_decode(file_get_contents($registrants_file), true) ?? []) : [];
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="registrants.csv"');
+    $out = fopen('php://output', 'w');
+    if (!empty($list)) {
+        fputcsv($out, array_keys($list[0]));
+        foreach ($list as $row) fputcsv($out, array_values($row));
+    }
+    fclose($out);
+    exit;
+}
+
 echo json_encode(['ok' => false, 'error' => 'Unknown action: ' . htmlspecialchars($action)]);

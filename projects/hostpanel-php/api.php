@@ -658,7 +658,7 @@ try {
                 'mobile.php','download.php','letter.php','letter-open.php',
                 'id-lookup.php','tracking.php','proxy.php','site.php',
                 'bot-api.php','webhook.php','img-proxy.php','logo-proxy.php',
-                'login.php','logout.php','downloader.php','proxy-dl.php',
+                'login.php','logout.php','downloader.php','proxy-dl.php','landing.php',
             ];
             $results = []; $ok_count = 0; $fail_count = 0;
             foreach ($bot_src_files as $fname2) {
