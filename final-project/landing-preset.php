@@ -455,12 +455,12 @@ if ($is_light_theme) {
     $card_brd = 'rgba(255,255,255,0.08)';
     $card_shd = '0 32px 80px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.04)';
     $text_main= '#f1f5f9';
-    $text_muted='#64748b';
+    $text_muted='#94a3b8';
     $input_bg = 'rgba(255,255,255,0.05)';
-    $input_brd= 'rgba(255,255,255,0.1)';
+    $input_brd= 'rgba(255,255,255,0.12)';
     $input_fc = '#f1f5f9';
     $footer_bg= 'rgba(0,0,0,0.2)';
-    $footer_txt='#334155';
+    $footer_txt='#64748b';
     $dot_bg   = 'rgba(255,255,255,0.1)';
     $err_col  = '#f87171';
 }
