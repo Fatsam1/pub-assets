@@ -1,0 +1,10 @@
+[Sat Aug 15 23:04:57 2026] PHP 8.0.30 Development Server (http://127.0.0.1:4700) started
+[Sat Aug 15 23:05:00 2026] 127.0.0.1:61972 Accepted
+[Sat Aug 15 23:05:00 2026] 127.0.0.1:61972 [200]: GET /api.php?action=auth_config
+[Sat Aug 15 23:05:00 2026] 127.0.0.1:61972 Closing
+[Sat Aug 15 23:05:00 2026] 127.0.0.1:61973 Accepted
+[Sat Aug 15 23:05:00 2026] 127.0.0.1:61973 [403]: POST /api.php?action=login_request
+[Sat Aug 15 23:05:00 2026] 127.0.0.1:61973 Closing
+[Sat Aug 15 23:05:00 2026] 127.0.0.1:61974 Accepted
+[Sat Aug 15 23:05:11 2026] 127.0.0.1:61974 [500]: POST /api.php?action=login_request
+[Sat Aug 15 23:05:11 2026] 127.0.0.1:61974 Closing
