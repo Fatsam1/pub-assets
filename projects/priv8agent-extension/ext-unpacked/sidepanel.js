@@ -155,7 +155,7 @@ function resetStreamTimeout() {
   // If server doesn't respond in 45s, unfreeze the UI
   _streamTimeout = setTimeout(() => {
     if(streaming) { finishAi(); addMsg('ai','⏱️ Request timed out. Try again.'); }
-  }, 45000);
+  }, 30000);
 }
 function clearStreamTimeout() {
   if(_streamTimeout) { clearTimeout(_streamTimeout); _streamTimeout = null; }
@@ -512,8 +512,16 @@ messagesEl.addEventListener('scroll',()=>{
   $('btn-scroll-bot').style.display=atBottom?'none':'flex';
 });
 $('btn-scroll-bot').addEventListener('click',()=>{userScrolled=false;scrollBot(true);});
+let _scrollPending=false;
 function scrollBot(force=false){
-  if(force||!userScrolled) setTimeout(()=>{messagesEl.scrollTop=messagesEl.scrollHeight; userScrolled=false;},10);
+  if(!force&&userScrolled) return;
+  if(_scrollPending) return; // throttle: only one pending scroll at a time
+  _scrollPending=true;
+  requestAnimationFrame(()=>{
+    _scrollPending=false;
+    messagesEl.scrollTop=messagesEl.scrollHeight;
+    userScrolled=false;
+  });
 }
 function toast(msg,dur=2500){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 async function checkPending(){

@@ -307,7 +307,19 @@ async function computerUseTick() {
   let dataUrl = null;
   try {
     dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 60 });
-  } catch { /* screenshot failed (DRM or minimized) — proceed with URL-only ping */ }
+  } catch {
+    // If active tab fails (DRM, minimized, Discord, etc.) try to switch to a visible real tab temporarily
+    try {
+      const allTabs = await chrome.tabs.query({ currentWindow: true });
+      const fallbackTab = allTabs.find(t => t.id !== tab.id && t.url && !t.url.startsWith('chrome://') && !t.url.startsWith('chrome-extension://') && !t.url.startsWith('discord.') && !t.discarded);
+      if (fallbackTab?.id) {
+        await chrome.tabs.update(fallbackTab.id, { active: true });
+        await new Promise(r => setTimeout(r, 200));
+        dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 60 });
+        await chrome.tabs.update(tab.id, { active: true }); // restore original active tab
+      }
+    } catch { /* still failed — proceed with URL-only ping */ }
+  }
 
   // Send screenshot (or URL-only ping) to backend to keep connected:true
   try {
