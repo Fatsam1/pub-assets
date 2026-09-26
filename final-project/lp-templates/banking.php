@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Banking template — HSBC / Chase / Wells Fargo style
 // Dark theme with strong brand gradient header, Inter font, centered card
 ?>
@@ -93,8 +93,8 @@ body{font-family:'Inter',system-ui,sans-serif;min-height:100vh;min-height:100dvh
         <span class="logo-ini" style="display:<?=$logo_url?'none':'flex'?>;align-items:center;justify-content:center;width:100%;height:100%"><?=mb_strtoupper(mb_substr($org_name,0,2))?></span>
       </div>
       <div>
-        <div class="hd-name"><?=htmlspecialchars($org_name)?></div>
-        <div class="hd-sub"><?=htmlspecialchars($org_sub)?></div>
+        <div class="hd-name"><?=$org_name?></div>
+        <div class="hd-sub"><?=$org_sub?></div>
       </div>
     </div>
     <div class="hd-bar">
@@ -129,7 +129,7 @@ body{font-family:'Inter',system-ui,sans-serif;min-height:100vh;min-height:100dvh
   </div>
 
   <?php if($footer): ?>
-  <div class="card-footer"><?=htmlspecialchars($footer)?></div>
+  <div class="card-footer"><?=$footer?></div>
   <?php endif; ?>
 </div>
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Payment template — PayPal style: white card, centered logo, thin progress bar
 ?>
 <!DOCTYPE html>
@@ -79,7 +79,7 @@ body{font-family:'Inter',Helvetica,Arial,sans-serif;min-height:100vh;min-height:
       <?php if($logo_url):?><img src="<?=htmlspecialchars($logo_url)?>" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><?php endif?>
       <span class="logo-ini" style="display:<?=$logo_url?'none':'flex'?>;align-items:center;justify-content:center;width:100%;height:100%"><?=mb_strtoupper(mb_substr($org_name,0,2))?></span>
     </div>
-    <div class="hd-name"><?=htmlspecialchars($org_name)?></div>
+    <div class="hd-name"><?=$org_name?></div>
     <div class="hd-tagline">Fast · Safe · Easy</div>
   </div>
   <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
@@ -100,7 +100,7 @@ body{font-family:'Inter',Helvetica,Arial,sans-serif;min-height:100vh;min-height:
   </div>
 
   <?php if($footer): ?>
-  <div class="card-footer"><?=htmlspecialchars($footer)?></div>
+  <div class="card-footer"><?=$footer?></div>
   <?php endif; ?>
 </div>
 

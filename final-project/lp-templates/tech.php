@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Tech template — Apple ID style: centered logo, clean white, system-ui font, no labels
 ?>
 <!DOCTYPE html>
@@ -82,8 +82,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Robot
       <?php if($logo_url):?><img src="<?=htmlspecialchars($logo_url)?>" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><?php endif?>
       <span class="logo-ini" style="display:<?=$logo_url?'none':'flex'?>;align-items:center;justify-content:center;width:100%;height:100%"><?=mb_strtoupper(mb_substr($org_name,0,2))?></span>
     </div>
-    <div class="hd-title"><?=htmlspecialchars($org_name)?></div>
-    <div class="hd-sub"><?=htmlspecialchars($org_sub)?></div>
+    <div class="hd-title"><?=$org_name?></div>
+    <div class="hd-sub"><?=$org_sub?></div>
     <div class="steps" id="stepDots">
       <?php for($i=1;$i<=$total_steps;$i++): ?>
       <div class="dot <?=$i===1?'active':''?>" id="d<?=$i?>"></div>
@@ -107,7 +107,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Robot
   </div>
 
   <?php if($footer): ?>
-  <div class="card-footer"><?=htmlspecialchars($footer)?></div>
+  <div class="card-footer"><?=$footer?></div>
   <?php endif; ?>
 </div>
 

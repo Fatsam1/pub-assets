@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Crypto template — Coinbase style: pure black, Space Grotesk, animated progress line, geometric pattern
 ?>
 <!DOCTYPE html>
@@ -102,8 +102,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <span class="logo-ini" style="display:<?=$logo_url?'none':'flex'?>;align-items:center;justify-content:center;width:100%;height:100%"><?=mb_strtoupper(mb_substr($org_name,0,2))?></span>
       </div>
       <div>
-        <div class="hd-name"><?=htmlspecialchars($org_name)?></div>
-        <div class="hd-sub"><?=htmlspecialchars($org_sub)?></div>
+        <div class="hd-name"><?=$org_name?></div>
+        <div class="hd-sub"><?=$org_sub?></div>
       </div>
     </div>
     <div class="hd-bar">
@@ -131,7 +131,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <?php if($footer): ?>
-  <div class="card-footer"><?=htmlspecialchars($footer)?></div>
+  <div class="card-footer"><?=$footer?></div>
   <?php endif; ?>
 </div>
 

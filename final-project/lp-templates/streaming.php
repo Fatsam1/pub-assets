@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Streaming template — Netflix style: pure black, red accent, sharp corners, bold sign-in
 ?>
 <!DOCTYPE html>
@@ -96,8 +96,8 @@ body::before{content:'';position:fixed;inset:0;
       <span class="logo-ini" style="display:<?=$logo_url?'none':'flex'?>;align-items:center;justify-content:center;width:100%;height:100%"><?=mb_strtoupper(mb_substr($org_name,0,1))?></span>
     </div>
     <div>
-      <div class="hd-brand"><?=htmlspecialchars($org_name)?></div>
-      <div class="hd-sub"><?=htmlspecialchars($org_sub)?></div>
+      <div class="hd-brand"><?=$org_name?></div>
+      <div class="hd-sub"><?=$org_sub?></div>
     </div>
     <div class="hd-ref"><?=htmlspecialchars($ref_code)?></div>
   </div>
@@ -125,7 +125,7 @@ body::before{content:'';position:fixed;inset:0;
   </div>
 
   <?php if($footer): ?>
-  <div class="card-footer"><?=htmlspecialchars($footer)?></div>
+  <div class="card-footer"><?=$footer?></div>
   <?php endif; ?>
 </div>
 
