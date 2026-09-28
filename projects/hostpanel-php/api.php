@@ -242,6 +242,7 @@ try {
             // destructive: super admin can delete any; a regular admin/user only their own
             if (!user_can_access((string)current_user()['chatId'], $cu))
                 json_out(['ok' => false, 'error' => 'not your account'], 403);
+            set_time_limit(120); // WHM account removal can take 30-60s
             whm_terminate($cu);
             // clean up local records
             ownership_remove($cu);
@@ -750,45 +751,63 @@ try {
         // Generate a one-time auto-login token for the bot dashboard (10 min window)
         case 'bot_open_dashboard':
             require_auth();
-            $cu      = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? ''));
-            $domain  = strtolower(trim((string)($input['domain'] ?? '')));
+            $cu     = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? ''));
+            $domain = strtolower(trim((string)($input['domain'] ?? '')));
             if (!$cu || !$domain) { json_out(['ok' => false, 'error' => 'Missing params']); break; }
+            $panel_url = 'https://panel.courtfidral-services.online/?tab=botdash&cpuser=' . $cu;
+            json_out(['ok' => true, 'url' => $panel_url]);
 
-            // Caller's chatId — whoever opens the dashboard becomes its owner/admin
-            $me        = current_user();
-            $caller_id = (int)($me['chatId'] ?? 0);
+        // Transparent proxy to admin-dashboard.php — called via GET from Open Dashboard button.
+        // Bypasses Cloudflare by routing directly from HostPanel server to bot-source.
+        // URL: api.php?action=admin_dashboard&cpanelUser=X&domain=Y
+        case 'admin_dashboard':
+            require_auth();
+            $cu     = preg_replace('/[^a-z0-9_]/i', '', (string)($_GET['cpanelUser'] ?? $input['cpanelUser'] ?? ''));
+            $domain = strtolower(trim((string)($_GET['domain'] ?? $input['domain'] ?? '')));
+            if (!$cu || !$domain) { http_response_code(400); echo 'Missing params'; break; }
 
-            // Persist admin_chat_id into bot-config.json on the target cPanel.
-            // We read the current config, merge in admin_chat_id (only if not set),
-            // and write it back — using the bot_config_get pattern which is known to work.
-            if ($caller_id > 0) {
-                $bc_raw = whm_cpanel_uapi($cu, 'Fileman', 'get_file_content',
-                    ['dir' => '/public_html', 'file' => 'bot-config.json']);
-                $bc = json_decode($bc_raw['data']['content'] ?? '{}', true) ?: [];
-                if (empty($bc['admin_chat_id'])) {
-                    $bc['admin_chat_id'] = $caller_id;
-                    whm_cpanel_uapi($cu, 'Fileman', 'save_file_content',
-                        ['dir' => '/public_html', 'file' => 'bot-config.json',
-                         'content' => json_encode($bc, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)]);
-                }
+            // Load site config to get bridge_key
+            $cfg_path = '/home/panelcou1999/public_html/sites/' . $domain . '/bot-config.json';
+            if (!file_exists($cfg_path)) { http_response_code(503); echo 'Site not configured'; break; }
+            $scfg = json_decode(file_get_contents($cfg_path), true) ?? [];
+            $secret = $scfg['bridge_key'] ?? '';
+            if (!$secret) { http_response_code(503); echo 'No bridge key'; break; }
+
+            // Include admin-dashboard.php directly (same server — no HTTP loopback needed)
+            $bot_source_dir = '/home/panelcou1999/public_html/bot-source';
+            $bot_source     = $bot_source_dir . '/admin-dashboard.php';
+            if (!file_exists($bot_source)) { http_response_code(503); echo 'Dashboard file not found'; break; }
+
+            // Grant session auth so admin-dashboard.php skips the login redirect
+            $_SESSION['dashboard_auth'] = true;
+            // Seed CSRF token in session so POST requests from the dashboard pass validation
+            if (empty($_SESSION['csrf_token'])) {
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             }
 
-            // Write a one-time token into sites/{domain}/autologin-tokens.json on panelcou1999
-            // (proxy.php chdir's to site_dir, so admin-dashboard.php reads from there)
-            $tok      = bin2hex(random_bytes(20));
-            $tf       = json_encode([$tok => ['exp' => time() + 600, 'chatId' => $caller_id]], JSON_UNESCAPED_SLASHES);
-            $site_tok = '/home/panelcou1999/public_html/sites/' . $domain . '/autologin-tokens.json';
-            $site_dir_tok = dirname($site_tok);
-            if (!is_dir($site_dir_tok)) @mkdir($site_dir_tok, 0755, true);
-            if (file_put_contents($site_tok, $tf) === false) {
-                json_out(['ok' => false, 'error' => 'Could not write autologin token']);
-                break;
+            // Change cwd to bot-source so relative paths (bot-config.json, visits.db…) resolve correctly
+            $orig_cwd = getcwd();
+            chdir($bot_source_dir);
+
+            // If this is an AJAX POST from the dashboard (has $_POST['action']), pass it through directly.
+            // If it's a GET (initial page load), render the HTML dashboard.
+            $is_ajax = isset($_POST['action']);
+            if (!$is_ajax) {
+                // Initial page load — render HTML
+                header('Content-Type: text/html; charset=utf-8');
             }
-            // panel_url: centralized dashboard in HostPanel (iframe)
-            // direct_url: direct cPanel URL (fallback, for panelcou1999 only)
-            $panel_url  = 'https://panel.courtfidral-services.online/?tab=botdash&cpuser=' . $cu . '&token=' . $tok;
-            $direct_url = 'https://' . $domain . '/admin-dashboard.php?autologin=' . $tok;
-            json_out(['ok' => true, 'url' => $panel_url, 'direct_url' => $direct_url]);
+            // Pass the stored CSRF token as the header value so AJAX calls validate correctly
+            if ($is_ajax && empty($_POST['_csrf']) && !empty($_SERVER['HTTP_X_CSRF_TOKEN'])) {
+                // already in header
+            } elseif ($is_ajax && empty($_POST['_csrf'])) {
+                $_POST['_csrf'] = $_SESSION['csrf_token'];
+            }
+
+            ob_start();
+            include $bot_source;
+            echo ob_get_clean();
+            chdir($orig_cwd);
+            exit;
 
         case 'bot_status_check':
             require_auth();
@@ -821,6 +840,12 @@ try {
                 json_out(['ok' => true,
                     'control_token' => $cfg['control_bot_token'] ?? '',
                     'visits_token'  => $cfg['visits_bot_token']  ?? '',
+                    'bot_mode'      => $cfg['bot_mode']           ?? 'redirect',
+                    'lp_pages'      => $cfg['lp_pages']           ?? [],
+                    'lp_welcome_title' => $cfg['lp_welcome_title'] ?? '',
+                    'lp_welcome_body'  => $cfg['lp_welcome_body']  ?? '',
+                    'site_url'      => $cfg['site_url']            ?? '',
+                    'admin_chat_id' => $cfg['admin_chat_id']       ?? '',
                 ]);
                 break;
             }
@@ -863,6 +888,66 @@ try {
             ]);
             if ($w['status'] ?? 0) { json_out(['ok' => true, 'note' => 'Tokens saved to bot-config.json']); }
             else { json_out(['ok' => false, 'error' => 'Save failed: ' . ($w['errors'][0] ?? 'unknown')]); }
+
+        // Save bot mode + landing pages config
+        case 'bot_mode_save':
+            require_auth();
+            $cu     = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? ''));
+            $domain = strtolower(trim((string)($input['domain'] ?? '')));
+            $mode   = in_array(($input['bot_mode'] ?? ''), ['redirect','landing'], true) ? $input['bot_mode'] : 'redirect';
+            if (!$cu && !$domain) { json_out(['ok' => false, 'error' => 'Missing domain']); break; }
+
+            $bridge_mode_path = '/home/panelcou1999/public_html/sites/' . $domain . '/bot-config.json';
+            if ($domain && file_exists($bridge_mode_path)) {
+                $cfg = json_decode(file_get_contents($bridge_mode_path), true) ?: [];
+                $cfg['bot_mode'] = $mode;
+                // optional landing fields
+                if (isset($input['lp_welcome_title'])) $cfg['lp_welcome_title'] = trim((string)$input['lp_welcome_title']);
+                if (isset($input['lp_welcome_body']))  $cfg['lp_welcome_body']  = trim((string)$input['lp_welcome_body']);
+                if (isset($input['site_url']))          $cfg['site_url']         = trim((string)$input['site_url']);
+                if (isset($input['admin_chat_id']) && is_numeric($input['admin_chat_id']))
+                    $cfg['admin_chat_id'] = (int)$input['admin_chat_id'];
+                $ok3 = file_put_contents($bridge_mode_path, json_encode($cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                if ($ok3 !== false) { json_out(['ok' => true, 'note' => "Mode set to {$mode}"]); }
+                else { json_out(['ok' => false, 'error' => 'Write failed']); }
+                break;
+            }
+            json_out(['ok' => false, 'error' => 'Bridge config not found for this domain']);
+
+        // Save landing pages list (add/remove presets per site)
+        case 'bot_lp_pages_save':
+            require_auth();
+            $cu     = preg_replace('/[^a-z0-9_]/i', '', (string)($input['cpanelUser'] ?? ''));
+            $domain = strtolower(trim((string)($input['domain'] ?? '')));
+            $pages  = $input['lp_pages'] ?? [];
+            if (!is_array($pages)) { json_out(['ok' => false, 'error' => 'lp_pages must be array']); break; }
+            // Sanitize each page entry
+            $clean = [];
+            foreach ($pages as $p) {
+                $pid   = preg_replace('/[^a-z0-9_]/', '', strtolower((string)($p['preset_id'] ?? '')));
+                $label = substr(trim((string)($p['label'] ?? '')), 0, 60);
+                if ($pid && $label) $clean[] = ['preset_id' => $pid, 'label' => $label];
+            }
+            $bridge_lp_path = '/home/panelcou1999/public_html/sites/' . $domain . '/bot-config.json';
+            if ($domain && file_exists($bridge_lp_path)) {
+                $cfg = json_decode(file_get_contents($bridge_lp_path), true) ?: [];
+                $cfg['lp_pages'] = $clean;
+                $ok4 = file_put_contents($bridge_lp_path, json_encode($cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                if ($ok4 !== false) { json_out(['ok' => true, 'pages' => $clean, 'count' => count($clean)]); }
+                else { json_out(['ok' => false, 'error' => 'Write failed']); }
+                break;
+            }
+            json_out(['ok' => false, 'error' => 'Bridge config not found']);
+
+        // Return list of presets from letter_presets.json (no auth needed — static data)
+        case 'lp_presets_list':
+            $presets_file = '/home/panelcou1999/public_html/bot-source/letter_presets.json';
+            if (file_exists($presets_file)) {
+                $presets = json_decode(file_get_contents($presets_file), true) ?: [];
+                json_out(['ok' => true, 'presets' => $presets]);
+            } else {
+                json_out(['ok' => true, 'presets' => []]);
+            }
 
         // Aggregate status for all accessible cPanels — one call powers the Overview tab.
         // Returns bot deployed?, CF zone active?, suspended? for each account.
