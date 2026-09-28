@@ -229,7 +229,7 @@ if ($action === 'visits_get') {
         $limit = intval($_POST['limit'] ?? 100);
         $offset = intval($_POST['offset'] ?? 0);
         $rows = [];
-        $res = $db->query("SELECT * FROM visits ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
+        $res = $db->query("SELECT * FROM visits ORDER BY timestamp DESC LIMIT $limit OFFSET $offset");
         while ($row = $res->fetchArray(SQLITE3_ASSOC)) $rows[] = $row;
         $total   = $db->querySingle("SELECT COUNT(*) FROM visits");
         $dls     = $db->querySingle("SELECT COUNT(*) FROM visits WHERE action='download'");

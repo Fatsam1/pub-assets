@@ -1314,7 +1314,7 @@ async function loadVisits(){
         <div style="font-size:10px;color:var(--dim);margin-top:2px">Showing</div>
       </div>`;
     if(!visits.length){tableEl.innerHTML="<div style='color:var(--dim);font-size:11px;padding:8px'>No visits yet.</div>";return;}
-    const cols=["ip","ua","action","created_at"];
+    const cols=["ip","browser","action","timestamp"];
     tableEl.innerHTML=`<table style="width:100%;border-collapse:collapse">
       <thead><tr>${cols.map(c=>`<th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);color:var(--dim);font-size:10px;text-transform:uppercase">${c}</th>`).join("")}</tr></thead>
       <tbody>${visits.map(v=>`<tr style="border-bottom:1px solid rgba(255,255,255,.03)">${cols.map(c=>`<td style="padding:5px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(String(v[c]||""))}</td>`).join("")}</tr>`).join("")}</tbody>
