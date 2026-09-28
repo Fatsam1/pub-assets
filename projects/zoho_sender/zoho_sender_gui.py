@@ -530,7 +530,7 @@ def _tg_callback_poll_thread(token, chat_id):
 def _do_switch_profile(prof_idx, token="", chat_id=""):
     """Switch a profile to the next unconnected valid combo."""
     profiles = _load_profiles()
-    prof = next((p for p in profiles if p["idx"] == prof_idx), None)
+    prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
     if not prof:
         _tg_send(token, chat_id, f"Profile {prof_idx} not found")
         return
@@ -1040,8 +1040,12 @@ class _AuthProxyTunnel:
 
 # --- End Local Proxy Tunnel ---
 
-# Default proxy  every Chrome session MUST use this, never direct IP
-_DEFAULT_PROXY = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
+# ProxyScrape Premium credentials — NEVER change these without user approval
+_PS_USER = "alv68pcvy8kb"
+_PS_PASS = "u0qd0imgg1i4nj4"
+_PS_SID  = "46e83e28-7c12-4c65-aa52-ef3e82f317d8"
+# Fallback proxy (used only if ProxyScrape API unreachable)
+_DEFAULT_PROXY = f"{_PS_USER}:{_PS_PASS}@104.207.54.238:3129"
 _hidden_browser = False
 
 def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
@@ -1078,6 +1082,7 @@ def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
     else:
         opts.add_argument(f"--proxy-server=http://{p}")
     d = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
+    d.set_page_load_timeout(180)
     return d
 
 def _apply_proxy_ext(opts, s):
@@ -1751,11 +1756,11 @@ def _block_combo(email):
 
 def _fetch_fresh_proxyscrape_proxy():
     """Fetch one fresh working proxy from ProxyScrape Premium API.
-    Prefers port 3129 (most reliable), tests before returning."""
+    Prefers port 3129 (most reliable), tests via HTTPS CONNECT before returning."""
     import urllib.request as _ur, random as _rnd, base64 as _b64
-    PS_USER = "alv68pcvy8kb"
-    PS_PASS = "u0qd0imgg1i4nj4"
-    PS_SID  = "46e83e28-7c12-4c65-aa52-ef3e82f317d8"
+    PS_USER = _PS_USER
+    PS_PASS = _PS_PASS
+    PS_SID  = _PS_SID
 
     def _test_proxy(ip_port):
         """Test proxy via HTTPS CONNECT tunnel (same as Chrome uses for HTTPS sites)."""
@@ -1808,7 +1813,7 @@ def _fetch_fresh_proxyscrape_proxy():
 
 def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
     profiles = _load_profiles()
-    prof = next((p for p in profiles if p["idx"] == profile_idx), None)
+    prof = next((p for p in profiles if str(p["idx"]) == str(profile_idx)), None)
     if not prof:
         CHECK_LOG.put(("err", f"  Profile {profile_idx} not found"))
         return
@@ -1827,6 +1832,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         _REG_PROXY = (prof.get("proxy") or prof.get("original_proxy") or "").strip()
     if _REG_PROXY:
         CHECK_LOG.put(("info", f"  Using proxy: {_REG_PROXY.rsplit('@',1)[-1]}"))
+        prof["proxy"] = _REG_PROXY  # persist fresh proxy so send uses same IP
     else:
         CHECK_LOG.put(("warn", "  No proxy available — using direct IP (may get rate-limited)"))
 
@@ -3037,7 +3043,7 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         if prof_idx is not None:
             try:
                 profs = _load_profiles()
-                _p = next((p for p in profs if p["idx"] == int(prof_idx)), None)
+                _p = next((p for p in profs if str(p["idx"]) == str(prof_idx)), None)
                 if _p:
                     _prof_email = _p.get("email", "")
                     _prof_imap_pw = _p.get("imap_pw", "")
@@ -3050,7 +3056,7 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         if prof_idx is not None and ("portal" not in cfg or not cfg.get("portal")):
             try:
                 _profs2 = _load_profiles()
-                _p2 = next((p for p in _profs2 if p["idx"] == int(prof_idx)), None)
+                _p2 = next((p for p in _profs2 if str(p["idx"]) == str(prof_idx)), None)
                 if _p2:
                     cfg.setdefault("portal", _p2.get("portal_id", ""))
                     cfg.setdefault("dept",   _p2.get("dept_id", ""))
@@ -3100,12 +3106,19 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
             _brand_name = cfg.get("survey_name", "").strip()
         if not _brand_name:
             _brand_name = "Survey"
-        SEND_LOG.put(("info", f"  Creating fresh survey: '{_brand_name}'"))
-        _new_survey_id = _create_blank_survey(d, cfg["portal"], cfg["dept"], survey_name=_brand_name)
+        _cfg_portal = cfg.get("portal", "") or ""
+        _cfg_dept   = cfg.get("dept", "") or ""
+        _cfg_survey = cfg.get("survey", "") or ""
+        if not _cfg_portal:
+            SEND_LOG.put(("err", "  No portal_id — check profile is active and has portal/dept IDs"))
+            return
+        SEND_LOG.put(("info", f"  Creating fresh survey: '{_brand_name}' (portal={_cfg_portal})"))
+        _new_survey_id = _create_blank_survey(d, _cfg_portal, _cfg_dept, survey_name=_brand_name)
         if _new_survey_id:
             cfg["survey"] = _new_survey_id
+            _cfg_survey = _new_survey_id
             SEND_LOG.put(("ok", f"  New survey ID: {_new_survey_id}"))
-            _add_dummy_question(d, cfg["portal"], cfg["dept"], _new_survey_id)
+            _add_dummy_question(d, _cfg_portal, _cfg_dept, _new_survey_id)
         else:
             SEND_LOG.put(("warn", "  Survey creation failed — using old survey ID"))
         # Always set Zoho's "Begin Survey" button text to the template's btn_text
@@ -3205,7 +3218,7 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 try:
                     profs = _load_profiles()
                     for p in profs:
-                        if p["idx"] == prof_idx:
+                        if str(p["idx"]) == str(prof_idx):
                             p["sent_count"] = p.get("sent_count", 0) + len(chunk)
                             _new_total = p["sent_count"]
                             break
@@ -3240,7 +3253,7 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                             try:
                                 profs = _load_profiles()
                                 for p in profs:
-                                    if p["idx"] == prof_idx:
+                                    if str(p["idx"]) == str(prof_idx):
                                         p["health"] = _reason
                                         break
                                 _save_profiles(profs)
@@ -3581,7 +3594,7 @@ class API:
         tg_chat  = payload.get("tg_chat", "")
         if not email or not pw: return {"error": "missing_credentials"}
         profiles = _load_profiles()
-        prof = next((p for p in profiles if p["idx"] == prof_idx), None)
+        prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
         if not prof: return {"error": "profile_not_found"}
         if prof["status"] not in ("free","active"):
             return {"error": "profile_busy"}
@@ -3616,7 +3629,7 @@ class API:
     def disconnect_profile(self, prof_idx):
         profiles = _load_profiles()
         for p in profiles:
-            if p["idx"] == int(prof_idx):
+            if str(p["idx"]) == str(prof_idx):
                 p["status"] = "free"; p["email"] = ""
                 p["connected_at"] = None; p["health"] = "ok"
                 p["sent_count"] = 0
@@ -3628,14 +3641,14 @@ class API:
     def save_profile_proxy(self, payload):
         profiles = _load_profiles()
         for p in profiles:
-            if p["idx"] == int(payload.get("idx",0)):
+            if str(p["idx"]) == str(payload.get("idx",0)):
                 p["proxy"] = payload.get("proxy","").strip(); break
         _save_profiles(profiles); return {"ok": True}
 
     def check_proxy_ip_by_idx(self, prof_idx):
         """Check proxy IP for a specific profile using its original proxy."""
         profiles = _load_profiles()
-        prof = next((p for p in profiles if p["idx"] == int(prof_idx)), None)
+        prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
         if not prof:
             return {"error": f"profile {prof_idx} not found"}
         # Prefer original_proxy (stored at add time) over proxy which may be resolved endpoint
@@ -3705,7 +3718,7 @@ class API:
         emails_raw = payload.get("emails","")
         file_path  = payload.get("file_path","")
         test_email = payload.get("test_email","")
-        prof_idx   = payload.get("profile_idx", None)
+        prof_idx   = payload.get("profile_idx") or payload.get("prof_idx") or None
 
         if file_path and os.path.exists(file_path):
             emails_raw = open(file_path, encoding="utf-8", errors="ignore").read()
@@ -3717,7 +3730,7 @@ class API:
         proxy = None
         if prof_idx is not None:
             profiles = _load_profiles()
-            prof = next((p for p in profiles if p["idx"] == int(prof_idx)), None)
+            prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
             if prof:
                 profile_dir = prof["dir"]
                 # Use Webshare HTTP proxy for send — profile SOCKS5 proxy can block Zoho Survey
@@ -4611,6 +4624,35 @@ textarea{resize:vertical;min-height:65px}
   </div>
 </div>
 
+<!-- SAFE ZONE CALCULATOR -->
+<div class="card" style="margin-top:8px">
+  <div class="ch"><span class="ci">📊</span><span class="ct">Safe Zone Calculator</span>
+    <span style="font-size:9px;color:var(--muted);margin-left:6px">100 emails/profile/day max (safe)</span>
+  </div>
+  <div class="cb">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div><label style="font-size:10px">Target Emails/Day</label>
+        <input type="number" id="sz_target" value="100" min="1" oninput="calcSafeZone()" style="width:90px"></div>
+      <div><label style="font-size:10px">Max/Profile/Day</label>
+        <input type="number" id="sz_per_prof" value="100" min="1" oninput="calcSafeZone()" style="width:90px"></div>
+      <div id="sz_result" style="font-size:12px;color:#34d399;font-weight:bold;padding-bottom:4px">→ 1 profile needed</div>
+    </div>
+    <div id="sz_table" style="margin-top:8px;font-size:10px;color:var(--muted)"></div>
+  </div>
+</div>
+<script>
+function calcSafeZone(){
+  const t=parseInt(document.getElementById('sz_target').value)||100;
+  const pp=parseInt(document.getElementById('sz_per_prof').value)||100;
+  const n=Math.ceil(t/pp);
+  document.getElementById('sz_result').textContent=`→ ${n} profile${n>1?'s':''} needed`;
+  const rows=[[100,1],[300,3],[500,5],[1000,10],[2000,20],[5000,50],[10000,100]];
+  document.getElementById('sz_table').innerHTML=
+    '<b>Quick reference (100 emails/profile/day):</b><br>'+
+    rows.map(([em,pr])=>`${em.toLocaleString()} emails → ${pr} profiles`).join('  |  ');
+}
+calcSafeZone();
+</script>
 </div><!-- /tab-sender -->
 
 <!--  TAB: DESIGN  -->
