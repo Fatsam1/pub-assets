@@ -442,7 +442,7 @@ def _tg_get_status_text():
     profiles = _load_profiles()
     lines = ["<b>[Priv8] Status Report</b>"]
     for p in profiles:
-        days, hours = _calc_trial_remaining(p.get("connected_at"), p.get("trial_days", 7))
+        days, hours = _calc_trial_remaining(p.get("connected_at"), p.get("trial_days", 7), expires_str=p.get("expires"))
         trial_str = f"{days}d {hours}h" if days is not None else "?"
         em = (p.get("email") or "")[:30]
         st = p.get("status", "free")
@@ -1129,6 +1129,11 @@ def _extract_portal_dept(url):
 
 def _create_blank_survey(d, portal_id, dept_id, survey_name=None):
     """Navigate to survey creator and create blank survey. Returns survey_id str or None."""
+    import time as _time
+    # Append short timestamp to avoid duplicate-name confirmation dialogs in Zoho
+    _ts = str(int(_time.time()))[-5:]
+    _unique_name = f"{(survey_name or 'Survey').rstrip()[:45]} {_ts}"
+    survey_name = _unique_name
     create_url = (f"https://survey.zoho.com/survey/newui#/portal/{portal_id}"
                   f"/department/{dept_id}/createsurvey/templatesurvey")
     d.get(create_url)
@@ -1144,19 +1149,15 @@ def _create_blank_survey(d, portal_id, dept_id, survey_name=None):
             d.execute_script("arguments[0].click();", els[0])
             time.sleep(3); break
 
-    # New Zoho UI: "Create from scratch" card → "Create Survey" button (first one)
-    # Also handles old UI: "Blank Survey" button
+    # Attempt 1: old UI — "Create from scratch" / "Blank" card
     clicked = False
     _scratch_kws = ["create from scratch", "blank", "from scratch", "scratch"]
     for kw in _scratch_kws:
-        # Find the card/section containing this keyword
         card = d.execute_script(f"""
             var kw = '{kw}';
-            var all = document.querySelectorAll('*');
-            for (var el of all) {{
+            for (var el of document.querySelectorAll('*')) {{
                 var t = (el.innerText||'').trim().toLowerCase();
                 if (t === kw || t.startsWith(kw)) {{
-                    // Find Create Survey button inside this card or its parent
                     var card = el.closest('[class*="card"],[class*="option"],[class*="create"],[class*="box"]') || el.parentElement;
                     if (card) {{
                         var btn = card.querySelector('button,a');
@@ -1168,21 +1169,50 @@ def _create_blank_survey(d, portal_id, dept_id, survey_name=None):
         """)
         if card:
             d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", card)
-            CHECK_LOG.put(("info", f"  Create blank survey: clicked '{kw}' card button"))
+            CHECK_LOG.put(("info", f"  Create blank survey: clicked '{kw}' card"))
             time.sleep(4); clicked = True; break
 
+    # Attempt 2: new Zoho UI — action buttons like "CREATE NEW SURVEY" on the page body
+    # These are not nav tabs but actual action/option buttons that trigger a modal
     if not clicked:
-        # Fallback: click first visible "Create Survey" button
         btn = d.execute_script("""
-            for (var b of document.querySelectorAll('button,a')) {
-                var t = (b.innerText||b.textContent||'').trim().toLowerCase();
-                if ((t === 'create survey' || t === 'create new survey') && b.offsetParent) return b;
-            } return null;
+            // Look for prominent action buttons — not nav tabs (exclude elements inside nav/tabs)
+            var actionKws = ['create new survey', 'create survey'];
+            for (var kw of actionKws) {
+                // Prefer button[class*="btn"] or div[class*="option"] containers
+                for (var b of document.querySelectorAll('button,div[class*="option"],div[class*="card"],li[class*="option"]')) {
+                    var t = (b.innerText||b.textContent||'').trim().toLowerCase();
+                    if ((t === kw || t.startsWith(kw)) && b.offsetParent) {
+                        // Skip if this is a nav tab element
+                        var nav = b.closest('nav,[role="tablist"],[class*="tab-nav"],[class*="tabs"]');
+                        if (!nav) return b;
+                    }
+                }
+            }
+            // Last resort: any visible button/a whose full text is one of these keywords
+            for (var kw of actionKws) {
+                for (var b of document.querySelectorAll('button,a')) {
+                    var t = (b.innerText||b.textContent||'').trim().toLowerCase();
+                    if (t === kw && b.offsetParent) return b;
+                }
+            }
+            return null;
         """)
         if btn:
             d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", btn)
-            CHECK_LOG.put(("info", "  Create blank survey: fallback 'Create Survey' button clicked"))
+            CHECK_LOG.put(("info", "  Create blank survey: clicked action button"))
             time.sleep(4); clicked = True
+
+    # Attempt 3: if a modal appeared after the tab click (Zoho sometimes opens modal directly)
+    # — just check if there's a visible dialog now without needing to click again
+    if not clicked:
+        modal_visible = d.execute_script("""
+            var m = document.querySelector('[class*="modal"][class*="show"],[class*="dialog"],[role="dialog"]');
+            return (m && m.offsetParent) ? true : false;
+        """)
+        if modal_visible:
+            CHECK_LOG.put(("info", "  Create blank survey: modal already open from tab click"))
+            clicked = True
 
     if not clicked:
         CHECK_LOG.put(("err", "  _create_blank_survey: no clickable button found"))
@@ -1209,53 +1239,138 @@ def _create_blank_survey(d, portal_id, dept_id, survey_name=None):
             return null;
         """)
         if name_field:
-            d.execute_script(
-                "arguments[0].value = ''; arguments[0].dispatchEvent(new Event('input',{bubbles:true}));"
-                "arguments[0].focus();",
-                name_field
-            )
-            time.sleep(0.3)
-            # Use JS to type — more reliable than send_keys for shadow/styled inputs
-            d.execute_script(
-                "var inp=arguments[0]; var nv=arguments[1]||'Survey';"
-                "var nd=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');"
-                "nd.set.call(inp,nv);"
-                "inp.dispatchEvent(new Event('input',{bubbles:true}));"
-                "inp.dispatchEvent(new Event('change',{bubbles:true}));",
-                name_field, survey_name or "Survey"
-            )
-            time.sleep(0.5)
-            CHECK_LOG.put(("info", "  Create survey modal: typed name"))
-
-        # Click CREATE button in modal — use find_elements for reliability
-        _all_btns = d.find_elements(By.TAG_NAME, "button")
-        create_btn = None
-        for _b in _all_btns:
+            from selenium.webdriver.common.keys import Keys
+            from selenium.webdriver.common.action_chains import ActionChains
+            # Click to focus, clear, type with real keyboard events
             try:
-                _bt = (_b.get_attribute("innerText") or _b.text or "").strip().upper()
-                if _bt in ("CREATE", "CREATE SURVEY") and _b.is_displayed():
-                    create_btn = _b; break
-            except: pass
+                d.execute_script("arguments[0].scrollIntoView({block:'center'});", name_field)
+                time.sleep(0.2)
+                name_field.click()
+                time.sleep(0.3)
+                # Select all + delete existing content
+                name_field.send_keys(Keys.CONTROL + 'a')
+                time.sleep(0.1)
+                name_field.send_keys(Keys.DELETE)
+                time.sleep(0.1)
+                # Type name char by char (more reliable for Ember)
+                _sname = (survey_name or "Survey")[:50]
+                name_field.send_keys(_sname)
+                time.sleep(0.5)
+            except Exception:
+                # Fallback to JS setter
+                d.execute_script(
+                    "var inp=arguments[0]; var nv=arguments[1]||'Survey';"
+                    "var nd=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');"
+                    "nd.set.call(inp,nv);"
+                    "inp.dispatchEvent(new Event('input',{bubbles:true}));"
+                    "inp.dispatchEvent(new Event('change',{bubbles:true}));",
+                    name_field, survey_name or "Survey"
+                )
+                time.sleep(0.5)
+            _actual = d.execute_script("return arguments[0].value;", name_field)
+            CHECK_LOG.put(("info", f"  Create survey modal: typed name (actual='{_actual[:30] if _actual else ''}')"))
+            time.sleep(0.3)
+
+        # Wait for CREATE button to become enabled (Zoho disables it when name is empty)
+        create_btn = None
+        for _wait in range(10):
+            time.sleep(0.5)
+            _all_btns = d.find_elements(By.TAG_NAME, "button")
+            for _b in _all_btns:
+                try:
+                    _bt = (_b.get_attribute("innerText") or _b.text or "").strip().upper()
+                    _disabled = _b.get_attribute("disabled")
+                    if _bt in ("CREATE", "CREATE SURVEY") and _b.is_displayed() and not _disabled:
+                        create_btn = _b; break
+                except: pass
+            if create_btn: break
         if create_btn:
             d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", create_btn)
             CHECK_LOG.put(("info", "  Create survey modal: clicked CREATE"))
-            time.sleep(6)
+            time.sleep(12)
+        else:
+            # Last resort: try clicking any CREATE button even if disabled
+            for _b in d.find_elements(By.TAG_NAME, "button"):
+                try:
+                    _bt = (_b.get_attribute("innerText") or _b.text or "").strip().upper()
+                    if _bt in ("CREATE", "CREATE SURVEY") and _b.is_displayed():
+                        d.execute_script("arguments[0].click();", _b)
+                        CHECK_LOG.put(("warn", "  Create survey modal: force-clicked disabled CREATE"))
+                        time.sleep(12); break
+                except: pass
     except Exception as _e:
         CHECK_LOG.put(("warn", f"  _create_blank_survey modal error: {_e}"))
 
-    # Wait for survey editor URL with survey ID (up to 40s)
-    for _ in range(20):
+    # Wait for survey editor URL with survey ID (up to 60s)
+    for _i in range(30):
         time.sleep(2)
         cur = d.current_url
+        if _i % 5 == 0:
+            CHECK_LOG.put(("info", f"  poll[{_i}] URL: {cur[:80]}"))
         m = re.search(r'survey[/=](\d{10,})', cur)
         if m: return m.group(1)
         m = re.search(r'/(\d{19,})', cur)
         if m: return m.group(1)
-    # Fallback: try extracting from page source
+        # Check page source for survey ID (works when Zoho doesn't update URL hash)
+        try:
+            src = d.page_source
+            for pat in [
+                r'"surveyId"\s*:\s*"?(\d{15,})"?',
+                r'"survey_id"\s*:\s*"?(\d{15,})"?',
+                r'data-survey-id="(\d{15,})"',
+                r'surveyId=(\d{15,})',
+            ]:
+                mm = re.search(pat, src)
+                if mm: return mm.group(1)
+        except: pass
+        # Every 10s check via mysurveys navigation and click newest survey
+        if _i > 0 and _i % 5 == 0:
+            try:
+                list_url = (f"https://survey.zoho.com/survey/newui#/portal/{portal_id}"
+                            f"/department/{dept_id}/mysurveys")
+                d.get(list_url)
+                time.sleep(4)
+                # Click first survey item (newest) to get its ID from URL
+                _items = d.find_elements(By.CSS_SELECTOR, "li.surveyItem,[class*='surveyItem']")
+                if _items:
+                    _h3 = _items[0].find_element(By.CSS_SELECTOR, "[class*='surveyName']")
+                    _iname = _h3.text.strip()
+                    # Click first (newest) survey — should be the one we just created
+                    d.execute_script("arguments[0].click();", _h3)
+                    time.sleep(3)
+                    _lcur = d.current_url
+                    _lm = re.search(r'survey[/=](\d{10,})', _lcur)
+                    if _lm:
+                        CHECK_LOG.put(("info", f"  Found newest survey via click: {_iname!r} id={_lm.group(1)}"))
+                        return _lm.group(1)
+            except: pass
+    # Final fallback: API call to list surveys and get the newest
     try:
-        m = re.search(r'"surveyId"\s*:\s*"?(\d+)"?', d.page_source)
-        if m: return m.group(1)
-    except: pass
+        import json as _json
+        result = d.execute_script(f"""
+            return new Promise(function(resolve) {{
+                fetch('https://survey.zoho.com/api/v1/surveys?portal={portal_id}&department={dept_id}&limit=5&page=1',
+                      {{credentials:'include'}})
+                    .then(function(r){{ return r.json(); }})
+                    .then(function(j){{ resolve(j); }})
+                    .catch(function(e){{ resolve(null); }});
+            }});
+        """)
+        CHECK_LOG.put(("info", f"  API fallback result type={type(result).__name__} keys={list(result.keys()) if isinstance(result, dict) else '?'}"))
+        if isinstance(result, dict) and result.get('data'):
+            surveys = result['data']
+            if surveys:
+                newest = surveys[0]
+                sid = str(newest.get('id') or newest.get('survey_id') or newest.get('surveyId') or '')
+                if sid and len(sid) >= 10:
+                    CHECK_LOG.put(("info", f"  _create_blank_survey: got survey_id from API list: {sid}"))
+                    return sid
+        elif result is None:
+            CHECK_LOG.put(("warn", "  API fallback: fetch returned null (CORS or network)"))
+        else:
+            CHECK_LOG.put(("warn", f"  API fallback: unexpected result: {str(result)[:100]}"))
+    except Exception as _ex:
+        CHECK_LOG.put(("warn", f"  API fallback error: {_ex}"))
     return None
 
 def _add_dummy_question(d, portal_id, dept_id, survey_id):
@@ -1525,7 +1640,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         CHECK_LOG.put(("err", f"  Profile {profile_idx} not found"))
         return
 
-    CHECK_LOG.put(("sep", f"  Registering {email}  Profile {profile_idx}"))
+    CHECK_LOG.put(("sep", f"  Connecting {email}  Profile {profile_idx}"))
     prof["status"] = "busy"; prof["email"] = email
     _save_profiles(profiles)
     if window:
@@ -1539,6 +1654,41 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
     d = None
     try:
         d = _build_driver(prof["dir"], proxy=_REG_PROXY, headless=_hidden_browser)
+
+        # If we already have a stored Zoho password, try LOGIN first — skip registration
+        _stored_pw = prof.get("zoho_password", "").strip()
+        if _stored_pw:
+            CHECK_LOG.put(("info", f"  Stored Zoho password found  trying LOGIN first..."))
+            lr = _login_existing_zoho(d, email, password, time.time()-60, stored_zoho_pw=_stored_pw)
+            lr_ok, lr_pw = lr if isinstance(lr, tuple) else (lr, None)
+            if lr_ok:
+                CHECK_LOG.put(("ok", "  Login succeeded  extracting IDs..."))
+                if not d.current_url.startswith("https://survey.zoho.com/"):
+                    d.get("https://survey.zoho.com/survey/newui")
+                    time.sleep(6)
+                portal_id, dept_id = _extract_portal_dept(d.current_url)
+                if not portal_id:
+                    for _ in range(8):
+                        time.sleep(2)
+                        portal_id, dept_id = _extract_portal_dept(d.current_url)
+                        if portal_id: break
+                survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+                if survey_id and portal_id and dept_id:
+                    _add_dummy_question(d, portal_id, dept_id, survey_id)
+                prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
+                             "health": "ok", "zoho_password": lr_pw or _stored_pw,
+                             "imap_pw": password})
+                if portal_id: prof["portal_id"] = portal_id
+                if dept_id:   prof["dept_id"]   = dept_id
+                if survey_id: prof["survey_id"] = survey_id
+                _save_profiles(profiles)
+                db_mark_registered(email, profile_idx=profile_idx)
+                _mark_combo_connected(email, profile_idx, zoho_password=lr_pw or _stored_pw)
+                CHECK_LOG.put(("ok", f"  Profile {profile_idx} READY (login) portal={portal_id} survey={survey_id}"))
+                if window: window.evaluate_js("refreshProfiles()")
+                return
+            else:
+                CHECK_LOG.put(("info", "  Login failed with stored pw  falling through to session/register check"))
 
         #  Check existing session
         CHECK_LOG.put(("info", "  Checking existing Zoho session..."))
@@ -2063,6 +2213,7 @@ def _add_profile_thread(proxy):
     d   = os.path.join(PROF_BASE, f"profile_{idx}")
     os.makedirs(d, exist_ok=True)
     profiles.append({"idx": idx, "dir": d, "proxy": proxy.strip(),
+                     "original_proxy": proxy.strip(),
                      "email": "", "status": "free", "connected_at": None,
                      "sent_count": 0, "health": "ok",
                      "trial_days": 7, "last_health_check": None})
@@ -2077,17 +2228,23 @@ def _add_profile_thread(proxy):
 #  PROFILE HEALTH MONITOR
 # 
 
-def _calc_trial_remaining(connected_at_str, trial_days=7):
-    """Returns days remaining and hours, or None if not available."""
-    if not connected_at_str: return None, None
+def _calc_trial_remaining(connected_at_str, trial_days=7, expires_str=None):
+    """Returns (days_remaining, hours_remaining). Uses expires field if available."""
+    from datetime import datetime
+    now = datetime.now()
     try:
-        from datetime import datetime
+        # Prefer explicit expires date if present
+        if expires_str:
+            try:
+                exp_dt = datetime.strptime(expires_str, "%Y-%m-%d")
+                remaining_secs = max(0, (exp_dt - now).total_seconds())
+                return int(remaining_secs // 86400), int((remaining_secs % 86400) // 3600)
+            except: pass
+        if not connected_at_str: return None, None
         connected = datetime.strptime(connected_at_str, "%Y-%m-%d %H:%M")
-        elapsed = (datetime.now() - connected).total_seconds()
+        elapsed = (now - connected).total_seconds()
         remaining_secs = max(0, trial_days * 86400 - elapsed)
-        days = int(remaining_secs // 86400)
-        hours = int((remaining_secs % 86400) // 3600)
-        return days, hours
+        return int(remaining_secs // 86400), int((remaining_secs % 86400) // 3600)
     except: return None, None
 
 def _health_monitor_thread(tg_token, tg_chat):
@@ -2098,7 +2255,7 @@ def _health_monitor_thread(tg_token, tg_chat):
         changed = False
         for prof in profiles:
             if prof["status"] != "active": continue
-            days, hours = _calc_trial_remaining(prof.get("connected_at"), prof.get("trial_days", 7))
+            days, hours = _calc_trial_remaining(prof.get("connected_at"), prof.get("trial_days", 7), expires_str=prof.get("expires"))
             if days is not None:
                 prof["last_health_check"] = time.strftime("%Y-%m-%d %H:%M")
                 if days == 0 and hours == 0:
@@ -2139,6 +2296,48 @@ def _build_email_html(cfg, template=None, custom_link=None):
 
     logo_letter = org_name[0].upper() if org_name else "M"
     logo_url = (src.get("logo_url") or "").strip()
+    logo_bg  = (src.get("logo_bg")  or "").strip()
+
+    # Build an inline SVG logo-avatar (works offline, no external requests)
+    # Shape: rounded rect, brand color bg + white initial letter
+    _svg_bg = logo_bg if logo_bg and logo_bg not in ("#ffffff", "#FFFFFF") else b1
+    _svg_letter = logo_letter
+    _svg_logo = (
+        f'data:image/svg+xml;charset=utf-8,'
+        f'%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 '
+        f'width%3D%2244%22 height%3D%2244%22 viewBox%3D%220 0 44 44%22%3E'
+        f'%3Crect width%3D%2244%22 height%3D%2244%22 rx%3D%226%22 '
+        f'fill%3D%22{urllib.parse.quote(_svg_bg)}%22%2F%3E'
+        f'%3Ctext x%3D%2222%22 y%3D%2230%22 font-family%3D%22Arial%2CSans-serif%22 '
+        f'font-size%3D%2224%22 font-weight%3D%22bold%22 fill%3D%22%23fff%22 '
+        f'text-anchor%3D%22middle%22%3E{_svg_letter}%3C%2Ftext%3E'
+        f'%3C%2Fsvg%3E'
+    )
+    # Brand-specific SVG logos (accurate to the real brand mark)
+    # brand_header_overrides: Outlook-safe table-only headers (no clip-path/SVG/data URI)
+    _brand_header_overrides = {
+        # Bank of America — red flag logo (pure table, Outlook-safe)
+        "bank_of_america": (
+            '<tr><td bgcolor="#E31837" style="background:#E31837;padding:14px 24px">'
+            '<table cellpadding="0" cellspacing="0" style="border-collapse:collapse">'
+            '<tr>'
+            # Red square with "B" initial
+            '<td bgcolor="#a0102a" style="background:#a0102a;width:40px;height:40px;'
+            'text-align:center;vertical-align:middle;font-family:Arial,sans-serif;'
+            'font-size:22px;font-weight:900;color:#ffffff;letter-spacing:0px" width="40" height="40">B</td>'
+            # Bank of America text
+            '<td style="padding-left:12px;font-family:Arial,sans-serif;'
+            'font-size:18px;font-weight:900;color:#ffffff;letter-spacing:0.5px;'
+            'vertical-align:middle">Bank of America</td>'
+            '</tr>'
+            '</table>'
+            '</td></tr>'
+            '<tr><td bgcolor="#a0102a" style="background:#a0102a;height:3px;font-size:0;line-height:0"></td></tr>'
+        ),
+    }
+    tpl_id = (src.get("id") or "").strip()
+    if not logo_url or "clearbit" in logo_url:
+        logo_url = _svg_logo
 
     body_text = src.get("body") or cfg.get("body") or (
         f'<p style="color:#555;font-size:14px;font-family:Arial,sans-serif;line-height:1.8;margin:0 0 12px">'
@@ -2152,31 +2351,32 @@ def _build_email_html(cfg, template=None, custom_link=None):
     # Use a simple <a> tag — Summernote preserves href and bgcolor on <a> but strips
     # nested tables. bgcolor on <a> is non-standard but Gmail/Outlook ignore it; the
     # background CSS property on the <a> style is what renders the color in email clients.
+    # For templates that use Zoho's native button (btn_label set in configure_email_invite),
+    # suppress the HTML button to avoid duplication.
     _btn_bg = (b1 or "#003366")
-    cta_block = (
-        f'<p style="text-align:center;padding:24px 0 12px;margin:0">'
-        f'<a href="{{{{Survey Link}}}}" target="_blank" '
-        f'style="display:inline-block;font-family:Arial,sans-serif;'
-        f'font-size:16px;font-weight:bold;color:#ffffff !important;'
-        f'text-decoration:none;padding:14px 32px;'
-        f'background-color:{_btn_bg};background:{_btn_bg};'
-        f'border-radius:4px;-webkit-border-radius:4px;'
-        f'border:2px solid {_btn_bg}">'
-        f'{btn_text}'
-        f'</a>'
-        f'</p>'
-    )
-
-    # ── Zoho topbar negative-margin offset ────────────────────────────────────
-    # Zoho always prepends a black survey-name banner (~65px) above our body HTML.
-    # Adding margin-top:-65px on the outer table makes our content slide up over it.
-    # We inject this via string replacement on the first <table … style=" so it
-    # targets the outermost table that every style function starts with.
-    MT = 'margin-top:-65px;'
+    # Banking templates rely on Zoho's native button (linked to survey) — no HTML button needed
+    _no_cta_categories = {"banking", "payment"}
+    if category in _no_cta_categories:
+        cta_block = ""
+    else:
+        cta_block = (
+            f'<p style="text-align:center;padding:24px 0 12px;margin:0">'
+            f'<a href="{{{{Survey Link}}}}" target="_blank" '
+            f'style="display:inline-block;font-family:Arial,sans-serif;'
+            f'font-size:16px;font-weight:bold;color:#ffffff !important;'
+            f'text-decoration:none;padding:14px 32px;'
+            f'background-color:{_btn_bg};background:{_btn_bg};'
+            f'border-radius:4px;-webkit-border-radius:4px;'
+            f'border:2px solid {_btn_bg}">'
+            f'{btn_text}'
+            f'</a>'
+            f'</p>'
+        )
 
     # ── Style dispatch by category ───────────────────────────────────────────
     if category in ("banking", "payment", "custom"):
-        html = _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
+        html = _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url,
+                                header_override=_brand_header_overrides.get(tpl_id))
     elif category in ("government", "court", "legal"):
         html = _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url, landing_url)
     elif category in ("crypto", "tech"):
@@ -2212,7 +2412,7 @@ def _build_email_html(cfg, template=None, custom_link=None):
     return _style_override + html
 
 
-def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url=""):
+def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, footer_text, logo_url="", landing_url="", header_override=None):
     """Banking / Payment — Zoho-integrated design.
     Strategy: Zoho always shows a black title bar (collector name) above our HTML.
     We make our header BLACK too so it blends seamlessly with Zoho's bar,
@@ -2253,18 +2453,25 @@ def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_bloc
         f'font-family:Arial,sans-serif;margin-top:2px;letter-spacing:0.3px">{org_sub}</span>'
     ) if org_sub else ""
 
-    # Always use styled text brand mark — img from external URLs often blocked by proxies.
-    # For a real logo, use cid: attachment or embed base64 — external URL is unreliable.
+    # Logo rendering: brand SVG logos embed the brand name inside the image,
+    # so we suppress the duplicate text span for those templates.
+    _logo_has_text = logo_url and logo_url.startswith("data:") and "text" in logo_url.lower() and "%3Ctext" in logo_url
     if logo_url:
-        # Try img first; wraps org_name text as fallback via alt= so it renders something either way
-        logo_inner = (
-            f'<img src="{logo_url}" alt="{org_name}" width="auto" height="36" '
-            f'style="height:36px;max-width:160px;vertical-align:middle;display:inline-block;border:0">'
-            f'<span style="display:inline-block;vertical-align:middle;margin-left:12px">'
-            f'<span style="display:block;font-size:18px;font-weight:900;color:#fff;'
-            f'font-family:Arial,sans-serif;letter-spacing:1px;line-height:1">{org_name}</span>'
-            f'{sub_part}</span>'
-        )
+        _img_height = "40" if _logo_has_text else "36"
+        _img_style = f"height:{_img_height}px;max-width:200px;vertical-align:middle;display:inline-block;border:0"
+        _img_el = f'<img src="{logo_url}" alt="{org_name}" width="auto" height="{_img_height}" style="{_img_style}">'
+        if _logo_has_text:
+            # Brand SVG already contains text — show only the image
+            logo_inner = _img_el
+        else:
+            # External or letter-avatar logo — add org_name text beside it
+            logo_inner = (
+                f'{_img_el}'
+                f'<span style="display:inline-block;vertical-align:middle;margin-left:12px">'
+                f'<span style="display:block;font-size:18px;font-weight:900;color:#fff;'
+                f'font-family:Arial,sans-serif;letter-spacing:1px;line-height:1">{org_name}</span>'
+                f'{sub_part}</span>'
+            )
     else:
         # Pure text mark — always renders, looks clean
         logo_inner = (
@@ -2274,12 +2481,21 @@ def _style_corporate(b1, b2, org_name, org_sub, logo_letter, body_text, cta_bloc
             f'{sub_part}</span>'
         )
 
-    # Brand-colored thin accent line (no HTML header — Zoho's own title bar is the header)
-    accent_line = f'<tr><td style="background:{b1};height:5px;font-size:0;line-height:0">&nbsp;</td></tr>'
+    accent_line = f'<tr><td style="background:{b2};height:3px;font-size:0;line-height:0"></td></tr>'
+
+    if header_override:
+        header_rows = header_override
+    else:
+        logo_row = (
+            f'<tr><td style="background:{b1};padding:14px 24px">'
+            f'{logo_inner}'
+            f'</td></tr>'
+        )
+        header_rows = logo_row + accent_line
 
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
-        f'{accent_line}'
+        f'{header_rows}'
         f'<tr><td style="padding:24px 28px 20px;background:#fff">'
         f'{body_text}{cta_block}'
         f'</td></tr>'
@@ -2323,7 +2539,7 @@ def _style_official(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block
         seal_strip = f'<a href="{landing_url}" style="text-decoration:none">{seal_strip}</a>'
 
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;margin-top:-70px">'
         f'<tr><td style="background:{b1};padding:10px 24px">{seal_strip}</td></tr>'
         f'<tr><td style="padding:22px 28px 16px;background:#fff">'
         f'{body_text}{cta_block}'
@@ -2363,7 +2579,7 @@ def _style_dark_modern(b1, b2, org_name, org_sub, logo_letter, body_text, cta_bl
         header_inner = f'<a href="{landing_url}" style="text-decoration:none">{header_inner}</a>'
 
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;margin-top:-70px">'
         f'<tr><td style="background:{dark};padding:18px 24px">{header_inner}</td></tr>'
         f'<tr><td style="padding:22px 28px 16px;background:#fff">'
         f'{body_text}{cta_block}'
@@ -2382,9 +2598,17 @@ def _style_media(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, f
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
+    logo_img = (
+        f'<img src="{logo_url}" alt="{org_name}" '
+        f'style="height:32px;max-width:120px;object-fit:contain;vertical-align:middle;'
+        f'display:inline-block;margin-bottom:10px;border:0">'
+        f'<br>'
+    ) if logo_url else ""
+
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;margin-top:-70px">'
         f'<tr><td style="background:linear-gradient(135deg,{b1} 0%,{b2} 100%);padding:26px 28px 22px">'
+        f'{logo_img}'
         f'<div style="font-size:26px;font-weight:900;color:#fff;font-family:Arial,sans-serif;'
         f'letter-spacing:-0.5px;line-height:1.1">{org_name}</div>'
         f'<div style="font-size:12px;color:rgba(255,255,255,0.7);font-family:Arial,sans-serif;'
@@ -2406,13 +2630,23 @@ def _style_practical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_bloc
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
+    logo_el = (
+        f'<img src="{logo_url}" alt="{org_name}" '
+        f'style="height:34px;max-width:130px;object-fit:contain;vertical-align:middle;display:inline-block;border:0;margin-right:12px">'
+    ) if logo_url else (
+        f'<span style="display:inline-block;width:36px;height:36px;border-radius:4px;background:{b1};'
+        f'text-align:center;line-height:36px;font-size:18px;font-weight:900;color:#fff;'
+        f'font-family:Arial,sans-serif;vertical-align:middle;margin-right:10px">{logo_letter}</span>'
+    )
+
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;margin-top:-70px">'
         f'<tr><td style="background:{b1};height:6px;font-size:0"></td></tr>'
         f'<tr><td style="padding:18px 28px 6px">'
         f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
         f'<td style="vertical-align:middle">'
-        f'<span style="font-size:22px;font-weight:900;color:{b1};font-family:Arial,sans-serif">{org_name}</span>'
+        f'{logo_el}'
+        f'<span style="font-size:20px;font-weight:900;color:{b1};font-family:Arial,sans-serif;vertical-align:middle">{org_name}</span>'
         f'<span style="font-size:11px;color:#aaa;font-family:Arial,sans-serif;margin-left:8px">{org_sub}</span>'
         f'</td></tr></table>'
         f'<div style="border-bottom:1px solid #ececec;margin:12px 0"></div>'
@@ -2433,14 +2667,19 @@ def _style_medical(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block,
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
-    cross = f'<div style="font-size:28px;color:{b1};line-height:1;margin-bottom:6px">+</div>'
+    logo_el = (
+        f'<img src="{logo_url}" alt="{org_name}" '
+        f'style="height:36px;max-width:140px;object-fit:contain;vertical-align:middle;display:inline-block;border:0;margin-bottom:6px">'
+    ) if logo_url else (
+        f'<div style="font-size:28px;color:{b1};line-height:1;margin-bottom:6px">+</div>'
+    )
 
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;margin-top:-70px">'
         f'<tr>'
         f'<td style="width:6px;background:{b1}"></td>'
         f'<td style="padding:20px 24px 20px 22px;border-bottom:1px solid #e0eaf2">'
-        f'{cross}'
+        f'{logo_el}'
         f'<div style="font-size:18px;font-weight:700;color:{b1};font-family:Arial,sans-serif">{org_name}</div>'
         f'<div style="font-size:11px;color:#aaa;font-family:Arial,sans-serif;margin-top:1px">{org_sub}</div>'
         f'</td></tr>'
@@ -2462,17 +2701,25 @@ def _style_telco(b1, b2, org_name, org_sub, logo_letter, body_text, cta_block, f
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
-    signal = '<span style="font-size:14px;letter-spacing:-1px;color:rgba(255,255,255,0.9)">▂▄▆</span>'
+    signal = '<span style="font-size:14px;letter-spacing:-1px;color:rgba(255,255,255,0.9)">&#9602;&#9604;&#9606;</span>'
+
+    logo_el = (
+        f'<img src="{logo_url}" alt="{org_name}" '
+        f'style="height:32px;max-width:120px;object-fit:contain;vertical-align:middle;display:inline-block;border:0;margin-right:12px">'
+    ) if logo_url else ""
 
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;margin-top:-70px">'
         f'<tr><td style="background:linear-gradient(90deg,{b1} 0%,{b2} 100%);padding:16px 28px">'
         f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
         f'<td style="vertical-align:middle">'
+        f'{logo_el}'
+        f'<div style="display:inline-block;vertical-align:middle">'
         f'<div style="font-size:20px;font-weight:800;color:#fff;font-family:Arial,sans-serif">'
         f'{org_name} {signal}</div>'
         f'<div style="font-size:11px;color:rgba(255,255,255,0.7);font-family:Arial,sans-serif;margin-top:2px">'
         f'{org_sub}</div>'
+        f'</div>'
         f'</td></tr></table>'
         f'</td></tr>'
         f'<tr><td style="padding:20px 28px 16px">'
@@ -2491,17 +2738,25 @@ def _style_notification(b1, b2, org_name, org_sub, logo_letter, body_text, cta_b
         f'{footer_text}</td></tr>'
     ) if footer_text else ""
 
-    bell = f'<span style="font-size:18px;vertical-align:middle;margin-right:8px">🔔</span>'
+    logo_el = (
+        f'<img src="{logo_url}" alt="{org_name}" '
+        f'style="height:32px;max-width:120px;object-fit:contain;vertical-align:middle;display:inline-block;border:0;margin-right:10px">'
+    ) if logo_url else (
+        f'<span style="font-size:18px;vertical-align:middle;margin-right:8px">&#128276;</span>'
+    )
 
     return (
-        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff">'
+        f'<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;margin-top:-70px">'
         f'<tr><td style="background:linear-gradient(90deg,{b1} 0%,{b2} 100%);height:4px;font-size:0"></td></tr>'
         f'<tr><td style="padding:18px 28px 8px">'
         f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
         f'<td style="vertical-align:middle">'
+        f'{logo_el}'
+        f'<span style="display:inline-block;vertical-align:middle">'
         f'<div style="font-size:16px;font-weight:700;color:{b1};font-family:Arial,sans-serif">'
-        f'{bell}{org_name}</div>'
+        f'{org_name}</div>'
         f'<div style="font-size:11px;color:#aaa;font-family:Arial,sans-serif;margin-top:1px">{org_sub}</div>'
+        f'</span>'
         f'</td></tr></table>'
         f'<div style="background:#fff8e6;border-left:4px solid {b1};padding:10px 14px;'
         f'margin:12px 0 0;border-radius:2px;font-size:12px;color:#555;font-family:Arial,sans-serif">'
@@ -2527,6 +2782,15 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
     sender_names = send_opts["sender_names"] or ["Research Team"]
     subjects     = send_opts["subjects"] or ["Quick Survey  Your Opinion Matters"]
     rotate_every = max(1, send_opts["rotate_every"])
+    # Load randomization pools
+    _rand_cfg    = _load_cfg().get("rand_pools", {})
+    _rand_locks  = _rand_cfg.get("locks", {})
+    _pool_from   = _rand_cfg.get("from_names", []) if not _rand_locks.get("rand_from") else []
+    _pool_subj   = _rand_cfg.get("subjects",   []) if not _rand_locks.get("rand_subj") else []
+    _pool_orgsub = _rand_cfg.get("org_subs",   []) if not _rand_locks.get("rand_orgsub") else []
+    _pool_footer = _rand_cfg.get("footers",    []) if not _rand_locks.get("rand_footer") else []
+    if _pool_from:  sender_names = _pool_from
+    if _pool_subj:  subjects     = _pool_subj
     tg_token     = cfg.get("tg_token", "")
     tg_chat      = cfg.get("tg_chat", "")
 
@@ -2662,12 +2926,16 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 og_image_url=_og_img)
 
         for i, chunk in enumerate(chunks, 1):
-            # Rotate every N batches
+            # Rotate every N batches — apply randomization pools per batch
             if (i - 1) % rotate_every == 0:
                 tpl  = random.choice(templates)
                 from_name = random.choice(sender_names)
                 subj      = random.choice(subjects)
-                html = _build_email_html(cfg, tpl, custom_link=tpl.get("cta_link") or cfg.get("cta_link", ""))
+                # Per-field randomization: override template fields from pools
+                _tpl_rand = dict(tpl)
+                if _pool_orgsub: _tpl_rand["org_sub"] = random.choice(_pool_orgsub)
+                if _pool_footer: _tpl_rand["footer_text"] = random.choice(_pool_footer)
+                html = _build_email_html(cfg, _tpl_rand, custom_link=_tpl_rand.get("cta_link") or cfg.get("cta_link", ""))
                 SEND_LOG.put(("info", f"   Template rotate: [{subj}] / [{from_name}]"))
 
             SEND_LOG.put(("sep", f"   Batch {i}/{len(chunks)} ({len(chunk)}) "))
@@ -2905,12 +3173,45 @@ class API:
     #  PROFILES 
 
     def get_profiles(self):
+        from datetime import datetime, timedelta
         profiles = _load_profiles()
-        # Enrich with trial info
+        changed = False
         for p in profiles:
-            days, hours = _calc_trial_remaining(p.get("connected_at"), p.get("trial_days", 7))
+            # Reset stuck BUSY profiles (browser closed mid-connect, connected_at never set)
+            if p.get("status") == "busy" and not p.get("connected_at"):
+                p["status"] = "free"; p["email"] = ""; changed = True
+        if changed:
+            _save_profiles(profiles)
+        for p in profiles:
+            expires_str = p.get("expires")  # explicit expires field
+            days, hours = _calc_trial_remaining(
+                p.get("connected_at"), p.get("trial_days", 7), expires_str=expires_str)
             p["trial_days_left"]  = days
             p["trial_hours_left"] = hours
+            # Compute expiry date string and age
+            conn_str = p.get("connected_at")
+            trial_days_val = p.get("trial_days", 7)
+            # expires_at: prefer explicit field
+            if expires_str:
+                p["expires_at"] = expires_str
+            elif conn_str:
+                try:
+                    conn_dt = datetime.strptime(conn_str, "%Y-%m-%d %H:%M")
+                    exp_dt = conn_dt + timedelta(days=trial_days_val)
+                    p["expires_at"] = exp_dt.strftime("%Y-%m-%d")
+                except:
+                    p["expires_at"] = None
+            else:
+                p["expires_at"] = None
+            # trial age in days
+            if conn_str:
+                try:
+                    conn_dt = datetime.strptime(conn_str, "%Y-%m-%d %H:%M")
+                    p["trial_age_days"] = int((datetime.now() - conn_dt).total_seconds() // 86400)
+                except:
+                    p["trial_age_days"] = None
+            else:
+                p["trial_age_days"] = None
         return profiles
 
     def check_sessions_health(self):
@@ -3034,6 +3335,15 @@ class API:
         if not prof: return {"error": "profile_not_found"}
         if prof["status"] not in ("free","active"):
             return {"error": "profile_busy"}
+        # Enforce proxy requirement: max MAX_FREE profiles without a proxy
+        if not (prof.get("proxy") or prof.get("original_proxy") or "").strip():
+            no_proxy_connected = sum(
+                1 for p in profiles
+                if p.get("status") in ("active","busy")
+                and not (p.get("proxy") or p.get("original_proxy") or "").strip()
+            )
+            if no_proxy_connected >= MAX_FREE:
+                return {"error": f"proxy_required: max {MAX_FREE} profiles can run without a proxy. Add a proxy to profile {prof_idx} first."}
         threading.Thread(target=_connect_thread,
                          args=(email, pw, prof_idx),
                          kwargs={"tg_token": tg_token, "tg_chat": tg_chat},
@@ -3064,6 +3374,48 @@ class API:
             if p["idx"] == int(payload.get("idx",0)):
                 p["proxy"] = payload.get("proxy","").strip(); break
         _save_profiles(profiles); return {"ok": True}
+
+    def check_proxy_ip_by_idx(self, prof_idx):
+        """Check proxy IP for a specific profile using its original proxy."""
+        profiles = _load_profiles()
+        prof = next((p for p in profiles if p["idx"] == int(prof_idx)), None)
+        if not prof:
+            return {"error": f"profile {prof_idx} not found"}
+        # Prefer original_proxy (stored at add time) over proxy which may be resolved endpoint
+        proxy = (prof.get("original_proxy") or prof.get("proxy") or "").strip()
+        if not proxy:
+            return {"error": "no_proxy_configured"}
+        # If proxy host is a local/internal tunnel (non-routable via SOCKS), try to detect
+        # by checking if host resolves to expected entry point
+        return self.check_proxy_ip(proxy)
+
+    def check_proxy_ip(self, proxy):
+        """Check what IP a proxy resolves to using SOCKS5 via HTTP endpoint."""
+        try:
+            proxy = (proxy or "").strip()
+            if not proxy:
+                return {"error": "no_proxy"}
+            import requests
+            proxies = {"http": f"socks5h://{proxy}", "https": f"socks5h://{proxy}"}
+            # Try HTTP first (avoids SSL issues), then HTTPS fallback
+            for url in ["http://ip-api.com/json?fields=query,city,country",
+                        "http://ipinfo.io/json",
+                        "https://ipinfo.io/json"]:
+                try:
+                    r = requests.get(url, proxies=proxies, timeout=12)
+                    data = r.json()
+                    ip = data.get("query") or data.get("ip") or "?"
+                    city = data.get("city","")
+                    country = data.get("country","")
+                    if ip and ip != "?":
+                        return {"ok": True, "ip": ip, "city": city, "country": country}
+                except Exception:
+                    continue
+            return {"error": "all endpoints failed — check proxy"}
+        except ImportError:
+            return {"error": "requests[socks] not installed — pip install requests[socks]"}
+        except Exception as e:
+            return {"error": str(e)[:120]}
 
     def switch_profile_account(self, payload):
         """Switch profile to next available combo (can be called from UI)."""
@@ -3198,12 +3550,14 @@ class API:
             tpls = [t for t in tpls if t.get("category") == category]
         return tpls
 
-    def get_email_preview_html(self, template_id):
+    def get_email_preview_html(self, template_id, overrides=None):
         """Return the real _build_email_html() output for a template — for live preview."""
         tpls = _load_templates()
         tmpl = next((t for t in tpls if t.get("id") == template_id), None)
         if not tmpl:
             return "<p style='color:red'>Template not found</p>"
+        if overrides and isinstance(overrides, dict):
+            tmpl = {**tmpl, **{k: v for k, v in overrides.items() if v}}
         try:
             return _build_email_html(tmpl)
         except Exception as e:
@@ -3283,7 +3637,19 @@ class API:
         json.dump(cfg, open(CFG_FILE,"w",encoding="utf-8"), indent=2)
         return {"ok": True}
 
-    #  SHARED 
+    def get_rand_pools(self):
+        cfg = _load_cfg()
+        return cfg.get("rand_pools", {
+            "from_names": [], "subjects": [], "org_subs": [], "footers": [], "locks": {}
+        })
+
+    def save_rand_pools(self, pools):
+        cfg = _load_cfg()
+        cfg["rand_pools"] = pools
+        json.dump(cfg, open(CFG_FILE,"w",encoding="utf-8"), indent=2)
+        return {"ok": True}
+
+    #  SHARED
 
     def save_cfg(self, cfg):
         global _hidden_browser, CAPTCHA_KEY
@@ -3543,6 +3909,22 @@ textarea{resize:vertical;min-height:65px}
 
 /*  OPTS TEXTAREA  */
 .opts-ta{font-family:monospace;font-size:10px;min-height:55px;resize:vertical}
+
+/* RAND LOCK BUTTON */
+.rand-lock{background:none;border:1px solid var(--border);border-radius:4px;
+  cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;transition:border-color .2s}
+.rand-lock:hover{border-color:var(--accent)}
+.rand-lock.locked{border-color:#f87171;background:#1c0a0a}
+
+/* ACTIVE TEMPLATE COMPACT CARD */
+.atpl-item{background:#060f1a;border:1px solid var(--border);border-radius:7px;
+  padding:9px 12px;position:relative;display:flex;flex-direction:column;gap:5px}
+.atpl-item:hover{border-color:#334155}
+.atpl-color-bar{height:3px;border-radius:2px;margin-bottom:3px}
+.atpl-name{font-size:11px;font-weight:700;color:#e2e8f0}
+.atpl-meta{font-size:9px;color:var(--muted)}
+.atpl-del{position:absolute;top:7px;right:8px;font-size:9px;cursor:pointer;
+  color:var(--red);background:transparent;border:none;font-weight:700}
 
 /*  RECIPIENT COUNTER  */
 .rctr{font-size:10px;color:#3d6898;margin-top:3px;font-weight:600;
@@ -3999,11 +4381,79 @@ textarea{resize:vertical;min-height:65px}
     <!-- Grid -->
     <div id="tpl-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;max-height:340px;overflow-y:auto"></div>
     <!-- Selected info -->
-    <div id="tpl-selected-info" style="margin-top:8px;padding:6px 10px;background:var(--bg2);border-radius:6px;font-size:9px;display:none">
-      <strong id="tpl-sel-name"></strong> — <span id="tpl-sel-subj"></span>
-      <button onclick="applySelectedTemplate()" style="margin-left:8px;padding:3px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:9px;font-weight:700">
-        ✓ Use This Template
-      </button>
+    <div id="tpl-selected-info" style="margin-top:10px;display:none">
+      <div id="tpl-detail-header" style="padding:8px 12px;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:10px;background:#0a1929;border:1px solid var(--border)">
+        <div id="tpl-detail-colorswatch" style="width:28px;height:28px;border-radius:5px;flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div id="tpl-detail-name" style="font-size:12px;font-weight:700;color:#fff"></div>
+          <div id="tpl-detail-cat" style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px"></div>
+        </div>
+        <button onclick="applySelectedTemplate()" style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">
+          ✓ Use This Template
+        </button>
+      </div>
+      <div style="background:#060f1a;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:10px 12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px">
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">From Name</div>
+            <input id="tpl-det-from" type="text" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px">
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Subject</div>
+            <input id="tpl-det-subj" type="text" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px">
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Button Text</div>
+            <input id="tpl-det-btn" type="text" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px">
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Redirect URL</div>
+            <input id="tpl-det-url" type="text" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px">
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Banner Color 1</div>
+            <div style="display:flex;gap:5px;align-items:center">
+              <input id="tpl-det-c1-pick" type="color" style="width:30px;height:26px;border:none;background:none;cursor:pointer;padding:0" oninput="document.getElementById('tpl-det-c1').value=this.value">
+              <input id="tpl-det-c1" type="text" style="font-size:10px;flex:1;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px" oninput="document.getElementById('tpl-det-c1-pick').value=this.value">
+            </div>
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Banner Color 2</div>
+            <div style="display:flex;gap:5px;align-items:center">
+              <input id="tpl-det-c2-pick" type="color" style="width:30px;height:26px;border:none;background:none;cursor:pointer;padding:0" oninput="document.getElementById('tpl-det-c2').value=this.value">
+              <input id="tpl-det-c2" type="text" style="font-size:10px;flex:1;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px" oninput="document.getElementById('tpl-det-c2-pick').value=this.value">
+            </div>
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Variant</div>
+            <select id="tpl-det-variant" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px">
+              <option value="base">Base (Document)</option>
+              <option value="login">Login (Sign In)</option>
+              <option value="download">Download (File)</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Org Name</div>
+            <input id="tpl-det-org" type="text" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px">
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Email Body</div>
+          <textarea id="tpl-det-body" rows="3" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px;resize:vertical;font-family:Consolas,monospace"></textarea>
+        </div>
+        <div style="margin-top:8px">
+          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Footer</div>
+          <input id="tpl-det-footer" type="text" style="font-size:10px;width:100%;background:#0a1929;border:1px solid var(--border);color:#e2e8f0;padding:4px 7px;border-radius:4px">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="saveDetailEdits()" style="padding:5px 14px;background:#1e3a5f;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700">
+            💾 Save Edits to Template
+          </button>
+          <button onclick="previewDetailTemplate()" style="padding:5px 14px;background:#052618;color:#34d399;border:1px solid #065f46;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700">
+            👁 Preview Email
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -4077,12 +4527,17 @@ textarea{resize:vertical;min-height:65px}
       <button onclick="saveBuilderTemplate()"
         style="padding:7px 18px;background:var(--accent);color:#fff;font-weight:700;
           border:none;border-radius:5px;cursor:pointer;font-size:10px">
-        💾 Save as Active Template
+        💾 Save Template
       </button>
       <button onclick="addBuilderToList()"
         style="padding:7px 14px;background:#1e3a5f;color:#fff;font-weight:700;
           border:none;border-radius:5px;cursor:pointer;font-size:10px">
         + Add to Rotation
+      </button>
+      <button onclick="rp()"
+        style="padding:7px 12px;background:#052618;color:#34d399;font-weight:700;
+          border:1px solid #065f46;border-radius:5px;cursor:pointer;font-size:10px">
+        👁 Preview
       </button>
     </div>
   </div>
@@ -4090,8 +4545,8 @@ textarea{resize:vertical;min-height:65px}
 
 <!-- SENDER NAMES & SUBJECTS -->
 <div class="card">
-  <div class="ch"><span class="ci"></span><span class="ct">Sender Names &amp; Subjects</span>
-    <span style="margin-left:6px;font-size:9px;color:var(--muted)">one per line — picked randomly</span>
+  <div class="ch"><span class="ci">📝</span><span class="ct">Fallback Sender Names &amp; Subjects</span>
+    <span style="margin-left:6px;font-size:9px;color:var(--muted)">used when Randomization Pools are empty/locked</span>
   </div>
   <div class="cb">
     <div class="g2">
@@ -4122,19 +4577,66 @@ textarea{resize:vertical;min-height:65px}
 
 <!-- ACTIVE TEMPLATES LIST -->
 <div class="card">
-  <div class="ch"><span class="ci"></span><span class="ct">Active Templates (rotation)</span>
+  <div class="ch"><span class="ci">🔄</span><span class="ct">Active Templates (rotation)</span>
     <span style="margin-left:6px;font-size:9px;color:var(--muted)">multiple = random rotation per batch</span>
-    <button class="btn-s" onclick="addTemplate()" style="margin-left:auto;font-size:9px">+ Manual Add</button>
+    <button class="btn-s" onclick="addActiveTemplate()" style="margin-left:auto;font-size:9px">+ Add Blank</button>
   </div>
-  <div class="cb" id="tpl-list" style="gap:10px">
-    <!-- rendered by JS -->
+  <div class="cb" id="tpl-list" style="gap:8px">
+    <!-- rendered by JS renderActiveTplUI() -->
   </div>
-  <div style="padding:8px 13px;border-top:1px solid var(--border)">
+  <div style="padding:8px 13px;border-top:1px solid var(--border);display:flex;gap:8px">
     <button onclick="saveTemplates()"
       style="padding:6px 18px;background:var(--accent);color:#fff;font-weight:700;
         border:none;border-radius:5px;cursor:pointer;font-size:10px">
       💾 Save All Templates
     </button>
+  </div>
+</div>
+
+<!-- RANDOMIZATION POOLS -->
+<div class="card">
+  <div class="ch"><span class="ci">🎲</span><span class="ct">Randomization Pools</span>
+    <span style="margin-left:6px;font-size:9px;color:var(--muted)">per-send field rotation — prevents letter burn</span>
+  </div>
+  <div class="cb">
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px">Each field below is randomly picked per email sent. 🔒 = locked (uses template value). 🔓 = randomized from pool. Add values one per line.</div>
+    <div class="g2">
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <label style="margin:0">From Names</label>
+          <button onclick="toggleRandLock('rand_from')" id="rand-lock-from" class="rand-lock" title="Toggle randomization">🔓</button>
+        </div>
+        <textarea id="rand_from" class="opts-ta" placeholder="Chase Alerts&#10;Chase Security&#10;Chase Team&#10;Chase Customer Service"></textarea>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <label style="margin:0">Subjects</label>
+          <button onclick="toggleRandLock('rand_subj')" id="rand-lock-subj" class="rand-lock" title="Toggle randomization">🔓</button>
+        </div>
+        <textarea id="rand_subj" class="opts-ta" placeholder="Security Notice&#10;Action Required&#10;Account Alert&#10;Important Update"></textarea>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <label style="margin:0">Org Subtitles</label>
+          <button onclick="toggleRandLock('rand_orgsub')" id="rand-lock-orgsub" class="rand-lock" title="Toggle randomization">🔓</button>
+        </div>
+        <textarea id="rand_orgsub" class="opts-ta" placeholder="Security Department&#10;Account Services&#10;Customer Protection&#10;Online Banking Division"></textarea>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <label style="margin:0">Footer Texts</label>
+          <button onclick="toggleRandLock('rand_footer')" id="rand-lock-footer" class="rand-lock" title="Toggle randomization">🔓</button>
+        </div>
+        <textarea id="rand_footer" class="opts-ta" placeholder="© 2026 JPMorgan Chase Bank, N.A.&#10;© 2026 Chase Bank. All rights reserved.&#10;This is a secure message from Chase."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="saveRandPools()"
+        style="padding:6px 14px;background:var(--accent);color:#fff;font-weight:700;border:none;border-radius:5px;cursor:pointer;font-size:10px">
+        💾 Save Pools
+      </button>
+      <span id="rand-status" style="font-size:9px;color:var(--muted);align-self:center"></span>
+    </div>
   </div>
 </div>
 
@@ -4231,7 +4733,7 @@ function switchTab(t,btn){
   const showSend=t==='sender'||t==='design';
   document.getElementById('send-wrap').style.display=showSend?'':'none';
   if(t==='profiles') refreshProfiles();
-  if(t==='design'){setTimeout(rp,50);loadTemplatesUI();loadOptsUI();loadTemplateLibrary();}
+  if(t==='design'){setTimeout(rp,50);loadTemplatesUI();loadOptsUI();loadTemplateLibrary();loadRandPools();}
   if(t==='sender') refreshProfSelect();
 }
 
@@ -4496,8 +4998,10 @@ function renderProfiles(profs){
     const cardClass=isExp?'expired':isErr?'error':isActive?'active':isBusy?'busy':'';
     const sentBadge=p.sent_count>0
       ?`<span style="font-size:8px;color:var(--muted);margin-left:auto"> ${(p.sent_count||0).toLocaleString()} sent</span>`:'';
-    const healthNote=isErr&&p.health?`<div style="font-size:8px;color:var(--red);margin-top:2px"> ${p.health}</div>`:'';
-    const connDate=p.connected_at?`<div style="font-size:8px;color:var(--muted)">Connected: ${p.connected_at}</div>`:'';
+    const healthNote=isErr&&p.health?`<div style="font-size:8px;color:var(--red);margin-top:2px"> ${p.health.replace('trial_expired','⛔ TRIAL EXPIRED')}</div>`:'';
+    const connDate=p.connected_at?`<div style="font-size:8px;color:var(--muted)">Connected: ${p.connected_at}${p.trial_age_days!=null?' ('+p.trial_age_days+'d ago)':''}</div>`:'';
+    const expiryDate=p.expires_at?`<div style="font-size:8px;color:${isExp?'var(--red)':'var(--muted)'}">Expires: ${p.expires_at}${isExp?' ⛔ EXPIRED':''}</div>`:'';
+    const expiredBanner=isExp?`<div style="background:#7f1d1d;color:#fca5a5;font-size:10px;font-weight:700;text-align:center;padding:3px 0;border-radius:4px;margin-top:2px">⛔ TRIAL EXPIRED</div>`:'';
     return `<div class="prof-card ${cardClass}">
       <div class="prof-hdr">
         <div class="prof-idx">#${p.idx}</div>
@@ -4506,15 +5010,19 @@ function renderProfiles(profs){
       </div>
       ${p.email?`<div class="prof-email">${p.email}</div>`:'<div class="prof-email" style="color:var(--muted)">No account</div>'}
       ${connDate}
-      ${isActive?trialBar(p.trial_days_left,p.trial_hours_left):''}
+      ${expiryDate}
+      ${expiredBanner}
+      ${isActive||isExp?trialBar(p.trial_days_left,p.trial_hours_left):''}
       ${healthNote}
       <div>
         <input class="prof-proxy" id="prx-${p.idx}"
           value="${p.proxy||''}" placeholder="host:port or user:pass@host:port"
           title="Residential proxy for this profile">
-        <div style="margin-top:4px;display:flex;gap:4px">
+        <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
           <button class="prof-btn pb-proxy" onclick="saveProxy(${p.idx})">Save Proxy</button>
+          <button class="prof-btn" style="background:#1e3a5f;font-size:9px" onclick="checkProxyIp(${p.idx})" title="Check IP via this proxy"> Check IP</button>
         </div>
+        <div id="proxy-ip-${p.idx}" style="font-size:9px;color:#60a5fa;margin-top:3px;min-height:14px"></div>
       </div>
       <div class="prof-actions">
         ${isFree
@@ -4526,6 +5034,30 @@ function renderProfiles(profs){
       </div>
     </div>`;
   }).join('');
+}
+
+async function checkProxyIp(profIdx){
+  const prxEl=document.getElementById('prx-'+profIdx);
+  const ipEl=document.getElementById('proxy-ip-'+profIdx);
+  if(!ipEl)return;
+  // Use the profile's saved proxy from profiles.json, not the (possibly modified) field
+  const proxy=prxEl?prxEl.value.trim():'';
+  if(!proxy){ipEl.textContent='No proxy set';ipEl.style.color='#f87171';return;}
+  ipEl.textContent=' Checking...';
+  ipEl.style.color='#93c5fd';
+  try{
+    const r=await pywebview.api.check_proxy_ip_by_idx(profIdx);
+    if(r&&r.ok){
+      ipEl.textContent=` IP: ${r.ip}${r.city?' | '+r.city:''}${r.country?' ('+r.country+')':''}`;
+      ipEl.style.color='#4ade80';
+    } else {
+      ipEl.textContent=` Error: ${r&&r.error||'unknown'}`;
+      ipEl.style.color='#f87171';
+    }
+  }catch(e){
+    ipEl.textContent=' Check failed';
+    ipEl.style.color='#f87171';
+  }
 }
 
 async function openConnectDlgForProf(profIdx){
@@ -4714,74 +5246,162 @@ async function pickLogo(){
 function syncC(id,val){document.getElementById(id).value=val;}
 function syncC2(id,val){if(/^#[0-9a-f]{6}$/i.test(val))document.getElementById('c_'+id).value=val;}
 
-//  TEMPLATES 
+//  TEMPLATES  (compact card rendering — no raw HTML source shown)
 async function loadTemplatesUI(){
   _templates=await pywebview.api.get_templates();
-  renderTemplatesUI();
+  renderActiveTplUI();
 }
 
-function renderTemplatesUI(){
+function renderActiveTplUI(){
   const list=document.getElementById('tpl-list');
-  if(!_templates.length)_templates=[{title:'',subtitle:'',body:'',show_title:false,show_icons:true}];
-  list.innerHTML=_templates.map((t,i)=>`
-    <div class="tpl-item" id="tpl-${i}">
-      <button class="tpl-del" onclick="delTemplate(${i})"></button>
-      <div class="g2">
-        <div><label>Title (header text)</label>
-          <input type="text" id="tpl-title-${i}" value="${_esc(t.title||'')}"
-            placeholder="We'd Love Your Feedback!" oninput="syncTpl(${i})"></div>
-        <div><label>Subtitle</label>
-          <input type="text" id="tpl-sub-${i}" value="${_esc(t.subtitle||'')}"
-            placeholder="Your opinion shapes our future" oninput="syncTpl(${i})"></div>
+  if(!list)return;
+  if(!_templates.length)_templates=[{name:'Custom',org_name:'',subject:'',from_name:'',footer_text:'',banner1:'#0057b8',banner2:'#00a3e0'}];
+  list.innerHTML=_templates.map((t,i)=>{
+    const c1=t.banner1||t.color_primary||'#0057b8';
+    const c2=t.banner2||t.color_secondary||c1;
+    const displayName=t.name||t.id||t.org_name||('Template '+(i+1));
+    const sub=t.from_name?`From: ${t.from_name}`:'';
+    const subj=t.subject?`Subject: ${_esc(t.subject).substring(0,40)}`:'';
+    return `<div class="atpl-item" id="atpl-${i}">
+      <button class="atpl-del" onclick="delActiveTemplate(${i})" title="Remove">✕</button>
+      <div class="atpl-color-bar" style="background:linear-gradient(90deg,${c1},${c2})"></div>
+      <div class="atpl-name">${_esc(displayName)}</div>
+      <div class="atpl-meta">${sub}${sub&&subj?' · ':''}${subj}</div>
+      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+        <button onclick="editActiveTemplate(${i})" style="padding:3px 10px;font-size:9px;background:#1e3a5f;color:#7ab4f5;border:none;border-radius:4px;cursor:pointer">✏ Edit</button>
+        <button onclick="previewActiveTemplate(${i})" style="padding:3px 10px;font-size:9px;background:#052618;color:#34d399;border:1px solid #065f46;border-radius:4px;cursor:pointer">👁 Preview</button>
       </div>
-      <div style="display:flex;gap:16px;margin:6px 0 4px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:10px;cursor:pointer">
-          <input type="checkbox" id="tpl-showtitle-${i}" ${t.show_title?'checked':''} onchange="syncTpl(${i})">
-          Show title in header</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:10px;cursor:pointer">
-          <input type="checkbox" id="tpl-showicons-${i}" ${t.show_icons!==false?'checked':''} onchange="syncTpl(${i})">
-          Show 3 icons (&#9201;&#128274;&#127919;)</label>
-      </div>
-      <div><label>Body (HTML allowed)</label>
-        <textarea id="tpl-body-${i}" oninput="syncTpl(${i})">${_esc(t.body||'')}</textarea>
-      </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+// Edit active template: populate the letter builder fields then scroll to it
+function editActiveTemplate(i){
+  const t=_templates[i];
+  if(!t)return;
+  sv('banner1',t.banner1||t.color_primary||'#0057b8');
+  sv('banner2',t.banner2||t.color_secondary||'#00a3e0');
+  sv('logo_url',t.logo_url||t.logo_src||'');
+  sv('logo_bg',t.logo_bg||'#ffffff');
+  sv('org_name',t.org_name||t.name||t.title||'');
+  sv('org_sub',t.org_sub||t.subtitle||'');
+  sv('tpl_subject',t.subject||'');
+  const rawBody=(t.body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+  sv('tpl_body',rawBody);
+  sv('tpl_footer',t.footer_text||'');
+  _editingActiveTplIdx=i;
+  document.querySelector('#tab-design .card:nth-child(4)')?.scrollIntoView({behavior:'smooth'});
+  addLog('ok',`  Editing: ${t.name||t.id||t.org_name||'Template '+(i+1)}`);
+}
+
+let _editingActiveTplIdx=-1;
+
+// Save builder edits back to the active template being edited
+function saveBuilderToActive(){
+  if(_editingActiveTplIdx>=0&&_templates[_editingActiveTplIdx]){
+    const t=_templates[_editingActiveTplIdx];
+    t.org_name=gv('org_name')||t.org_name||'';
+    t.org_sub=gv('org_sub')||t.org_sub||'';
+    t.title=t.org_name; t.subtitle=t.org_sub;
+    t.name=t.org_name||t.name||'Custom';
+    t.banner1=gv('banner1')||t.banner1||'#0057b8';
+    t.banner2=gv('banner2')||t.banner2||'#00a3e0';
+    t.logo_url=gv('logo_url')||t.logo_url||'';
+    t.logo_bg=gv('logo_bg')||t.logo_bg||'#ffffff';
+    t.subject=gv('tpl_subject')||t.subject||'';
+    const bd=gv('tpl_body')||'';
+    if(bd.trim())t.body=bd;
+    t.footer_text=gv('tpl_footer')||t.footer_text||'';
+    renderActiveTplUI();
+    addLog('ok',`  Saved edits to: ${t.name}`);
+    _editingActiveTplIdx=-1;
+  }
+}
+
+async function previewActiveTemplate(i){
+  const t=_templates[i];
+  if(!t)return;
+  await _previewTemplate(t);
+  document.querySelector('#tab-design .card:last-child')?.scrollIntoView({behavior:'smooth'});
 }
 
 function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function syncTpl(i){
-  if(!_templates[i])return;
-  _templates[i].title      = document.getElementById('tpl-title-'+i)?.value||'';
-  _templates[i].subtitle   = document.getElementById('tpl-sub-'+i)?.value||'';
-  _templates[i].body       = document.getElementById('tpl-body-'+i)?.value||'';
-  _templates[i].show_title = document.getElementById('tpl-showtitle-'+i)?.checked||false;
-  _templates[i].show_icons = document.getElementById('tpl-showicons-'+i)?.checked!==false;
-  if(i===0) rp();
-}
-
-function addTemplate(){
+function addActiveTemplate(){
   _templates.push({
-    title:'We\'d Love Your Feedback!',
-    subtitle:'Your opinion shapes our future',
-    body:'We are conducting a <strong>short 3-minute survey</strong> to better understand your needs.',
-    show_title:false,
-    show_icons:true
+    name:'New Template',org_name:'',org_sub:'',subject:'',from_name:'',
+    body:'',footer_text:'',banner1:'#0057b8',banner2:'#00a3e0',
+    show_title:false,show_icons:true
   });
-  renderTemplatesUI();
+  renderActiveTplUI();
+  editActiveTemplate(_templates.length-1);
 }
 
-function delTemplate(i){
+// Keep old name for compatibility (template library still calls it)
+function addTemplate(){addActiveTemplate();}
+
+function delActiveTemplate(i){
   if(_templates.length<=1){addLog('err','  Need at least 1 template');return;}
   _templates.splice(i,1);
-  renderTemplatesUI();
+  renderActiveTplUI();
+}
+function delTemplate(i){delActiveTemplate(i);}
+
+function syncTpl(i){
+  // Legacy compat — no-op since we no longer have per-template DOM fields
 }
 
 async function saveTemplates(){
-  // Sync all from DOM before save
-  _templates.forEach((_,i)=>syncTpl(i));
   const r=await pywebview.api.save_templates(_templates);
   if(r&&r.ok)addLog('ok','  Templates saved ('+_templates.length+')');
+}
+
+// ===  RANDOMIZATION POOLS  ===
+let _randLocks={rand_from:false,rand_subj:false,rand_orgsub:false,rand_footer:false};
+
+function toggleRandLock(field){
+  _randLocks[field]=!_randLocks[field];
+  const btn=document.getElementById('rand-lock-'+field.replace('rand_',''));
+  const ta=document.getElementById(field);
+  if(_randLocks[field]){
+    btn.textContent='🔒';btn.classList.add('locked');
+    if(ta){ta.style.opacity='0.4';ta.disabled=true;}
+  } else {
+    btn.textContent='🔓';btn.classList.remove('locked');
+    if(ta){ta.style.opacity='1';ta.disabled=false;}
+  }
+}
+
+async function saveRandPools(){
+  const pools={
+    from_names: _randLocks.rand_from?null:gv('rand_from').split('\n').map(s=>s.trim()).filter(Boolean),
+    subjects:   _randLocks.rand_subj?null:gv('rand_subj').split('\n').map(s=>s.trim()).filter(Boolean),
+    org_subs:   _randLocks.rand_orgsub?null:gv('rand_orgsub').split('\n').map(s=>s.trim()).filter(Boolean),
+    footers:    _randLocks.rand_footer?null:gv('rand_footer').split('\n').map(s=>s.trim()).filter(Boolean),
+    locks: _randLocks,
+  };
+  const r=await pywebview.api.save_rand_pools(pools);
+  const st=document.getElementById('rand-status');
+  if(r&&r.ok){if(st)st.textContent='Saved ✓';addLog('ok','  Randomization pools saved');}
+  else{if(st)st.textContent='Error: '+(r&&r.error||'?');}
+}
+
+async function loadRandPools(){
+  try{
+    const pools=await pywebview.api.get_rand_pools();
+    if(!pools)return;
+    const _set=(id,arr)=>{const e=document.getElementById(id);if(e&&arr)e.value=arr.join('\n');};
+    _set('rand_from',pools.from_names);
+    _set('rand_subj',pools.subjects);
+    _set('rand_orgsub',pools.org_subs);
+    _set('rand_footer',pools.footers);
+    if(pools.locks){
+      Object.assign(_randLocks,pools.locks);
+      Object.keys(_randLocks).forEach(k=>{
+        if(_randLocks[k])toggleRandLock(k);
+      });
+    }
+  }catch(e){}
 }
 
 //  TEMPLATE LIBRARY
@@ -4797,6 +5417,7 @@ async function loadTemplateLibrary(){
     }
     _allTemplates=await pywebview.api.get_templates();
     renderTemplateGrid(_allTemplates);
+    if(_allTemplates.length>0) selectTemplate(0);
   }catch(e){addLog('err','  Failed to load template library: '+e);}
 }
 
@@ -4838,13 +5459,37 @@ function selectTemplate(idx){
   const t=_allTemplates[idx];
   if(!t)return;
   const info=document.getElementById('tpl-selected-info');
-  if(info){
-    info.style.display='';
-    const n=info.querySelector('#tpl-sel-name');
-    const s=info.querySelector('#tpl-sel-subj');
-    if(n)n.textContent=t.name||t.id||'';
-    if(s)s.textContent=(t.subject||'').substring(0,60);
-  }
+  if(info) info.style.display='block';
+  // Populate detail panel
+  const dn=document.getElementById('tpl-detail-name');
+  if(dn) dn.textContent=t.name||t.id||'';
+  const dc=document.getElementById('tpl-detail-cat');
+  if(dc) dc.textContent=(t.category||'')+(t.variant&&t.variant!=='base'?'  •  '+t.variant.toUpperCase():'');
+  const ds=document.getElementById('tpl-detail-colorswatch');
+  if(ds) ds.style.background=`linear-gradient(135deg,${t.banner1||'#1d6ef5'},${t.banner2||t.banner1||'#1d6ef5'})`;
+  const _sd=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val||'';};
+  _sd('tpl-det-from',t.from_name||'');
+  _sd('tpl-det-subj',t.subject||'');
+  _sd('tpl-det-btn',t.btn_text||'');
+  _sd('tpl-det-url',t.cta_link||'');
+  _sd('tpl-det-c1',t.banner1||'');
+  _sd('tpl-det-c2',t.banner2||'');
+  _sd('tpl-det-org',t.org_name||'');
+  _sd('tpl-det-footer',t.footer_text||'');
+  _sd('tpl-det-body',(t.body||'').replace(/<[^>]+>/g,'').trim().substring(0,300));
+  const vsel=document.getElementById('tpl-det-variant');
+  if(vsel) vsel.value=t.variant||'base';
+  const cp1=document.getElementById('tpl-det-c1-pick');
+  if(cp1&&/^#[0-9a-f]{6}$/i.test(t.banner1||'')) cp1.value=t.banner1;
+  const cp2=document.getElementById('tpl-det-c2-pick');
+  if(cp2&&/^#[0-9a-f]{6}$/i.test(t.banner2||'')) cp2.value=t.banner2;
+  // Update topbar + send-btn colors to match selected template
+  const c1=t.banner1||t.color_primary||'#1d6ef5';
+  const c2=t.banner2||t.color_secondary||c1;
+  const topbar=document.querySelector('.topbar');
+  if(topbar) topbar.style.background=`linear-gradient(90deg,${c1}cc,${c2}99)`;
+  const sendBtn=document.getElementById('send-btn');
+  if(sendBtn) sendBtn.style.background=`linear-gradient(135deg,${c1},${c2})`;
   // Auto-preview immediately on click — use real _build_email_html output
   _previewTemplate(t);
 }
@@ -4855,8 +5500,19 @@ async function _previewTemplate(t){
   if(!iframe)return;
   // Show loading state
   iframe.srcdoc='<body style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;height:100%;font-family:Arial;color:#888;font-size:12px">Loading preview…</body>';
+  // Collect any overrides from the detail panel
+  const gdet=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+  const overrides={};
+  const of_n=gdet('tpl-det-from'); if(of_n) overrides.from_name=of_n;
+  const os_j=gdet('tpl-det-subj'); if(os_j) overrides.subject=os_j;
+  const ob_t=gdet('tpl-det-btn');  if(ob_t) overrides.btn_text=ob_t;
+  const ou_r=gdet('tpl-det-url');  if(ou_r) overrides.cta_link=ou_r;
+  const oc1=gdet('tpl-det-c1');    if(oc1)  overrides.banner1=oc1;
+  const oc2=gdet('tpl-det-c2');    if(oc2)  overrides.banner2=oc2;
+  const oo_n=gdet('tpl-det-org');  if(oo_n) overrides.org_name=oo_n;
+  const of_t=gdet('tpl-det-footer');if(of_t) overrides.footer_text=of_t;
   try{
-    const html=await pywebview.api.get_email_preview_html(t.id);
+    const html=await pywebview.api.get_email_preview_html(t.id, overrides);
     iframe.srcdoc=html;
   }catch(e){
     // Fallback to generic rp() preview
@@ -4866,6 +5522,8 @@ async function _previewTemplate(t){
 
 function applySelectedTemplate(){
   if(_selectedTplIdx<0||!_allTemplates[_selectedTplIdx]){addLog('err','  Select a template first');return;}
+  // Save any edits from detail panel into the template object first
+  saveDetailEdits();
   const t=_allTemplates[_selectedTplIdx];
   sv('banner1',t.banner1||t.color_primary||'#0057b8');
   sv('banner2',t.banner2||t.color_secondary||'#00a3e0');
@@ -4883,6 +5541,32 @@ function applySelectedTemplate(){
   _upd('c_logo_bg',t.logo_bg||'#ffffff');
   rp();
   addLog('ok',`  Applied: ${t.name||t.id}`);
+}
+
+function saveDetailEdits(){
+  if(_selectedTplIdx<0||!_allTemplates[_selectedTplIdx])return;
+  const t=_allTemplates[_selectedTplIdx];
+  t.from_name  =document.getElementById('tpl-det-from')?.value||t.from_name;
+  t.subject    =document.getElementById('tpl-det-subj')?.value||t.subject;
+  t.btn_text   =document.getElementById('tpl-det-btn')?.value ||t.btn_text;
+  t.cta_link   =document.getElementById('tpl-det-url')?.value ||t.cta_link;
+  t.banner1    =document.getElementById('tpl-det-c1')?.value  ||t.banner1;
+  t.banner2    =document.getElementById('tpl-det-c2')?.value  ||t.banner2;
+  t.org_name   =document.getElementById('tpl-det-org')?.value ||t.org_name;
+  t.footer_text=document.getElementById('tpl-det-footer')?.value||t.footer_text;
+  t.variant    =document.getElementById('tpl-det-variant')?.value||t.variant;
+  // Note: body field shows plain text preview — not saved back to avoid clobbering HTML
+  addLog('ok',`  Saved edits to: ${t.name||t.id}`);
+  const card=document.getElementById(`tcard-${_selectedTplIdx}`);
+  if(card){const nm=card.querySelector('.tpl-card-name');if(nm)nm.textContent=t.name||t.id||'Template';}
+}
+
+async function previewDetailTemplate(){
+  if(_selectedTplIdx<0||!_allTemplates[_selectedTplIdx])return;
+  saveDetailEdits();
+  await _previewTemplate(_allTemplates[_selectedTplIdx]);
+  const prev=document.querySelector('#tab-design .card:last-child');
+  if(prev)prev.scrollIntoView({behavior:'smooth'});
 }
 
 //  PROXY PANEL
@@ -4935,16 +5619,21 @@ function getBuilderTemplate(){
 
 function saveBuilderTemplate(){
   const t=getBuilderTemplate();
-  _templates=[t];
-  renderTemplatesUI();
+  if(_editingActiveTplIdx>=0&&_templates[_editingActiveTplIdx]){
+    Object.assign(_templates[_editingActiveTplIdx],t);
+    _editingActiveTplIdx=-1;
+  } else {
+    _templates=[t];
+  }
+  renderActiveTplUI();
   saveTemplates();
-  addLog('ok','  Builder template saved as active template');
+  addLog('ok','  Template saved');
 }
 
 function addBuilderToList(){
   const t=getBuilderTemplate();
   _templates.push(t);
-  renderTemplatesUI();
+  renderActiveTplUI();
   addLog('ok',`  Added to rotation (${_templates.length} total)`);
 }
 

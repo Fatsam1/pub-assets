@@ -1,0 +1,23 @@
+[
+  {
+    "idx": 4,
+    "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_4",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@174.138.162.36:3129",
+    "original_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@104.207.54.238:1081",
+    "email": "472.coordinador.telemarketing@nissannamiangelopolis.com.mx",
+    "status": "free",
+    "health": "ok",
+    "sent_count": 0,
+    "connected_at": null,
+    "trial_days": 7,
+    "last_health_check": null,
+    "zoho_password": "j@8025eF1HDg",
+    "imap_pw": "",
+    "imap_password": "GnitekraM@EtnatsissA!",
+    "surveys": {
+      "linkedin": "1276001000000003715",
+      "chase_bank_login": "1276001000000073001"
+    },
+    "profile_dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_4"
+  }
+]
