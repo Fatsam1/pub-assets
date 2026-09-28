@@ -127,10 +127,37 @@ def _imap_get_otp(timeout=90, after_ts=None, email=None, imap_pw=None):
     except: pass
     return None
 
-def login_if_needed(d, email=None, imap_pw=None):
+def _ensure_survey_dashboard(d):
+    """After password login, redirect to survey.zoho.com if still on accounts/www."""
+    cur = d.current_url
+    if "survey.zoho.com" not in cur or "login" in cur.lower():
+        L.info("  Redirecting to survey.zoho.com after login...")
+        d.get("https://survey.zoho.com/survey/newui")
+        time.sleep(8)
+        L.info(f"  Dashboard URL: {d.current_url[:100]}")
+        # Handle "Keep me signed in" / trust prompt if appeared
+        for sel in [
+            "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'trust')]",
+            "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'yes')]",
+            "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'continue')]",
+        ]:
+            try:
+                els = [e for e in d.find_elements(By.XPATH, sel) if e.is_displayed()]
+                if els:
+                    d.execute_script("arguments[0].click();", els[0])
+                    L.info(f"  Trust clicked after redirect")
+                    time.sleep(3); break
+            except: pass
+
+
+def login_if_needed(d, email=None, imap_pw=None, zoho_pw=None):
     """Login via accounts.zoho.com if not on survey.zoho.com dashboard."""
     _email = email or EMAIL
     _imap_pw = imap_pw or PW_IMAP
+    # zoho_pw: the Zoho account password (may differ from IMAP password).
+    # If caller passes imap_pw and it is the same as the Zoho password, use it.
+    # Fall back to global PW only as last resort.
+    _zoho_pw = zoho_pw or imap_pw or PW
     cur = d.current_url
     needs_login = (
         "survey.zoho.com" not in cur
@@ -185,6 +212,39 @@ def login_if_needed(d, email=None, imap_pw=None):
         pg_otp = d.execute_script("return document.body.innerText")[:400].lower()
         L.info(f"After OTP link: {pg_otp[:200]}")
 
+        # If Zoho rate-limited OTP or errored, fall back to password immediately
+        if ("no more emails can be sent" in pg_otp or "rate limit" in pg_otp
+                or "an error occurred" in pg_otp or "error occurred" in pg_otp):
+            L.warning("  OTP rate-limited — switching to password fallback immediately")
+            # Click 'Sign in using password' link
+            for sel in [
+                "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'password')]",
+                "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'password')]",
+                "[id*='password']","a[href*='password']",
+            ]:
+                try:
+                    by = By.XPATH if sel.startswith("//") else By.CSS_SELECTOR
+                    els = [e for e in d.find_elements(by, sel) if e.is_displayed()]
+                    if els:
+                        d.execute_script("arguments[0].click();", els[0])
+                        L.info(f"  Password link clicked: {sel[:40]}")
+                        rw(2, 3); break
+                except: pass
+            # Now fill password
+            try:
+                pw_el = WebDriverWait(d, 10).until(
+                    EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
+                pw_el.clear()
+                for ch in _zoho_pw: pw_el.send_keys(ch); time.sleep(0.04)
+                pw_el.send_keys(Keys.ENTER)
+                rw(6, 8)
+                ss(d, "login_5_result.png")
+                L.info(f"After login URL: {d.current_url[:100]}")
+            except Exception as _pe:
+                L.error(f"  Password fallback failed: {_pe}")
+            _ensure_survey_dashboard(d)
+            return
+
         # Find OTP input field and get code from IMAP
         otp_el = None
         for sel in ["input[autocomplete='one-time-code']",
@@ -202,7 +262,7 @@ def login_if_needed(d, email=None, imap_pw=None):
 
         if otp_el:
             L.info("  Fetching OTP from IMAP (waiting for fresh email)...")
-            otp_code = _imap_get_otp(timeout=120, after_ts=otp_request_ts,
+            otp_code = _imap_get_otp(timeout=20, after_ts=otp_request_ts,
                                      email=_email, imap_pw=_imap_pw)
             if otp_code:
                 L.info(f"  OTP: {otp_code}")
@@ -212,24 +272,27 @@ def login_if_needed(d, email=None, imap_pw=None):
                 try: otp_el.click()
                 except: d.execute_script("arguments[0].click();", otp_el)
                 time.sleep(0.3)
-                # Use JS to set value (React-compatible)
-                d.execute_script("""
-                    var el = arguments[0], code = arguments[1];
-                    try {
+                # Type OTP char by char (works for both single-input and split-digit fields)
+                try:
+                    otp_el.send_keys(Keys.CONTROL + "a")
+                    otp_el.send_keys(Keys.DELETE)
+                    time.sleep(0.1)
+                    for ch in otp_code:
+                        otp_el.send_keys(ch)
+                        time.sleep(0.08)
+                except: pass
+                # Also set via JS as backup
+                try:
+                    d.execute_script("""
+                        var el = arguments[0], code = arguments[1];
                         var setter = Object.getOwnPropertyDescriptor(
                             window.HTMLInputElement.prototype, 'value').set;
                         setter.call(el, code);
-                    } catch(e) { el.value = code; }
-                    el.dispatchEvent(new Event('input', {bubbles:true}));
-                    el.dispatchEvent(new Event('change', {bubbles:true}));
-                    el.dispatchEvent(new KeyboardEvent('keyup', {bubbles:true}));
-                """, otp_el, otp_code)
-                time.sleep(0.5)
-                # Also send via keys as fallback
-                try:
-                    otp_el.send_keys(Keys.CONTROL + "a")
-                    otp_el.send_keys(otp_code)
+                        el.dispatchEvent(new Event('input', {bubbles:true}));
+                        el.dispatchEvent(new Event('change', {bubbles:true}));
+                    """, otp_el, otp_code)
                 except: pass
+                time.sleep(0.3)
                 L.info(f"  OTP typed — field value: {d.execute_script('return arguments[0].value', otp_el)}")
                 time.sleep(0.5)
                 for sel in [
@@ -241,15 +304,63 @@ def login_if_needed(d, email=None, imap_pw=None):
                         btns = [e for e in d.find_elements(by, sel) if e.is_displayed()]
                         if btns: btns[0].click(); L.info(f"  OTP submit: {sel[:40]}"); break
                     except: pass
-                # Wait up to 15s for redirect away from accounts.zoho.com
-                for _ in range(15):
+                # Wait up to 20s for redirect away from accounts.zoho.com OTP page
+                for _ in range(20):
                     time.sleep(1)
-                    if "accounts.zoho.com" not in d.current_url:
+                    try:
+                        cur = d.current_url
+                    except Exception:
+                        # Chrome closed the connection mid-redirect — switch to any new window
+                        try:
+                            handles = d.window_handles
+                            if handles:
+                                d.switch_to.window(handles[-1])
+                                time.sleep(2)
+                        except Exception: pass
                         break
-                ss(d, "login_4_after_otp.png")
-                pg_post = d.execute_script("return document.body.innerText")[:300].lower()
-                L.info(f"  After OTP URL: {d.current_url[:100]}")
-                L.info(f"  After OTP page: {pg_post[:200]}")
+                    # announcement redirect still on accounts.zoho.com — keep waiting
+                    if "accounts.zoho.com" not in cur:
+                        break
+                # Switch to most-recent window if Zoho opened a new one
+                try:
+                    handles = d.window_handles
+                    if len(handles) > 1:
+                        d.switch_to.window(handles[-1])
+                        time.sleep(2)
+                except Exception: pass
+                try:
+                    ss(d, "login_4_after_otp.png")
+                    pg_post = d.execute_script("return document.body.innerText")[:300].lower()
+                    L.info(f"  After OTP URL: {d.current_url[:100]}")
+                    L.info(f"  After OTP page: {pg_post[:200]}")
+                    # OTP failed (error page or incorrect OTP) — fall back to password
+                    if ("accounts.zoho.com" in d.current_url and
+                            ("error occurred" in pg_post or "an error" in pg_post
+                             or "incorrect otp" in pg_post or "incorrect" in pg_post)):
+                        L.warning("  OTP submit failed (error page) — password fallback")
+                        for _psel in [
+                            "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'password')]",
+                            "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'password')]",
+                        ]:
+                            try:
+                                _pels = [e for e in d.find_elements(By.XPATH, _psel) if e.is_displayed()]
+                                if _pels:
+                                    d.execute_script("arguments[0].click();", _pels[0])
+                                    time.sleep(2); break
+                            except: pass
+                        try:
+                            pw_el2 = WebDriverWait(d, 10).until(
+                                EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
+                            pw_el2.clear()
+                            for ch in _zoho_pw: pw_el2.send_keys(ch); time.sleep(0.04)
+                            pw_el2.send_keys(Keys.ENTER)
+                            rw(6, 8)
+                            L.info(f"After password fallback URL: {d.current_url[:100]}")
+                        except Exception as _pwe:
+                            L.error(f"  Password fallback after OTP error failed: {_pwe}")
+                        return
+                except Exception as _e:
+                    L.warning(f"  After OTP: session read failed ({_e.__class__.__name__}) — continuing")
                 # Handle "Keep me signed in" / trust device prompt
                 for sel in [
                     "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'trust')]",
@@ -271,20 +382,39 @@ def login_if_needed(d, email=None, imap_pw=None):
                     pw_el = WebDriverWait(d, 8).until(
                         EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
                     pw_el.clear()
-                    for ch in PW: pw_el.send_keys(ch); time.sleep(0.04)
+                    for ch in _zoho_pw: pw_el.send_keys(ch); time.sleep(0.04)
                     pw_el.send_keys(Keys.ENTER)
                     rw(6, 8)
                 except: pass
+                _ensure_survey_dashboard(d)
         else:
             L.warning("  No OTP input field — trying password fallback")
+            # Zoho may show "smart sign-in" or "next" page — click through to password
+            for _fsel in [
+                "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'password')]",
+                "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'password')]",
+                "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'next')]",
+                "#nextbtn", "button[type='submit']",
+            ]:
+                try:
+                    by = By.XPATH if _fsel.startswith("//") else By.CSS_SELECTOR
+                    _fels = [e for e in d.find_elements(by, _fsel) if e.is_displayed()]
+                    if _fels:
+                        d.execute_script("arguments[0].click();", _fels[0])
+                        L.info(f"  Clicked to reach password: {_fsel[:50]}")
+                        time.sleep(3); break
+                except: pass
             try:
-                pw_el = WebDriverWait(d, 8).until(
+                pw_el = WebDriverWait(d, 10).until(
                     EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
                 pw_el.clear()
-                for ch in PW: pw_el.send_keys(ch); time.sleep(0.04)
+                for ch in _zoho_pw: pw_el.send_keys(ch); time.sleep(0.04)
                 pw_el.send_keys(Keys.ENTER)
                 rw(6, 8)
-            except: pass
+                L.info(f"  Password login done: {d.current_url[:80]}")
+            except Exception as _pfe:
+                L.error(f"  Password fallback failed: {_pfe}")
+            _ensure_survey_dashboard(d)
 
         ss(d, "login_5_result.png")
         L.info(f"After login URL: {d.current_url[:100]}")
@@ -2256,17 +2386,21 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                            subject, body_html, recipients,
                            from_name=None, reply_to=None,
                            send_mode='now', schedule_dt=None,
-                           survey_name=None):
+                           survey_name=None,
+                           btn_label=None, btn_color=None,
+                           header_title=None, header_bg=None, header_font=None,
+                           hide_survey_button=False):
     """
     Full Email Invite flow (discovered via Phase 7c exploration):
       1. Launch → click email_invites tile
       2. Draft handling: CONTINUE WITH DRAFT → back to Compose  OR  CREATE EMAIL
       3. Fill Subject (input#editorSubject / input[name='recipient_subject'])
-      4. Set body via Edit Message modal (Summernote .note-editable)
+      4. Set body + optional header/button style via Edit Message modal (Summernote)
       5. NEXT → Sender Info → fill sender_name → NEXT
       6. Recipients: input[name='recipient_input'] → type + Enter → NEXT
       7. Send/Schedule: click button#oneTimeDistribution CONTINUE → Send Now
     recipients: list or comma-separated string.
+    btn_label/btn_color/header_title/header_bg/header_font: set inside Edit Message modal.
     Returns True if sent/scheduled, False on failure.
     """
     if isinstance(recipients, list):
@@ -2276,8 +2410,11 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
 
     # ── Step 0: Rename survey + dept so title bar shows brand ─────────────
     if survey_name:
-        rename_survey(d, portal_id, dept_id, survey_id, survey_name)
-        rename_department(d, portal_id, dept_id, survey_name)
+        try:
+            rename_survey(d, portal_id, dept_id, survey_id, survey_name)
+            rename_department(d, portal_id, dept_id, survey_name)
+        except Exception as _re:
+            L.warning(f"rename step skipped (browser issue): {_re}")
 
     # ── Step 1: Navigate to launch ───────────────────────────────────────
     launch_url = (f"https://survey.zoho.com/survey/newui"
@@ -2298,6 +2435,15 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
 
     email_icon = None
     for _tile_try in range(5):
+        # Scroll down to reveal "Private audience" section (Email Invites is below the fold)
+        try:
+            d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
+            d.execute_script("window.scrollTo(0, 0);")
+            time.sleep(0.5)
+        except Exception:
+            pass
+
         _pg_check = (d.execute_script("return document.body.innerText") or "").lower()
 
         # Note: old class selector 'email_invites_zohosurvey_collector' finds an icon div (no text)
@@ -2305,8 +2451,32 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
         if not email_icon:
             # State B: "My Collectors" page — "Open" is a <div> near collector name
             # State A: cards page — "Create" is a <button.grayBtn> with child span near Email Invites div
+            # NOTE: Email Invites is in "Private audience" section, below the fold.
+            # Don't require r.width/height > 0 for Create buttons — they may be off-screen.
             email_icon = d.execute_script("""
-                // Strategy 0: "Add New Collector" button on My Collectors page → always creates fresh
+                // Strategy 0a: On My Collectors page, find and click the "Email Invites" collector row
+                // The row text is like "Email Invites by Zoho Survey collector" and has an email icon
+                // We need to click the row itself (not a span inside), by finding text nodes
+                var allEls = Array.from(document.querySelectorAll('*'));
+                for(var el of allEls){
+                    // Skip containers that are too large
+                    var rect = el.getBoundingClientRect();
+                    if(!el.offsetParent || rect.width > 600 || rect.height > 100 || rect.height < 10) continue;
+                    var t=(el.innerText||el.textContent||'').trim().toLowerCase();
+                    // Exact match: "email invites by zoho survey collector" or similar
+                    if(t==='email invites by zoho survey collector' || t==='email invites by zoho survey'){
+                        return el;
+                    }
+                }
+                // Strategy 0b: "CREATE EMAIL" already on page
+                for(var b0a of document.querySelectorAll('button')){
+                    var t0a=(b0a.innerText||b0a.textContent||'').trim().toUpperCase();
+                    var r0a=b0a.getBoundingClientRect();
+                    if(r0a.width>0&&r0a.height>0&&t0a==='CREATE EMAIL'){
+                        return b0a;
+                    }
+                }
+                // Strategy 0c: "Add New Collector" button (last resort)
                 for(var b0 of document.querySelectorAll('button,a,div[role="button"]')){
                     var t0=(b0.innerText||b0.textContent||'').trim().toLowerCase();
                     var r0=b0.getBoundingClientRect();
@@ -2316,6 +2486,7 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                 }
                 // Strategy 1: find "Email Invites" div/text, walk up to card, find Create button
                 // (prefer 'create' over 'open' — 'open' reuses old collector with old name)
+                // Email Invites is in Private audience section — may not be visible in viewport
                 var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
                 var node; var openBtn = null;
                 while (node = walker.nextNode()) {
@@ -2324,19 +2495,19 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                     var el = node.parentElement;
                     for (var d2=0; d2<12&&el; d2++) {
                         var cardText = (el.innerText||el.textContent||'').toLowerCase();
-                        if (cardText.includes('email invites') && (cardText.includes('by zoho survey') || cardText.includes('zoho survey'))) {
-                            // Prefer Create over Open
+                        if (cardText.includes('email invites') && (cardText.includes('by zoho survey') || cardText.includes('zoho survey') || cardText.includes('share'))) {
+                            // Prefer Create over Open — don't require visibility (element may be below fold)
                             for (var b of el.querySelectorAll('button')) {
                                 var bt = (b.innerText||b.textContent||'').trim().toLowerCase();
+                                if (bt === 'create') return b;
                                 var r = b.getBoundingClientRect();
-                                if (bt === 'create' && r.width > 0 && r.height > 0) return b;
                                 if (bt === 'open' && r.width > 0 && r.height > 0) openBtn = b;
+                                else if (bt === 'open' && !openBtn) openBtn = b;
                             }
                             // Fallback: div/span with Open text (My Collectors page — last resort)
                             for (var b of el.querySelectorAll('div,span')) {
                                 var bt = (b.innerText||b.textContent||'').trim().toLowerCase();
-                                var r = b.getBoundingClientRect();
-                                if (bt === 'open' && r.width > 0 && r.height > 0 && !openBtn) openBtn = b;
+                                if (bt === 'open' && !openBtn) openBtn = b;
                             }
                         }
                         el = el.parentElement;
@@ -2345,16 +2516,29 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                 // If only Open found (no Create), return it as last resort
                 if(openBtn) return openBtn;
                 // Strategy 2: find all buttons with class grayBtn and Create text near Email Invites
-                for (var b2 of document.querySelectorAll('button.grayBtn')) {
+                for (var b2 of document.querySelectorAll('button.grayBtn,button')) {
                     var bt2 = (b2.innerText||b2.textContent||'').trim().toLowerCase();
                     if (bt2 !== 'create') continue;
-                    var r2 = b2.getBoundingClientRect();
-                    if (r2.width === 0 || r2.height === 0) continue;
                     var p = b2.parentElement;
                     for (var d3=0; d3<10&&p; d3++) {
                         var pt = (p.innerText||p.textContent||'').toLowerCase();
                         if (pt.includes('email invites')) return b2;
                         p = p.parentElement;
+                    }
+                }
+                // Strategy 3: find Email Invites heading, then next Create button sibling/cousin
+                var allText = document.querySelectorAll('h3,h4,p,div,span,label');
+                for(var tx of allText){
+                    var tval=(tx.innerText||tx.textContent||'').trim().toLowerCase();
+                    if(tval!=='email invites' && !tval.startsWith('email invites')) continue;
+                    // Found Email Invites label — look in parent for Create button
+                    var par=tx.parentElement;
+                    for(var up=0;up<8&&par;up++){
+                        for(var cb of par.querySelectorAll('button')){
+                            var cbt=(cb.innerText||cb.textContent||'').trim().toLowerCase();
+                            if(cbt==='create') return cb;
+                        }
+                        par=par.parentElement;
                     }
                 }
                 return null;
@@ -2387,8 +2571,63 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
     for _wi in range(12):
         time.sleep(1)
         _pg_now = (d.execute_script("return document.body.innerText") or "").lower()
-        if any(x in _pg_now for x in ["create email", "create new", "editorsubject", "composer", "subject", "my collectors"]):
+        if any(x in _pg_now for x in ["create email", "create new", "editorsubject", "composer", "subject", "my collectors", "audience", "email invites"]):
             break
+    # If "Add New Collector" opened a "Create Collector" page with audience options
+    _pg_now2 = (d.execute_script("return document.body.innerText") or "").lower()
+    if "audience" in _pg_now2 or ("create collector" in _pg_now2) or ("based on your audience" in _pg_now2):
+        L.info("'Create Collector' audience page detected — going back to My Collectors to use existing one")
+        # Option A: click "← My Collectors" link to go back
+        _back_mc = d.execute_script("""
+            for(var el of document.querySelectorAll('a,button,span,div')){
+                var t=(el.innerText||el.textContent||'').trim().toLowerCase();
+                if((t==='my collectors'||t.includes('my collectors'))&&el.offsetParent) return el;
+            } return null;
+        """)
+        if _back_mc:
+            L.info("Clicking '← My Collectors' to go back")
+            d.execute_script("arguments[0].click();", _back_mc)
+            for _wi2 in range(10):
+                time.sleep(1)
+                _pg_now3 = (d.execute_script("return document.body.innerText") or "").lower()
+                if "create email" in _pg_now3 or "add new collector" in _pg_now3:
+                    break
+        else:
+            # Option B: scroll to Private audience section and find Email Invites Create
+            L.info("No back link — scrolling to find Email Invites Create in audience page")
+            d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+            _ei_btn = d.execute_script("""
+                // Find "Email Invites by Zoho Survey" card's Create button (in Private audience section)
+                var allBtns = Array.from(document.querySelectorAll('button'));
+                for(var b of allBtns){
+                    var t=(b.innerText||b.textContent||'').trim();
+                    if(t.toUpperCase() !== 'CREATE') continue;
+                    // Check if this Create button is near "Email Invites" + "Zoho Survey" text
+                    var p = b.parentElement;
+                    for(var d2=0; d2<8&&p; d2++){
+                        var pt=(p.innerText||p.textContent||'').toLowerCase();
+                        if(pt.includes('email invites') && (pt.includes('zoho survey')||pt.includes('private'))){
+                            return b;
+                        }
+                        p = p.parentElement;
+                    }
+                }
+                return null;
+            """)
+            if _ei_btn:
+                d.execute_script("arguments[0].scrollIntoView({block:'center'});", _ei_btn)
+                time.sleep(0.5)
+                _ei_txt = d.execute_script("return (arguments[0].innerText||'').trim()", _ei_btn)
+                L.info(f"Clicking Email Invites Create: {_ei_txt!r}")
+                d.execute_script("arguments[0].click();", _ei_btn)
+                for _wi2 in range(10):
+                    time.sleep(1)
+                    _pg_now3 = (d.execute_script("return document.body.innerText") or "").lower()
+                    if any(x in _pg_now3 for x in ["create email", "editorsubject", "subject", "my collectors"]):
+                        break
+            else:
+                L.warning("No Email Invites Create button found on audience page")
     ss(d, "ci_02_icon.png")
     _pg_after_click = (d.execute_script("return document.body.innerText") or "")
     L.info(f"After Email Invites click — URL: {d.current_url[:80]}")
@@ -2612,9 +2851,13 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
     else:
         L.warning("Subject field not found")
 
-    # ── Step 5: Set Body (Summernote via Edit Message modal) ─────────────
-    L.info("Setting message body...")
-    body_set = _set_email_body(d, body_html)
+    # ── Step 5: Set Body + header/button style (Summernote via Edit Message modal) ──
+    L.info("Setting message body + collector style...")
+    body_set = _set_email_body(d, body_html,
+                               btn_label=btn_label, btn_color=btn_color,
+                               header_title=header_title,
+                               header_bg=header_bg, header_font=header_font,
+                               hide_survey_button=hide_survey_button)
     L.info(f"Body set: {body_set}")
     ss(d, "ci_05_body.png")
 
@@ -2847,12 +3090,17 @@ def _click_next_btn(d):
     return False
 
 
-def _set_email_body(d, html_body):
+def _set_email_body(d, html_body, btn_label=None, btn_color=None,
+                    header_title=None, header_bg=None, header_font=None,
+                    hide_survey_button=False):
     """
     Set email body via Zoho Survey's Summernote editor.
     Confirmed flow (Phase 7c): Click 'Edit Message' DIV → modal opens with
     .note-editable[contenteditable='true'] → set innerHTML → click OK
     (button[name='saveTemplateButton']).
+
+    Also optionally sets header title, colors, and button label/color in the same
+    modal before clicking OK (all params are hex WITHOUT #).
     """
     # Step A: Click "Edit Message" to open the modal
     em = d.execute_script("""
@@ -2878,19 +3126,373 @@ def _set_email_body(d, html_body):
         return null;
     """)
     if note_ed:
-        L.info("Found Summernote .note-editable — setting content via execCommand")
-        # Use execCommand insertHTML which Summernote respects, keeping img tags intact
+        L.info("Found Summernote .note-editable — setting content via innerHTML")
+        # Use innerHTML directly — bypasses Summernote sanitizer which strips
+        # inline styles (background-color, padding) from <a> tags via execCommand.
         d.execute_script("""
             arguments[0].focus();
-            // Clear existing content
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
-            // Insert HTML — execCommand preserves img tags better than innerHTML
-            document.execCommand('insertHTML', false, arguments[1]);
+            arguments[0].innerHTML = arguments[1];
             arguments[0].dispatchEvent(new Event('input',  {bubbles:true}));
             arguments[0].dispatchEvent(new Event('change', {bubbles:true}));
         """, note_ed, html_body)
         time.sleep(1)
+
+        # Step B1b: Hide survey button if requested (switch to Question Embed)
+        if hide_survey_button:
+            switched = d.execute_script("""
+                // Find 'Question Embed' tab/button in the modal and click it
+                for(var el of document.querySelectorAll('button,a,div,span,label')){
+                    var t = (el.innerText||el.textContent||'').trim();
+                    if(t === 'Question Embed' && el.offsetParent){
+                        el.click();
+                        return 'clicked:' + t;
+                    }
+                }
+                return 'not_found';
+            """)
+            L.info(f"hide_survey_button: {switched}")
+            time.sleep(1)
+
+        # Step B2: Set header title, colors, and button label/color if requested
+        # These are set BEFORE clicking OK so they save in one action
+        def _ember_set(inp, value):
+            """Set input via React/Ember native setter so the framework registers the change."""
+            d.execute_script("""
+                var el = arguments[0]; var val = arguments[1];
+                var nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                    window.HTMLInputElement.prototype, 'value').set;
+                nativeInputValueSetter.call(el, val);
+                el.dispatchEvent(new Event('input',  {bubbles:true}));
+                el.dispatchEvent(new Event('change', {bubbles:true}));
+                el.dispatchEvent(new KeyboardEvent('keyup',  {bubbles:true}));
+            """, inp, value)
+            time.sleep(0.3)
+
+        def _kbd_input(inp, value):
+            """Set input field via keyboard (required for Ember.js controlled inputs)."""
+            d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].focus(); arguments[0].click();", inp)
+            time.sleep(0.2)
+            inp.send_keys(Keys.CONTROL + "a")
+            inp.send_keys(Keys.DELETE)
+            time.sleep(0.1)
+            inp.send_keys(value)
+            time.sleep(0.2)
+            # Also fire native setter so Ember/React registers the value
+            _ember_set(inp, value)
+
+        def _get_hex_input(index):
+            """Find color hex input by index. Multi-strategy: hex-value match,
+            then swatch-adjacent, then short-maxlength, then any short visible input."""
+            return d.execute_script(f"""
+                var inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+
+                // Strategy 1: value is a 6-char hex (with or without #)
+                var hexInputs = inputs.filter(function(i){{
+                    return /^#?[0-9a-fA-F]{{6}}$/.test((i.value||'').trim()) && i.offsetParent;
+                }});
+                if(hexInputs[{index}]) return hexInputs[{index}];
+
+                // Strategy 2: inputs adjacent to a color swatch div
+                var swatchInputs = [];
+                for(var inp of inputs){{
+                    if(!inp.offsetParent) continue;
+                    var p = inp.parentElement;
+                    for(var depth=0; depth<6 && p; depth++){{
+                        var cls=(p.className||'').toLowerCase();
+                        if(cls.includes('color')||cls.includes('swatch')||cls.includes('picker')){{
+                            swatchInputs.push(inp); break;
+                        }}
+                        p = p.parentElement;
+                    }}
+                }}
+                if(swatchInputs[{index}]) return swatchInputs[{index}];
+
+                // Strategy 3: maxlength=6 or maxlength=7 (typical for hex color inputs)
+                var mlInputs = inputs.filter(function(i){{
+                    var ml = parseInt(i.getAttribute('maxlength')||'99');
+                    return i.offsetParent && ml >= 6 && ml <= 7;
+                }});
+                if(mlInputs[{index}]) return mlInputs[{index}];
+
+                // Strategy 4: short visible text inputs (width < 120px) — likely color fields
+                var shortInputs = inputs.filter(function(i){{
+                    if(!i.offsetParent) return false;
+                    var r = i.getBoundingClientRect();
+                    return r.width > 0 && r.width < 120;
+                }});
+                if(shortInputs[{index}]) return shortInputs[{index}];
+
+                return null;
+            """)
+
+        if header_title:
+            ti = d.execute_script("return document.querySelector('input[name=\"title_input\"]');")
+            if ti:
+                _kbd_input(ti, header_title)
+                L.info(f"Header title set: {d.execute_script('return arguments[0].value;', ti)!r}")
+
+        if btn_label is not None:
+            bi = d.execute_script("return document.querySelector('input[name=\"button_input\"]');")
+            if bi:
+                _kbd_input(bi, btn_label)
+                L.info(f"Button label set: {d.execute_script('return arguments[0].value;', bi)!r}")
+
+        def _set_color_via_picker(hex_bare, label):
+            """
+            Open the color picker popup for a hex input field and set the color.
+            hex_bare: 6-char hex WITHOUT # (e.g. 'DB0011')
+            label: log label string
+
+            Strategy:
+            1. Find the hex input field (current value matches known default or section context)
+            2. Find its adjacent color swatch div/span
+            3. Click swatch → color picker popup opens
+            4. Enter hex in picker input field
+            5. Press TAB to sync the canvas gradient from the typed hex
+            6. Click OK to confirm
+
+            Returns True on success, False on failure.
+            """
+            # Determine which hex input to target based on label
+            if 'header' in label.lower():
+                # Header section: find input near 'title name'/'alignment', or default dark color
+                target_inp = d.execute_script("""
+                    var inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                    for(var inp of inputs){
+                        if(!inp.offsetParent) continue;
+                        var v=(inp.value||'').trim();
+                        if(!/^#?[0-9a-fA-F]{6}$/.test(v)) continue;
+                        var vc=v.replace('#','').toLowerCase();
+                        if(vc==='ffffff'||vc==='fff') continue;
+                        var p=inp.parentElement;
+                        for(var d2=0;d2<10&&p;d2++){
+                            var t=(p.innerText||p.textContent||'').toLowerCase();
+                            if(t.includes('title name')||t.includes('alignment')) return inp;
+                            p=p.parentElement;
+                        }
+                    }
+                    // Fallback: value is default header dark color
+                    for(var inp of inputs){
+                        if(!inp.offsetParent) continue;
+                        var v=(inp.value||'').trim().toUpperCase().replace('#','');
+                        if(v==='282828'||v==='1A1A1A'||v==='000000') return inp;
+                    }
+                    return null;
+                """)
+            else:
+                # Button/survey link section: scroll first, then find button color input
+                d.execute_script("""
+                    var panels = document.querySelectorAll(
+                        '.zs-modal-body,[class*="modal-body"],[class*="modalBody"],[class*="panel-body"],.rightPanel,.right-panel');
+                    for(var p of panels){if(p.scrollHeight>200){p.scrollTop=p.scrollHeight;break;}}
+                """)
+                time.sleep(0.5)
+                target_inp = d.execute_script("""
+                    var inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                    // Strategy A: any known Zoho default button colors (pink/red variants)
+                    var knownDefaults = ['F93468','FF3468','F03468','E91E63','FF4081','FF0066','FF1744','D81B60'];
+                    for(var inp of inputs){
+                        if(!inp.offsetParent) continue;
+                        var v=(inp.value||'').trim().toUpperCase().replace('#','');
+                        if(knownDefaults.indexOf(v)>=0) return inp;
+                    }
+                    // Strategy B: last hex input not near 'title name' / not white / not header
+                    var candidates=inputs.filter(function(i){
+                        if(!i.offsetParent) return false;
+                        var v=(i.value||'').trim();
+                        if(!/^#?[0-9a-fA-F]{6}$/.test(v)) return false;
+                        var vc=v.replace('#','').toLowerCase();
+                        if(vc==='ffffff'||vc==='fff') return false;
+                        var p=i.parentElement;
+                        for(var d2=0;d2<8&&p;d2++){
+                            if((p.innerText||'').toLowerCase().includes('title name')) return false;
+                            if((p.innerText||'').toLowerCase().includes('alignment')) return false;
+                            p=p.parentElement;
+                        }
+                        return true;
+                    });
+                    return candidates.length>0 ? candidates[candidates.length-1] : null;
+                """)
+
+            if not target_inp:
+                L.warning(f"{label}: hex input not found")
+                return False
+
+            cur = d.execute_script('return arguments[0].value', target_inp)
+            L.info(f"{label}: hex input found, current val: {cur!r}")
+
+            # Force value early via ember — works even if picker fails
+            _ember_set(target_inp, '#' + hex_bare)
+            time.sleep(0.2)
+            L.info(f"{label}: early ember_set to #{hex_bare}")
+
+            # Find the color swatch adjacent to this input
+            swatch = d.execute_script("""
+                var inp = arguments[0];
+                var parent = inp.parentElement;
+                for(var d2=0; d2<5 && parent; d2++){
+                    var swatches = parent.querySelectorAll('div[style*="background"], span[style*="background"], div[class*="color"], span[class*="color"]');
+                    for(var s of swatches){
+                        if(s.offsetParent && s.offsetWidth > 5 && s.offsetWidth < 60) return s;
+                    }
+                    parent = parent.parentElement;
+                }
+                return null;
+            """, target_inp)
+
+            sw_info = d.execute_script("""
+                var s=arguments[0];
+                return s ? s.tagName+'|'+s.className : 'no swatch';
+            """, swatch)
+            L.info(f"{label}: swatch={sw_info!r}")
+
+            if swatch:
+                # Click swatch to open the color picker popup
+                d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", swatch)
+                time.sleep(1.2)
+                ss(d, f"ci_{label}_picker_open.png")
+
+                # Convert hex to HSV for canvas/slider positioning
+                r_val = int(hex_bare[0:2], 16) / 255.0
+                g_val = int(hex_bare[2:4], 16) / 255.0
+                b_val = int(hex_bare[4:6], 16) / 255.0
+                cmax = max(r_val, g_val, b_val)
+                cmin = min(r_val, g_val, b_val)
+                delta = cmax - cmin
+                # Hue 0-360
+                if delta == 0:
+                    hue = 0
+                elif cmax == r_val:
+                    hue = 60 * (((g_val - b_val) / delta) % 6)
+                elif cmax == g_val:
+                    hue = 60 * (((b_val - r_val) / delta) + 2)
+                else:
+                    hue = 60 * (((r_val - g_val) / delta) + 4)
+                sat = 0 if cmax == 0 else (delta / cmax)  # HSV saturation
+                val_v = cmax  # HSV value
+
+                L.info(f"{label}: HSV = H:{hue:.1f} S:{sat:.3f} V:{val_v:.3f}")
+
+                r_int = int(hex_bare[0:2], 16)
+                g_int = int(hex_bare[2:4], 16)
+                b_int = int(hex_bare[4:6], 16)
+
+                # Strategy A: type hex directly into the hex text input inside the picker
+                picker_hex_inp = d.execute_script("""
+                    var inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                    for(var inp of inputs){
+                        if(!inp.offsetParent) continue;
+                        var v=(inp.value||'').trim().replace('#','').toUpperCase();
+                        if(/^[0-9A-F]{6}$/.test(v)) return inp;
+                    }
+                    // fallback: any short text input visible inside picker
+                    var allInps = Array.from(document.querySelectorAll('input'));
+                    for(var inp of allInps){
+                        if(!inp.offsetParent) continue;
+                        var p=inp.parentElement;
+                        for(var d2=0;d2<8&&p;d2++){
+                            var cls=(p.className||'').toLowerCase();
+                            if(cls.includes('picker')||cls.includes('colorpicker')){
+                                if((inp.maxLength>=6&&inp.maxLength<=7)||inp.type==='text') return inp;
+                            }
+                            p=p.parentElement;
+                        }
+                    }
+                    return null;
+                """)
+
+                if picker_hex_inp:
+                    # Type hex via keyboard — most reliable for Zoho picker
+                    d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].focus(); arguments[0].click();", picker_hex_inp)
+                    time.sleep(0.2)
+                    picker_hex_inp.send_keys(Keys.CONTROL + "a")
+                    picker_hex_inp.send_keys(Keys.DELETE)
+                    time.sleep(0.1)
+                    picker_hex_inp.send_keys(hex_bare)
+                    time.sleep(0.2)
+                    picker_hex_inp.send_keys(Keys.TAB)  # trigger Zoho to sync canvas from hex
+                    time.sleep(0.4)
+                    L.info(f"{label}: hex typed in picker field: {hex_bare}")
+                    # Also fire ember setter to be safe
+                    _ember_set(picker_hex_inp, hex_bare)
+                    time.sleep(0.2)
+                else:
+                    # Strategy B: canvas MouseEvents (HSV click)
+                    canvas_result = d.execute_script("""
+                        var hue=arguments[0], sat=arguments[1], val=arguments[2];
+                        var canvases = Array.from(document.querySelectorAll('canvas'));
+                        var mainCanvas = null, hueCanvas = null;
+                        for(var c of canvases){
+                            if(!c.offsetParent) continue;
+                            if(c.offsetWidth > 80 && c.offsetHeight > 80){ mainCanvas=c; continue; }
+                            if(c.offsetWidth > 80 && c.offsetHeight < 30){ hueCanvas=c; }
+                        }
+                        if(!mainCanvas) return 'no canvas';
+                        if(hueCanvas){
+                            var hr=hueCanvas.getBoundingClientRect();
+                            var hx=hr.left+(hue/360)*hr.width, hy=hr.top+hr.height/2;
+                            hueCanvas.dispatchEvent(new MouseEvent('mousedown',{clientX:hx,clientY:hy,bubbles:true}));
+                            hueCanvas.dispatchEvent(new MouseEvent('mousemove',{clientX:hx,clientY:hy,bubbles:true}));
+                            hueCanvas.dispatchEvent(new MouseEvent('mouseup',{clientX:hx,clientY:hy,bubbles:true}));
+                        }
+                        var cr=mainCanvas.getBoundingClientRect();
+                        var cx=cr.left+sat*cr.width, cy=cr.top+(1-val)*cr.height;
+                        mainCanvas.dispatchEvent(new MouseEvent('mousedown',{clientX:cx,clientY:cy,bubbles:true}));
+                        mainCanvas.dispatchEvent(new MouseEvent('mousemove',{clientX:cx,clientY:cy,bubbles:true}));
+                        mainCanvas.dispatchEvent(new MouseEvent('mouseup',{clientX:cx,clientY:cy,bubbles:true}));
+                        return 'canvas:'+mainCanvas.offsetWidth+'x'+mainCanvas.offsetHeight;
+                    """, hue, sat, val_v)
+                    L.info(f"{label}: canvas fallback: {canvas_result!r}")
+                    time.sleep(0.4)
+
+                ss(d, f"ci_{label}_picker_set.png")
+
+                # Click OK to confirm
+                ok_btn = d.execute_script("""
+                    var btns = Array.from(document.querySelectorAll('button,div[class*="ok"],span[class*="ok"]'));
+                    for(var b of btns){
+                        if(b.offsetParent && (b.innerText||'').trim().toUpperCase()==='OK') return b;
+                    }
+                    return null;
+                """)
+                if ok_btn:
+                    L.info(f"{label}: clicking OK")
+                    d.execute_script("arguments[0].click();", ok_btn)
+                    time.sleep(0.7)
+                else:
+                    L.warning(f"{label}: OK button not found")
+
+                val_after = d.execute_script('return arguments[0].value', target_inp)
+                L.info(f"{label} after picker: {val_after!r}")
+
+                # Safety: if picker didn't update the target field, force via _ember_set
+                if val_after.replace('#','').upper() != hex_bare.upper():
+                    L.warning(f"{label}: picker mismatch ({val_after!r}), forcing _ember_set")
+                    _ember_set(target_inp, '#' + hex_bare)
+                    time.sleep(0.2)
+
+                ss(d, f"ci_{label}_after.png")
+                return True
+            else:
+                L.info(f"{label}: no swatch found — forcing via _ember_set")
+                _ember_set(target_inp, '#' + hex_bare)
+                target_inp.send_keys(Keys.TAB)
+                time.sleep(0.3)
+                return True
+
+        if header_bg:
+            _set_color_via_picker(header_bg.lstrip('#').upper(), 'header_bg')
+            # Click somewhere neutral to dismiss any lingering picker state before next op
+            d.execute_script("""
+                var modal = document.querySelector('.zs-modal-body,[class*="modal-body"],[class*="modalBody"]');
+                if(modal) modal.click();
+            """)
+            time.sleep(0.5)
+
+        if btn_color:
+            ss(d, "ci_btn_color_modal.png")
+            _set_color_via_picker(btn_color.lstrip('#').upper(), 'btn_color')
+            ss(d, "ci_btn_color_after_tab.png")
 
         # Step C: Click OK to close modal and save
         ok_btn = d.execute_script(
@@ -3070,6 +3672,278 @@ def main():
     finally:
         try: d.quit()
         except: pass
+
+def set_collector_button_style(d, portal_id, dept_id, survey_id, btn_label, btn_color=None,
+                               header_title=None, header_bg=None, header_font=None,
+                               body_text=None):
+    """
+    Launch → Email Invites collector → Edit Message → set all header + button styles.
+
+    Params:
+      btn_label   : button text, e.g. "Continue"
+      btn_color   : hex WITHOUT #, e.g. "db0011" — button background
+      header_title: header title text, e.g. "HSBC"
+      header_bg   : hex WITHOUT # — header background color (index 0)
+      header_font : hex WITHOUT # — header font color (index 1)
+      body_text   : placeholder body text (required by Zoho to save); defaults to "Please complete the survey."
+
+    Color input order in modal (among inputs matching /^#[0-9a-fA-F]{6}$/):
+      [0] header background, [1] header font, [2] button background, [3] button font
+    """
+    launch_url = (f"https://survey.zoho.com/survey/newui"
+                  f"#/portal/{portal_id}/department/{dept_id}"
+                  f"/survey/{survey_id}/launch")
+    L.info(f"set_collector_button_style: label={btn_label!r} btn_color={btn_color!r} "
+           f"header_title={header_title!r} header_bg={header_bg!r}")
+    d.get("https://survey.zoho.com/survey/newui"); rw(2, 3)
+    d.get(launch_url); rw(5, 7)
+
+    # Step 1: Navigate into the first Email collector to expose "Edit Message"
+    # On launch page → "My Collectors" list → click first collector row → Compose Email page
+    collector_entered = d.execute_script("""
+        // Try clicking the first collector name/row to enter Compose Email screen
+        var links = Array.from(document.querySelectorAll('a, button, .pointerCursor, [role="link"]'));
+        // Look for "Email Invites" or "HSBC" or any collector link
+        for(var el of links){
+            var t = (el.innerText||el.textContent||'').trim();
+            if(t && t.length > 3 && t.length < 80 && el.offsetParent &&
+               !t.match(/^(My Collectors|Create|Add|EDITOR|SETTINGS|THEMES|HUB|PUBLISH|PREVIEW|Language|Default)$/i)){
+                // Try collector rows — skip nav items
+                var cls = el.className || '';
+                if(cls.includes('collector') || cls.includes('Collector') ||
+                   el.closest('.collector-list-item') || el.closest('[class*="collector"]') ||
+                   el.closest('li') || el.tagName === 'A'){
+                    el.click(); return 'clicked_collector:' + t.slice(0,30);
+                }
+            }
+        }
+        return null;
+    """)
+    L.info(f"Collector entry click: {collector_entered!r}")
+    if collector_entered:
+        rw(3, 4)
+
+    # Step 2: Click "Edit Message" — visible in Compose Email page as a link/button
+    edit_clicked = d.execute_script("""
+        var all = Array.from(document.querySelectorAll('a, button, span, div'));
+        for(var el of all){
+            var t = (el.innerText||el.textContent||'').trim().toLowerCase();
+            if((t === 'edit message' || t === 'edit') && el.offsetParent){
+                el.click(); return 'clicked:' + t;
+            }
+        }
+        // Try class-based: pencil/edit icon near message area
+        var pencil = document.querySelector('.mT3.pull-right.pointerCursor, [class*="edit"][class*="message"], .editMessage');
+        if(pencil && pencil.offsetParent){ pencil.click(); return 'clicked_class:' + pencil.className; }
+        return null;
+    """)
+    L.info(f"Edit Message click: {edit_clicked!r}")
+    if not edit_clicked:
+        # Last resort: navigate back to launch page and try again after a delay
+        d.get(launch_url); rw(6, 8)
+        edit_clicked = d.execute_script("""
+            var all = Array.from(document.querySelectorAll('a, button, span, [class*="edit"]'));
+            for(var el of all){
+                var t = (el.innerText||el.textContent||'').trim().toLowerCase();
+                if((t === 'edit message' || t === 'edit') && el.offsetParent){
+                    el.click(); return 'clicked2:' + t;
+                }
+            }
+            return null;
+        """)
+        L.info(f"Edit Message retry: {edit_clicked!r}")
+        if not edit_clicked:
+            L.warning("Edit Message button not found after retry")
+            return False
+    rw(3, 4)
+
+    def _set_text_input(selector_js, value, name="field"):
+        """Set a text input using keyboard events (required for Ember.js controlled inputs)."""
+        inp = d.execute_script(f"return {selector_js};")
+        if not inp:
+            L.warning(f"{name} input not found")
+            return False
+        d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].focus(); arguments[0].click();", inp)
+        time.sleep(0.3)
+        inp.send_keys(Keys.CONTROL + "a")
+        inp.send_keys(Keys.DELETE)
+        time.sleep(0.1)
+        inp.send_keys(value)
+        time.sleep(0.3)
+        actual = d.execute_script("return arguments[0].value;", inp)
+        L.info(f"{name} set to: {actual!r}")
+        return True
+
+    def _set_color_input(index, hex_val, name="color"):
+        """Set a hex color input at given index among color-pattern inputs in the modal.
+        Searches for: inputs matching #RRGGBB pattern, OR inputs near a color swatch/picker,
+        OR any short text inputs that look like color fields."""
+        hex_with_hash = '#' + hex_val.lstrip('#')
+        hex_no_hash = hex_val.lstrip('#')
+        color_inp = d.execute_script(f"""
+            var inputs = Array.from(document.querySelectorAll('input[type="text"], input[type="color"]'));
+            // Strategy 1: inputs whose value matches a hex color pattern (with or without #)
+            var hexInputs = inputs.filter(function(i){{
+                var v = (i.value || '').trim();
+                return /^#?[0-9a-fA-F]{{6}}$/.test(v) && i.offsetParent;
+            }});
+            if(hexInputs[{index}]) return hexInputs[{index}];
+            // Strategy 2: inputs near a color-swatch div (Zoho uses color preview boxes)
+            var swatchInputs = [];
+            for(var inp of inputs){{
+                if(!inp.offsetParent) continue;
+                var p = inp.parentElement;
+                for(var d2=0; d2<5&&p; d2++){{
+                    if(p.querySelector('[class*="color"],[class*="swatch"],[class*="picker"]') ||
+                       getComputedStyle(p).backgroundColor.includes('rgb(')){{
+                        swatchInputs.push(inp); break;
+                    }}
+                    p = p.parentElement;
+                }}
+            }}
+            if(swatchInputs[{index}]) return swatchInputs[{index}];
+            // Strategy 3: short text inputs (max 10 chars, likely a hex field)
+            var shortInputs = inputs.filter(function(i){{
+                return i.offsetParent && (i.maxLength <= 10 || i.size <= 10 ||
+                    (i.getAttribute('maxlength') && parseInt(i.getAttribute('maxlength')) <= 10));
+            }});
+            if(shortInputs[{index}]) return shortInputs[{index}];
+            return null;
+        """)
+        if not color_inp:
+            L.warning(f"{name} color input (index {index}) not found — trying JS direct set")
+            # Last resort: try to set color by JS on all short inputs
+            set_result = d.execute_script(f"""
+                var inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                var short = inputs.filter(function(i){{ return i.offsetParent && i.getBoundingClientRect().width < 150; }});
+                var el = short[{index}];
+                if(!el) return 'not_found';
+                el.focus(); el.value = '{hex_with_hash}';
+                el.dispatchEvent(new Event('input', {{bubbles:true}}));
+                el.dispatchEvent(new Event('change', {{bubbles:true}}));
+                return 'js_set:' + el.value;
+            """)
+            L.info(f"{name} JS fallback: {set_result}")
+            return bool(set_result and 'not_found' not in str(set_result))
+        d.execute_script("arguments[0].scrollIntoView({block:'center'}); arguments[0].focus(); arguments[0].click();", color_inp)
+        time.sleep(0.2)
+        color_inp.send_keys(Keys.CONTROL + "a")
+        color_inp.send_keys(Keys.DELETE)
+        # Try with # prefix first, then without
+        color_inp.send_keys(hex_with_hash)
+        time.sleep(0.3)
+        actual = d.execute_script("return arguments[0].value;", color_inp)
+        # If value not set, try without #
+        if not actual or actual.strip() == '':
+            color_inp.send_keys(Keys.CONTROL + "a")
+            color_inp.send_keys(Keys.DELETE)
+            color_inp.send_keys(hex_no_hash)
+            time.sleep(0.2)
+            actual = d.execute_script("return arguments[0].value;", color_inp)
+        color_inp.send_keys(Keys.TAB)
+        time.sleep(0.5)
+        # Trigger Ember change events via JS
+        d.execute_script("""
+            arguments[0].dispatchEvent(new Event('input', {bubbles:true}));
+            arguments[0].dispatchEvent(new Event('change', {bubbles:true}));
+        """, color_inp)
+        time.sleep(0.3)
+        actual = d.execute_script("return arguments[0].value;", color_inp)
+        L.info(f"{name} (index {index}) set to: {actual!r}")
+        return True
+
+    # 1. Header title
+    if header_title:
+        _set_text_input('document.querySelector(\'input[name="title_input"]\')', header_title, "header_title")
+
+    # 2. Header background color (index 0)
+    if header_bg:
+        _set_color_input(0, header_bg.lstrip('#'), "header_bg")
+
+    # 3. Header font color (index 1)
+    if header_font:
+        _set_color_input(1, header_font.lstrip('#'), "header_font")
+
+    # 4. Button label
+    _set_text_input('document.querySelector(\'input[name="button_input"]\')', btn_label, "button_label")
+
+    # 5. Button background color (index 2)
+    if btn_color:
+        _set_color_input(2, btn_color.lstrip('#'), "button_bg")
+
+    # 6. Ensure body is not empty (Zoho rejects save with empty body)
+    body_placeholder = body_text or "Please complete the survey."
+    d.execute_script("""
+        var editor = document.querySelector('.note-editable');
+        if (editor && (!editor.innerText || editor.innerText.trim() === '')) {
+            editor.innerHTML = '<p>' + arguments[0] + '</p>';
+            editor.dispatchEvent(new Event('input', {bubbles: true}));
+        }
+    """, body_placeholder)
+    time.sleep(0.3)
+
+    # 7. Click OK button using ActionChains (JS .click() doesn't trigger Ember action)
+    ok_btn = d.execute_script("""
+        for(var b of document.querySelectorAll('button')){
+            if(b.innerText.trim()==='OK'&&b.offsetParent) return b;
+        } return null;
+    """)
+    if ok_btn:
+        d.execute_script("arguments[0].scrollIntoView({block:'center'});", ok_btn)
+        time.sleep(0.3)
+        from selenium.webdriver.common.action_chains import ActionChains
+        ActionChains(d).move_to_element(ok_btn).click(ok_btn).perform()
+        rw(2, 3)
+        ss(d, "collector_btn_saved.png")
+        L.info("Edit Message OK clicked — collector message style saved")
+    else:
+        L.warning("OK button not found in modal")
+        return False
+    return True
+
+
+def build_redirect_html(brand_name, logo_url, message, target_url, delay_sec=3, bg_color="#003366", text_color="#ffffff"):
+    """
+    Build a branded intermediate redirect HTML page.
+    Shows logo + thank-you message for delay_sec seconds then auto-redirects to target_url.
+    Returns HTML string ready to save to a .html file or serve inline.
+    """
+    logo_block = ""
+    if logo_url:
+        logo_block = f'<img src="{logo_url}" alt="{brand_name}" style="max-height:80px;max-width:260px;margin-bottom:24px;object-fit:contain;">'
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{brand_name}</title>
+<meta http-equiv="refresh" content="{delay_sec};url={target_url}">
+<style>
+  *{{margin:0;padding:0;box-sizing:border-box}}
+  body{{background:{bg_color};display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
+  .card{{text-align:center;padding:48px 40px;max-width:520px}}
+  .checkmark{{font-size:56px;margin-bottom:20px}}
+  h1{{color:{text_color};font-size:22px;font-weight:600;margin-bottom:12px}}
+  p{{color:{text_color};opacity:.85;font-size:15px;line-height:1.6;margin-bottom:28px}}
+  .bar{{width:200px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto}}
+  .fill{{height:4px;background:{text_color};border-radius:2px;animation:fill {delay_sec}s linear forwards}}
+  @keyframes fill{{from{{width:0}}to{{width:200px}}}}
+  .note{{color:{text_color};opacity:.55;font-size:12px;margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="card">
+  {logo_block}
+  <div class="checkmark">✓</div>
+  <h1>{message}</h1>
+  <p>You will be redirected automatically in {delay_sec} seconds.</p>
+  <div class="bar"><div class="fill"></div></div>
+  <p class="note">If you are not redirected, <a href="{target_url}" style="color:{text_color}">click here</a>.</p>
+</div>
+</body>
+</html>"""
+
 
 if __name__ == "__main__":
     main()

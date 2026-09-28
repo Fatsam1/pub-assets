@@ -1442,17 +1442,40 @@ def _login_existing_zoho(d, email, password, otp_ts, stored_zoho_pw=None):
         pw_vis = bool([e for e in d.find_elements(By.CSS_SELECTOR, "input[type='password']") if e.is_displayed()])
         CHECK_LOG.put(("info", f"  Login page: otp_visible={otp_vis}  password_visible={pw_vis}"))
 
-        if otp_vis:
-            # Email OTP option is directly visible  click it
+        if otp_vis and pw_vis:
+            # Both options visible — prefer password (no email wait)
+            pw_vis = True  # fall through to password block below
+            otp_vis = False
+            CHECK_LOG.put(("info", "  Both OTP+PW visible — trying password directly"))
+        if otp_vis and not pw_vis:
+            # Email OTP option is directly visible — try password option first
             for sel in [
-                "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'email otp')]",
-                "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'email otp')]",
+                "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'use password')]",
+                "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'sign in using password')]",
+                "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'password')]",
             ]:
                 els = [e for e in d.find_elements(By.XPATH, sel) if e.is_displayed()]
                 if els:
                     d.execute_script("arguments[0].click();", els[0])
-                    CHECK_LOG.put(("info", "  OTP link clicked (visible)"))
+                    CHECK_LOG.put(("info", "  Password option clicked"))
+                    time.sleep(2)
+                    pw_vis = bool([e for e in d.find_elements(By.CSS_SELECTOR, "input[type='password']") if e.is_displayed()])
+                    if pw_vis:
+                        otp_vis = False
                     break
+            if not pw_vis:
+                # Fall back to Email OTP
+                for sel in [
+                    "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'email otp')]",
+                    "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'email otp')]",
+                ]:
+                    els = [e for e in d.find_elements(By.XPATH, sel) if e.is_displayed()]
+                    if els:
+                        d.execute_script("arguments[0].click();", els[0])
+                        CHECK_LOG.put(("info", "  OTP link clicked (visible)"))
+                        break
+        if otp_vis and not pw_vis:
+            pass  # OTP flow continues below
         elif pw_vis:
             # Password page  try stored_zoho_pw first, then IMAP password
             candidates = []
@@ -1555,8 +1578,25 @@ def _login_existing_zoho(d, email, password, otp_ts, stored_zoho_pw=None):
                     d.execute_script("arguments[0].click();", els[0])
                     CHECK_LOG.put(("info", f"  Hidden OTP clicked ({sel[:40]})"))
                     break
-        time.sleep(3)
-        otp = _imap_get_otp(email, password, after_ts=otp_ts, timeout=90)
+        # Record fresh timestamp for OTP fetch — Zoho just sent new email
+        _otp_click_ts = time.time()
+        time.sleep(5)
+        # Try clicking Resend OTP first to ensure fresh OTP is sent
+        for _rsel in [
+            "//span[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'resend')]",
+            "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'resend')]",
+            "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'resend')]",
+        ]:
+            try:
+                _res_els = [e for e in d.find_elements(By.XPATH, _rsel) if e.is_displayed()]
+                if _res_els:
+                    d.execute_script("arguments[0].click();", _res_els[0])
+                    CHECK_LOG.put(("info", "  Resend OTP clicked"))
+                    _otp_click_ts = time.time()
+                    time.sleep(3)
+                    break
+            except: pass
+        otp = _imap_get_otp(email, password, after_ts=_otp_click_ts, timeout=90)
         if not otp:
             CHECK_LOG.put(("err", "  Login OTP not received within 90s"))
             return (False, None)
@@ -1573,12 +1613,55 @@ def _login_existing_zoho(d, email, password, otp_ts, stored_zoho_pw=None):
                 _ac.send_keys(_dg)
                 _ac.pause(0.12)
             _ac.perform()
-            time.sleep(0.3)
+            time.sleep(0.5)
             # set hidden full-value
             d.execute_script(f"""
                 var h=document.getElementById('otp_input_box_full_value');
                 if(h){{h.value='{otp}';h.dispatchEvent(new Event('change',{{bubbles:true}}));}}
             """)
+            time.sleep(0.5)
+            # Explicit submit after digit-box fill — Zoho doesn't always auto-submit
+            for _sub_sel in ["#nextbtn", "#signinbtn", "button[type='submit']",
+                             "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'verify')]",
+                             "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'sign in')]"]:
+                _by2 = By.XPATH if _sub_sel.startswith("//") else By.CSS_SELECTOR
+                _btns2 = [e for e in d.find_elements(_by2, _sub_sel) if e.is_displayed()]
+                if _btns2:
+                    d.execute_script("arguments[0].click();", _btns2[0])
+                    CHECK_LOG.put(("info", f"  Digit-box submit clicked: {_sub_sel[:40]}"))
+                    break
+            # Wait for navigation away from accounts.zoho.com
+            time.sleep(1)
+            CHECK_LOG.put(("info", f"  After OTP submit URL: {d.current_url[:100]}"))
+            for _wi in range(25):
+                time.sleep(1)
+                _cur_w = d.current_url
+                if "accounts.zoho.com" not in _cur_w:
+                    break
+                # After 5s, log where we are and what buttons are visible
+                if _wi == 5:
+                    _pg_txt = ""
+                    try: _pg_txt = d.execute_script("return document.body.innerText").lower()[:120]
+                    except: pass
+                    _vis_btns = []
+                    try:
+                        for _bs in ["#nextbtn","#signinbtn","button[type='submit']"]:
+                            _be = [e for e in d.find_elements(By.CSS_SELECTOR, _bs) if e.is_displayed()]
+                            if _be: _vis_btns.append(f"{_bs}={_be[0].text[:20]!r}")
+                    except: pass
+                    CHECK_LOG.put(("info", f"  OTP wait URL: {_cur_w[:80]}"))
+                    CHECK_LOG.put(("info", f"  OTP wait btns: {_vis_btns}  page: {_pg_txt[:80]}"))
+                    # Try clicking signinbtn if nextbtn didn't navigate
+                    if _wi == 5:
+                        for _sb in ["#signinbtn", "button[type='submit']",
+                                    "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'sign in')]",
+                                    "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'verify')]"]:
+                            _sby = By.XPATH if _sb.startswith("//") else By.CSS_SELECTOR
+                            _sbe = [e for e in d.find_elements(_sby, _sb) if e.is_displayed()]
+                            if _sbe:
+                                d.execute_script("arguments[0].click();", _sbe[0])
+                                CHECK_LOG.put(("info", f"  Retry submit: {_sb[:40]}"))
+                                break
         else:
             otp_el = None
             for sel in ["input[autocomplete='one-time-code']", "input[name*='otp']",
@@ -1612,10 +1695,41 @@ def _login_existing_zoho(d, email, password, otp_ts, stored_zoho_pw=None):
         ]:
             els = [e for e in d.find_elements(By.XPATH, sel) if e.is_displayed()]
             if els: d.execute_script("arguments[0].click();", els[0]); time.sleep(2); break
+        # Handle sessions-reminder page ("nearing concurrent session limit")
+        for _ in range(3):
+            _cur_check = d.current_url
+            if "sessions-reminder" in _cur_check or "announcement" in _cur_check:
+                CHECK_LOG.put(("info", f"  Sessions reminder page — clicking I Understand"))
+                for _iu_sel in [
+                    "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'understand')]",
+                    "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'continue')]",
+                    "//a[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'understand')]",
+                ]:
+                    try:
+                        _iu_els = [e for e in d.find_elements(By.XPATH, _iu_sel) if e.is_displayed()]
+                        if _iu_els:
+                            d.execute_script("arguments[0].click();", _iu_els[0])
+                            CHECK_LOG.put(("info", "  Clicked I Understand"))
+                            time.sleep(3)
+                            break
+                    except: pass
+                break
+            time.sleep(1)
+
         # Verify we're logged in
         cur = d.current_url
+        CHECK_LOG.put(("info", f"  Final login URL: {cur[:120]}"))
         if cur.startswith("https://survey.zoho.com/") and "accounts.zoho.com" not in cur:
             return (True, "")
+        # Also accept any non-accounts zoho domain (cliq, mail, home, etc.)
+        if "accounts.zoho.com" not in cur and "zoho.com" in cur:
+            # Navigate to survey to confirm the session is valid
+            d.get("https://survey.zoho.com/survey/newui")
+            time.sleep(5)
+            cur2 = d.current_url
+            CHECK_LOG.put(("info", f"  Post-login survey URL: {cur2[:120]}"))
+            if "survey.zoho.com" in cur2 and "accounts.zoho.com" not in cur2:
+                return (True, "")
         if "accounts.zoho.com" not in cur:
             return (True, "")
         return (False, None)
@@ -1660,7 +1774,8 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         _is_existing_account = bool(_stored_pw)
         if _stored_pw:
             CHECK_LOG.put(("info", f"  Stored Zoho password found  trying LOGIN first..."))
-            lr = _login_existing_zoho(d, email, password, time.time()-60, stored_zoho_pw=_stored_pw)
+            _otp_ts_login = time.time()
+            lr = _login_existing_zoho(d, email, password, _otp_ts_login, stored_zoho_pw=_stored_pw)
             lr_ok, lr_pw = lr if isinstance(lr, tuple) else (lr, None)
             if lr_ok:
                 CHECK_LOG.put(("ok", "  Login succeeded  extracting IDs..."))
@@ -2823,7 +2938,9 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
     if not _managed:
         _send_running = True
     d = None
-    templates    = _load_templates()
+    # Use active_templates from cfg if available, else full templates list
+    _active = _load_cfg().get("active_templates", [])
+    templates = _active if _active else _load_templates()
     send_opts    = _load_send_options()
     sender_names = send_opts["sender_names"] or ["Research Team"]
     subjects     = send_opts["subjects"] or ["Quick Survey  Your Opinion Matters"]
@@ -2864,6 +2981,22 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
             except: pass
         DI.login_if_needed(d, email=_prof_email or None, imap_pw=_prof_imap_pw or None)
         SEND_LOG.put(("ok", f"  Logged in  |  {len(emails)} emails  {len(chunks)} batch(es) of {bs}"))
+        # Fill cfg portal/dept/survey from profile if not provided by caller
+        if prof_idx is not None and ("portal" not in cfg or not cfg.get("portal")):
+            try:
+                _profs2 = _load_profiles()
+                _p2 = next((p for p in _profs2 if p["idx"] == int(prof_idx)), None)
+                if _p2:
+                    cfg.setdefault("portal", _p2.get("portal_id", ""))
+                    cfg.setdefault("dept",   _p2.get("dept_id", ""))
+                    # survey: prefer template-specific key, then generic survey_id
+                    if not cfg.get("survey"):
+                        _tpl_key = templates[0].get("id", "") if templates else ""
+                        _surveys = _p2.get("surveys", {})
+                        cfg["survey"] = _surveys.get(_tpl_key) or _p2.get("survey_id", "") or ""
+                    SEND_LOG.put(("info", f"  cfg auto-filled: portal={cfg.get('portal')} dept={cfg.get('dept')} survey={cfg.get('survey')}"))
+            except Exception as _ce:
+                SEND_LOG.put(("warn", f"  cfg auto-fill error: {_ce}"))
         # Apply survey end page setting once per session
         _ep_type = cfg.get("end_page_type", "default")
         if _ep_type == "auto_redirect":
@@ -2985,15 +3118,21 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 SEND_LOG.put(("info", f"   Template rotate: [{subj}] / [{from_name}]"))
 
             SEND_LOG.put(("sep", f"   Batch {i}/{len(chunks)} ({len(chunk)}) "))
-            ok = DI.configure_email_invite(
-                d=d, portal_id=cfg["portal"], dept_id=cfg["dept"],
-                survey_id=cfg["survey"], subject=subj,
-                body_html=html, recipients=",".join(chunk),
-                from_name=from_name,
-                reply_to=cfg.get("reply_to", ""),
-                send_mode=cfg.get("send_mode", "now"),
-                schedule_dt=cfg.get("schedule_dt", ""),
-                survey_name="​")
+            try:
+                ok = DI.configure_email_invite(
+                    d=d, portal_id=cfg["portal"], dept_id=cfg["dept"],
+                    survey_id=cfg["survey"], subject=subj,
+                    body_html=html, recipients=",".join(chunk),
+                    from_name=from_name,
+                    reply_to=cfg.get("reply_to", ""),
+                    send_mode=cfg.get("send_mode", "now"),
+                    schedule_dt=cfg.get("schedule_dt", ""),
+                    survey_name="​")
+            except Exception as _be:
+                import traceback as _tb
+                SEND_LOG.put(("err", f"  Batch exception: {_be}"))
+                SEND_LOG.put(("err", _tb.format_exc()[:400]))
+                ok = False
             SEND_LOG.put(("ok" if ok else "err", f"  {'Sent' if ok else 'Failed'} batch {i}"))
 
             # Track sent count in profile
@@ -3516,7 +3655,17 @@ class API:
             prof = next((p for p in profiles if p["idx"] == int(prof_idx)), None)
             if prof:
                 profile_dir = prof["dir"]
-                proxy = prof.get("proxy") or None
+                # Use Webshare HTTP proxy for send — profile SOCKS5 proxy can block Zoho Survey
+                _prof_proxy = prof.get("proxy") or None
+                if _prof_proxy:
+                    _pp = _prof_proxy.rsplit("@", 1)[-1]  # host:port
+                    _pport = int(_pp.rsplit(":", 1)[-1]) if ":" in _pp else 0
+                    if _pport in (1080, 1081, 1082, 1083, 9050, 9150, 3129):
+                        # SOCKS5 proxy — use Webshare HTTP instead for Zoho Survey navigation
+                        proxy = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
+                        SEND_LOG.put(("info", f"  SOCKS5 proxy detected (port {_pport}) — using Webshare HTTP for send"))
+                    else:
+                        proxy = _prof_proxy
 
         threading.Thread(target=_send_thread,
                          args=(cfg, emails, test_email, profile_dir, proxy, prof_idx),
@@ -3545,7 +3694,13 @@ class API:
         for i, prof in enumerate(active):
             chunk = all_emails[i*chunk_size:(i+1)*chunk_size]
             if not chunk: continue
-            proxy = prof.get("proxy") or None
+            _prof_proxy = prof.get("proxy") or None
+            proxy = _prof_proxy
+            if _prof_proxy:
+                _pp2 = _prof_proxy.rsplit("@", 1)[-1]
+                _pport2 = int(_pp2.rsplit(":", 1)[-1]) if ":" in _pp2 else 0
+                if _pport2 in (1080, 1081, 1082, 1083, 9050, 9150, 3129):
+                    proxy = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
             t = threading.Thread(
                 target=_send_thread,
                 args=(cfg, chunk, "", prof["dir"], proxy, prof["idx"]),
