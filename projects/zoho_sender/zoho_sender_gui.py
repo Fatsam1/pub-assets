@@ -930,7 +930,7 @@ class _AuthProxyTunnel:
         self._is_socks5 = self._up_port in (1080, 1081, 1082, 1083, 9050, 9150)
 
     def _connect_upstream(self, dest_host, dest_port):
-        """Open connection to dest via upstream proxy (SOCKS5 or HTTP CONNECT)."""
+        """Open a tunnel to dest_host:dest_port via the upstream proxy."""
         if self._is_socks5:
             try:
                 import socks as _socks
@@ -941,22 +941,24 @@ class _AuthProxyTunnel:
                 s.connect((dest_host, dest_port))
                 return s
             except ImportError:
-                pass  # fallback to HTTP CONNECT
-        # HTTP CONNECT fallback
+                pass
+        # HTTP proxy upstream — use CONNECT for HTTPS (port 443), direct socket for HTTP
         up = _socket.create_connection((self._up_host, self._up_port), timeout=15)
-        req = (f"CONNECT {dest_host}:{dest_port} HTTP/1.1\r\n"
-               f"Host: {dest_host}:{dest_port}\r\n"
-               f"Proxy-Authorization: Basic {self._user_pass}\r\n"
-               f"Proxy-Connection: keep-alive\r\n\r\n").encode()
-        up.send(req)
-        resp = b""
-        while b"\r\n\r\n" not in resp:
-            c = up.recv(4096)
-            if not c: break
-            resp += c
-        if b"200" not in resp:
-            up.close()
-            raise ConnectionError(f"Upstream CONNECT failed: {resp[:80]}")
+        if dest_port == 443:
+            req = (f"CONNECT {dest_host}:{dest_port} HTTP/1.1\r\n"
+                   f"Host: {dest_host}:{dest_port}\r\n"
+                   f"Proxy-Authorization: Basic {self._user_pass}\r\n"
+                   f"Proxy-Connection: keep-alive\r\n\r\n").encode()
+            up.send(req)
+            resp = b""
+            while b"\r\n\r\n" not in resp:
+                c = up.recv(4096)
+                if not c: break
+                resp += c
+            if b"200" not in resp:
+                up.close()
+                raise ConnectionError(f"Upstream CONNECT failed: {resp[:80]}")
+        # For plain HTTP, just return the socket — caller sends the full request
         return up
 
     def start(self):
@@ -998,15 +1000,16 @@ class _AuthProxyTunnel:
                 cl.send(b"HTTP/1.1 200 Connection established\r\n\r\n")
                 self._bridge(cl, up)
             else:
-                # Plain HTTP request — extract host
-                import re as _re
-                m = _re.search(r'Host:\s*([^\r\n:]+)(?::(\d+))?', data.decode("utf-8","replace"), _re.I)
-                h = m.group(1).strip() if m else target.split("/")[0]
-                p = int(m.group(2)) if m and m.group(2) else 80
-                up = self._connect_upstream(h, p)
+                # Plain HTTP request — forward to upstream proxy with auth
+                # Connect directly to upstream proxy (not the destination)
+                up = _socket.create_connection((self._up_host, self._up_port), timeout=15)
                 lines = data.decode("utf-8", "replace").split("\r\n")
+                # Ensure request line has absolute URL (it should already from browser)
+                # Add Proxy-Authorization if missing
                 if not any(ln.lower().startswith("proxy-authorization") for ln in lines):
                     lines.insert(1, f"Proxy-Authorization: Basic {self._user_pass}")
+                # Remove Proxy-Connection header that may confuse upstream
+                lines = [ln for ln in lines if not ln.lower().startswith("proxy-connection")]
                 up.send("\r\n".join(lines).encode())
                 self._bridge(cl, up)
         except Exception:
@@ -1066,11 +1069,10 @@ def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
             _pport = int(_addr.rsplit(":", 1)[1]) if ":" in _addr else 8080
         except Exception:
             _pport = 0
-        if _pport in (80, 8080, 3128, 8888, 3000):
-            _apply_proxy_ext(opts, p)
-        else:
-            local_port = _AuthProxyTunnel.get_port(p)
-            opts.add_argument(f"--proxy-server=http://127.0.0.1:{local_port}")
+        # Always use local tunnel — extension-based proxy auth is unreliable and
+        # can leak the machine IP before the extension activates.
+        local_port = _AuthProxyTunnel.get_port(p)
+        opts.add_argument(f"--proxy-server=http://127.0.0.1:{local_port}")
     elif p.startswith(("socks5://","socks4://","http://","https://")):
         opts.add_argument(f"--proxy-server={p}")
     else:
@@ -1747,6 +1749,63 @@ def _block_combo(email):
             break
     _save_valid(combos)
 
+def _fetch_fresh_proxyscrape_proxy():
+    """Fetch one fresh working proxy from ProxyScrape Premium API.
+    Prefers port 3129 (most reliable), tests before returning."""
+    import urllib.request as _ur, random as _rnd, base64 as _b64
+    PS_USER = "alv68pcvy8kb"
+    PS_PASS = "u0qd0imgg1i4nj4"
+    PS_SID  = "46e83e28-7c12-4c65-aa52-ef3e82f317d8"
+
+    def _test_proxy(ip_port):
+        """Test proxy via HTTPS CONNECT tunnel (same as Chrome uses for HTTPS sites)."""
+        try:
+            _h, _p = ip_port.rsplit(":", 1)
+            _auth = _b64.b64encode(f"{PS_USER}:{PS_PASS}".encode()).decode()
+            _s = _socket.create_connection((_h, int(_p)), timeout=6)
+            _s.send((
+                f"CONNECT www.google.com:443 HTTP/1.1\r\n"
+                f"Host: www.google.com:443\r\n"
+                f"Proxy-Authorization: Basic {_auth}\r\n"
+                f"Proxy-Connection: keep-alive\r\n\r\n"
+            ).encode())
+            _s.settimeout(6)
+            _resp = b""
+            while b"\r\n\r\n" not in _resp:
+                _d = _s.recv(4096)
+                if not _d:
+                    break
+                _resp += _d
+            _s.close()
+            return b"200" in _resp
+        except Exception:
+            return False
+
+    try:
+        url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
+               f"&protocol=http&serviceId={PS_SID}&simplified=true")
+        ctx = ssl._create_unverified_context()
+        txt = _ur.urlopen(_ur.Request(url, headers={"User-Agent":"Mozilla/5.0"}),
+                          context=ctx, timeout=10).read().decode().strip()
+        lines = [l.strip() for l in txt.splitlines() if l.strip() and ":" in l]
+        if not lines:
+            return ""
+        # Prefer port 3129 (most reliable), then 8080, then rest
+        p3129 = [l for l in lines if l.endswith(":3129")]
+        p8080 = [l for l in lines if l.endswith(":8080")]
+        others = [l for l in lines if not l.endswith(":3129") and not l.endswith(":8080")]
+        _rnd.shuffle(p3129); _rnd.shuffle(p8080); _rnd.shuffle(others)
+        candidates = p3129[:10] + p8080[:5] + others[:5]
+        for candidate in candidates:
+            if _test_proxy(candidate):
+                return f"{PS_USER}:{PS_PASS}@{candidate}"
+        # Fallback: return first port-3129 without testing (better than nothing)
+        if p3129:
+            return f"{PS_USER}:{PS_PASS}@{p3129[0]}"
+        return ""
+    except Exception:
+        return ""
+
 def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
     profiles = _load_profiles()
     prof = next((p for p in profiles if p["idx"] == profile_idx), None)
@@ -1761,9 +1820,15 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         try: window.evaluate_js("refreshProfiles()")
         except: pass
 
-    # Registration ALWAYS uses Webshare Egypt proxy (no mobile OTP, email-only)
-    # The per-profile SOCKS5 proxy is only for Send operations
-    _REG_PROXY = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
+    # Always fetch a fresh ProxyScrape proxy for this connect session
+    _REG_PROXY = _fetch_fresh_proxyscrape_proxy()
+    if not _REG_PROXY:
+        # Fallback to profile's stored proxy or nothing
+        _REG_PROXY = (prof.get("proxy") or prof.get("original_proxy") or "").strip()
+    if _REG_PROXY:
+        CHECK_LOG.put(("info", f"  Using proxy: {_REG_PROXY.rsplit('@',1)[-1]}"))
+    else:
+        CHECK_LOG.put(("warn", "  No proxy available — using direct IP (may get rate-limited)"))
 
     d = None
     try:
@@ -3424,8 +3489,8 @@ class API:
                 idx  = prof["idx"]
                 em   = prof.get("email","")
                 pw_  = prof.get("imap_pw","") or _pw_map.get(em,"") or prof.get("password","")
-                # Use Webshare Egypt for session check (avoids mobile OTP on relogin)
-                _check_proxy = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
+                # Use fresh ProxyScrape proxy for session check
+                _check_proxy = _fetch_fresh_proxyscrape_proxy() or (prof.get("proxy") or "")
                 d2   = None
                 try:
                     d2 = _build_driver(prof["dir"], proxy=_check_proxy, headless=_hidden_browser)
@@ -3660,10 +3725,13 @@ class API:
                 if _prof_proxy:
                     _pp = _prof_proxy.rsplit("@", 1)[-1]  # host:port
                     _pport = int(_pp.rsplit(":", 1)[-1]) if ":" in _pp else 0
-                    if _pport in (1080, 1081, 1082, 1083, 9050, 9150, 3129):
-                        # SOCKS5 proxy — use Webshare HTTP instead for Zoho Survey navigation
-                        proxy = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
-                        SEND_LOG.put(("info", f"  SOCKS5 proxy detected (port {_pport}) — using Webshare HTTP for send"))
+                    if _pport in (1080, 1081, 1082, 1083, 9050, 9150):
+                        # SOCKS5 proxy — fetch fresh ProxyScrape HTTP proxy instead
+                        proxy = _fetch_fresh_proxyscrape_proxy()
+                        if proxy:
+                            SEND_LOG.put(("info", f"  SOCKS5 proxy detected — using fresh ProxyScrape HTTP for send"))
+                        else:
+                            proxy = _prof_proxy
                     else:
                         proxy = _prof_proxy
 
@@ -3699,8 +3767,8 @@ class API:
             if _prof_proxy:
                 _pp2 = _prof_proxy.rsplit("@", 1)[-1]
                 _pport2 = int(_pp2.rsplit(":", 1)[-1]) if ":" in _pp2 else 0
-                if _pport2 in (1080, 1081, 1082, 1083, 9050, 9150, 3129):
-                    proxy = "gdiwrafcresidential-rotate:mqzo2x6uux4o@p.webshare.io:80"
+                if _pport2 in (1080, 1081, 1082, 1083, 9050, 9150):
+                    proxy = _fetch_fresh_proxyscrape_proxy() or _prof_proxy
             t = threading.Thread(
                 target=_send_thread,
                 args=(cfg, chunk, "", prof["dir"], proxy, prof["idx"]),
@@ -3777,7 +3845,6 @@ class API:
         PS_USER = "alv68pcvy8kb"
         PS_PASS = "u0qd0imgg1i4nj4"
         PS_SID  = "46e83e28-7c12-4c65-aa52-ef3e82f317d8"
-        PS_PORT = "3129"
         proxies = []
         url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
                f"&protocol=http&serviceId={PS_SID}&simplified=true")
@@ -3786,15 +3853,12 @@ class API:
             ctx = ssl._create_unverified_context()
             resp = _ur.urlopen(req, context=ctx, timeout=15)
             txt = resp.read().decode("utf-8").strip()
-            lines = [l.strip() for l in txt.splitlines() if l.strip() and ":" not in l.strip().split(".")[-1]]
-            # Lines are "ip:port" — replace port with premium port 3129
+            # Lines are "ip:port" — keep original port from API
             for line in txt.splitlines():
                 line = line.strip()
-                if not line or line.startswith("#"):
+                if not line or line.startswith("#") or ":" not in line:
                     continue
-                parts = line.split(":")
-                ip = parts[0]
-                proxies.append(f"{PS_USER}:{PS_PASS}@{ip}:{PS_PORT}")
+                proxies.append(f"{PS_USER}:{PS_PASS}@{line}")
         except Exception as _e:
             CHECK_LOG.put(("warn", f"  ProxyScrape Premium fetch error: {_e}"))
         if not proxies:
