@@ -3398,6 +3398,8 @@ class API:
 
     def add_profile(self, proxy):
         # Allow proxy-less profiles up to MAX_FREE; after that require a proxy
+        if isinstance(proxy, dict):
+            proxy = proxy.get("proxy", proxy.get("value", ""))
         proxy = (proxy or "").strip()
         if not proxy:
             existing = _load_profiles()
@@ -3757,6 +3759,26 @@ class API:
         return len([l for l in open(path,encoding="utf-8",errors="ignore")
                     .read().replace(",","\n").splitlines()
                     if l.strip() and "@" in l])
+
+    def stop_send(self):
+        global _send_running
+        _send_running = False
+        SEND_LOG.put(("info", "  Send stopped by user"))
+        return {"ok": True}
+
+    def get_active_templates(self):
+        cfg = _load_cfg()
+        return cfg.get("active_templates", [])
+
+    def save_active_templates(self, templates):
+        cfg = _load_cfg()
+        cfg["active_templates"] = templates if isinstance(templates, list) else []
+        json.dump(cfg, open(CFG_FILE, "w", encoding="utf-8"), indent=2)
+        return {"ok": True}
+
+    def get_send_status(self):
+        global _send_running
+        return {"running": _send_running}
 
 
 # 
