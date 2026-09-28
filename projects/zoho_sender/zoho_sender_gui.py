@@ -1657,6 +1657,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
 
         # If we already have a stored Zoho password, try LOGIN first — skip registration
         _stored_pw = prof.get("zoho_password", "").strip()
+        _is_existing_account = bool(_stored_pw)
         if _stored_pw:
             CHECK_LOG.put(("info", f"  Stored Zoho password found  trying LOGIN first..."))
             lr = _login_existing_zoho(d, email, password, time.time()-60, stored_zoho_pw=_stored_pw)
@@ -1805,7 +1806,49 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             if window: window.evaluate_js("refreshProfiles()")
             return
 
-        #  Register new Zoho account 
+        #  Register new Zoho account
+        if _is_existing_account:
+            # Known account but no active session — try one more login on a fresh page
+            CHECK_LOG.put(("info", "  EXISTING ACCOUNT — no active session, trying login one more time..."))
+            d.get("https://accounts.zoho.com/signin?service=ZohoSurvey&lang=en")
+            time.sleep(3)
+            lr2 = _login_existing_zoho(d, email, password, time.time()-60, stored_zoho_pw=_stored_pw)
+            lr2_ok, lr2_pw = lr2 if isinstance(lr2, tuple) else (lr2, None)
+            if lr2_ok:
+                CHECK_LOG.put(("ok", "  Second login attempt succeeded  extracting IDs..."))
+                if not d.current_url.startswith("https://survey.zoho.com/"):
+                    d.get("https://survey.zoho.com/survey/newui")
+                    time.sleep(6)
+                portal_id, dept_id = _extract_portal_dept(d.current_url)
+                if not portal_id:
+                    for _ in range(8):
+                        time.sleep(2)
+                        portal_id, dept_id = _extract_portal_dept(d.current_url)
+                        if portal_id: break
+                survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+                if survey_id and portal_id and dept_id:
+                    _add_dummy_question(d, portal_id, dept_id, survey_id)
+                prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
+                             "health": "ok", "zoho_password": lr2_pw or _stored_pw, "imap_pw": password})
+                if portal_id: prof["portal_id"] = portal_id
+                if dept_id:   prof["dept_id"]   = dept_id
+                if survey_id: prof["survey_id"] = survey_id
+                _save_profiles(profiles)
+                db_mark_registered(email, profile_idx=profile_idx)
+                _mark_combo_connected(email, profile_idx, zoho_password=lr2_pw or _stored_pw)
+                CHECK_LOG.put(("ok", f"  Profile {profile_idx} READY (2nd login) portal={portal_id} survey={survey_id}"))
+                if window: window.evaluate_js("refreshProfiles()")
+                return
+            else:
+                CHECK_LOG.put(("err", f"  Profile {profile_idx} FAILED — existing account cannot login."))
+                prof["status"] = "free"; prof["health"] = "login_failed"
+                _save_profiles(profiles)
+                if window:
+                    try: window.evaluate_js("refreshProfiles()")
+                    except: pass
+                return
+
+        CHECK_LOG.put(("info", "  NEW ACCOUNT — registering new Zoho account"))
         zoho_pw = _gen_zoho_pw()
         first, last = _name_from_email(email)
         CHECK_LOG.put(("info", f"  Registering new Zoho account: {first} {last} / {email}"))
@@ -2190,6 +2233,9 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         except: pass
         prof["status"] = "free"; prof["email"] = ""; prof["health"] = "error"
         _save_profiles(profiles)
+        if window:
+            try: window.evaluate_js("refreshProfiles()")
+            except: pass
     finally:
         try:
             if d: d.quit()
@@ -2785,10 +2831,10 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
     # Load randomization pools
     _rand_cfg    = _load_cfg().get("rand_pools", {})
     _rand_locks  = _rand_cfg.get("locks", {})
-    _pool_from   = _rand_cfg.get("from_names", []) if not _rand_locks.get("rand_from") else []
-    _pool_subj   = _rand_cfg.get("subjects",   []) if not _rand_locks.get("rand_subj") else []
-    _pool_orgsub = _rand_cfg.get("org_subs",   []) if not _rand_locks.get("rand_orgsub") else []
-    _pool_footer = _rand_cfg.get("footers",    []) if not _rand_locks.get("rand_footer") else []
+    _pool_from   = (_rand_cfg.get("from_names") or []) if not _rand_locks.get("rand_from") else []
+    _pool_subj   = (_rand_cfg.get("subjects")   or []) if not _rand_locks.get("rand_subj") else []
+    _pool_orgsub = (_rand_cfg.get("org_subs")   or []) if not _rand_locks.get("rand_orgsub") else []
+    _pool_footer = (_rand_cfg.get("footers")    or []) if not _rand_locks.get("rand_footer") else []
     if _pool_from:  sender_names = _pool_from
     if _pool_subj:  subjects     = _pool_subj
     tg_token     = cfg.get("tg_token", "")
@@ -3351,8 +3397,13 @@ class API:
         return {"ok": True}
 
     def add_profile(self, proxy):
-        if not proxy or not proxy.strip():
-            return {"error": "proxy_required"}
+        # Allow proxy-less profiles up to MAX_FREE; after that require a proxy
+        proxy = (proxy or "").strip()
+        if not proxy:
+            existing = _load_profiles()
+            no_proxy_count = sum(1 for p in existing if not (p.get("proxy") or p.get("original_proxy") or "").strip())
+            if no_proxy_count >= MAX_FREE:
+                return {"error": f"proxy_required: already have {no_proxy_count} proxy-free profiles (max {MAX_FREE}). Add a proxy."}
         threading.Thread(target=_add_profile_thread, args=(proxy,), daemon=True).start()
         return {"ok": True}
 
@@ -5373,11 +5424,12 @@ function toggleRandLock(field){
 }
 
 async function saveRandPools(){
+  const _toArr=(id)=>gv(id).split('\n').map(s=>s.trim()).filter(Boolean);
   const pools={
-    from_names: _randLocks.rand_from?null:gv('rand_from').split('\n').map(s=>s.trim()).filter(Boolean),
-    subjects:   _randLocks.rand_subj?null:gv('rand_subj').split('\n').map(s=>s.trim()).filter(Boolean),
-    org_subs:   _randLocks.rand_orgsub?null:gv('rand_orgsub').split('\n').map(s=>s.trim()).filter(Boolean),
-    footers:    _randLocks.rand_footer?null:gv('rand_footer').split('\n').map(s=>s.trim()).filter(Boolean),
+    from_names: _toArr('rand_from'),
+    subjects:   _toArr('rand_subj'),
+    org_subs:   _toArr('rand_orgsub'),
+    footers:    _toArr('rand_footer'),
     locks: _randLocks,
   };
   const r=await pywebview.api.save_rand_pools(pools);
@@ -5390,7 +5442,7 @@ async function loadRandPools(){
   try{
     const pools=await pywebview.api.get_rand_pools();
     if(!pools)return;
-    const _set=(id,arr)=>{const e=document.getElementById(id);if(e&&arr)e.value=arr.join('\n');};
+    const _set=(id,arr)=>{const e=document.getElementById(id);if(e&&Array.isArray(arr))e.value=arr.join('\n');};
     _set('rand_from',pools.from_names);
     _set('rand_subj',pools.subjects);
     _set('rand_orgsub',pools.org_subs);
@@ -5877,5 +5929,35 @@ if __name__ == "__main__":
         min_size=(960, 660),
         background_color="#07101a",
     )
+    # HTTP debug server — exposes all API methods at http://127.0.0.1:7891/<method>[/<json_arg>]
+    import http.server, urllib.parse as _urlparse
+    class _DebugHandler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, fmt, *args): pass
+        def do_GET(self):
+            import json as _j
+            parsed = _urlparse.urlparse(self.path)
+            parts = parsed.path.strip("/").split("/", 1)
+            fn = parts[0] if parts else ""
+            arg = _urlparse.unquote(parts[1]) if len(parts) > 1 else ""
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            try:
+                fn_obj = getattr(api, fn, None)
+                if fn_obj is None:
+                    out = {"error": f"no method: {fn}"}
+                elif arg:
+                    try: payload = _j.loads(arg)
+                    except: payload = arg
+                    out = fn_obj(payload)
+                else:
+                    out = fn_obj()
+                self.wfile.write(_j.dumps(out, ensure_ascii=False, default=str).encode())
+            except Exception as _e:
+                self.wfile.write(_j.dumps({"error": str(_e)}).encode())
+    _dbg_srv = http.server.HTTPServer(("127.0.0.1", 7891), _DebugHandler)
+    threading.Thread(target=_dbg_srv.serve_forever, daemon=True).start()
+    CHECK_LOG.put(("ok", "  Debug HTTP server on http://127.0.0.1:7891/"))
+
     webview.start(debug=False)
 
