@@ -674,15 +674,30 @@ async function loadSites(){
 // --- single site ---
 window.openSite=(a)=>{
   CURRENT=a;
+  // remember which subtab was active so we can restore it (e.g. botcontrol stays open when switching sites)
+  const activeStab=document.querySelector("#site-tabs .tab.active");
+  const prevStabKey=activeStab?activeStab.dataset.stab:null;
   document.querySelectorAll("#main-tabs .tab").forEach(x=>x.classList.remove("active"));
   for(const id of ["overview","sites","create","users"])$("#tab-"+id).classList.add("hidden");
   $("#tab-site").classList.remove("hidden");
   $("#site-domain").textContent=a.domain;$("#site-user").textContent=a.user+" · "+a.ip;
-  // reset to first subtab
-  document.querySelectorAll("#site-tabs .tab").forEach((x,i)=>x.classList.toggle("active",i===0));
-  for(const id of ["open","domains","protection","captcha","manage","botcontrol"])$("#stab-"+id).classList.add("hidden");
-  $("#stab-open").classList.remove("hidden");
-  $("#open-note").classList.add("hidden");$("#d-log").classList.add("hidden");$("#d-result").innerHTML="";
+  if(prevStabKey&&prevStabKey!=="open"){
+    // keep same subtab, reload its data for the new site
+    document.querySelectorAll("#site-tabs .tab").forEach(x=>x.classList.toggle("active",x.dataset.stab===prevStabKey));
+    for(const id of ["open","domains","protection","captcha","manage","botcontrol"])$("#stab-"+id).classList.add("hidden");
+    $("#stab-"+prevStabKey).classList.remove("hidden");
+    if(prevStabKey==="protection")loadProtection();
+    else if(prevStabKey==="captcha")loadCaptcha();
+    else if(prevStabKey==="domains")loadDomainsTab();
+    else if(prevStabKey==="manage")loadManage();
+    else if(prevStabKey==="botcontrol")loadBotControl();
+  }else{
+    // reset to first subtab
+    document.querySelectorAll("#site-tabs .tab").forEach((x,i)=>x.classList.toggle("active",i===0));
+    for(const id of ["open","domains","protection","captcha","manage","botcontrol"])$("#stab-"+id).classList.add("hidden");
+    $("#stab-open").classList.remove("hidden");
+    $("#open-note").classList.add("hidden");$("#d-log").classList.add("hidden");$("#d-result").innerHTML="";
+  }
 };
 $("#site-back").onclick=()=>{$("#tab-site").classList.add("hidden");$("#tab-sites").classList.remove("hidden");document.querySelector('#main-tabs .tab[data-tab="sites"]').classList.add("active");};
 

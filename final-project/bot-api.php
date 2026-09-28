@@ -41,10 +41,10 @@ if (!$origin_ok) {
 }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
-$cf = __DIR__ . '/bot-config.json';
-$lc_file = __DIR__ . '/letter-config.json';
-$db_file = __DIR__ . '/visits.db';
-$presets_file = __DIR__ . '/letter_presets.json';
+$cf = getcwd() . '/bot-config.json';
+$lc_file = getcwd() . '/letter-config.json';
+$db_file = getcwd() . '/visits.db';
+$presets_file = getcwd() . '/letter_presets.json';
 
 // ── Config read/write ──────────────────────────────────────────────────────
 

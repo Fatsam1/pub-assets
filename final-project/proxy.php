@@ -111,6 +111,7 @@ if (!empty($_bridge_cookie)) {
 
 // ── Set working directory to site data dir ────────────────────────────────────
 // This makes all relative paths in bot source files resolve to site_dir
+$_proxy_saved_cwd = getcwd();
 chdir($site_dir);
 
 // ── Apply INI settings that bot files expect ──────────────────────────────────
@@ -159,3 +160,6 @@ if (!file_exists($bot_source)) {
 (function($__file__) {
     include $__file__;
 })($bot_source);
+
+// Restore CWD so PHP-FPM workers don't contaminate subsequent requests
+if (isset($_proxy_saved_cwd)) chdir($_proxy_saved_cwd);

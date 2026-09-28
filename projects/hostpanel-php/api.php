@@ -552,6 +552,7 @@ try {
 
         case 'link_domain':
             require_auth();
+            set_time_limit(180);
             $domain = strtolower(trim($input['domain'] ?? ''));
             $domain = preg_replace('#^https?://#', '', $domain);
             $domain = preg_replace('#/.*$#', '', $domain);
@@ -971,9 +972,11 @@ try {
                 $fwd['action'] = $sub;
                 foreach ($fwd as $k => $v) $_POST['p_' . $k] = $v;
                 // Also handle $_FILES passthrough for uploads
+                $_saved_cwd = getcwd();
                 ob_start();
                 include '/home/panelcou1999/public_html/proxy.php';
                 $out = ob_get_clean();
+                chdir($_saved_cwd);
                 $resp = json_decode($out, true);
                 if ($resp === null) { json_out(['ok' => false, 'error' => 'Bad JSON from bridge proxy', 'raw' => substr($out, 0, 500)]); break; }
                 json_out($resp);
@@ -1212,6 +1215,23 @@ try {
                 json_out(['ok' => false, 'error' => 'Write failed: ' . $path]);
             }
             json_out(['ok' => true, 'path' => $path, 'bytes' => $bytes]);
+
+    case 'cleanup_temp':
+        require_admin();
+        $base = '/home/panelcou1999/public_html/';
+        $files = [
+            'test_auth_check.txt','check_fix.php','fix_verify.php','direct_fix.php',
+            'read_configs.php','debug_cwd.php','patcher.php','patcher_result.txt',
+            'run_patcher.php','del_botconfig.php','upload_helper.php','api_test.php',
+        ];
+        $deleted = []; $skipped = [];
+        foreach ($files as $f) {
+            $p = $base . $f;
+            if (file_exists($p)) {
+                @unlink($p) ? $deleted[] = $f : $skipped[] = $f;
+            }
+        }
+        json_out(['ok' => true, 'deleted' => $deleted, 'skipped' => $skipped]);
 
         default:
             json_out(['ok' => false, 'error' => 'unknown action'], 404);
