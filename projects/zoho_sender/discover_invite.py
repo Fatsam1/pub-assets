@@ -2425,17 +2425,28 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                   f"#/portal/{portal_id}/department/{dept_id}"
                   f"/survey/{survey_id}/launch")
     L.info(f"Navigating to launch: {launch_url}")
-    # Break SPA state: go to home first, then navigate to launch URL
-    d.get("https://survey.zoho.com/survey/newui"); rw(2, 3)
-    d.get(launch_url); rw(6, 8)
-    # Wait for Zoho SPA spinner to disappear (up to 25 extra seconds)
-    for _sp in range(25):
-        _pg_sp = (d.execute_script("return document.body.innerText") or "").strip()
+    # Break SPA state: go to home first (longer wait after rename navigations)
+    d.get("https://survey.zoho.com/survey/newui"); rw(4, 6)
+    # Retry launch up to 3 times in case of ERR_EMPTY_RESPONSE
+    for _launch_try in range(3):
+        d.get(launch_url); rw(6, 8)
+        # Wait for Zoho SPA spinner to disappear (up to 25 extra seconds)
+        for _sp in range(25):
+            _pg_sp = (d.execute_script("return document.body.innerText") or "").strip()
+            if len(_pg_sp) > 50:
+                break
+            time.sleep(1)
+        _pg_err = _pg_sp.lower()
+        if "err_empty_response" in _pg_err or "didn't send any data" in _pg_err or "page isn't working" in _pg_err:
+            L.info(f"launch page: ERR_EMPTY_RESPONSE on attempt {_launch_try+1} — retrying after 5s...")
+            time.sleep(5)
+            d.get("https://survey.zoho.com/survey/newui"); rw(3, 5)
+            continue
         if len(_pg_sp) > 50:
+            L.info(f"launch page loaded on attempt {_launch_try+1}")
             break
-        time.sleep(1)
-    else:
-        L.info("launch page: spinner wait timed out — proceeding anyway")
+        L.info(f"launch page: spinner wait timed out on attempt {_launch_try+1} — proceeding")
+        break
     ss(d, "ci_01_launch.png")
 
     # ── Step 2: Get into "Email Invites by Zoho Survey" flow ────────────
