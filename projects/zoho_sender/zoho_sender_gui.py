@@ -1061,11 +1061,12 @@ def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
         opts.add_argument("--window-size=1,1")
     elif size:
         opts.add_argument(f"--window-size={size[0]},{size[1]}")
-    # Force proxy  never allow direct machine IP
-    if not proxy or not proxy.strip():
-        proxy = _DEFAULT_PROXY
-    p = proxy.strip()
-    if "@" in p:
+    # Use proxy if provided; None or False → direct connection (no proxy)
+    if not proxy:
+        p = ""
+    else:
+        p = proxy.strip()
+    if p and "@" in p:
         # Detect HTTP proxies (port 80/8080/3128) — use extension-based auth (onAuthRequired)
         # For SOCKS5 ports (1080-1083, 9050) — use _AuthProxyTunnel
         try:
@@ -1077,10 +1078,11 @@ def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
         # can leak the machine IP before the extension activates.
         local_port = _AuthProxyTunnel.get_port(p)
         opts.add_argument(f"--proxy-server=http://127.0.0.1:{local_port}")
-    elif p.startswith(("socks5://","socks4://","http://","https://")):
+    elif p and p.startswith(("socks5://","socks4://","http://","https://")):
         opts.add_argument(f"--proxy-server={p}")
-    else:
+    elif p:
         opts.add_argument(f"--proxy-server=http://{p}")
+    # else: p is empty — direct connection, no proxy arg added
     d = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
     d.set_page_load_timeout(180)
     return d
@@ -2701,6 +2703,27 @@ def _calc_trial_remaining(connected_at_str, trial_days=7, expires_str=None):
         return int(remaining_secs // 86400), int((remaining_secs % 86400) // 3600)
     except: return None, None
 
+def _proxy_refresh_thread():
+    """On startup and every 25 min: assign a fresh working ProxyScrape proxy to every active profile."""
+    import time as _time
+    def _refresh():
+        profiles = _load_profiles()
+        changed = False
+        for prof in profiles:
+            if prof.get("status") not in ("active", "busy"):
+                continue
+            proxy = _fetch_fresh_proxyscrape_proxy()
+            if proxy and proxy != prof.get("proxy", ""):
+                prof["proxy"] = proxy
+                changed = True
+        if changed:
+            _save_profiles(profiles)
+    _refresh()  # run immediately on startup
+    while True:
+        _time.sleep(1500)  # 25 minutes
+        _refresh()
+
+
 def _health_monitor_thread(tg_token, tg_chat):
     """Check active profiles every 30 min; alert if trial expired or browser unreachable."""
     while True:
@@ -3357,21 +3380,36 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
             _logo_url = templates[0].get("logo_url", "").strip()
         if _logo_url:
             SEND_LOG.put(("info", f"  Setting survey logo: {_logo_url}"))
-            DI.set_survey_header_logo(d, cfg["portal"], cfg["dept"], cfg["survey"], _logo_url)
+            import logging as _lg3; _lg3.getLogger().info("STEP: set_survey_header_logo START")
+            try:
+                DI.set_survey_header_logo(d, cfg["portal"], cfg["dept"], cfg["survey"], _logo_url)
+                _lg3.getLogger().info("STEP: set_survey_header_logo DONE")
+            except Exception as _le:
+                _lg3.getLogger().error("STEP: set_survey_header_logo FAILED: %s", _le)
         # Apply survey theme color
         _theme_color = cfg.get("survey_theme_color", "").strip()
         if not _theme_color and templates:
             _theme_color = templates[0].get("banner1", "").strip()
         if _theme_color:
             SEND_LOG.put(("info", f"  Setting survey theme: {_theme_color}"))
-            DI.set_survey_theme_color(d, cfg["portal"], cfg["dept"], cfg["survey"], _theme_color)
+            import logging as _lg3; _lg3.getLogger().info("STEP: set_survey_theme_color START %s", _theme_color)
+            try:
+                DI.set_survey_theme_color(d, cfg["portal"], cfg["dept"], cfg["survey"], _theme_color)
+                _lg3.getLogger().info("STEP: set_survey_theme_color DONE")
+            except Exception as _te:
+                _lg3.getLogger().error("STEP: set_survey_theme_color FAILED: %s", _te)
         # Apply survey footer text
         _survey_footer = cfg.get("survey_footer_text", "").strip()
         if not _survey_footer and templates:
             _survey_footer = templates[0].get("footer_text", "").strip()
         if _survey_footer:
             SEND_LOG.put(("info", f"  Setting survey footer"))
-            DI.set_survey_footer(d, cfg["portal"], cfg["dept"], cfg["survey"], _survey_footer)
+            import logging as _lg3; _lg3.getLogger().info("STEP: set_survey_footer START")
+            try:
+                DI.set_survey_footer(d, cfg["portal"], cfg["dept"], cfg["survey"], _survey_footer)
+                _lg3.getLogger().info("STEP: set_survey_footer DONE")
+            except Exception as _fe:
+                _lg3.getLogger().error("STEP: set_survey_footer FAILED: %s", _fe)
         # Apply preferences (progress bar)
         _hide_pb = cfg.get("hide_progress_bar", False)
         if _hide_pb:
@@ -3418,6 +3456,7 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 SEND_LOG.put(("info", f"   Template rotate: [{subj}] / [{from_name}]"))
 
             SEND_LOG.put(("sep", f"   Batch {i}/{len(chunks)} ({len(chunk)}) "))
+            import logging as _lg3; _lg3.getLogger().info("STEP: configure_email_invite START batch %d portal=%s survey=%s", i, cfg.get("portal","?"), cfg.get("survey","?"))
             try:
                 ok = DI.configure_email_invite(
                     d=d, portal_id=cfg["portal"], dept_id=cfg["dept"],
@@ -3507,9 +3546,19 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         if not _managed: SEND_LOG.put(("done", "  CAMPAIGN COMPLETE"))
         time.sleep(2)
     except Exception as e:
-        import traceback
+        import traceback as _tb2
+        _err_txt = _tb2.format_exc()
         SEND_LOG.put(("err", f"  CRASH: {e}"))
-        SEND_LOG.put(("err", traceback.format_exc()[:400]))
+        SEND_LOG.put(("err", _err_txt[:400]))
+        # write to log file directly so we can see it
+        try:
+            import logging as _lg2
+            _lg2.getLogger().error("SEND_THREAD CRASH: %s\n%s", e, _err_txt)
+        except: pass
+        try:
+            with open(os.path.join(DIR, "send_error.txt"), "w", encoding="utf-8") as _ef:
+                _ef.write(f"CRASH: {e}\n{_err_txt}")
+        except: pass
     finally:
         if not _managed: _send_running = False
         try:
@@ -3836,15 +3885,11 @@ class API:
         return {"ok": True}
 
     def add_profile(self, proxy):
-        # Allow proxy-less profiles up to MAX_FREE; after that require a proxy
         if isinstance(proxy, dict):
             proxy = proxy.get("proxy", proxy.get("value", ""))
         proxy = (proxy or "").strip()
         if not proxy:
-            existing = _load_profiles()
-            no_proxy_count = sum(1 for p in existing if not (p.get("proxy") or p.get("original_proxy") or "").strip())
-            if no_proxy_count >= MAX_FREE:
-                return {"error": f"proxy_required: already have {no_proxy_count} proxy-free profiles (max {MAX_FREE}). Add a proxy."}
+            proxy = _fetch_fresh_proxyscrape_proxy()
         threading.Thread(target=_add_profile_thread, args=(proxy,), daemon=True).start()
         return {"ok": True}
 
@@ -3968,20 +4013,7 @@ class API:
             prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
             if prof:
                 profile_dir = prof["dir"]
-                # Use Webshare HTTP proxy for send — profile SOCKS5 proxy can block Zoho Survey
-                _prof_proxy = prof.get("proxy") or None
-                if _prof_proxy:
-                    _pp = _prof_proxy.rsplit("@", 1)[-1]  # host:port
-                    _pport = int(_pp.rsplit(":", 1)[-1]) if ":" in _pp else 0
-                    if _pport in (1080, 1081, 1082, 1083, 9050, 9150):
-                        # SOCKS5 proxy — fetch fresh ProxyScrape HTTP proxy instead
-                        proxy = _fetch_fresh_proxyscrape_proxy()
-                        if proxy:
-                            SEND_LOG.put(("info", f"  SOCKS5 proxy detected — using fresh ProxyScrape HTTP for send"))
-                        else:
-                            proxy = _prof_proxy
-                    else:
-                        proxy = _prof_proxy
+                proxy = prof.get("proxy") or None
 
         threading.Thread(target=_send_thread,
                          args=(cfg, emails, test_email, profile_dir, proxy, prof_idx),
@@ -4010,13 +4042,7 @@ class API:
         for i, prof in enumerate(active):
             chunk = all_emails[i*chunk_size:(i+1)*chunk_size]
             if not chunk: continue
-            _prof_proxy = prof.get("proxy") or None
-            proxy = _prof_proxy
-            if _prof_proxy:
-                _pp2 = _prof_proxy.rsplit("@", 1)[-1]
-                _pport2 = int(_pp2.rsplit(":", 1)[-1]) if ":" in _pp2 else 0
-                if _pport2 in (1080, 1081, 1082, 1083, 9050, 9150):
-                    proxy = _fetch_fresh_proxyscrape_proxy() or _prof_proxy
+            proxy = prof.get("proxy") or None
             t = threading.Thread(
                 target=_send_thread,
                 args=(cfg, chunk, "", prof["dir"], proxy, prof["idx"]),
@@ -6432,6 +6458,7 @@ if __name__ == "__main__":
     # NOTE: _DEFAULT_PROXY stays as Webshare Egypt — proxy_str (SOCKS5) is for Send only
 
     # Start background threads
+    threading.Thread(target=_proxy_refresh_thread, daemon=True).start()
     if tg_token and tg_chat:
         threading.Thread(target=_tg_callback_poll_thread,
                          args=(tg_token, tg_chat), daemon=True).start()
