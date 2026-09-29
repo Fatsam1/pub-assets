@@ -3300,6 +3300,15 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         cd_max = int(cfg.get("cd_max", 75))
 
         SEND_LOG.put(("info", "  Opening browser..."))
+        # Always read fresh proxy from profiles.json at send time
+        if prof_idx is not None:
+            try:
+                _plist = _load_profiles()
+                _pp = next((p for p in _plist if str(p["idx"]) == str(prof_idx)), None)
+                if _pp:
+                    proxy = _pp.get("proxy") or proxy
+            except Exception:
+                pass
         d = _build_driver(profile_dir, proxy=proxy, size=(1200, 900), headless=cfg.get("hidden_browser", False))
         d.get("https://survey.zoho.com/survey/newui"); time.sleep(7)
         # Get profile credentials for login_if_needed
