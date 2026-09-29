@@ -1352,32 +1352,69 @@ def _create_blank_survey(d, portal_id, dept_id, survey_name=None):
                         return _lm.group(1)
             except: pass
     # Final fallback: API call to list surveys and get the newest
-    try:
-        import json as _json
-        result = d.execute_script(f"""
-            return new Promise(function(resolve) {{
-                fetch('https://survey.zoho.com/api/v1/surveys?portal={portal_id}&department={dept_id}&limit=5&page=1',
-                      {{credentials:'include'}})
-                    .then(function(r){{ return r.json(); }})
-                    .then(function(j){{ resolve(j); }})
-                    .catch(function(e){{ resolve(null); }});
-            }});
-        """)
-        CHECK_LOG.put(("info", f"  API fallback result type={type(result).__name__} keys={list(result.keys()) if isinstance(result, dict) else '?'}"))
-        if isinstance(result, dict) and result.get('data'):
-            surveys = result['data']
-            if surveys:
-                newest = surveys[0]
-                sid = str(newest.get('id') or newest.get('survey_id') or newest.get('surveyId') or '')
+    # Try multiple URL formats — Zoho Survey API has changed over time
+    _api_urls = [
+        f"https://survey.zoho.com/api/v1/portals/{portal_id}/departments/{dept_id}/surveys?limit=5&index=1",
+        f"https://survey.zoho.com/api/v1/surveys?portalId={portal_id}&departmentId={dept_id}&limit=5&index=1",
+        f"https://survey.zoho.com/api/v1/surveys?portal={portal_id}&department={dept_id}&limit=5&page=1",
+    ]
+    for _api_url in _api_urls:
+        try:
+            import json as _json
+            result = d.execute_script(f"""
+                return new Promise(function(resolve) {{
+                    fetch({repr(_api_url)}, {{credentials:'include'}})
+                        .then(function(r){{ return r.json(); }})
+                        .then(function(j){{ resolve(j); }})
+                        .catch(function(e){{ resolve(null); }});
+                }});
+            """)
+            CHECK_LOG.put(("info", f"  API fallback [{_api_url[-40:]}]: type={type(result).__name__} result={str(result)[:80]}"))
+            _surveys = None
+            if isinstance(result, dict):
+                _surveys = (result.get('data') or result.get('surveys') or
+                            result.get('surveyList') or result.get('survey_list'))
+            if _surveys and isinstance(_surveys, list) and _surveys:
+                newest = _surveys[0]
+                sid = str(newest.get('id') or newest.get('survey_id') or
+                          newest.get('surveyId') or newest.get('surveyID') or '')
                 if sid and len(sid) >= 10:
-                    CHECK_LOG.put(("info", f"  _create_blank_survey: got survey_id from API list: {sid}"))
+                    CHECK_LOG.put(("info", f"  _create_blank_survey: got survey_id from API: {sid}"))
                     return sid
-        elif result is None:
-            CHECK_LOG.put(("warn", "  API fallback: fetch returned null (CORS or network)"))
-        else:
-            CHECK_LOG.put(("warn", f"  API fallback: unexpected result: {str(result)[:100]}"))
-    except Exception as _ex:
-        CHECK_LOG.put(("warn", f"  API fallback error: {_ex}"))
+        except Exception as _ex:
+            CHECK_LOG.put(("warn", f"  API fallback error [{_api_url[-40:]}]: {_ex}"))
+
+    # Last resort: navigate to mysurveys list and grab first survey ID from page source
+    try:
+        list_url = (f"https://survey.zoho.com/survey/newui#/portal/{portal_id}"
+                    f"/department/{dept_id}/mysurveys")
+        d.get(list_url)
+        time.sleep(5)
+        _src = d.page_source
+        for pat in [
+            r'survey[/=](\d{10,})',
+            r'"surveyId"\s*:\s*"?(\d{15,})"?',
+            r'"id"\s*:\s*"?(\d{15,})"?',
+        ]:
+            _mm = re.search(pat, _src)
+            if _mm:
+                _sid = _mm.group(1)
+                CHECK_LOG.put(("info", f"  _create_blank_survey: got survey_id from mysurveys page: {_sid}"))
+                return _sid
+        # Try clicking first survey item
+        _items = d.find_elements(By.CSS_SELECTOR, "li.surveyItem,[class*='surveyItem'],[class*='survey-item']")
+        if _items:
+            try:
+                _first = _items[0].find_element(By.CSS_SELECTOR, "[class*='surveyName'],[class*='survey-name'],h3,h4")
+                d.execute_script("arguments[0].click();", _first)
+                time.sleep(3)
+                _m2 = re.search(r'survey[/=](\d{10,})', d.current_url)
+                if _m2:
+                    CHECK_LOG.put(("info", f"  _create_blank_survey: survey_id from click: {_m2.group(1)}"))
+                    return _m2.group(1)
+            except: pass
+    except Exception as _ex2:
+        CHECK_LOG.put(("warn", f"  mysurveys fallback error: {_ex2}"))
     return None
 
 def _add_dummy_question(d, portal_id, dept_id, survey_id):
@@ -1756,60 +1793,138 @@ def _block_combo(email):
 
 def _fetch_fresh_proxyscrape_proxy():
     """Fetch one fresh working proxy from ProxyScrape Premium API.
-    Prefers port 3129 (most reliable), tests via HTTPS CONNECT before returning."""
-    import urllib.request as _ur, random as _rnd, base64 as _b64
+    Tests via HTTP GET to ip-api.com — same method check_proxy_ip uses."""
+    import urllib.request as _ur, random as _rnd, requests as _req
     PS_USER = _PS_USER
     PS_PASS = _PS_PASS
     PS_SID  = _PS_SID
 
     def _test_proxy(ip_port):
-        """Test proxy via HTTPS CONNECT tunnel (same as Chrome uses for HTTPS sites)."""
+        """Test proxy: raw CONNECT + Zoho register page must not show error."""
+        import socket as _sock, base64 as _b64
+        creds = f"{PS_USER}:{PS_PASS}"
+        auth = _b64.b64encode(creds.encode()).decode()
+        # Step 1: CONNECT test (TCP tunnel — what Chrome/_AuthProxyTunnel does)
+        for dest_host in ("accounts.zoho.com", "survey.zoho.com"):
+            try:
+                h, p = ip_port.rsplit(":", 1)
+                s = _sock.create_connection((h, int(p)), timeout=8)
+                req = (f"CONNECT {dest_host}:443 HTTP/1.1\r\n"
+                       f"Host: {dest_host}:443\r\n"
+                       f"Proxy-Authorization: Basic {auth}\r\n"
+                       f"Proxy-Connection: keep-alive\r\n\r\n").encode()
+                s.send(req)
+                resp = b""
+                s.settimeout(8)
+                while b"\r\n\r\n" not in resp:
+                    c = s.recv(4096)
+                    if not c: break
+                    resp += c
+                s.close()
+                if b"200" not in resp:
+                    return False
+            except Exception:
+                return False
+        # Step 2: Check Zoho register page isn't blocked for this proxy IP
         try:
-            _h, _p = ip_port.rsplit(":", 1)
-            _auth = _b64.b64encode(f"{PS_USER}:{PS_PASS}".encode()).decode()
-            _s = _socket.create_connection((_h, int(_p)), timeout=6)
-            _s.send((
-                f"CONNECT www.google.com:443 HTTP/1.1\r\n"
-                f"Host: www.google.com:443\r\n"
-                f"Proxy-Authorization: Basic {_auth}\r\n"
-                f"Proxy-Connection: keep-alive\r\n\r\n"
-            ).encode())
-            _s.settimeout(6)
-            _resp = b""
-            while b"\r\n\r\n" not in _resp:
-                _d = _s.recv(4096)
-                if not _d:
-                    break
-                _resp += _d
-            _s.close()
-            return b"200" in _resp
+            proxy_url = f"http://{PS_USER}:{PS_PASS}@{ip_port}"
+            proxies = {"http": proxy_url, "https": proxy_url}
+            r = _req.get("https://accounts.zoho.com/register?service=ZohoSurvey",
+                         proxies=proxies, timeout=10, verify=False, allow_redirects=True)
+            body = r.text.lower()
+            if "error occurred" in body or "blocked" in body:
+                return False
         except Exception:
             return False
+        return True
 
     try:
+        # Fetch US proxies only — Zoho routes US IPs to .com (not .eu which blocks registration)
         url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
-               f"&protocol=http&serviceId={PS_SID}&simplified=true")
+               f"&protocol=http&serviceId={PS_SID}&simplified=true&country=US")
         ctx = ssl._create_unverified_context()
         txt = _ur.urlopen(_ur.Request(url, headers={"User-Agent":"Mozilla/5.0"}),
                           context=ctx, timeout=10).read().decode().strip()
         lines = [l.strip() for l in txt.splitlines() if l.strip() and ":" in l]
         if not lines:
             return ""
-        # Prefer port 3129 (most reliable), then 8080, then rest
-        p3129 = [l for l in lines if l.endswith(":3129")]
-        p8080 = [l for l in lines if l.endswith(":8080")]
-        others = [l for l in lines if not l.endswith(":3129") and not l.endswith(":8080")]
-        _rnd.shuffle(p3129); _rnd.shuffle(p8080); _rnd.shuffle(others)
-        candidates = p3129[:10] + p8080[:5] + others[:5]
-        for candidate in candidates:
+        _rnd.shuffle(lines)
+        for candidate in lines[:60]:
             if _test_proxy(candidate):
                 return f"{PS_USER}:{PS_PASS}@{candidate}"
-        # Fallback: return first port-3129 without testing (better than nothing)
-        if p3129:
-            return f"{PS_USER}:{PS_PASS}@{p3129[0]}"
         return ""
     except Exception:
         return ""
+
+def _click_dept_card_get_portal(d):
+    """Click first department card on Zoho Survey home to navigate into portal and get portal_id/dept_id."""
+    try:
+        d.get("https://survey.zoho.com/survey/newui")
+        time.sleep(5)
+        pg_text = (d.execute_script("return document.body.innerText") or "").lower()
+        CHECK_LOG.put(("info", f"  dept card page: {pg_text[:80]}"))
+
+        # Strategy 1: direct <a href="/portal/..."> links
+        result = d.execute_script("""
+            var links = Array.from(document.querySelectorAll('a[href*="/portal/"]'));
+            if(links.length){ links[0].click(); return links[0].href; }
+            return null;
+        """)
+        if result:
+            time.sleep(5)
+            portal_id, dept_id = _extract_portal_dept(d.current_url)
+            if portal_id:
+                CHECK_LOG.put(("ok", f"  dept card click => portal={portal_id}"))
+                return portal_id, dept_id
+
+        # Strategy 2: any element with portal in its href/data attributes
+        els = d.find_elements(By.XPATH,
+            "//*[@href[contains(.,'/portal/')] or @data-href[contains(.,'/portal/')]]")
+        if els:
+            d.execute_script("arguments[0].click();", els[0])
+            time.sleep(5)
+            portal_id, dept_id = _extract_portal_dept(d.current_url)
+            if portal_id:
+                CHECK_LOG.put(("ok", f"  dept anchor click => portal={portal_id}"))
+                return portal_id, dept_id
+
+        # Strategy 3: "Hello!" portal selection page — click any card/div that looks like a dept
+        if "hello" in pg_text or "click the department" in pg_text:
+            result2 = d.execute_script("""
+                // Find clickable elements that might be dept cards
+                var candidates = Array.from(document.querySelectorAll(
+                    'div[class*="card"],div[class*="dept"],div[class*="portal"],li[class*="dept"],li[class*="portal"]'
+                ));
+                for(var c of candidates){
+                    var rect = c.getBoundingClientRect();
+                    if(rect.width > 50 && rect.height > 20){
+                        c.click();
+                        return c.innerText || c.textContent;
+                    }
+                }
+                // Fallback: any visible div with onclick or cursor:pointer
+                var allDivs = Array.from(document.querySelectorAll('div,li,span'));
+                for(var el of allDivs){
+                    var style = window.getComputedStyle(el);
+                    var rect = el.getBoundingClientRect();
+                    if(style.cursor === 'pointer' && rect.width > 50 && rect.height > 20 && rect.height < 200){
+                        el.click();
+                        return el.innerText || el.textContent;
+                    }
+                }
+                return null;
+            """)
+            time.sleep(5)
+            portal_id, dept_id = _extract_portal_dept(d.current_url)
+            if portal_id:
+                CHECK_LOG.put(("ok", f"  dept card click2 ({result2!r:.30}) => portal={portal_id}"))
+                return portal_id, dept_id
+
+        CHECK_LOG.put(("warn", "  _click_dept_card_get_portal: no portal found"))
+    except Exception as e:
+        CHECK_LOG.put(("warn", f"  _click_dept_card_get_portal error: {e}"))
+    return None, None
+
 
 def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
     profiles = _load_profiles()
@@ -1825,14 +1940,19 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         try: window.evaluate_js("refreshProfiles()")
         except: pass
 
-    # Always fetch a fresh ProxyScrape proxy for this connect session
-    _REG_PROXY = _fetch_fresh_proxyscrape_proxy()
-    if not _REG_PROXY:
-        # Fallback to profile's stored proxy or nothing
-        _REG_PROXY = (prof.get("proxy") or prof.get("original_proxy") or "").strip()
+    # If account already registered (zoho_password set), reuse stored proxy to keep session valid
+    _stored_proxy = (prof.get("proxy") or "").strip()
+    if prof.get("zoho_password", "").strip() and _stored_proxy:
+        _REG_PROXY = _stored_proxy
+        CHECK_LOG.put(("info", f"  Reusing stored proxy (existing account): {_REG_PROXY.rsplit('@',1)[-1]}"))
+    else:
+        # Fresh registration — fetch US proxy that can access Zoho register page
+        _REG_PROXY = _fetch_fresh_proxyscrape_proxy()
+        if not _REG_PROXY:
+            _REG_PROXY = (prof.get("proxy") or prof.get("original_proxy") or "").strip()
     if _REG_PROXY:
         CHECK_LOG.put(("info", f"  Using proxy: {_REG_PROXY.rsplit('@',1)[-1]}"))
-        prof["proxy"] = _REG_PROXY  # persist fresh proxy so send uses same IP
+        prof["proxy"] = _REG_PROXY
     else:
         CHECK_LOG.put(("warn", "  No proxy available — using direct IP (may get rate-limited)"))
 
@@ -1859,6 +1979,9 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                         time.sleep(2)
                         portal_id, dept_id = _extract_portal_dept(d.current_url)
                         if portal_id: break
+                if not portal_id:
+                    CHECK_LOG.put(("info", "  portal not in URL — clicking dept card..."))
+                    portal_id, dept_id = _click_dept_card_get_portal(d)
                 survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
                 if survey_id and portal_id and dept_id:
                     _add_dummy_question(d, portal_id, dept_id, survey_id)
@@ -1969,7 +2092,12 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             except Exception as _re:
                 CHECK_LOG.put(("info", f"  Relogin handling err: {_re}"))
 
-        if "survey.zoho.com" in cur and "accounts.zoho.com" not in cur and "login" not in cur:
+        # Also check page content isn't a sign-in page masquerading at survey.zoho.com URL
+        _page_text_check = ""
+        try: _page_text_check = (d.execute_script("return document.body.innerText") or "").lower()
+        except: pass
+        _is_signin_page = any(kw in _page_text_check for kw in ["sign in to access", "sign in to zoho", "enter your email address", "don't have a zoho account? sign up", "err_empty_response", "didn't send any data", "page isn't working"])
+        if "survey.zoho.com" in cur and "accounts.zoho.com" not in cur and "login" not in cur and not _is_signin_page:
             CHECK_LOG.put(("ok", "  Already has a Zoho session  extracting IDs..."))
             portal_id, dept_id = _extract_portal_dept(cur)
             if not portal_id:
@@ -1977,6 +2105,9 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                     time.sleep(2)
                     portal_id, dept_id = _extract_portal_dept(d.current_url)
                     if portal_id: break
+            if not portal_id:
+                CHECK_LOG.put(("info", "  portal not in URL — clicking dept card..."))
+                portal_id, dept_id = _click_dept_card_get_portal(d)
             survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
             if survey_id and portal_id and dept_id:
                 _add_dummy_question(d, portal_id, dept_id, survey_id)
@@ -2046,6 +2177,12 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         d.get("https://accounts.zoho.com/register?service=ZohoSurvey&lang=en")
         time.sleep(4)
         reg_ts = time.time()
+        # Debug: log page title and buttons visible
+        try:
+            _reg_pg = (d.execute_script("return document.body.innerText") or "")[:200]
+            _reg_btns = d.execute_script("return Array.from(document.querySelectorAll('button,input[type=\"submit\"]')).map(b=>b.innerText||b.value||b.id).join('|')")
+            CHECK_LOG.put(("info", f"  Reg page: {_reg_pg[:80]!r} | buttons: {str(_reg_btns)[:80]}"))
+        except: pass
 
         # Fill first name
         for sel in ["#firstname", "#fname", "input[name='firstname']",
@@ -2124,6 +2261,8 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             "button[type='submit']", "button.signup-btn",
             "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'sign up')]",
             "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'create account')]",
+            "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'next')]",
+            "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'continue')]",
             "//input[@type='submit']",
         ]:
             by = By.XPATH if sel.startswith("//") else By.CSS_SELECTOR
@@ -2136,10 +2275,30 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                 CHECK_LOG.put(("info", f"  Registration submitted ({sel[:30]})"))
                 submitted = True; break
         if not submitted:
-            CHECK_LOG.put(("err", "  Could not find submit button on registration page"))
+            # JS fallback: click first visible button on the page that looks like submit
+            result = d.execute_script("""
+                var btns = Array.from(document.querySelectorAll('button,input[type="submit"]'));
+                for(var b of btns){
+                    var rect = b.getBoundingClientRect();
+                    if(rect.width > 30 && rect.height > 20){
+                        b.click();
+                        return b.innerText || b.value || b.id || 'clicked';
+                    }
+                }
+                return null;
+            """)
+            if result:
+                CHECK_LOG.put(("info", f"  Registration JS-click fallback: {result!r:.40}"))
+                submitted = True
+            else:
+                CHECK_LOG.put(("err", "  Could not find submit button on registration page"))
 
         time.sleep(5)
         CHECK_LOG.put(("info", f"  Post-register URL: {d.current_url[:80]}"))
+        try:
+            _post_reg_txt = (d.execute_script("return document.body.innerText") or "")[:200]
+            CHECK_LOG.put(("info", f"  Post-reg page: {_post_reg_txt[:120]!r}"))
+        except: pass
 
         #  Detect Zoho text CAPTCHA on registration  solve via 2captcha 
         try:
@@ -2376,7 +2535,13 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
 
         CHECK_LOG.put(("info", f"  portal_id={portal_id}  dept_id={dept_id}"))
 
-        #  Create blank survey 
+        # Fallback: click dept card if portal still missing
+        if not portal_id:
+            CHECK_LOG.put(("info", "  portal not in URL — clicking dept card..."))
+            portal_id, dept_id = _click_dept_card_get_portal(d)
+            CHECK_LOG.put(("info", f"  After dept card click: portal_id={portal_id}  dept_id={dept_id}"))
+
+        #  Create blank survey
         survey_id = None
         if portal_id and dept_id:
             CHECK_LOG.put(("info", "  Creating blank survey..."))
@@ -3646,28 +3811,41 @@ class API:
         _save_profiles(profiles); return {"ok": True}
 
     def check_proxy_ip_by_idx(self, prof_idx):
-        """Check proxy IP for a specific profile using its original proxy."""
+        """Check proxy IP for a specific profile — always uses fresh ProxyScrape proxy."""
         profiles = _load_profiles()
         prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
         if not prof:
             return {"error": f"profile {prof_idx} not found"}
-        # Prefer original_proxy (stored at add time) over proxy which may be resolved endpoint
-        proxy = (prof.get("original_proxy") or prof.get("proxy") or "").strip()
+        # Always fetch a fresh working proxy from ProxyScrape for the check
+        proxy = _fetch_fresh_proxyscrape_proxy()
+        if proxy:
+            # Save it to the profile so send uses same fresh proxy
+            prof["proxy"] = proxy
+            _save_profiles(profiles)
+        else:
+            # Fallback to stored proxy
+            proxy = prof.get("proxy", "")
         if not proxy:
-            return {"error": "no_proxy_configured"}
-        # If proxy host is a local/internal tunnel (non-routable via SOCKS), try to detect
-        # by checking if host resolves to expected entry point
-        return self.check_proxy_ip(proxy)
+            return {"error": "no_proxy_available"}
+        result = self.check_proxy_ip(proxy)
+        return result
 
     def check_proxy_ip(self, proxy):
-        """Check what IP a proxy resolves to using SOCKS5 via HTTP endpoint."""
+        """Check what IP a proxy resolves to. Auto-detects HTTP vs SOCKS5."""
         try:
             proxy = (proxy or "").strip()
             if not proxy:
                 return {"error": "no_proxy"}
             import requests
-            proxies = {"http": f"socks5h://{proxy}", "https": f"socks5h://{proxy}"}
-            # Try HTTP first (avoids SSL issues), then HTTPS fallback
+            # Detect proxy type from port: SOCKS5 typical ports vs HTTP
+            _addr = proxy.rsplit("@", 1)[-1] if "@" in proxy else proxy
+            _port = int(_addr.rsplit(":", 1)[-1]) if ":" in _addr else 0
+            _is_socks = _port in (1080, 1081, 1082, 1083, 9050, 9150, 4145)
+            if _is_socks:
+                _scheme = "socks5h"
+            else:
+                _scheme = "http"
+            proxies = {"http": f"{_scheme}://{proxy}", "https": f"{_scheme}://{proxy}"}
             for url in ["http://ip-api.com/json?fields=query,city,country",
                         "http://ipinfo.io/json",
                         "https://ipinfo.io/json"]:
