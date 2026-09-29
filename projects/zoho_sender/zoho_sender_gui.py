@@ -3898,15 +3898,12 @@ class API:
         if not prof: return {"error": "profile_not_found"}
         if prof["status"] not in ("free","active"):
             return {"error": "profile_busy"}
-        # Enforce proxy requirement: max MAX_FREE profiles without a proxy
-        if not (prof.get("proxy") or prof.get("original_proxy") or "").strip():
-            no_proxy_connected = sum(
-                1 for p in profiles
-                if p.get("status") in ("active","busy")
-                and not (p.get("proxy") or p.get("original_proxy") or "").strip()
-            )
-            if no_proxy_connected >= MAX_FREE:
-                return {"error": f"proxy_required: max {MAX_FREE} profiles can run without a proxy. Add a proxy to profile {prof_idx} first."}
+        # Auto-assign proxy if profile has none
+        if not (prof.get("proxy") or "").strip():
+            _p = _fetch_fresh_proxyscrape_proxy()
+            if _p:
+                prof["proxy"] = _p
+                _save_profiles(profiles)
         threading.Thread(target=_connect_thread,
                          args=(email, pw, prof_idx),
                          kwargs={"tg_token": tg_token, "tg_chat": tg_chat},
@@ -4742,9 +4739,9 @@ textarea{resize:vertical;min-height:65px}
   <div class="cb">
     <div class="profs-grid" id="profs-grid"><!-- rendered by JS --></div>
     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
-      <label>Add Profile (requires residential proxy)</label>
+      <label>Add Profile (proxy optional — auto-assigned if empty)</label>
       <div style="display:flex;gap:7px">
-        <input type="text" id="new-proxy" placeholder="user:pass@host:port  or  host:port" style="flex:1">
+        <input type="text" id="new-proxy" placeholder="user:pass@host:port  or  leave empty for auto" style="flex:1">
         <button onclick="addProfile()"
           style="padding:6px 14px;background:#6d28d9;color:#fff;font-weight:700;
             border:none;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">
@@ -5547,8 +5544,8 @@ async function clearValid(){
 function openConnectDlg(email,pw){
   _dlgEmail=email; _dlgPw=pw;
   pywebview.api.get_profiles().then(profs=>{
-    const free=profs.find(p=>p.status==='free');
-    if(!free){addLog('err','  No free profile  disconnect or add proxy profile');return;}
+    const free=profs.find(p=>p.status==='free')||profs.find(p=>p.status==='active'&&!p.email);
+    if(!free){addLog('err','  No free profile — click + Add Profile first');return;}
     _dlgProfIdx=free.idx;
     document.getElementById('dlg-prof').textContent='#'+free.idx;
     document.getElementById('dlg-email').value=email;
@@ -5736,9 +5733,10 @@ async function autoAssignProxies(){
 
 async function addProfile(){
   const proxy=document.getElementById('new-proxy').value.trim();
-  if(!proxy){addLog('err','  Proxy required to add a new profile');return;}
-  const r=await pywebview.api.add_profile(proxy);
+  addLog('info','  Adding profile'+(proxy?(' with proxy '+proxy.split('@').pop()):' — fetching proxy automatically...'));
+  const r=await pywebview.api.add_profile(proxy||'');
   if(r&&r.ok){document.getElementById('new-proxy').value='';setTimeout(refreshProfiles,600);}
+  else if(r&&r.error){addLog('err','  '+r.error);}
 }
 
 async function switchProfileAccount(profIdx){
