@@ -2428,6 +2428,14 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
     # Break SPA state: go to home first, then navigate to launch URL
     d.get("https://survey.zoho.com/survey/newui"); rw(2, 3)
     d.get(launch_url); rw(6, 8)
+    # Wait for Zoho SPA spinner to disappear (up to 25 extra seconds)
+    for _sp in range(25):
+        _pg_sp = (d.execute_script("return document.body.innerText") or "").strip()
+        if len(_pg_sp) > 50:
+            break
+        time.sleep(1)
+    else:
+        L.info("launch page: spinner wait timed out — proceeding anyway")
     ss(d, "ci_01_launch.png")
 
     # ── Step 2: Get into "Email Invites by Zoho Survey" flow ────────────
@@ -2438,7 +2446,7 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
     from selenium.webdriver.common.action_chains import ActionChains as _AC
 
     email_icon = None
-    for _tile_try in range(5):
+    for _tile_try in range(8):
         # Scroll down to reveal "Private audience" section (Email Invites is below the fold)
         try:
             d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -2550,11 +2558,11 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
 
         if email_icon:
             break
-        L.info(f"Email tile not found yet (attempt {_tile_try+1}/5) — waiting...")
+        L.info(f"Email tile not found yet (attempt {_tile_try+1}/8) — waiting...")
         rw(3, 4)
 
     if not email_icon:
-        L.error("Email Invites tile/button not found after 5 attempts")
+        L.error("Email Invites tile/button not found after 8 attempts")
         ss(d, "ci_fail_no_icon.png"); return False
 
     _btn_txt = d.execute_script("return (arguments[0].innerText||'').trim()", email_icon)
