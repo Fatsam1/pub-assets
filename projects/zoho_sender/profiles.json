@@ -50,7 +50,7 @@
     "email": "hscode.manager.test.1@solardropshipping.com",
     "status": "active",
     "connected_at": "2026-09-29 20:48",
-    "sent_count": 0,
+    "sent_count": 1,
     "health": "ok",
     "trial_days": 7,
     "last_health_check": null,

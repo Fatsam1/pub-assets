@@ -6,6 +6,10 @@ discover_invite.py — Zoho Survey invite URL discovery for Oscar's account
 4. Save the invite URL
 """
 import sys, time, re, os, logging, ssl
+# Force utf-8 on stdout to avoid UnicodeEncodeError with arrow/special chars on Windows cp1256
+if hasattr(sys.stdout, 'reconfigure'):
+    try: sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except: pass
 ssl._create_default_https_context = ssl._create_unverified_context
 os.environ["WDM_SSL_VERIFY"] = "0"
 
@@ -528,7 +532,7 @@ def create_survey(d, portal_id, dept_id):
                     break
             except: pass
 
-    SENDER_NAME = "​"  # zero-width space → Zoho black bar shows blank
+    SENDER_NAME = "​"  # zero-width space -> Zoho black bar shows blank
 
     # Step 1: Click "Create Survey" button — this opens the name dialog
     for sel in [
@@ -852,7 +856,7 @@ def navigate_to_email_invite(d, portal_id, dept_id, survey_id):
         L.info("Collect/Email page confirmed!")
         return cur
 
-    # May need to click "Add Collector" → "Email Invites by Zoho Survey"
+    # May need to click "Add Collector" -> "Email Invites by Zoho Survey"
     if "collector" in pg_l or "add" in pg_l or "distribute" in pg_l:
         for sel in [
             "//div[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'email invite')]",
@@ -896,7 +900,7 @@ def navigate_to_email_invite(d, portal_id, dept_id, survey_id):
 def set_survey_end_page(d, portal_id, dept_id, survey_id,
                         end_page_type='default', end_page_url='', end_page_msg=''):
     """
-    Navigate to SETTINGS → Survey End Page and configure post-survey redirect.
+    Navigate to SETTINGS -> Survey End Page and configure post-survey redirect.
     end_page_type: 'default' | 'redirect' | 'message' | 'summary'
     """
     if not end_page_type or end_page_type == 'default':
@@ -947,7 +951,7 @@ def set_survey_end_page(d, portal_id, dept_id, survey_id,
     L.info(f"Radios found on end-page: {all_radios_info}")
 
     def _find_ep_radio(keyword_sets, value_attrs):
-        """Multi-strategy radio finder: by value → by label text → by aria → by label click"""
+        """Multi-strategy radio finder: by value -> by label text -> by aria -> by label click"""
         return d.execute_script("""
             var vals = arguments[0];
             var kwds = arguments[1];
@@ -1171,7 +1175,7 @@ def set_survey_end_page(d, portal_id, dept_id, survey_id,
 
 def set_survey_button_text(d, portal_id, dept_id, survey_id, button_text):
     """
-    SETTINGS → Introduction Page → "Begin Survey button label"
+    SETTINGS -> Introduction Page -> "Begin Survey button label"
     Changes the CTA button text in the email invite from "Begin Survey" to custom text.
     input#continueButtonLabel is a plain text input — simple to set.
     """
@@ -1246,10 +1250,10 @@ def set_survey_button_text(d, portal_id, dept_id, survey_id, button_text):
 
 def disable_intro_page(d, portal_id, dept_id, survey_id):
     """
-    SETTINGS → Introduction Page → toggle OFF so Zoho does NOT append a 'Begin Survey'
+    SETTINGS -> Introduction Page -> toggle OFF so Zoho does NOT append a 'Begin Survey'
     button to the email invite. Call this when using our own CTA button in the letter body.
     Strategy: navigate to Introduction Page settings, find the toggle/checkbox and turn it off.
-    If the toggle is already off → no-op. If CONFIGURE button shows, intro page is already
+    If the toggle is already off -> no-op. If CONFIGURE button shows, intro page is already
     disabled. If a DELETE/DISABLE button exists, click it to turn it off.
     """
     settings_url = (f"https://survey.zoho.com/survey/newui"
@@ -1268,7 +1272,7 @@ def disable_intro_page(d, portal_id, dept_id, survey_id):
         L.warning("disable_intro_page: Introduction Page sidebar link not found")
         return False
     d.execute_script("arguments[0].click();", intro_link); rw(3, 4)
-    # If "CONFIGURE" button is visible → intro page is already disabled (not configured)
+    # If "CONFIGURE" button is visible -> intro page is already disabled (not configured)
     configure_visible = d.execute_script("""
         for(var b of document.querySelectorAll('button,a')){
             var t=(b.innerText||'').trim().toUpperCase();
@@ -1315,7 +1319,7 @@ def disable_intro_page(d, portal_id, dept_id, survey_id):
 
 def set_survey_header_logo(d, portal_id, dept_id, survey_id, logo_url):
     """
-    SETTINGS → Header → Survey logo → download logo from URL and upload via file input.
+    SETTINGS -> Header -> Survey logo -> download logo from URL and upload via file input.
     The BROWSE div triggers input#upload-image (hidden file input) — use send_keys with local path.
     """
     if not logo_url:
@@ -1397,7 +1401,7 @@ def set_survey_header_logo(d, portal_id, dept_id, survey_id, logo_url):
 
 
 def set_survey_footer(d, portal_id, dept_id, survey_id, footer_text):
-    """SETTINGS → Footer — set custom footer text on the survey page."""
+    """SETTINGS -> Footer — set custom footer text on the survey page."""
     if not footer_text:
         return True
     settings_url = (f"https://survey.zoho.com/survey/newui"
@@ -1529,7 +1533,7 @@ def set_survey_theme_color(d, portal_id, dept_id, survey_id, primary_color):
 
 def set_survey_preferences(d, portal_id, dept_id, survey_id,
                             show_progress_bar=None, one_response_per_person=None):
-    """SETTINGS → Preferences — control progress bar visibility and response limits."""
+    """SETTINGS -> Preferences — control progress bar visibility and response limits."""
     if show_progress_bar is None and one_response_per_person is None:
         return True
     settings_url = (f"https://survey.zoho.com/survey/newui"
@@ -1589,7 +1593,7 @@ def set_survey_preferences(d, portal_id, dept_id, survey_id,
 
 
 def set_survey_terms(d, portal_id, dept_id, survey_id, terms_text):
-    """SETTINGS → Terms and Conditions — enable T&C checkbox with custom brand text.
+    """SETTINGS -> Terms and Conditions — enable T&C checkbox with custom brand text.
 
     Enables the T&C section and sets the custom text so respondents must agree
     before submitting (e.g. 'By continuing, you agree to HSBC's Privacy Policy').
@@ -1699,7 +1703,7 @@ def set_survey_terms(d, portal_id, dept_id, survey_id, terms_text):
 def set_social_media_preview(d, portal_id, dept_id, survey_id,
                               og_title='', og_description='', og_image_url=''):
     """
-    SETTINGS → Social Media Preview — set OG title, description, image.
+    SETTINGS -> Social Media Preview — set OG title, description, image.
     Shown when survey link is shared on WhatsApp/Facebook/Telegram/etc.
     og_title      : headline shown in link preview card
     og_description: subtitle/body text in preview card
@@ -1740,7 +1744,7 @@ def set_social_media_preview(d, portal_id, dept_id, survey_id,
         result = d.execute_script("""
             var kwds = arguments[0];
             var val  = arguments[1];
-            // Strategy 1: label → adjacent/child input/textarea
+            // Strategy 1: label -> adjacent/child input/textarea
             for(var lbl of document.querySelectorAll('label,div,span,p')){
                 var lt = (lbl.innerText||lbl.textContent||'').toLowerCase().trim();
                 for(var kw of kwds){
@@ -1876,7 +1880,7 @@ def set_end_page_auto_redirect(d, portal_id, dept_id, survey_id,
                                 brand_name='', brand_color='#0057b8',
                                 brand_logo_url=''):
     """
-    SETTINGS → Survey End Page → Custom Message with embedded HTML:
+    SETTINGS -> Survey End Page -> Custom Message with embedded HTML:
     Shows a branded 'Thank You / Verification Complete' page for `delay_seconds`,
     then auto-redirects to `redirect_url` via JavaScript + meta refresh.
 
@@ -2114,7 +2118,7 @@ def rename_survey(d, portal_id, dept_id, survey_id, new_name):
 
 
 def set_survey_intro_page(d, portal_id, dept_id, survey_id, title, description=""):
-    """SETTINGS → Introduction Page — click sidebar link, configure, set title + description."""
+    """SETTINGS -> Introduction Page — click sidebar link, configure, set title + description."""
     if not title:
         return True
     settings_url = (f"https://survey.zoho.com/survey/newui"
@@ -2251,7 +2255,7 @@ def rename_department(d, portal_id, dept_id, new_name):
     Zoho Survey email invites show the department/portal name as the black
     title bar header. Changing the department name updates this.
 
-    Navigates to My Portals → clicks the dept settings icon or uses the
+    Navigates to My Portals -> clicks the dept settings icon or uses the
     portal manage page to rename the department.
     Returns True on success, False on failure.
     """
@@ -2392,13 +2396,13 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                            hide_survey_button=False):
     """
     Full Email Invite flow (discovered via Phase 7c exploration):
-      1. Launch → click email_invites tile
-      2. Draft handling: CONTINUE WITH DRAFT → back to Compose  OR  CREATE EMAIL
+      1. Launch -> click email_invites tile
+      2. Draft handling: CONTINUE WITH DRAFT -> back to Compose  OR  CREATE EMAIL
       3. Fill Subject (input#editorSubject / input[name='recipient_subject'])
       4. Set body + optional header/button style via Edit Message modal (Summernote)
-      5. NEXT → Sender Info → fill sender_name → NEXT
-      6. Recipients: input[name='recipient_input'] → type + Enter → NEXT
-      7. Send/Schedule: click button#oneTimeDistribution CONTINUE → Send Now
+      5. NEXT -> Sender Info -> fill sender_name -> NEXT
+      6. Recipients: input[name='recipient_input'] -> type + Enter -> NEXT
+      7. Send/Schedule: click button#oneTimeDistribution CONTINUE -> Send Now
     recipients: list or comma-separated string.
     btn_label/btn_color/header_title/header_bg/header_font: set inside Edit Message modal.
     Returns True if sent/scheduled, False on failure.
@@ -2635,12 +2639,12 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
 
     # ── Step 3: Entry-point detection after clicking the email tile ─────────
     # New Zoho UI 2026:
-    #   Clicking Email Invites Create → "My Collectors" page with CREATE EMAIL buttons
-    #   Clicking CREATE EMAIL → Compose page (input#editorSubject)
+    #   Clicking Email Invites Create -> "My Collectors" page with CREATE EMAIL buttons
+    #   Clicking CREATE EMAIL -> Compose page (input#editorSubject)
     # Old UI:
-    #   First use → Compose directly
-    #   After send → History → CREATE NEW → Distribute → CREATE EMAIL → Compose
-    #   Draft → CONTINUE WITH DRAFT → back to Compose
+    #   First use -> Compose directly
+    #   After send -> History -> CREATE NEW -> Distribute -> CREATE EMAIL -> Compose
+    #   Draft -> CONTINUE WITH DRAFT -> back to Compose
     pg = (d.execute_script("return document.body.innerText") or "").lower()
     ss(d, "ci_02b_state.png")
 
@@ -2741,7 +2745,7 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
             if discard:
                 L.info("Draft banner — clicking DISCARD DRAFT to start fresh")
                 d.execute_script("arguments[0].click();", discard); rw(2, 3)
-                # Confirm dialog: "Are you sure you want to delete this draft?" → click YES
+                # Confirm dialog: "Are you sure you want to delete this draft?" -> click YES
                 yes_btn = d.execute_script("""
                     for(var b of document.querySelectorAll('button')){
                         var t=(b.innerText||'').trim().toUpperCase();
@@ -2751,7 +2755,7 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
                 if yes_btn:
                     L.info("Discard confirm — clicking YES")
                     d.execute_script("arguments[0].click();", yes_btn); rw(3, 4)
-                # After confirm → still on Collector Overview → click "Send Email" or find Invite History → Send New
+                # After confirm -> still on Collector Overview -> click "Send Email" or find Invite History -> Send New
                 # Try clicking "Invite History" tab then "Send Email" button
                 invite_hist = d.execute_script("""
                     for(var el of document.querySelectorAll('a,button,li,div')){
@@ -2815,7 +2819,7 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
             _click_create_email()
 
         else:
-            # Overview/history page: CREATE NEW → Distribute page → CREATE EMAIL
+            # Overview/history page: CREATE NEW -> Distribute page -> CREATE EMAIL
             create_new = d.execute_script("""
                 for(var b of document.querySelectorAll('button')){
                     if((b.innerText||'').trim().toUpperCase()==='CREATE NEW'&&b.offsetParent) return b;
@@ -2861,8 +2865,8 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
     L.info(f"Body set: {body_set}")
     ss(d, "ci_05_body.png")
 
-    # ── Step 6: NEXT-1 → Sender Info ─────────────────────────────────────
-    L.info("NEXT-1: Compose → Sender Info")
+    # ── Step 6: NEXT-1 -> Sender Info ─────────────────────────────────────
+    L.info("NEXT-1: Compose -> Sender Info")
     if not _click_next_btn(d):
         L.error("NEXT-1 (saveInviteButton) not found"); ss(d, "ci_fail_next1.png"); return False
     rw(3, 4); ss(d, "ci_06_sender_info.png")
@@ -2963,8 +2967,8 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
             """)
             L.info(f"reply_to: custom dropdown not found. Current displayed value: {cur_val!r}")
 
-    # ── Step 8: NEXT-2 → Recipients ──────────────────────────────────────
-    L.info("NEXT-2: Sender Info → Recipients")
+    # ── Step 8: NEXT-2 -> Recipients ──────────────────────────────────────
+    L.info("NEXT-2: Sender Info -> Recipients")
     if not _click_next_btn(d):
         L.warning("NEXT-2 not found"); ss(d, "ci_warn_next2.png")
     else:
@@ -2976,8 +2980,8 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
     L.info(f"Recipients result: {recip_ok}")
     ss(d, "ci_09_recipients_added.png")
 
-    # ── Step 10: NEXT-3 → Send/Schedule ──────────────────────────────────
-    L.info("NEXT-3: Recipients → Send/Schedule")
+    # ── Step 10: NEXT-3 -> Send/Schedule ──────────────────────────────────
+    L.info("NEXT-3: Recipients -> Send/Schedule")
     if _click_next_btn(d):
         rw(3, 4); ss(d, "ci_10_send_sched.png")
     else:
@@ -3095,8 +3099,8 @@ def _set_email_body(d, html_body, btn_label=None, btn_color=None,
                     hide_survey_button=False):
     """
     Set email body via Zoho Survey's Summernote editor.
-    Confirmed flow (Phase 7c): Click 'Edit Message' DIV → modal opens with
-    .note-editable[contenteditable='true'] → set innerHTML → click OK
+    Confirmed flow (Phase 7c): Click 'Edit Message' DIV -> modal opens with
+    .note-editable[contenteditable='true'] -> set innerHTML -> click OK
     (button[name='saveTemplateButton']).
 
     Also optionally sets header title, colors, and button label/color in the same
@@ -3246,7 +3250,7 @@ def _set_email_body(d, html_body, btn_label=None, btn_color=None,
             Strategy:
             1. Find the hex input field (current value matches known default or section context)
             2. Find its adjacent color swatch div/span
-            3. Click swatch → color picker popup opens
+            3. Click swatch -> color picker popup opens
             4. Enter hex in picker input field
             5. Press TAB to sync the canvas gradient from the typed hex
             6. Click OK to confirm
@@ -3524,7 +3528,7 @@ def _add_recipients(d, recipients_csv):
     """
     Add email recipients to Zoho Survey Email Invite recipients page.
     Confirmed (Phase 7c): input[name='recipient_input'] cls='inviteInp'
-    ph='Enter email addresses separated by commas' → type addr + Enter per address.
+    ph='Enter email addresses separated by commas' -> type addr + Enter per address.
     """
     emails = [a.strip() for a in recipients_csv.split(",") if a.strip()]
     if not emails:
@@ -3677,7 +3681,7 @@ def set_collector_button_style(d, portal_id, dept_id, survey_id, btn_label, btn_
                                header_title=None, header_bg=None, header_font=None,
                                body_text=None):
     """
-    Launch → Email Invites collector → Edit Message → set all header + button styles.
+    Launch -> Email Invites collector -> Edit Message -> set all header + button styles.
 
     Params:
       btn_label   : button text, e.g. "Continue"
@@ -3699,7 +3703,7 @@ def set_collector_button_style(d, portal_id, dept_id, survey_id, btn_label, btn_
     d.get(launch_url); rw(5, 7)
 
     # Step 1: Navigate into the first Email collector to expose "Edit Message"
-    # On launch page → "My Collectors" list → click first collector row → Compose Email page
+    # On launch page -> "My Collectors" list -> click first collector row -> Compose Email page
     collector_entered = d.execute_script("""
         // Try clicking the first collector name/row to enter Compose Email screen
         var links = Array.from(document.querySelectorAll('a, button, .pointerCursor, [role="link"]'));
@@ -3947,3 +3951,4 @@ def build_redirect_html(brand_name, logo_url, message, target_url, delay_sec=3, 
 
 if __name__ == "__main__":
     main()
+
