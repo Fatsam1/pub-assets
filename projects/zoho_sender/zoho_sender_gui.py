@@ -1940,11 +1940,43 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         try: window.evaluate_js("refreshProfiles()")
         except: pass
 
-    # If account already registered (zoho_password set), reuse stored proxy to keep session valid
+    # Determine proxy — test stored proxy first; fetch fresh if dead or missing
+    def _quick_test_proxy(px_str):
+        """Quick CONNECT test to accounts.zoho.com — returns True if alive."""
+        import socket as _sk, base64 as _b64
+        try:
+            _ip_port = px_str.rsplit("@", 1)[-1]
+            _h, _p = _ip_port.rsplit(":", 1)
+            _au = _b64.b64encode(f"{_PS_USER}:{_PS_PASS}".encode()).decode()
+            _s = _sk.create_connection((_h, int(_p)), timeout=6)
+            _req = (f"CONNECT accounts.zoho.com:443 HTTP/1.1\r\n"
+                    f"Host: accounts.zoho.com:443\r\n"
+                    f"Proxy-Authorization: Basic {_au}\r\n"
+                    f"Proxy-Connection: keep-alive\r\n\r\n").encode()
+            _s.send(_req)
+            _s.settimeout(6)
+            _resp = b""
+            while b"\r\n\r\n" not in _resp:
+                _c = _s.recv(4096)
+                if not _c: break
+                _resp += _c
+            _s.close()
+            return b"200" in _resp
+        except Exception:
+            return False
+
     _stored_proxy = (prof.get("proxy") or "").strip()
+    _REG_PROXY = ""
     if prof.get("zoho_password", "").strip() and _stored_proxy:
-        _REG_PROXY = _stored_proxy
-        CHECK_LOG.put(("info", f"  Reusing stored proxy (existing account): {_REG_PROXY.rsplit('@',1)[-1]}"))
+        # Test stored proxy — if alive, reuse it; if dead, fetch fresh
+        if _quick_test_proxy(_stored_proxy):
+            _REG_PROXY = _stored_proxy
+            CHECK_LOG.put(("info", f"  Stored proxy alive — reusing: {_REG_PROXY.rsplit('@',1)[-1]}"))
+        else:
+            CHECK_LOG.put(("warn", f"  Stored proxy dead ({_stored_proxy.rsplit('@',1)[-1]}) — fetching fresh US proxy..."))
+            _REG_PROXY = _fetch_fresh_proxyscrape_proxy()
+            if not _REG_PROXY:
+                CHECK_LOG.put(("err", "  No fresh proxy found — connect will likely fail"))
     else:
         # Fresh registration — fetch US proxy that can access Zoho register page
         _REG_PROXY = _fetch_fresh_proxyscrape_proxy()
@@ -1982,9 +2014,14 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                 if not portal_id:
                     CHECK_LOG.put(("info", "  portal not in URL — clicking dept card..."))
                     portal_id, dept_id = _click_dept_card_get_portal(d)
-                survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
-                if survey_id and portal_id and dept_id:
-                    _add_dummy_question(d, portal_id, dept_id, survey_id)
+                _existing_survey = (prof.get("survey_id") or "").strip()
+                if _existing_survey:
+                    survey_id = _existing_survey
+                    CHECK_LOG.put(("info", f"  Reusing existing survey_id={survey_id}"))
+                else:
+                    survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+                    if survey_id and portal_id and dept_id:
+                        _add_dummy_question(d, portal_id, dept_id, survey_id)
                 prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
                              "health": "ok", "zoho_password": lr_pw or _stored_pw,
                              "imap_pw": password})
@@ -2108,9 +2145,14 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             if not portal_id:
                 CHECK_LOG.put(("info", "  portal not in URL — clicking dept card..."))
                 portal_id, dept_id = _click_dept_card_get_portal(d)
-            survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
-            if survey_id and portal_id and dept_id:
-                _add_dummy_question(d, portal_id, dept_id, survey_id)
+            _existing_survey = (prof.get("survey_id") or "").strip()
+            if _existing_survey:
+                survey_id = _existing_survey
+                CHECK_LOG.put(("info", f"  Reusing existing survey_id={survey_id}"))
+            else:
+                survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+                if survey_id and portal_id and dept_id:
+                    _add_dummy_question(d, portal_id, dept_id, survey_id)
             prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
                          "health": "ok", "imap_pw": password})
             if portal_id: prof["portal_id"] = portal_id
@@ -2142,9 +2184,14 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                         time.sleep(2)
                         portal_id, dept_id = _extract_portal_dept(d.current_url)
                         if portal_id: break
-                survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
-                if survey_id and portal_id and dept_id:
-                    _add_dummy_question(d, portal_id, dept_id, survey_id)
+                _existing_survey = (prof.get("survey_id") or "").strip()
+                if _existing_survey:
+                    survey_id = _existing_survey
+                    CHECK_LOG.put(("info", f"  Reusing existing survey_id={survey_id}"))
+                else:
+                    survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+                    if survey_id and portal_id and dept_id:
+                        _add_dummy_question(d, portal_id, dept_id, survey_id)
                 prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
                              "health": "ok", "zoho_password": lr2_pw or _stored_pw, "imap_pw": password})
                 if portal_id: prof["portal_id"] = portal_id
@@ -2382,9 +2429,14 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                     time.sleep(2)
                     portal_id, dept_id = _extract_portal_dept(d.current_url)
                     if portal_id: break
-            survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
-            if survey_id and portal_id and dept_id:
-                _add_dummy_question(d, portal_id, dept_id, survey_id)
+            _existing_survey = (prof.get("survey_id") or "").strip()
+            if _existing_survey:
+                survey_id = _existing_survey
+                CHECK_LOG.put(("info", f"  Reusing existing survey_id={survey_id}"))
+            else:
+                survey_id = _create_blank_survey(d, portal_id, dept_id) if portal_id else None
+                if survey_id and portal_id and dept_id:
+                    _add_dummy_question(d, portal_id, dept_id, survey_id)
             prof.update({"status": "active", "connected_at": time.strftime("%Y-%m-%d %H:%M"),
                          "health": "ok", "zoho_password": login_zoho_pw or zoho_pw,
                          "imap_pw": password})
@@ -2541,15 +2593,20 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             portal_id, dept_id = _click_dept_card_get_portal(d)
             CHECK_LOG.put(("info", f"  After dept card click: portal_id={portal_id}  dept_id={dept_id}"))
 
-        #  Create blank survey
-        survey_id = None
-        if portal_id and dept_id:
+        #  Create blank survey (skip if already have one)
+        _existing_survey = (prof.get("survey_id") or "").strip()
+        if _existing_survey:
+            survey_id = _existing_survey
+            CHECK_LOG.put(("info", f"  Reusing existing survey_id={survey_id}"))
+        elif portal_id and dept_id:
             CHECK_LOG.put(("info", "  Creating blank survey..."))
             survey_id = _create_blank_survey(d, portal_id, dept_id)
             CHECK_LOG.put(("ok" if survey_id else "err",
                            f"  survey_id={survey_id}" if survey_id else "  Survey creation failed"))
             if survey_id:
                 _add_dummy_question(d, portal_id, dept_id, survey_id)
+        else:
+            survey_id = None
 
         #  Mark profile as active 
         prof.update({
