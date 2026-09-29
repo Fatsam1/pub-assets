@@ -1824,8 +1824,8 @@ def _test_proxy_connect(proxy_str):
 _test_sticky_proxy = _test_proxy_connect
 
 def _fetch_fresh_proxyscrape_proxy(session_id=None):
-    """Fetch a working ProxyScrape rotating proxy. Tests up to 30 candidates."""
-    import urllib.request as _ur, random as _rnd
+    """Fetch a working ProxyScrape proxy. Tests candidates in parallel for speed."""
+    import urllib.request as _ur, random as _rnd, concurrent.futures as _cf
     try:
         url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
                f"&protocol=http&serviceId={_PS_SID}&simplified=true&country=US")
@@ -1836,10 +1836,13 @@ def _fetch_fresh_proxyscrape_proxy(session_id=None):
         if not lines:
             return ""
         _rnd.shuffle(lines)
-        for ip_port in lines[:30]:
-            candidate = f"{_PS_USER}:{_PS_PASS}@{ip_port}"
-            if _test_proxy_connect(candidate):
-                return candidate
+        candidates = [f"{_PS_USER}:{_PS_PASS}@{ip}" for ip in lines[:60]]
+        # Test all candidates in parallel — return first one that works
+        with _cf.ThreadPoolExecutor(max_workers=20) as ex:
+            futures = {ex.submit(_test_proxy_connect, c): c for c in candidates}
+            for fut in _cf.as_completed(futures):
+                if fut.result():
+                    return futures[fut]
     except Exception:
         pass
     return ""
