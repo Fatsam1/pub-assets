@@ -1044,8 +1044,8 @@ class _AuthProxyTunnel:
 _PS_USER = "alv68pcvy8kb"
 _PS_PASS = "u0qd0imgg1i4nj4"
 _PS_SID  = "46e83e28-7c12-4c65-aa52-ef3e82f317d8"
-# Fallback proxy (used only if ProxyScrape API unreachable)
 _DEFAULT_PROXY = f"{_PS_USER}:{_PS_PASS}@104.207.54.238:3129"
+_LAST_GOOD_PROXY = ""   # cached last working proxy — reused if still alive
 _hidden_browser = False
 
 def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
@@ -1794,29 +1794,26 @@ def _block_combo(email):
     _save_valid(combos)
 
 def _test_proxy_connect(proxy_str):
-    """Test proxy via raw CONNECT tunnel to accounts.zoho.com and survey.zoho.com."""
+    """Test proxy via raw CONNECT tunnel to survey.zoho.com."""
     import socket as _sock, base64 as _b64
     try:
         auth_part, addr_part = proxy_str.rsplit("@", 1)
         h, p = addr_part.rsplit(":", 1)
         creds_b64 = _b64.b64encode(auth_part.encode()).decode()
-        for dest in ("accounts.zoho.com", "survey.zoho.com"):
-            s = _sock.create_connection((h, int(p)), timeout=8)
-            req = (f"CONNECT {dest}:443 HTTP/1.1\r\n"
-                   f"Host: {dest}:443\r\n"
-                   f"Proxy-Authorization: Basic {creds_b64}\r\n"
-                   f"Proxy-Connection: keep-alive\r\n\r\n").encode()
-            s.send(req)
-            resp = b""
-            s.settimeout(8)
-            while b"\r\n\r\n" not in resp:
-                c = s.recv(4096)
-                if not c: break
-                resp += c
-            s.close()
-            if b"200" not in resp:
-                return False
-        return True
+        s = _sock.create_connection((h, int(p)), timeout=4)
+        req = (f"CONNECT survey.zoho.com:443 HTTP/1.1\r\n"
+               f"Host: survey.zoho.com:443\r\n"
+               f"Proxy-Authorization: Basic {creds_b64}\r\n"
+               f"Proxy-Connection: keep-alive\r\n\r\n").encode()
+        s.send(req)
+        resp = b""
+        s.settimeout(4)
+        while b"\r\n\r\n" not in resp:
+            c = s.recv(4096)
+            if not c: break
+            resp += c
+        s.close()
+        return b"200" in resp
     except Exception:
         return False
 
@@ -1824,8 +1821,12 @@ def _test_proxy_connect(proxy_str):
 _test_sticky_proxy = _test_proxy_connect
 
 def _fetch_fresh_proxyscrape_proxy(session_id=None):
-    """Fetch a working ProxyScrape proxy. Tests candidates in parallel for speed."""
-    import urllib.request as _ur, random as _rnd, concurrent.futures as _cf
+    """Return a working ProxyScrape proxy. Reuses cached proxy if still alive."""
+    global _LAST_GOOD_PROXY
+    import urllib.request as _ur, random as _rnd, concurrent.futures as _cf, socket as _sock
+    # Fast path: reuse last known-good proxy if still alive
+    if _LAST_GOOD_PROXY and _test_proxy_connect(_LAST_GOOD_PROXY):
+        return _LAST_GOOD_PROXY
     try:
         url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
                f"&protocol=http&serviceId={_PS_SID}&simplified=true&country=US")
@@ -1836,13 +1837,29 @@ def _fetch_fresh_proxyscrape_proxy(session_id=None):
         if not lines:
             return ""
         _rnd.shuffle(lines)
-        candidates = [f"{_PS_USER}:{_PS_PASS}@{ip}" for ip in lines[:60]]
-        # Test all candidates in parallel — return first one that works
+
+        # Stage 1: TCP connect check in parallel (fast — 2s timeout)
+        def _tcp_alive(ip_port):
+            try:
+                h, p = ip_port.rsplit(":", 1)
+                s = _sock.create_connection((h, int(p)), timeout=2)
+                s.close()
+                return ip_port
+            except Exception:
+                return None
+
+        with _cf.ThreadPoolExecutor(max_workers=50) as ex:
+            tcp_results = list(ex.map(_tcp_alive, lines[:100]))
+        alive = [r for r in tcp_results if r]
+
+        # Stage 2: CONNECT test on TCP-alive only
+        candidates = [f"{_PS_USER}:{_PS_PASS}@{ip}" for ip in alive]
         with _cf.ThreadPoolExecutor(max_workers=20) as ex:
             futures = {ex.submit(_test_proxy_connect, c): c for c in candidates}
             for fut in _cf.as_completed(futures):
                 if fut.result():
-                    return futures[fut]
+                    _LAST_GOOD_PROXY = futures[fut]
+                    return _LAST_GOOD_PROXY
     except Exception:
         pass
     return ""
