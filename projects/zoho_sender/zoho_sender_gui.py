@@ -1793,70 +1793,58 @@ def _block_combo(email):
             break
     _save_valid(combos)
 
-def _fetch_fresh_proxyscrape_proxy():
-    """Fetch one fresh working proxy from ProxyScrape Premium API.
-    Tests via HTTP GET to ip-api.com — same method check_proxy_ip uses."""
-    import urllib.request as _ur, random as _rnd, requests as _req
-    PS_USER = _PS_USER
-    PS_PASS = _PS_PASS
-    PS_SID  = _PS_SID
+_PS_GATE = "gate.proxyscrape.com:7777"
 
-    def _test_proxy(ip_port):
-        """Test proxy: raw CONNECT + Zoho register page must not show error."""
-        import socket as _sock, base64 as _b64
-        creds = f"{PS_USER}:{PS_PASS}"
-        auth = _b64.b64encode(creds.encode()).decode()
-        # Step 1: CONNECT test (TCP tunnel — what Chrome/_AuthProxyTunnel does)
-        for dest_host in ("accounts.zoho.com", "survey.zoho.com"):
-            try:
-                h, p = ip_port.rsplit(":", 1)
-                s = _sock.create_connection((h, int(p)), timeout=8)
-                req = (f"CONNECT {dest_host}:443 HTTP/1.1\r\n"
-                       f"Host: {dest_host}:443\r\n"
-                       f"Proxy-Authorization: Basic {auth}\r\n"
-                       f"Proxy-Connection: keep-alive\r\n\r\n").encode()
-                s.send(req)
-                resp = b""
-                s.settimeout(8)
-                while b"\r\n\r\n" not in resp:
-                    c = s.recv(4096)
-                    if not c: break
-                    resp += c
-                s.close()
-                if b"200" not in resp:
-                    return False
-            except Exception:
-                return False
-        # Step 2: Check Zoho register page isn't blocked for this proxy IP
-        try:
-            proxy_url = f"http://{PS_USER}:{PS_PASS}@{ip_port}"
-            proxies = {"http": proxy_url, "https": proxy_url}
-            r = _req.get("https://accounts.zoho.com/register?service=ZohoSurvey",
-                         proxies=proxies, timeout=10, verify=False, allow_redirects=True)
-            body = r.text.lower()
-            if "error occurred" in body or "blocked" in body:
-                return False
-        except Exception:
-            return False
-        return True
+def _make_sticky_proxy(session_id):
+    """Build a ProxyScrape sticky-session proxy string for a given session ID.
+    Same session_id → same IP for up to 10 minutes per connection."""
+    return f"user-{_PS_USER}-session-{session_id}:{_PS_PASS}@{_PS_GATE}"
 
+def _test_sticky_proxy(proxy_str):
+    """Test a sticky proxy via raw CONNECT to accounts.zoho.com and survey.zoho.com."""
+    import socket as _sock, base64 as _b64
     try:
-        # Fetch US proxies only — Zoho routes US IPs to .com (not .eu which blocks registration)
-        url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
-               f"&protocol=http&serviceId={PS_SID}&simplified=true&country=US")
-        ctx = ssl._create_unverified_context()
-        txt = _ur.urlopen(_ur.Request(url, headers={"User-Agent":"Mozilla/5.0"}),
-                          context=ctx, timeout=10).read().decode().strip()
-        lines = [l.strip() for l in txt.splitlines() if l.strip() and ":" in l]
-        if not lines:
-            return ""
-        _rnd.shuffle(lines)
-        for candidate in lines[:60]:
-            if _test_proxy(candidate):
-                return f"{PS_USER}:{PS_PASS}@{candidate}"
-        return ""
+        # parse user:pass@host:port
+        auth_part, addr_part = proxy_str.rsplit("@", 1)
+        h, p = addr_part.rsplit(":", 1)
+        creds_b64 = _b64.b64encode(auth_part.encode()).decode()
+        for dest in ("accounts.zoho.com", "survey.zoho.com"):
+            s = _sock.create_connection((h, int(p)), timeout=10)
+            req = (f"CONNECT {dest}:443 HTTP/1.1\r\n"
+                   f"Host: {dest}:443\r\n"
+                   f"Proxy-Authorization: Basic {creds_b64}\r\n"
+                   f"Proxy-Connection: keep-alive\r\n\r\n").encode()
+            s.send(req)
+            resp = b""
+            s.settimeout(10)
+            while b"\r\n\r\n" not in resp:
+                c = s.recv(4096)
+                if not c: break
+                resp += c
+            s.close()
+            if b"200" not in resp:
+                return False
+        return True
     except Exception:
-        return ""
+        return False
+
+def _fetch_fresh_proxyscrape_proxy(session_id=None):
+    """Return a working sticky-session proxy for the given session_id.
+    If session_id is None, generates a random one (rotating behaviour).
+    Same session_id gives same IP for ~10 min; rotate by changing session_id."""
+    import random as _rnd, string as _str
+    if session_id is None:
+        session_id = "".join(_rnd.choices(_str.ascii_lowercase + _str.digits, k=10))
+    proxy = _make_sticky_proxy(session_id)
+    if _test_sticky_proxy(proxy):
+        return proxy
+    # Gate is alive but session IP may be blocked — try a few new session IDs
+    for _ in range(5):
+        sid = "".join(_rnd.choices(_str.ascii_lowercase + _str.digits, k=10))
+        proxy = _make_sticky_proxy(sid)
+        if _test_sticky_proxy(proxy):
+            return proxy
+    return ""
 
 def _click_dept_card_get_portal(d):
     """Click first department card on Zoho Survey home to navigate into portal and get portal_id/dept_id."""
@@ -2664,12 +2652,18 @@ def _mark_combo_connected(email, profile_idx, zoho_password=None):
 
 
 def _add_profile_thread(proxy):
+    import random as _rnd, string as _str
     profiles = _load_profiles()
     idx = max(p["idx"] for p in profiles) + 1
     d   = os.path.join(PROF_BASE, f"profile_{idx}")
     os.makedirs(d, exist_ok=True)
+    # Generate a sticky session_id so this profile keeps same IP
+    session_id = "".join(_rnd.choices(_str.ascii_lowercase + _str.digits, k=10))
+    if not proxy:
+        proxy = _fetch_fresh_proxyscrape_proxy(session_id) or ""
     profiles.append({"idx": idx, "dir": d, "proxy": proxy.strip(),
                      "original_proxy": proxy.strip(),
+                     "session_id": session_id,
                      "email": "", "status": "free", "connected_at": None,
                      "sent_count": 0, "health": "ok",
                      "trial_days": 7, "last_health_check": None})
@@ -2703,8 +2697,36 @@ def _calc_trial_remaining(connected_at_str, trial_days=7, expires_str=None):
         return int(remaining_secs // 86400), int((remaining_secs % 86400) // 3600)
     except: return None, None
 
+def _ensure_profile_proxy(prof):
+    """Ensure prof has a working sticky proxy. Uses stored session_id for same IP.
+    Returns True if proxy is confirmed working, False if gate unreachable."""
+    import random as _rnd, string as _str
+    session_id = prof.get("session_id")
+    if not session_id:
+        session_id = "".join(_rnd.choices(_str.ascii_lowercase + _str.digits, k=10))
+        prof["session_id"] = session_id
+    # Test existing proxy first — if still alive, keep it
+    existing = prof.get("proxy", "")
+    if existing and _test_sticky_proxy(existing):
+        return True
+    # Existing dead — retry same session_id once (IP may have rotated)
+    proxy = _fetch_fresh_proxyscrape_proxy(session_id)
+    if proxy:
+        prof["proxy"] = proxy
+        return True
+    # Session IP blocked — assign new session_id
+    new_sid = "".join(_rnd.choices(_str.ascii_lowercase + _str.digits, k=10))
+    proxy = _fetch_fresh_proxyscrape_proxy(new_sid)
+    if proxy:
+        prof["session_id"] = new_sid
+        prof["proxy"] = proxy
+        return True
+    return False
+
+
 def _proxy_refresh_thread():
-    """On startup and every 25 min: assign a fresh working ProxyScrape proxy to every active profile."""
+    """On startup: verify every active profile has a working proxy.
+    Only replaces a proxy if it's dead — keeps same IP as long as possible."""
     import time as _time
     def _refresh():
         profiles = _load_profiles()
@@ -2712,15 +2734,13 @@ def _proxy_refresh_thread():
         for prof in profiles:
             if prof.get("status") not in ("active", "busy"):
                 continue
-            proxy = _fetch_fresh_proxyscrape_proxy()
-            if proxy and proxy != prof.get("proxy", ""):
-                prof["proxy"] = proxy
+            if _ensure_profile_proxy(prof):
                 changed = True
         if changed:
             _save_profiles(profiles)
     _refresh()  # run immediately on startup
     while True:
-        _time.sleep(1500)  # 25 minutes
+        _time.sleep(300)  # check every 5 min — only replaces dead proxies
         _refresh()
 
 
