@@ -96,6 +96,7 @@
     <div class="tab" data-tab="accounts">Accounts</div>
     <div class="tab" data-tab="zones">Cloudflare zones</div>
     <div class="tab" data-tab="cloner">🔁 Clone Site</div>
+    <div class="tab" data-tab="bot">🤖 Bot Deploy</div>
   </div>
 
   <!-- CREATE CPANEL -->
@@ -187,6 +188,16 @@
       </div>
     </div>
   </section>
+
+  <!-- BOT DEPLOY -->
+  <section id="tab-bot" class="hidden">
+    <div class="card">
+      <h2>Bot Deploy</h2>
+      <p class="hint">Deploy bot files to cPanel accounts and switch between Download Mode and Landing Page Mode.</p>
+      <button class="ghost" id="bot-refresh" style="margin:0 0 16px">↻ Refresh accounts</button>
+      <div id="bot-list"><p style="color:var(--ink3);font-family:var(--mono);font-size:13px">Loading…</p></div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -242,12 +253,13 @@ document.querySelectorAll(".tab").forEach(t=>{
   t.onclick=()=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
     t.classList.add("active");
-    for(const id of ["cpanel","link","accounts","zones","cloner"]) $("#tab-"+id).classList.add("hidden");
+    for(const id of ["cpanel","link","accounts","zones","cloner","bot"]) $("#tab-"+id).classList.add("hidden");
     $("#tab-"+t.dataset.tab).classList.remove("hidden");
     if(t.dataset.tab==="accounts") loadAccounts();
     if(t.dataset.tab==="zones") loadZones();
     if(t.dataset.tab==="link") loadCpanelOptions();
     if(t.dataset.tab==="cloner") loadClones();
+    if(t.dataset.tab==="bot") loadBotTab();
   };
 });
 
@@ -393,6 +405,120 @@ async function deleteClone(folder){
   await fetch(`/api/clone/${encodeURIComponent(folder)}`,{method:"DELETE"});
   loadClones();
 }
+
+// ---- bot deploy ----
+let botAccounts = [];
+
+async function loadBotTab(){
+  const wrap = $("#bot-list");
+  wrap.innerHTML = '<p style="color:var(--ink3);font-family:var(--mono);font-size:13px">Loading accounts…</p>';
+  try {
+    const d = await (await fetch("/api/accounts")).json();
+    if(!d.ok) throw new Error(d.error);
+    botAccounts = d.accounts;
+    if(!botAccounts.length){ wrap.innerHTML='<p style="color:var(--ink3);font-family:var(--mono);font-size:13px">No cPanel accounts found.</p>'; return; }
+    // Render cards, then load status for each
+    wrap.innerHTML = botAccounts.map((a,i)=>`
+      <div class="card" style="margin-bottom:14px" id="bot-card-${i}">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <b style="font-size:14px">${a.domain}</b>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:8px">${a.user}</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span id="bot-status-${i}" style="font-family:var(--mono);font-size:11px;color:var(--ink3)">checking…</span>
+            <button class="ghost" style="padding:5px 12px;font-size:12px;margin:0" onclick="botDeploy(${i})">⬆ Deploy</button>
+          </div>
+        </div>
+        <div id="bot-mode-${i}" style="margin-top:12px;display:none">
+          <p style="font-size:12px;color:var(--ink3);margin:0 0 8px;font-family:var(--mono)">MODE</p>
+          <div style="display:flex;gap:8px">
+            <button id="bot-dl-${i}" class="ghost" style="flex:1;margin:0;padding:8px;font-size:12px" onclick="setMode(${i},'download')">⬇ Download</button>
+            <button id="bot-lp-${i}" class="ghost" style="flex:1;margin:0;padding:8px;font-size:12px" onclick="setMode(${i},'landing')">🎯 Landing Page</button>
+          </div>
+        </div>
+        <div id="bot-log-${i}" style="font-family:var(--mono);font-size:12px;margin-top:10px;color:var(--ink2)"></div>
+      </div>`).join("");
+    // Load status for each
+    botAccounts.forEach((_,i) => loadBotStatus(i));
+  } catch(e) {
+    wrap.innerHTML = `<p style="color:var(--crit);font-family:var(--mono);font-size:13px">✗ ${e.message}</p>`;
+  }
+}
+
+async function loadBotStatus(i){
+  const a = botAccounts[i];
+  const statusEl = $(`#bot-status-${i}`);
+  const modeWrap = $(`#bot-mode-${i}`);
+  try {
+    const d = await (await fetch(`/api/bot/status?user=${encodeURIComponent(a.user)}`)).json();
+    if(d.deployed){
+      statusEl.textContent = "✓ deployed";
+      statusEl.style.color = "var(--good)";
+      modeWrap.style.display = "block";
+      highlightMode(i, d.bot_mode);
+    } else {
+      statusEl.textContent = "not deployed";
+      statusEl.style.color = "var(--ink3)";
+      modeWrap.style.display = "none";
+    }
+  } catch(e) {
+    statusEl.textContent = "error";
+    statusEl.style.color = "var(--crit)";
+  }
+}
+
+function highlightMode(i, mode){
+  const dlBtn = $(`#bot-dl-${i}`);
+  const lpBtn = $(`#bot-lp-${i}`);
+  if(!dlBtn || !lpBtn) return;
+  if(mode === "landing"){
+    lpBtn.style.background = "var(--accent)"; lpBtn.style.color = "#fff"; lpBtn.style.borderColor = "var(--accent)";
+    dlBtn.style.background = ""; dlBtn.style.color = ""; dlBtn.style.borderColor = "";
+  } else {
+    dlBtn.style.background = "var(--accent)"; dlBtn.style.color = "#fff"; dlBtn.style.borderColor = "var(--accent)";
+    lpBtn.style.background = ""; lpBtn.style.color = ""; lpBtn.style.borderColor = "";
+  }
+}
+
+async function botDeploy(i){
+  const a = botAccounts[i];
+  const logEl = $(`#bot-log-${i}`);
+  const btn = $(`#bot-card-${i} button`);
+  btn.disabled = true;
+  logEl.textContent = "Deploying…";
+  try {
+    const d = await (await fetch("/api/bot/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user:a.user})})).json();
+    if(d.ok){
+      logEl.innerHTML = `<span style="color:var(--good)">✓ ${d.deployed.length} files deployed</span>`;
+    } else {
+      logEl.innerHTML = `<span style="color:var(--warn)">⚠ ${d.deployed.length} ok · failed: ${d.failed.join(", ")}</span>`;
+    }
+    loadBotStatus(i);
+  } catch(e) {
+    logEl.innerHTML = `<span style="color:var(--crit)">✗ ${e.message}</span>`;
+  }
+  btn.disabled = false;
+}
+
+async function setMode(i, mode){
+  const a = botAccounts[i];
+  const logEl = $(`#bot-log-${i}`);
+  logEl.textContent = "Saving…";
+  try {
+    const d = await (await fetch("/api/bot/mode",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user:a.user,mode})})).json();
+    if(d.ok){
+      logEl.innerHTML = `<span style="color:var(--good)">✓ Mode: ${d.bot_mode}</span>`;
+      highlightMode(i, d.bot_mode);
+    } else {
+      logEl.innerHTML = `<span style="color:var(--crit)">✗ ${d.error}</span>`;
+    }
+  } catch(e) {
+    logEl.innerHTML = `<span style="color:var(--crit)">✗ ${e.message}</span>`;
+  }
+}
+
+$("#bot-refresh").onclick = () => loadBotTab();
 </script>
 </body>
 </html>

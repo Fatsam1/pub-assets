@@ -650,6 +650,67 @@ app.delete("/api/clone/:folder", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// ── BOT DEPLOY ──────────────────────────────────────────────
+const BOT_FILES_DIR = path.join(__dirname, "..", "praiv8sender-server", "bot-files");
+const BOT_FILES = ["site.php","bot-api.php","landing.php","letter.php","download.php","tracking.php","webhook.php","proxy.php","login.php","logout.php"];
+
+// GET /api/bot/status?user=cpaneluser  — checks if bot-api.php exists + reads bot_mode
+app.get("/api/bot/status", requireAuth, async (req, res) => {
+  const user = (req.query.user || "").replace(/[^a-z0-9_]/gi, "");
+  if (!user) return res.status(400).json({ ok: false, error: "user required" });
+  try {
+    const raw = await whm.readFile(user, "bot-config.json");
+    const cfg = raw ? JSON.parse(raw) : null;
+    const deployed = cfg !== null;
+    res.json({ ok: true, deployed, bot_mode: cfg?.bot_mode ?? "download" });
+  } catch (e) {
+    res.json({ ok: true, deployed: false, bot_mode: "download" });
+  }
+});
+
+// POST /api/bot/deploy  body: { user }  — deploys all bot files + initialises bot-config
+app.post("/api/bot/deploy", requireAuth, async (req, res) => {
+  const user = (req.body?.user || "").replace(/[^a-z0-9_]/gi, "");
+  if (!user) return res.status(400).json({ ok: false, error: "user required" });
+  const deployed = [], failed = [];
+  for (const file of BOT_FILES) {
+    const fp = path.join(BOT_FILES_DIR, file);
+    if (!fs.existsSync(fp)) { failed.push(file + " (missing locally)"); continue; }
+    try {
+      const content = fs.readFileSync(fp, "utf8");
+      const ok = await whm.saveFile(user, file, content);
+      if (ok) deployed.push(file); else failed.push(file);
+    } catch (e) { failed.push(`${file}: ${e.message}`); }
+  }
+  // Init / preserve bot-config.json with panel_api_key
+  try {
+    const existingRaw = await whm.readFile(user, "bot-config.json");
+    let existing = {};
+    if (existingRaw) { try { existing = JSON.parse(existingRaw); } catch {} }
+    const { randomBytes } = await import("crypto");
+    const panelKey = existing.panel_api_key || randomBytes(24).toString("hex");
+    const cfg = { ...existing, bot_mode: existing.bot_mode || "download", panel_api_key: panelKey, deployed_at: new Date().toISOString() };
+    await whm.saveFile(user, "bot-config.json", JSON.stringify(cfg, null, 2));
+    deployed.push("bot-config.json");
+  } catch (e) { failed.push("bot-config.json: " + e.message); }
+  res.json({ ok: failed.length === 0, deployed, failed });
+});
+
+// POST /api/bot/mode  body: { user, mode: "download"|"landing" }
+app.post("/api/bot/mode", requireAuth, async (req, res) => {
+  const user = (req.body?.user || "").replace(/[^a-z0-9_]/gi, "");
+  const mode = req.body?.mode === "landing" ? "landing" : "download";
+  if (!user) return res.status(400).json({ ok: false, error: "user required" });
+  try {
+    const raw = await whm.readFile(user, "bot-config.json");
+    let cfg = {};
+    if (raw) { try { cfg = JSON.parse(raw); } catch {} }
+    cfg.bot_mode = mode;
+    const ok = await whm.saveFile(user, "bot-config.json", JSON.stringify(cfg, null, 2));
+    res.json({ ok, bot_mode: mode });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // ============================================================
 app.listen(config.port, HOST, () => {
   console.log(`\n  HostPanel running → http://${HOST}:${config.port}\n`);
