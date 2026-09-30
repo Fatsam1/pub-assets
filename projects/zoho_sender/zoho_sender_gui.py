@@ -3331,8 +3331,8 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
     if not _managed:
         _send_running = True
     d = None
-    # Use active_templates from cfg if available, else full templates list
-    _active = _load_cfg().get("active_templates", [])
+    # Use active_templates from caller cfg first, then disk cfg, then full list
+    _active = cfg.get("active_templates") or _load_cfg().get("active_templates", [])
     templates = _active if _active else _load_templates()
     send_opts    = _load_send_options()
     sender_names = send_opts["sender_names"] or ["Research Team"]
@@ -5885,6 +5885,7 @@ async function sendCampaign(){
     survey_terms_text:gv('survey_terms_text'),
     og_title:gv('og_title'),og_description:gv('og_description'),og_image_url:gv('og_image_url'),
     og_auto_from_template:document.getElementById('og_auto_from_template')?.checked||false,
+    active_templates:_templates.length?_templates:undefined,
   };
   let r;
   if(profIdx==='all'){
@@ -6319,11 +6320,12 @@ function saveBuilderTemplate(){
     Object.assign(_templates[_editingActiveTplIdx],t);
     _editingActiveTplIdx=-1;
   } else {
-    _templates=[t];
+    // Add to list instead of replacing — never wipe existing templates
+    _templates.push(t);
   }
   renderActiveTplUI();
   saveTemplates();
-  addLog('ok','  Template saved');
+  addLog('ok','  Template saved ('+_templates.length+' total)');
 }
 
 function addBuilderToList(){
@@ -6513,14 +6515,15 @@ window.addEventListener('pywebviewready', async()=>{
   document.getElementById('st-valid').textContent=valids.length;
   document.getElementById('valid-cnt').textContent=valids.length;
   document.getElementById('send-wrap').style.display='none';
-  // Init templates with defaults
-  _templates=[{
-    title:"We'd Love Your Feedback!",
-    subtitle:"Your opinion shapes our future",
-    body:"We are conducting a <strong>short 3-minute survey</strong> to better understand your needs. Your feedback is extremely valuable to us. The survey is completely <strong>anonymous</strong>.",
-    show_title:false,
-    show_icons:true
-  }];
+  // Load saved templates from disk (fallback to built-in default)
+  try{
+    const saved=await pywebview.api.get_active_templates();
+    _templates=saved&&saved.length?saved:[{
+      title:"We'd Love Your Feedback!",subtitle:"Your opinion shapes our future",
+      body:"We are conducting a <strong>short 3-minute survey</strong> to better understand your needs. Your feedback is extremely valuable to us. The survey is completely <strong>anonymous</strong>.",
+      show_title:false,show_icons:true
+    }];
+  }catch(e){}
   // Load DB badge
   const dbr=await pywebview.api.get_db_stats();
   document.getElementById('db-cnt').textContent=`DB: ${dbr.count} registered`;
