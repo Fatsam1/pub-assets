@@ -1045,7 +1045,8 @@ _PS_USER = "alv68pcvy8kb"
 _PS_PASS = "u0qd0imgg1i4nj4"
 _PS_SID  = "46e83e28-7c12-4c65-aa52-ef3e82f317d8"
 _DEFAULT_PROXY = f"{_PS_USER}:{_PS_PASS}@104.207.54.238:3129"
-_LAST_GOOD_PROXY = ""   # cached last working proxy — reused if still alive
+_LAST_GOOD_PROXY = ""        # cached last working proxy — reused if still alive
+_PROFILE_PROXY_MAP = {}      # {prof_idx: proxy_str} — each profile reserves its own IP
 _hidden_browser = False
 
 def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
@@ -1820,13 +1821,24 @@ def _test_proxy_connect(proxy_str):
 # keep old name as alias so existing callers work
 _test_sticky_proxy = _test_proxy_connect
 
-def _fetch_fresh_proxyscrape_proxy(session_id=None):
-    """Return a working ProxyScrape proxy. Reuses cached proxy if still alive."""
+def _fetch_fresh_proxyscrape_proxy(session_id=None, exclude=None):
+    """Return a working ProxyScrape proxy not already reserved by another profile.
+    exclude: set of proxy strings to skip (IPs owned by other profiles)."""
     global _LAST_GOOD_PROXY
     import urllib.request as _ur, random as _rnd, concurrent.futures as _cf, socket as _sock
-    # Fast path: reuse last known-good proxy if still alive
-    if _LAST_GOOD_PROXY and _test_proxy_connect(_LAST_GOOD_PROXY):
-        return _LAST_GOOD_PROXY
+    _exclude = set(exclude) if exclude else set()
+
+    def _ip_of(proxy_str):
+        try: return proxy_str.rsplit("@", 1)[-1].split(":")[0]
+        except: return ""
+
+    excluded_ips = {_ip_of(p) for p in _exclude if p}
+
+    # Fast path: reuse last known-good proxy if still alive and not excluded
+    if _LAST_GOOD_PROXY and _ip_of(_LAST_GOOD_PROXY) not in excluded_ips:
+        if _test_proxy_connect(_LAST_GOOD_PROXY):
+            return _LAST_GOOD_PROXY
+
     try:
         url = (f"https://api.proxyscrape.com/v2/?request=getproxies"
                f"&protocol=http&serviceId={_PS_SID}&simplified=true&country=US")
@@ -1834,6 +1846,8 @@ def _fetch_fresh_proxyscrape_proxy(session_id=None):
         txt = _ur.urlopen(_ur.Request(url, headers={"User-Agent": "Mozilla/5.0"}),
                           context=ctx, timeout=10).read().decode().strip()
         lines = [l.strip() for l in txt.splitlines() if l.strip() and ":" in l]
+        # skip IPs already owned by other profiles
+        lines = [l for l in lines if l.split(":")[0] not in excluded_ips]
         if not lines:
             return ""
         _rnd.shuffle(lines)
@@ -2675,7 +2689,9 @@ def _add_profile_thread(proxy):
     d   = os.path.join(PROF_BASE, f"profile_{idx}")
     os.makedirs(d, exist_ok=True)
     if not proxy:
-        proxy = _fetch_fresh_proxyscrape_proxy() or ""
+        # Exclude IPs already used by existing profiles
+        exclude = {p.get("proxy", "") for p in profiles if p.get("proxy", "")}
+        proxy = _fetch_fresh_proxyscrape_proxy(exclude=exclude) or ""
     profiles.append({"idx": idx, "dir": d, "proxy": proxy.strip(),
                      "original_proxy": proxy.strip(),
                      "email": "", "status": "free", "connected_at": None,
@@ -2711,22 +2727,38 @@ def _calc_trial_remaining(connected_at_str, trial_days=7, expires_str=None):
         return int(remaining_secs // 86400), int((remaining_secs % 86400) // 3600)
     except: return None, None
 
-def _ensure_profile_proxy(prof):
-    """Ensure prof has a working proxy. Keeps existing if alive, fetches new one if dead.
-    Returns True if proxy is confirmed working or was just assigned."""
+def _ensure_profile_proxy(prof, all_profiles=None):
+    """Ensure prof has a working proxy. Keeps existing if alive, fetches a NEW unique one if dead.
+    Excludes IPs already owned by other active profiles so each profile gets its own IP."""
+    global _PROFILE_PROXY_MAP
     existing = prof.get("proxy", "")
     if existing and _test_proxy_connect(existing):
+        _PROFILE_PROXY_MAP[str(prof.get("idx", ""))] = existing
         return True  # still alive — keep it
-    proxy = _fetch_fresh_proxyscrape_proxy()
+    # Build exclusion set from other profiles' proxies
+    exclude = set()
+    if all_profiles:
+        my_idx = str(prof.get("idx", ""))
+        for p in all_profiles:
+            if str(p.get("idx", "")) != my_idx:
+                px = p.get("proxy", "")
+                if px:
+                    exclude.add(px)
+    # Also exclude from the in-memory map
+    for idx, px in _PROFILE_PROXY_MAP.items():
+        if idx != str(prof.get("idx", "")) and px:
+            exclude.add(px)
+    proxy = _fetch_fresh_proxyscrape_proxy(exclude=exclude)
     if proxy:
         prof["proxy"] = proxy
+        _PROFILE_PROXY_MAP[str(prof.get("idx", ""))] = proxy
         return True
     return False
 
 
 def _proxy_refresh_thread():
     """On startup: verify every active profile has a working proxy.
-    Only replaces a proxy if it's dead — keeps same IP as long as possible."""
+    Only replaces a proxy if it's dead — each profile keeps its own unique IP."""
     import time as _time
     def _refresh():
         profiles = _load_profiles()
@@ -2734,7 +2766,7 @@ def _proxy_refresh_thread():
         for prof in profiles:
             if prof.get("status") not in ("active", "busy"):
                 continue
-            if _ensure_profile_proxy(prof):
+            if _ensure_profile_proxy(prof, all_profiles=profiles):
                 changed = True
         if changed:
             _save_profiles(profiles)
@@ -3898,9 +3930,11 @@ class API:
         if not prof: return {"error": "profile_not_found"}
         if prof["status"] not in ("free","active"):
             return {"error": "profile_busy"}
-        # Auto-assign proxy if profile has none
+        # Auto-assign proxy if profile has none — exclude IPs of other profiles
         if not (prof.get("proxy") or "").strip():
-            _p = _fetch_fresh_proxyscrape_proxy()
+            _exclude = {p.get("proxy", "") for p in profiles
+                        if str(p.get("idx","")) != str(prof_idx) and p.get("proxy","")}
+            _p = _fetch_fresh_proxyscrape_proxy(exclude=_exclude)
             if _p:
                 prof["proxy"] = _p
                 _save_profiles(profiles)
