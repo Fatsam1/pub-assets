@@ -4112,6 +4112,9 @@ class API:
         test_email = payload.get("test_email","")
         prof_idx   = payload.get("profile_idx") or payload.get("prof_idx") or None
 
+        if prof_idx is None and not cfg.get("portal"):
+            return {"error": "Select a profile first (or fill Portal/Dept/Survey manually)"}
+
         if file_path and os.path.exists(file_path):
             emails_raw = open(file_path, encoding="utf-8", errors="ignore").read()
         emails = [e.strip() for e in emails_raw.replace(",","\n").splitlines()
@@ -5867,8 +5870,11 @@ async function onProfSelectChange(val){
   if(!prof) return;
   if(prof.portal_id){sv('portal',prof.portal_id);}
   if(prof.dept_id){sv('dept',prof.dept_id);}
-  if(prof.survey_id){sv('survey',prof.survey_id);}
-  addLog('info',`  Profile ${val} loaded: portal=${prof.portal_id} survey=${prof.survey_id}`);
+  // Use template-specific survey if available, else fall back to profile default
+  const _activeTplKey=((_templates[0]||{}).id)||((_templates[0]||{}).name||'').toLowerCase().replace(/[^a-z0-9]+/g,'_')||'';
+  const _surveyId=(prof.surveys&&_activeTplKey&&prof.surveys[_activeTplKey])||prof.survey_id||'';
+  if(_surveyId){sv('survey',_surveyId);}
+  addLog('info',`  Profile ${val} loaded: portal=${prof.portal_id} survey=${_surveyId}`);
 }
 
 //  EMAIL SENDER 
@@ -5963,18 +5969,21 @@ function onSendDone(){
 function switchLogo(mode,btn){
   _logoMode=mode;
   document.querySelectorAll('#tab-design .mt-row .mt').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('logo-url-w').style.display=mode==='url'?'':'none';
-  document.getElementById('logo-file-w').style.display=mode==='file'?'':'none';
+  if(btn)btn.classList.add('active');
+  const uw=document.getElementById('logo-url-w');
+  const fw=document.getElementById('logo-file-w');
+  if(uw)uw.style.display=mode==='url'?'':'none';
+  if(fw)fw.style.display=mode==='file'?'':'none';
   rp();
 }
 async function pickLogo(){
   const r=await pywebview.api.pick_file('logo');
   if(!r||!r.path)return;
   _logoData=r.data||'';
-  document.getElementById('logo-fi').textContent=r.path.split('\\').pop();
-  document.getElementById('logo-prev').innerHTML=
-    `<img src="${_logoData}" style="max-height:44px;border-radius:5px">`;
+  const fi=document.getElementById('logo-fi');
+  const prev=document.getElementById('logo-prev');
+  if(fi)fi.textContent=r.path.split('\\').pop();
+  if(prev)prev.innerHTML=`<img src="${_logoData}" style="max-height:44px;border-radius:5px">`;
   rp();
 }
 function syncC(id,val){document.getElementById(id).value=val;}
