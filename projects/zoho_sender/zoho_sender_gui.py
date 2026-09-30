@@ -4216,11 +4216,18 @@ class API:
         return tpls
 
     def get_email_preview_html(self, template_id, overrides=None):
-        """Return the real _build_email_html() output for a template — for live preview."""
-        tpls = _load_templates()
-        tmpl = next((t for t in tpls if t.get("id") == template_id), None)
-        if not tmpl:
-            return "<p style='color:red'>Template not found</p>"
+        """Return the real _build_email_html() output for a template — for live preview.
+        template_id can be a string id OR a full template dict (passed directly from JS)."""
+        if isinstance(template_id, dict):
+            # Called with full template object — use directly
+            tmpl = dict(template_id)
+        else:
+            tpls = _load_templates()
+            tmpl = next((t for t in tpls if t.get("id") == template_id), None)
+            if not tmpl:
+                # Fallback: treat overrides as the template data
+                tmpl = dict(overrides) if overrides and isinstance(overrides, dict) else {}
+                overrides = None
         if overrides and isinstance(overrides, dict):
             tmpl = {**tmpl, **{k: v for k, v in overrides.items() if v}}
         try:
@@ -6256,7 +6263,8 @@ async function _previewTemplate(t){
   const oo_n=gdet('tpl-det-org');  if(oo_n) overrides.org_name=oo_n;
   const of_t=gdet('tpl-det-footer');if(of_t) overrides.footer_text=of_t;
   try{
-    const html=await pywebview.api.get_email_preview_html(t.id, overrides);
+    // Pass full template object (t.id may not exist for in-memory templates)
+    const html=await pywebview.api.get_email_preview_html(t.id||t, overrides);
     iframe.srcdoc=html;
   }catch(e){
     // Fallback to generic rp() preview
@@ -6370,6 +6378,7 @@ function getBuilderTemplate(){
     banner1:gv('banner1')||'#0057b8',
     banner2:gv('banner2')||'#00a3e0',
     logo_src:gv('logo_url')||'',
+    logo_url:gv('logo_url')||'',
     logo_bg:gv('logo_bg')||'#ffffff',
     org_name:gv('org_name')||'',
     org_sub:gv('org_sub')||'',
