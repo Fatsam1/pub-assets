@@ -3797,9 +3797,14 @@ class API:
         profiles = _load_profiles()
         changed = False
         for p in profiles:
-            # Reset stuck BUSY profiles (browser closed mid-connect, connected_at never set)
-            if p.get("status") == "busy" and not p.get("connected_at"):
-                p["status"] = "free"; p["health"] = "error"; changed = True
+            # Reset stuck BUSY profiles
+            if p.get("status") == "busy":
+                if p.get("connected_at"):
+                    # Connected but send crashed — restore to active
+                    p["status"] = "active"; changed = True
+                else:
+                    # Never finished connecting
+                    p["status"] = "free"; p["health"] = "error"; changed = True
         if changed:
             _save_profiles(profiles)
         for p in profiles:
