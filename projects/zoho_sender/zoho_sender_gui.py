@@ -5600,10 +5600,11 @@ async function clearValid(){
   document.getElementById('valid-cnt').textContent='0';
 }
 
-//  CONNECT DIALOG 
+//  CONNECT DIALOG
 function openConnectDlg(email,pw){
   _dlgEmail=email; _dlgPw=pw;
   pywebview.api.get_profiles().then(profs=>{
+    // Pick first free profile (with or without email — disconnect now preserves email)
     const free=profs.find(p=>p.status==='free')||profs.find(p=>p.status==='active'&&!p.email);
     if(!free){addLog('err','  No free profile — click + Add Profile first');return;}
     _dlgProfIdx=free.idx;
@@ -5707,7 +5708,7 @@ function renderProfiles(profs){
       </div>
       <div class="prof-actions">
         ${isFree
-          ?'<button class="prof-btn pb-connect" onclick="openConnectDlgForProf('+p.idx+')">Connect</button>'
+          ?`<button class="prof-btn pb-connect" onclick="openConnectDlgForProf(${p.idx})">${p.email?'Reconnect':'Connect'}</button>`
           :isActive
             ?`<button class="prof-btn pb-switch" onclick="switchProfileAccount(${p.idx})"> Switch</button>
               <button class="prof-btn pb-disconnect" onclick="disconnectProf(${p.idx})">Disconnect</button>`
@@ -5721,13 +5722,13 @@ async function checkProxyIp(profIdx){
   const prxEl=document.getElementById('prx-'+profIdx);
   const ipEl=document.getElementById('proxy-ip-'+profIdx);
   if(!ipEl)return;
-  // Use the profile's saved proxy from profiles.json, not the (possibly modified) field
   const proxy=prxEl?prxEl.value.trim():'';
   if(!proxy){ipEl.textContent='No proxy set';ipEl.style.color='#f87171';return;}
   ipEl.textContent=' Checking...';
   ipEl.style.color='#93c5fd';
   try{
-    const r=await pywebview.api.check_proxy_ip_by_idx(profIdx);
+    // Use the proxy currently in the input (may differ from saved)
+    const r=await pywebview.api.check_proxy_ip(proxy);
     if(r&&r.ok){
       ipEl.textContent=` IP: ${r.ip}${r.city?' | '+r.city:''}${r.country?' ('+r.country+')':''}`;
       ipEl.style.color='#4ade80';
@@ -5742,6 +5743,18 @@ async function checkProxyIp(profIdx){
 }
 
 async function openConnectDlgForProf(profIdx){
+  // If profile already has saved email+pw, pre-fill them (reconnect flow)
+  const profs=await pywebview.api.get_profiles();
+  const prof=profs.find(p=>String(p.idx)===String(profIdx));
+  if(prof&&prof.email&&prof.zoho_password){
+    _dlgEmail=prof.email; _dlgPw=prof.zoho_password; _dlgProfIdx=profIdx;
+    document.getElementById('dlg-prof').textContent='#'+profIdx;
+    document.getElementById('dlg-email').value=prof.email;
+    document.getElementById('dlg-pw').value=prof.zoho_password;
+    document.getElementById('dlg-overlay').classList.add('show');
+    return;
+  }
+  // Otherwise pick from valid combos
   const valids=await pywebview.api.get_valid_combos();
   const unconnected=valids.filter(v=>v.connected_profile==null&&!v.blocked);
   if(!unconnected.length){
