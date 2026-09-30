@@ -954,7 +954,24 @@ router.post("/admin/plans/toggle", async (req, res) => {
 router.get("/admin/cf-zones", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    const zones = await cf.cfListZones();
+    const rawZones = await cf.cfListZones();
+    // Fetch cPanel accounts for cpanelUser lookup
+    const accounts = await q(sql`SELECT domain, cpanel_user FROM hostpanel_accounts WHERE managed = true`);
+    const domainToUser: Record<string, string> = {};
+    for (const a of accounts) domainToUser[(a as any).domain] = (a as any).cpanel_user;
+    // Enrich zones: map name->domain, add ssl setting + cpanelUser; parallel with per-zone timeout
+    const zones = await Promise.all(rawZones.map(async (z: any) => {
+      let ssl = 'unknown';
+      try {
+        const sslSetting = await Promise.race([
+          cf.cfCall(`/zones/${z.id}/settings/ssl`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+        ]) as any;
+        ssl = (sslSetting as any)?.value ?? 'unknown';
+      } catch { /* ignore */ }
+      const cpanelUser = domainToUser[z.name] || '';
+      return { ...z, domain: z.name, ssl, cpanelUser };
+    }));
     res.json({ ok: true, zones });
   } catch (e: any) {
     res.status(502).json({ ok: false, error: e.message });
