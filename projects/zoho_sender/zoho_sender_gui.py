@@ -2438,7 +2438,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             if not login_ok:
                 CHECK_LOG.put(("err", "  Login failed for existing account  blocking combo + resetting profile"))
                 _block_combo(email)  # mark combo as unusable
-                prof["status"] = "free"; prof["email"] = ""; prof["health"] = "login_failed"
+                prof["status"] = "free"; prof["health"] = "login_failed"
                 _save_profiles(profiles)
                 if window: window.evaluate_js("refreshProfiles()")
                 return
@@ -2488,7 +2488,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                     f"\nTime: {time.strftime('%H:%M:%S')}", profile_idx)
                 _tg_send_photo(tg_token, tg_chat, snap, f"OTP timeout  Profile {profile_idx}")
             except: pass
-            prof["status"] = "free"; prof["email"] = ""; prof["health"] = "otp_timeout"
+            prof["status"] = "free"; prof["health"] = "otp_timeout"
             _save_profiles(profiles)
             if window: window.evaluate_js("refreshProfiles()")
             return
@@ -2606,7 +2606,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                         d.save_screenshot(snap)
                         _tg_send_photo(tg_token, tg_chat, snap, f"Survey nav failed  Profile {profile_idx}")
                     except: pass
-                    prof["status"] = "free"; prof["email"] = ""; prof["health"] = "login_failed"
+                    prof["status"] = "free"; prof["health"] = "login_failed"
                     _save_profiles(profiles)
                     if window: window.evaluate_js("refreshProfiles()")
                     return
@@ -2617,7 +2617,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                     d.save_screenshot(snap)
                     _tg_send_photo(tg_token, tg_chat, snap, f"Survey nav failed  Profile {profile_idx}")
                 except: pass
-                prof["status"] = "free"; prof["email"] = ""; prof["health"] = "login_failed"
+                prof["status"] = "free"; prof["health"] = "login_failed"
                 _save_profiles(profiles)
                 if window: window.evaluate_js("refreshProfiles()")
                 return
@@ -2686,7 +2686,7 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                     f"\nError: {str(e)[:200]}\nTime: {time.strftime('%H:%M:%S')}", profile_idx)
                 _tg_send_photo(tg_token, tg_chat, snap, f"Connect error  Profile {profile_idx}")
         except: pass
-        prof["status"] = "free"; prof["email"] = ""; prof["health"] = "error"
+        prof["status"] = "free"; prof["health"] = "error"
         _save_profiles(profiles)
         if window:
             try: window.evaluate_js("refreshProfiles()")
@@ -3667,7 +3667,7 @@ class API:
         try:
             result = window.create_file_dialog(
                 _OPEN_DLG, allow_multiple=False,
-                file_types=('Text Files (*.txt;*.csv)', 'All files (*.*)')
+                file_types=('Text/CSV (*.txt *.csv)', 'All files (*.*)')
             )
             if result and len(result) > 0:
                 p = result[0]
@@ -3799,7 +3799,7 @@ class API:
         for p in profiles:
             # Reset stuck BUSY profiles (browser closed mid-connect, connected_at never set)
             if p.get("status") == "busy" and not p.get("connected_at"):
-                p["status"] = "free"; p["email"] = ""; changed = True
+                p["status"] = "free"; p["health"] = "error"; changed = True
         if changed:
             _save_profiles(profiles)
         for p in profiles:
@@ -4313,12 +4313,12 @@ class API:
             if mode == "logo":
                 result = window.create_file_dialog(
                     _OPEN_DLG, allow_multiple=False,
-                    file_types=('Images (*.png;*.jpg;*.jpeg;*.gif;*.webp)', 'All files (*.*)')
+                    file_types=('Images (*.png *.jpg *.jpeg *.gif *.webp)', 'All files (*.*)')
                 )
             else:
                 result = window.create_file_dialog(
                     _OPEN_DLG, allow_multiple=False,
-                    file_types=('Text/CSV (*.txt;*.csv)', 'All files (*.*)')
+                    file_types=('Text/CSV (*.txt *.csv)', 'All files (*.*)')
                 )
             if result and len(result) > 0:
                 p = result[0]
