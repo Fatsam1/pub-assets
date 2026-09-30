@@ -267,43 +267,49 @@ async function fetchAsset(url, timeout = 10000) {
   }
 }
 
-function safeFilename(u) {
+// Convert an absolute asset URL to a local relative path preserving directory structure
+function assetLocalPath(assetUrl, baseOrigin) {
   try {
-    const p = new URL(u).pathname;
-    const base = path.basename(p).split("?")[0] || "asset";
-    return base.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80) || "asset";
+    const u = new URL(assetUrl);
+    // Strip query/hash, sanitize path segments
+    let p = u.pathname.replace(/[?#].*$/, "");
+    // Remove leading slash
+    p = p.replace(/^\//, "");
+    // Sanitize each segment
+    const parts = p.split("/").map(s => s.replace(/[^a-zA-Z0-9._-]/g, "_") || "_");
+    if (!parts[parts.length - 1].includes(".")) parts[parts.length - 1] += "_file";
+    // If cross-origin, prefix with hostname
+    if (u.origin !== baseOrigin) {
+      parts.unshift(u.hostname.replace(/[^a-zA-Z0-9.-]/g, "_"));
+    }
+    return parts.join("/");
   } catch {
-    return "asset_" + Math.random().toString(36).slice(2, 8);
+    return "assets/unknown_" + Math.random().toString(36).slice(2, 6);
   }
 }
 
-function ext(ct, filename) {
-  if (filename.includes(".")) return filename;
-  if (ct.includes("css")) return filename + ".css";
-  if (ct.includes("javascript")) return filename + ".js";
-  if (ct.includes("png")) return filename + ".png";
-  if (ct.includes("jpeg") || ct.includes("jpg")) return filename + ".jpg";
-  if (ct.includes("gif")) return filename + ".gif";
-  if (ct.includes("svg")) return filename + ".svg";
-  if (ct.includes("webp")) return filename + ".webp";
-  if (ct.includes("woff2")) return filename + ".woff2";
-  if (ct.includes("woff")) return filename + ".woff";
-  if (ct.includes("ttf")) return filename + ".ttf";
-  return filename;
+function addExtIfMissing(localPath, ct) {
+  if (/\.[a-z0-9]{1,5}$/i.test(localPath)) return localPath;
+  if (ct.includes("css")) return localPath + ".css";
+  if (ct.includes("javascript")) return localPath + ".js";
+  if (ct.includes("png")) return localPath + ".png";
+  if (ct.includes("jpeg") || ct.includes("jpg")) return localPath + ".jpg";
+  if (ct.includes("gif")) return localPath + ".gif";
+  if (ct.includes("svg")) return localPath + ".svg";
+  if (ct.includes("webp")) return localPath + ".webp";
+  if (ct.includes("woff2")) return localPath + ".woff2";
+  if (ct.includes("woff")) return localPath + ".woff";
+  if (ct.includes("ttf")) return localPath + ".ttf";
+  return localPath;
 }
 
 app.post("/api/clone", requireAuth, express.json(), async (req, res) => {
-  let { url, folder, captureForm, inlineAssets, stripTracking } = req.body || {};
+  let { url, folder, captureForm, stripTracking } = req.body || {};
   const log = [];
   const step = (m) => { log.push({ t: Date.now(), m }); };
 
   if (!url || !/^https?:\/\//i.test(url)) {
     return res.status(400).json({ ok: false, error: "Enter a valid URL (must start with http:// or https://)", log });
-  }
-
-  // Normalize
-  if (!url.endsWith("/") && !url.includes(".", url.lastIndexOf("/") + 1) && !url.includes("?")) {
-    // root URL — fine as-is
   }
 
   let baseUrl;
@@ -313,14 +319,10 @@ app.post("/api/clone", requireAuth, express.json(), async (req, res) => {
 
   folder = (folder || baseUrl.hostname).replace(/[^a-zA-Z0-9_.-]/g, "_").slice(0, 60);
   const outDir = path.join(CLONE_DIR, folder);
-  const assetsDir = path.join(outDir, "assets");
 
-  try {
-    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-    if (!fs.existsSync(assetsDir)) fs.mkdirSync(assetsDir, { recursive: true });
-  } catch (e) {
-    return res.status(500).json({ ok: false, error: "Cannot create output dir: " + e.message, log });
-  }
+  // Clean previous clone if exists
+  if (fs.existsSync(outDir)) fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
 
   try {
     // 1. Fetch the main HTML
@@ -328,59 +330,60 @@ app.post("/api/clone", requireAuth, express.json(), async (req, res) => {
     let html;
     try {
       const { buf, ct } = await fetchAsset(url);
-      if (!ct.includes("html") && !ct.includes("text")) {
-        step(`⚠ Content-Type is ${ct} — proceeding anyway`);
-      }
+      if (!ct.includes("html") && !ct.includes("text")) step(`⚠ Content-Type is ${ct} — proceeding anyway`);
       html = buf.toString("utf-8");
       step(`✓ HTML fetched (${(buf.length / 1024).toFixed(1)} KB)`);
     } catch (e) {
       return res.status(500).json({ ok: false, error: "Failed to fetch page: " + e.message, log });
     }
 
-    // 2. Collect all asset URLs
-    const assetMap = new Map(); // absoluteUrl → localFilename
+    // 2. Collect all asset URLs — preserve original src values for replacement
+    // assetMap: absoluteUrl → { localPath, originals: Set<string> }
+    const assetMap = new Map();
+    const baseOrigin = baseUrl.origin;
+
+    function recordAsset(src) {
+      if (!src || src.startsWith("data:") || src.startsWith("javascript:") || src.startsWith("#") || src.startsWith("mailto:")) return;
+      try {
+        const abs = new URL(src, url).href;
+        if (!assetMap.has(abs)) {
+          assetMap.set(abs, { localPath: assetLocalPath(abs, baseOrigin), originals: new Set() });
+        }
+        assetMap.get(abs).originals.add(src);
+      } catch {}
+    }
+
+    // Extract from HTML attributes
+    const attrRe = /\b(?:src|href|data-src|data-href|poster|content)=["']([^"']+)["']/gi;
+    const srcsetRe = /srcset=["']([^"']+)["']/gi;
+    let m;
+    while ((m = attrRe.exec(html)) !== null) recordAsset(m[1]);
+    while ((m = srcsetRe.exec(html)) !== null) {
+      m[1].split(",").forEach(part => recordAsset(part.trim().split(/\s+/)[0]));
+    }
+
+    // Filter: only download CSS/JS/images/fonts — not HTML pages
+    const isAsset = (u) => /\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot|mp4|mp3|pdf)(\?|$)/i.test(u)
+      || !u.includes(".");
+
+    const toDownload = [...assetMap.entries()].filter(([u]) => isAsset(u));
+    step(`Found ${toDownload.length} assets to download`);
+
+    // 3. Download assets in parallel batches, preserve directory structure
+    const BATCH = 8;
+    let downloaded = 0, skipped = 0;
     const errors = [];
 
-    function absUrl(src) {
-      if (!src || src.startsWith("data:") || src.startsWith("javascript:") || src.startsWith("#")) return null;
-      try { return new URL(src, url).href; } catch { return null; }
-    }
-
-    // Find all src/href/url() references
-    const srcRe = /(?:src|href|action)=["']([^"']+)["']/gi;
-    const cssUrlRe = /url\(["']?([^"')]+)["']?\)/gi;
-    const importRe = /@import\s+["']([^"']+)["']/gi;
-
-    let m;
-    while ((m = srcRe.exec(html)) !== null) {
-      const a = absUrl(m[1]);
-      if (a && !assetMap.has(a)) {
-        const fn = ext("", safeFilename(a));
-        assetMap.set(a, fn);
-      }
-    }
-    while ((m = cssUrlRe.exec(html)) !== null) {
-      const a = absUrl(m[1]);
-      if (a && !assetMap.has(a)) {
-        assetMap.set(a, ext("", safeFilename(a)));
-      }
-    }
-
-    step(`Found ${assetMap.size} assets to download`);
-
-    // 3. Download all assets (parallel batches of 6)
-    const entries = [...assetMap.entries()];
-    const BATCH = 6;
-    let downloaded = 0, skipped = 0;
-
-    for (let i = 0; i < entries.length; i += BATCH) {
-      const batch = entries.slice(i, i + BATCH);
-      await Promise.all(batch.map(async ([assetUrl, filename]) => {
+    for (let i = 0; i < toDownload.length; i += BATCH) {
+      const batch = toDownload.slice(i, i + BATCH);
+      await Promise.all(batch.map(async ([assetUrl, info]) => {
         try {
           const { buf, ct } = await fetchAsset(assetUrl, 8000);
-          const finalName = ext(ct, filename);
-          assetMap.set(assetUrl, finalName);
-          fs.writeFileSync(path.join(assetsDir, finalName), buf);
+          const localPath = addExtIfMissing(info.localPath, ct);
+          info.localPath = localPath;
+          const fullPath = path.join(outDir, localPath);
+          fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+          fs.writeFileSync(fullPath, buf);
           downloaded++;
         } catch (e) {
           errors.push(assetUrl);
@@ -391,11 +394,28 @@ app.post("/api/clone", requireAuth, express.json(), async (req, res) => {
 
     step(`✓ Downloaded ${downloaded} assets (${skipped} failed)`);
 
-    // 4. Rewrite HTML — replace absolute URLs with local paths
+    // 4. Rewrite HTML — replace every original src reference with the local path
     let output = html;
-    assetMap.forEach((localName, originalUrl) => {
-      output = output.split(originalUrl).join(`assets/${localName}`);
+
+    // First replace absolute URLs
+    assetMap.forEach((info, absUrl_) => {
+      output = output.split(absUrl_).join(info.localPath);
     });
+
+    // Then replace original relative references
+    assetMap.forEach((info) => {
+      info.originals.forEach(orig => {
+        if (!orig.startsWith("http")) {
+          output = output.split(`="${orig}"`).join(`="${info.localPath}"`);
+          output = output.split(`='${orig}'`).join(`='${info.localPath}'`);
+        }
+      });
+    });
+
+    // Add <base> tag so relative paths still resolve if any were missed
+    if (!/<base\s/i.test(output)) {
+      output = output.replace(/<head>/i, `<head>\n<base href="${url.endsWith("/") ? url : url + "/"}">`);
+    }
 
     // 5. Handle forms — capture POSTs if option enabled
     if (captureForm) {
