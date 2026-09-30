@@ -198,8 +198,8 @@ async function notifyUser(userId: number, telegramId: string | null, title: stri
 
 // Suspend a cPanel from the cron context (mirrors whmSuspend in the hostpanel service).
 async function whmSuspendForCron(cpanelUser: string, on: boolean): Promise<void> {
-  const host = process.env.WHM_HOST || "54.38.221.66";
-  const user = process.env.WHM_USER || "streamfl";
+  const host = process.env.WHM_HOST || "169.58.26.102";
+  const user = process.env.WHM_USER || "root";
   const token = process.env.WHM_API_TOKEN || "";
   const fn = on ? "suspendacct" : "unsuspendacct";
   const url = `https://${host}:2087/json-api/${fn}?api.version=1&user=${encodeURIComponent(cpanelUser)}`;

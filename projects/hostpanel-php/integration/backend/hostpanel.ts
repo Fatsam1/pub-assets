@@ -15,7 +15,7 @@ import * as cf from "../services/hostpanel/cloudflare.js";
 
 const router: IRouter = Router();
 
-const SERVER_IP = process.env.WHM_HOST || "54.38.221.66";
+const SERVER_IP = process.env.WHM_HOST || "169.58.26.102";
 
 // ---------- small helpers ----------
 
@@ -948,6 +948,31 @@ router.post("/admin/plans/toggle", async (req, res) => {
   }
   await q(sql`UPDATE hostpanel_plans SET is_active = ${active} WHERE id = ${id}`);
   res.json({ ok: true, id, active });
+});
+
+// ADMIN — Cloudflare zones list (for admin dashboard overview).
+router.get("/admin/cf-zones", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const zones = await cf.cfListZones();
+    res.json({ ok: true, zones });
+  } catch (e: any) {
+    res.status(502).json({ ok: false, error: e.message });
+  }
+});
+
+// ADMIN — All subscriptions with user info.
+router.get("/admin/subscriptions", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const rows = await q(sql`
+    SELECT s.id, s.user_id, u.email AS user_email, u.name AS user_name,
+           p.name AS plan_name, p.display_name, p.price_usd,
+           s.status, s.auto_renew, s.started_at, s.expires_at, s.grace_until, s.updated_at
+    FROM hostpanel_subscriptions s
+    JOIN hostpanel_plans p ON p.id = s.plan_id
+    JOIN users u ON u.id = s.user_id
+    ORDER BY s.updated_at DESC`);
+  res.json({ ok: true, subscriptions: rows });
 });
 
 // ============================================================

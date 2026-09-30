@@ -25,9 +25,9 @@ $ENV = hp_load_env();
 
 $CONFIG = [
     'whm' => [
-        'host'  => $ENV['WHM_HOST']      ?? '54.38.221.66',
-        'user'  => $ENV['WHM_USER']      ?? 'streamfl',
-        'token' => $ENV['WHM_API_TOKEN'] ?? '',
+        'host'  => $ENV['WHM_HOST']      ?? '169.58.26.102',
+        'user'  => $ENV['WHM_USER']      ?? 'root',
+        'token' => $ENV['WHM_API_TOKEN'] ?? '1EXLB0ZTKMPGFO6JAKEOZXX4LQJMUHSS',
         'port'  => 2087,
     ],
     'cloudflare' => [
@@ -41,7 +41,7 @@ $CONFIG = [
         'botUsername'   => $ENV['TG_BOT_USERNAME']    ?? '',
         'allowedChatId' => $ENV['TG_ALLOWED_CHAT_ID'] ?? '',
     ],
-    'serverIp' => $ENV['WHM_HOST'] ?? '54.38.221.66',
+    'serverIp' => $ENV['WHM_HOST'] ?? '169.58.26.102',
 ];
 
 // Sessions live in a file so login persists across requests.

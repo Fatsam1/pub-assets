@@ -13,8 +13,8 @@ for path in [r"E:\work\.env"]:
             k, v = line.split("=", 1)
             ENV[k.strip()] = v.strip()
 
-HOST = ENV.get("WHM_HOST", "54.38.221.66")
-USER = ENV.get("WHM_USER", "streamfl")
+HOST = ENV.get("WHM_HOST", "169.58.26.102")
+USER = ENV.get("WHM_USER", "root")
 TOKEN = ENV["WHM_API_TOKEN"]
 CU = os.environ.get("CPANEL_USER", "panelcou1999")
 DEST = f"/home/{CU}/public_html"

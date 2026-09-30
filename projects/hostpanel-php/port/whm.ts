@@ -25,8 +25,8 @@ let _whmConfig: WhmConfig | null = null;
 export function getWhmConfig(): WhmConfig {
   if (_whmConfig) return _whmConfig;
   _whmConfig = {
-    host: process.env.WHM_HOST || '54.38.221.66',
-    user: process.env.WHM_USER || 'streamfl',
+    host: process.env.WHM_HOST || '169.58.26.102',
+    user: process.env.WHM_USER || 'root',
     token: process.env.WHM_API_TOKEN || '',
     port: 2087,
   };
@@ -224,6 +224,15 @@ export async function whmChangeDomain(cpanelUser: string, newDomain: string): Pr
 export async function whmLoginUrl(cpanelUser: string): Promise<string> {
   const d = await whmCall('create_user_session', { user: cpanelUser, service: 'cpaneld' });
   return d.url ?? '';
+}
+
+/** whm_admin_login_url — root WHM auto-login URL, no password. Returns domain-based URL. */
+export async function whmAdminLoginUrl(): Promise<string> {
+  const d = await whmCall('create_user_session', { user: 'root', service: 'whostmgrd' });
+  const url: string = d.url ?? '';
+  // Replace raw IP with the server hostname so the URL works via domain (no SSL cert warning)
+  const whmHost = process.env.WHM_HOST ?? '169.58.26.102';
+  return url.replace(new RegExp(`https://${whmHost.replace(/\./g, '\\.')}:2087/`), 'https://server.privatehash.online:2087/');
 }
 
 /** whm_add_addon */

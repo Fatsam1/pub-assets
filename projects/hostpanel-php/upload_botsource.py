@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upload bot-source files to panelcou1999/public_html/bot-source/ via WHM API."""
+"""Upload bot-source files to a cPanel account's public_html via WHM API."""
 import os, sys, json, ssl, urllib.parse, urllib.request
 
 ENV = {}
@@ -12,11 +12,11 @@ for path in [r"E:\work\.env"]:
             k, v = line.split("=", 1)
             ENV[k.strip()] = v.strip()
 
-HOST = ENV.get("WHM_HOST", "54.38.221.66")
-USER = ENV.get("WHM_USER", "streamfl")
+HOST = ENV.get("WHM_HOST", "169.58.26.102")
+USER = ENV.get("WHM_USER", "root")
 TOKEN = ENV["WHM_API_TOKEN"]
-CU = "panelcou1999"
-DEST = f"/home/{CU}/public_html/bot-source"
+CU = os.environ.get("CPANEL_USER", "casaisde")
+DEST = f"/home/{CU}/public_html"
 
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
