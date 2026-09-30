@@ -4839,7 +4839,7 @@ textarea{resize:vertical;min-height:65px}
     </div>
     <div>
       <label>Sending Profile (choose connected profile, or leave for Oscar default)</label>
-      <select id="prof-select">
+      <select id="prof-select" onchange="onProfSelectChange(this.value)">
         <option value="">Default  Oscar (ZohoTestProf_Oscar)</option>
       </select>
     </div>
@@ -5021,19 +5021,10 @@ calcSafeZone();
     </button>
   </div>
   <div class="cb">
-    <div class="g2">
-      <div>
-        <label>SOCKS5 Proxy — Profile 1</label>
-        <input type="text" id="proxy_p1" placeholder="user:pass@host:port">
-      </div>
-      <div>
-        <label>SOCKS5 Proxy — Profile 2</label>
-        <input type="text" id="proxy_p2" placeholder="user:pass@host:port">
-      </div>
-      <div>
-        <label>SOCKS5 Proxy — Profile 3</label>
-        <input type="text" id="proxy_p3" placeholder="user:pass@host:port">
-      </div>
+    <div id="proxy-profiles-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div style="color:var(--muted);font-size:10px;grid-column:1/-1">Loading profiles...</div>
+    </div>
+    <div class="g2" style="margin-bottom:8px">
       <div>
         <label>Fetched pool (select to assign)</label>
         <select id="proxy_pool_sel" size="4" style="width:100%;font-family:monospace;font-size:9px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);border-radius:5px">
@@ -5419,7 +5410,7 @@ function switchTab(t,btn){
   const showSend=t==='sender'||t==='design';
   document.getElementById('send-wrap').style.display=showSend?'':'none';
   if(t==='profiles') refreshProfiles();
-  if(t==='design'){setTimeout(rp,50);loadTemplatesUI();loadOptsUI();loadTemplateLibrary();loadRandPools();}
+  if(t==='design'){setTimeout(rp,50);loadTemplatesUI();loadOptsUI();loadTemplateLibrary();loadRandPools();renderProxyGrid();}
   if(t==='sender') refreshProfSelect();
 }
 
@@ -5825,8 +5816,10 @@ async function switchProfileAccount(profIdx){
   if(r&&r.ok) setTimeout(refreshProfiles,500);
 }
 
+let _cachedProfs=[];
 async function refreshProfSelect(){
   const profs=await pywebview.api.get_profiles();
+  _cachedProfs=profs;
   const sel=document.getElementById('prof-select');
   const cur=sel.value;
   sel.innerHTML='<option value="">Default  Oscar (ZohoTestProf_Oscar)</option><option value="all">&#9733; All Active Profiles</option>';
@@ -5836,6 +5829,16 @@ async function refreshProfSelect(){
     sel.appendChild(o);
   });
   sel.value=cur;
+}
+async function onProfSelectChange(val){
+  if(!val||val==='all'||val==='') return;
+  // Fill portal/dept/survey from selected profile
+  const prof=_cachedProfs.find(p=>String(p.idx)===String(val));
+  if(!prof) return;
+  if(prof.portal_id){sv('portal',prof.portal_id);}
+  if(prof.dept_id){sv('dept',prof.dept_id);}
+  if(prof.survey_id){sv('survey',prof.survey_id);}
+  addLog('info',`  Profile ${val} loaded: portal=${prof.portal_id} survey=${prof.survey_id}`);
 }
 
 //  EMAIL SENDER 
@@ -6281,22 +6284,44 @@ async function fetchProxies(){
     const sel=document.getElementById('proxy_pool_sel');
     if(sel)sel.innerHTML=r.proxies.map(p=>`<option value="${p}">${p}</option>`).join('');
     if(st)st.textContent=`Fetched ${r.total} proxies`;
-    if(r.proxies[0])sv('proxy_p1',r.proxies[0]);
-    if(r.proxies[1])sv('proxy_p2',r.proxies[1]);
-    if(r.proxies[2])sv('proxy_p3',r.proxies[2]);
+    // Fill into per-profile proxy fields
+    const _grid=document.getElementById('proxy-profiles-grid');
+    const _inputs=_grid?_grid.querySelectorAll('input[data-prof-idx]'):[];
+    _inputs.forEach((inp,i)=>{if(r.proxies[i])inp.value=r.proxies[i];});
     addLog('ok',`  Fetched ${r.total} proxies`);
   }catch(e){if(st)st.textContent='Error: '+e;addLog('err','  Proxy fetch error: '+e);}
 }
 
+async function renderProxyGrid(){
+  const profs=await pywebview.api.get_profiles();
+  _cachedProfs=profs;
+  const grid=document.getElementById('proxy-profiles-grid');
+  if(!grid)return;
+  if(!profs||!profs.length){grid.innerHTML='<div style="color:var(--muted);font-size:10px">No profiles yet</div>';return;}
+  grid.innerHTML=profs.map(p=>`
+    <div>
+      <label style="font-size:9px">Profile ${p.idx} — ${p.email||'(no email)'} <span style="color:var(--${p.status==='active'?'green':'muted'})">${p.status}</span></label>
+      <input type="text" data-prof-idx="${p.idx}" value="${p.proxy||''}" placeholder="user:pass@host:port"
+        style="width:100%;font-size:9px;font-family:monospace;padding:4px 6px;background:var(--dim);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+    </div>`).join('');
+}
 async function assignProxies(){
-  const p1=gv('proxy_p1'),p2=gv('proxy_p2'),p3=gv('proxy_p3');
-  const proxies=[p1,p2,p3].filter(Boolean);
-  if(!proxies.length){addLog('err','  No proxies to assign — fill proxy fields or fetch first');return;}
-  try{
-    const r=await pywebview.api.assign_proxies_to_profiles(proxies);
-    if(r&&r.ok)addLog('ok',`  Assigned ${r.assigned.length} proxies to profiles`);
-    else addLog('err','  Assign failed: '+(r&&r.error||'unknown'));
-  }catch(e){addLog('err','  Assign error: '+e);}
+  const grid=document.getElementById('proxy-profiles-grid');
+  const inputs=grid?grid.querySelectorAll('input[data-prof-idx]'):[];
+  if(!inputs.length){addLog('err','  No profiles found');return;}
+  let assigned=0;
+  for(const inp of inputs){
+    const idx=inp.dataset.profIdx;
+    const proxy=inp.value.trim();
+    if(!proxy)continue;
+    try{
+      const r=await pywebview.api.save_profile_proxy({profile_idx:parseInt(idx),proxy});
+      if(r&&r.ok)assigned++;
+      else addLog('err',`  Profile ${idx} proxy save failed: ${r&&r.error||'?'}`);
+    }catch(e){addLog('err',`  Profile ${idx}: ${e}`);}
+  }
+  if(assigned>0)addLog('ok',`  Saved ${assigned} profile proxies`);
+  else addLog('err','  No proxies to assign — fill proxy fields or fetch first');
 }
 
 //  LETTER BUILDER
@@ -6586,6 +6611,11 @@ if __name__ == "__main__":
     import http.server, urllib.parse as _urlparse
     class _DebugHandler(http.server.BaseHTTPRequestHandler):
         def log_message(self, fmt, *args): pass
+        def do_OPTIONS(self):
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.end_headers()
         def do_GET(self):
             import json as _j
             parsed = _urlparse.urlparse(self.path)
@@ -6594,6 +6624,7 @@ if __name__ == "__main__":
             arg = _urlparse.unquote(parts[1]) if len(parts) > 1 else ""
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             try:
                 fn_obj = getattr(api, fn, None)
