@@ -2,7 +2,7 @@
   {
     "idx": 4,
     "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_4",
-    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@159.89.87.80:10000",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@146.190.60.147:8013",
     "original_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@104.207.54.238:1081",
     "email": "472.coordinador.telemarketing@nissannamiangelopolis.com.mx",
     "status": "active",
@@ -28,7 +28,7 @@
   {
     "idx": 5,
     "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_5",
-    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@68.183.130.198:10000",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@68.183.17.102:10000",
     "original_proxy": "user:pass@5.6.7.8:1080",
     "email": "logistics.manager.test.1@solardropshipping.com",
     "status": "active",
@@ -50,7 +50,7 @@
   {
     "idx": 6,
     "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_6",
-    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@159.89.239.204:10000",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@152.53.183.107:8081",
     "original_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@174.138.161.187:39880",
     "email": "hscode.manager.test.1@solardropshipping.com",
     "status": "active",
@@ -63,8 +63,11 @@
     "imap_pw": "%.Q6>m^}*]45]]!V",
     "portal_id": "941178562",
     "dept_id": "wsBBCK",
-    "survey_id": "1275705000000004001",
-    "session_id": "53dydb7xrp"
+    "survey_id": "1275705000000006001",
+    "session_id": "53dydb7xrp",
+    "surveys": {
+      "hsbc_bank": "1275705000000006001"
+    }
   },
   {
     "idx": 7,
