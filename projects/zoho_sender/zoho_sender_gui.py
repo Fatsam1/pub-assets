@@ -3860,7 +3860,8 @@ class API:
                 em   = prof.get("email","")
                 pw_  = prof.get("imap_pw","") or _pw_map.get(em,"") or prof.get("password","")
                 # Use fresh ProxyScrape proxy for session check
-                _check_proxy = _fetch_fresh_proxyscrape_proxy() or (prof.get("proxy") or "")
+                _chk_excl = {p.get("proxy","") for p in profs if str(p.get("idx","")) != str(idx) and p.get("proxy","")}
+                _check_proxy = _fetch_fresh_proxyscrape_proxy(exclude=_chk_excl) or (prof.get("proxy") or "")
                 d2   = None
                 try:
                     d2 = _build_driver(prof["dir"], proxy=_check_proxy, headless=_hidden_browser)
@@ -3974,7 +3975,8 @@ class API:
             proxy = proxy.get("proxy", proxy.get("value", ""))
         proxy = (proxy or "").strip()
         if not proxy:
-            proxy = _fetch_fresh_proxyscrape_proxy()
+            _excl = {p.get("proxy","") for p in _load_profiles() if p.get("proxy","")}
+            proxy = _fetch_fresh_proxyscrape_proxy(exclude=_excl)
         threading.Thread(target=_add_profile_thread, args=(proxy,), daemon=True).start()
         return {"ok": True}
 
@@ -3982,11 +3984,11 @@ class API:
         profiles = _load_profiles()
         for p in profiles:
             if str(p["idx"]) == str(prof_idx):
-                p["status"] = "free"; p["email"] = ""
+                p["status"] = "free"
                 p["connected_at"] = None; p["health"] = "ok"
                 p["sent_count"] = 0
-                p["zoho_password"] = ""; p["imap_pw"] = ""
-                p.pop("portal_id", None); p.pop("dept_id", None); p.pop("survey_id", None)
+                # Keep email, zoho_password, portal_id, dept_id, survey_id
+                # so reconnect can use the login flow instead of re-registering
                 break
         _save_profiles(profiles); return {"ok": True}
 
@@ -3998,20 +4000,19 @@ class API:
         _save_profiles(profiles); return {"ok": True}
 
     def check_proxy_ip_by_idx(self, prof_idx):
-        """Check proxy IP for a specific profile — always uses fresh ProxyScrape proxy."""
+        """Check proxy IP for a specific profile — uses profile's stored proxy."""
         profiles = _load_profiles()
         prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
         if not prof:
             return {"error": f"profile {prof_idx} not found"}
-        # Always fetch a fresh working proxy from ProxyScrape for the check
-        proxy = _fetch_fresh_proxyscrape_proxy()
-        if proxy:
-            # Save it to the profile so send uses same fresh proxy
-            prof["proxy"] = proxy
-            _save_profiles(profiles)
-        else:
-            # Fallback to stored proxy
-            proxy = prof.get("proxy", "")
+        proxy = prof.get("proxy", "")
+        if not proxy:
+            # No stored proxy — fetch one unique to this profile
+            exclude = {p.get("proxy","") for p in profiles if str(p.get("idx","")) != str(prof_idx) and p.get("proxy","")}
+            proxy = _fetch_fresh_proxyscrape_proxy(exclude=exclude) or ""
+            if proxy:
+                prof["proxy"] = proxy
+                _save_profiles(profiles)
         if not proxy:
             return {"error": "no_proxy_available"}
         result = self.check_proxy_ip(proxy)
