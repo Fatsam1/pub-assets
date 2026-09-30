@@ -4856,9 +4856,9 @@ textarea{resize:vertical;min-height:65px}
   <div class="ch"><span class="ci"></span><span class="ct">Survey Config</span></div>
   <div class="cb">
     <div class="g3">
-      <div><label>Portal ID</label><input type="text" id="portal" placeholder="auto-filled from profile"></div>
-      <div><label>Dept ID</label><input type="text" id="dept" placeholder="auto-filled from profile"></div>
-      <div><label>Survey ID</label><input type="text" id="survey" placeholder="auto-filled from profile"></div>
+      <div><label>Portal ID</label><input type="text" id="portal" placeholder="auto-filled from profile" oninput="saveCfg()"></div>
+      <div><label>Dept ID</label><input type="text" id="dept" placeholder="auto-filled from profile" oninput="saveCfg()"></div>
+      <div><label>Survey ID</label><input type="text" id="survey" placeholder="auto-filled from profile" oninput="saveCfg()"></div>
     </div>
     <div class="g2" style="margin-top:8px">
       <div><label>Landing Page URL (header link)</label>
