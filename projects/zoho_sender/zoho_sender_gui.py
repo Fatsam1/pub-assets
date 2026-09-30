@@ -4221,7 +4221,7 @@ class API:
         if overrides and isinstance(overrides, dict):
             tmpl = {**tmpl, **{k: v for k, v in overrides.items() if v}}
         try:
-            return _build_email_html(tmpl)
+            return _build_email_html({}, tmpl)
         except Exception as e:
             return f"<p style='color:red'>Preview error: {e}</p>"
 
@@ -4846,9 +4846,9 @@ textarea{resize:vertical;min-height:65px}
   <div class="ch"><span class="ci"></span><span class="ct">Survey Config</span></div>
   <div class="cb">
     <div class="g3">
-      <div><label>Portal ID</label><input type="text" id="portal" value="929858814"></div>
-      <div><label>Dept ID</label><input type="text" id="dept" value="BrBR76"></div>
-      <div><label>Survey ID</label><input type="text" id="survey" value="1256274000000004001"></div>
+      <div><label>Portal ID</label><input type="text" id="portal" placeholder="auto-filled from profile"></div>
+      <div><label>Dept ID</label><input type="text" id="dept" placeholder="auto-filled from profile"></div>
+      <div><label>Survey ID</label><input type="text" id="survey" placeholder="auto-filled from profile"></div>
     </div>
     <div class="g2" style="margin-top:8px">
       <div><label>Landing Page URL (header link)</label>
@@ -4859,9 +4859,9 @@ textarea{resize:vertical;min-height:65px}
           style="font-size:10px"></div>
     </div>
     <div>
-      <label>Sending Profile (choose connected profile, or leave for Oscar default)</label>
+      <label>Sending Profile</label>
       <select id="prof-select" onchange="onProfSelectChange(this.value)">
-        <option value="">Default  Oscar (ZohoTestProf_Oscar)</option>
+        <option value="">── Select Profile ──</option>
       </select>
     </div>
     <label style="display:flex;align-items:center;gap:6px;font-size:10px;margin-top:6px;cursor:pointer">
@@ -5843,7 +5843,7 @@ async function refreshProfSelect(){
   _cachedProfs=profs;
   const sel=document.getElementById('prof-select');
   const cur=sel.value;
-  sel.innerHTML='<option value="">Default  Oscar (ZohoTestProf_Oscar)</option><option value="all">&#9733; All Active Profiles</option>';
+  sel.innerHTML='<option value="">── Select Profile ──</option><option value="all">&#9733; All Active Profiles</option>';
   profs.filter(p=>p.status==='active').forEach(p=>{
     const o=document.createElement('option');
     o.value=p.idx; o.textContent=`Profile ${p.idx}  ${p.email}`;
@@ -5852,7 +5852,16 @@ async function refreshProfSelect(){
   sel.value=cur;
 }
 async function onProfSelectChange(val){
-  if(!val||val==='all'||val==='') return;
+  // Show send-wrap whenever a valid selection is made
+  const sw=document.getElementById('send-wrap');
+  if(sw) sw.style.display='';
+  if(!val||val==='') return;
+  if(val==='all'){
+    // Clear portal/dept/survey — each profile uses its own
+    sv('portal',''); sv('dept',''); sv('survey','');
+    addLog('info','  All Active profiles selected — each will use its own portal/survey');
+    return;
+  }
   // Fill portal/dept/survey from selected profile
   const prof=_cachedProfs.find(p=>String(p.idx)===String(val));
   if(!prof) return;
@@ -6565,7 +6574,7 @@ window.addEventListener('pywebviewready', async()=>{
   renderValid(valids);
   document.getElementById('st-valid').textContent=valids.length;
   document.getElementById('valid-cnt').textContent=valids.length;
-  document.getElementById('send-wrap').style.display='none';
+  // send-wrap is always visible — profile selection populates portal/survey fields
   // Load saved templates from disk (fallback to built-in default)
   try{
     const saved=await pywebview.api.get_active_templates();
