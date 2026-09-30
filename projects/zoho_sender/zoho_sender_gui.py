@@ -1989,24 +1989,27 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
 
     _stored_proxy = (prof.get("proxy") or "").strip()
     _REG_PROXY = ""
-    if prof.get("zoho_password", "").strip() and _stored_proxy:
-        # Test stored proxy — if alive, reuse it; if dead, fetch fresh
-        if _quick_test_proxy(_stored_proxy):
-            _REG_PROXY = _stored_proxy
-            CHECK_LOG.put(("info", f"  Stored proxy alive — reusing: {_REG_PROXY.rsplit('@',1)[-1]}"))
-        else:
-            CHECK_LOG.put(("warn", f"  Stored proxy dead ({_stored_proxy.rsplit('@',1)[-1]}) — fetching fresh US proxy..."))
-            _REG_PROXY = _fetch_fresh_proxyscrape_proxy()
-            if not _REG_PROXY:
-                CHECK_LOG.put(("err", "  No fresh proxy found — connect will likely fail"))
+
+    # Build exclusion set — don't reuse IPs already owned by other profiles
+    _proxy_exclude = {p.get("proxy", "") for p in profiles
+                      if str(p.get("idx","")) != str(profile_idx) and p.get("proxy","")}
+
+    if _stored_proxy and _quick_test_proxy(_stored_proxy):
+        _REG_PROXY = _stored_proxy
+        CHECK_LOG.put(("info", f"  Stored proxy alive — reusing: {_REG_PROXY.rsplit('@',1)[-1]}"))
     else:
-        # Fresh registration — fetch US proxy that can access Zoho register page
-        _REG_PROXY = _fetch_fresh_proxyscrape_proxy()
+        if _stored_proxy:
+            CHECK_LOG.put(("warn", f"  Stored proxy dead ({_stored_proxy.rsplit('@',1)[-1]}) — fetching unique US proxy..."))
+        else:
+            CHECK_LOG.put(("info", "  No proxy stored — fetching unique US proxy..."))
+        _REG_PROXY = _fetch_fresh_proxyscrape_proxy(exclude=_proxy_exclude)
         if not _REG_PROXY:
-            _REG_PROXY = (prof.get("proxy") or prof.get("original_proxy") or "").strip()
+            CHECK_LOG.put(("err", "  No fresh unique proxy found — connect will likely fail"))
+
     if _REG_PROXY:
         CHECK_LOG.put(("info", f"  Using proxy: {_REG_PROXY.rsplit('@',1)[-1]}"))
         prof["proxy"] = _REG_PROXY
+        _save_profiles(profiles)
     else:
         CHECK_LOG.put(("warn", "  No proxy available — using direct IP (may get rate-limited)"))
 
@@ -2226,13 +2229,13 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
                 if window: window.evaluate_js("refreshProfiles()")
                 return
             else:
-                CHECK_LOG.put(("err", f"  Profile {profile_idx} FAILED — existing account cannot login."))
-                prof["status"] = "free"; prof["health"] = "login_failed"
+                # Login failed twice — account might need reset. Clear stored pw and try register
+                CHECK_LOG.put(("warn", f"  Both login attempts failed — clearing stored Zoho pw and proceeding to register flow"))
+                prof["zoho_password"] = ""
+                _stored_pw = ""
+                _is_existing_account = False
                 _save_profiles(profiles)
-                if window:
-                    try: window.evaluate_js("refreshProfiles()")
-                    except: pass
-                return
+                # Fall through to registration
 
         CHECK_LOG.put(("info", "  NEW ACCOUNT — registering new Zoho account"))
         zoho_pw = _gen_zoho_pw()
@@ -2586,16 +2589,38 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             cur = d.current_url
 
         if not cur.startswith("https://survey.zoho.com/"):
-            CHECK_LOG.put(("err", f"  Failed to reach survey dashboard (URL: {cur[:70]})"))
-            try:
-                snap = os.path.join(DIR, f"err_profile{profile_idx}_survey.png")
-                d.save_screenshot(snap)
-                _tg_send_photo(tg_token, tg_chat, snap, f"Survey nav failed  Profile {profile_idx}")
-            except: pass
-            prof["status"] = "free"; prof["email"] = ""; prof["health"] = "login_failed"
-            _save_profiles(profiles)
-            if window: window.evaluate_js("refreshProfiles()")
-            return
+            CHECK_LOG.put(("warn", f"  Failed to reach survey after register OTP (URL: {cur[:70]}) — trying login..."))
+            # Registration went through but session didn't land — try login with stored zoho_pw
+            _post_reg_pw = prof.get("zoho_password", "").strip()
+            _lr_post = _login_existing_zoho(d, email, password, time.time()-300, stored_zoho_pw=_post_reg_pw)
+            _lr_post_ok, _lr_post_pw = _lr_post if isinstance(_lr_post, tuple) else (_lr_post, None)
+            if _lr_post_ok:
+                CHECK_LOG.put(("ok", "  Post-register login succeeded"))
+                if not d.current_url.startswith("https://survey.zoho.com/"):
+                    d.get("https://survey.zoho.com/survey/newui"); time.sleep(6)
+                cur = d.current_url
+                if not cur.startswith("https://survey.zoho.com/"):
+                    CHECK_LOG.put(("err", f"  Still can't reach survey after login (URL: {cur[:70]})"))
+                    try:
+                        snap = os.path.join(DIR, f"err_profile{profile_idx}_survey.png")
+                        d.save_screenshot(snap)
+                        _tg_send_photo(tg_token, tg_chat, snap, f"Survey nav failed  Profile {profile_idx}")
+                    except: pass
+                    prof["status"] = "free"; prof["email"] = ""; prof["health"] = "login_failed"
+                    _save_profiles(profiles)
+                    if window: window.evaluate_js("refreshProfiles()")
+                    return
+            else:
+                CHECK_LOG.put(("err", f"  Post-register login also failed (URL: {cur[:70]})"))
+                try:
+                    snap = os.path.join(DIR, f"err_profile{profile_idx}_survey.png")
+                    d.save_screenshot(snap)
+                    _tg_send_photo(tg_token, tg_chat, snap, f"Survey nav failed  Profile {profile_idx}")
+                except: pass
+                prof["status"] = "free"; prof["email"] = ""; prof["health"] = "login_failed"
+                _save_profiles(profiles)
+                if window: window.evaluate_js("refreshProfiles()")
+                return
 
         CHECK_LOG.put(("ok", "  Reached Zoho Survey dashboard!"))
 
