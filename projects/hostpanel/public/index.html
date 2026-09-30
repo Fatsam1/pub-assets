@@ -177,7 +177,7 @@
 
     <div class="card" style="margin-top:20px">
       <h2>Saved Clones</h2>
-      <p class="hint">All locally cloned sites — click Preview to open, Delete to remove.</p>
+      <p class="hint">All locally cloned sites — Download ZIP for upload-ready landing page, Delete to remove.</p>
       <div id="cl-list-wrap">
         <table id="cl-table" style="display:none">
           <thead><tr><th>Folder</th><th>index.html size</th><th>Created</th><th>Actions</th></tr></thead>
@@ -350,8 +350,8 @@ $("#cl-go").onclick = async ()=>{
         <div><b>✓ Clone complete</b></div>
         <div>Folder: <b>${d.folder}</b> · Assets: <b>${d.assetCount}</b>${d.captureForm?' · <span style="color:var(--warn)">Form capture ON</span>':''}</div>
         <div style="margin-top:8px">
-          <a href="/clones/${d.folder}/index.html" target="_blank" style="margin-right:12px">🔍 Preview</a>
-          <a href="/api/clone-download?folder=${encodeURIComponent(d.folder)}">📦 File list</a>
+          <a href="/api/clone-download?folder=${encodeURIComponent(d.folder)}" style="margin-right:12px">⬇ Download ZIP</a>
+          <a href="/clones/${d.folder}/index.html" target="_blank" style="color:#888;font-size:12px">Preview</a>
         </div>
       </div>`;
       loadClones();
@@ -380,7 +380,8 @@ async function loadClones(){
         <td class=mono>${c.size}</td>
         <td class=mono>${c.created}</td>
         <td>
-          <a href="/clones/${encodeURIComponent(c.folder)}/index.html" target="_blank" style="margin-right:10px;color:var(--accent)">Preview</a>
+          <a href="/api/clone-download?folder=${encodeURIComponent(c.folder)}" style="margin-right:10px;color:var(--accent)">⬇ Download</a>
+          <a href="/clones/${encodeURIComponent(c.folder)}/index.html" target="_blank" style="margin-right:10px;color:#888;font-size:12px">Preview</a>
           <span style="color:var(--crit);cursor:pointer" onclick="deleteClone('${c.folder}')">Delete</span>
         </td>
       </tr>`).join("");
