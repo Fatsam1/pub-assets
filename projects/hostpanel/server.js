@@ -446,18 +446,34 @@ app.post("/api/clone", requireAuth, express.json(), async (req, res) => {
     }
 
     // ── 6. Fetch CSS sub-assets not captured by browser ───
-    const { fetch: uFetch2 } = await import("undici");
     const fetchHeaders = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0.0.0 Safari/537.36" };
+
+    const httpsMod = await import("https");
+    const httpMod = await import("http");
+    function httpGet(url, timeoutMs = 8000) {
+      return new Promise((resolve, reject) => {
+        const mod = url.startsWith("https:") ? httpsMod.default : httpMod.default;
+        const t = setTimeout(() => { reject(new Error("timeout")); }, timeoutMs);
+        const req = mod.get(url, { headers: fetchHeaders }, res => {
+          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            clearTimeout(t);
+            resolve(httpGet(res.headers.location, timeoutMs));
+            return;
+          }
+          const chunks = [];
+          res.on("data", c => chunks.push(c));
+          res.on("end", () => { clearTimeout(t); resolve({ buf: Buffer.concat(chunks), ct: res.headers["content-type"] || "" }); });
+          res.on("error", e => { clearTimeout(t); reject(e); });
+        });
+        req.on("error", e => { clearTimeout(t); reject(e); });
+      });
+    }
+
     let extraFetched = 0;
     for (const [, info] of assetMap) {
       if (!info.needFetch) continue;
       try {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 8000);
-        const r = await uFetch2(info.absUrl, { headers: fetchHeaders, signal: ctrl.signal, redirect: "follow" });
-        clearTimeout(t);
-        const buf = Buffer.from(await r.arrayBuffer());
-        const ct = r.headers.get("content-type") || "";
+        const { buf, ct } = await httpGet(info.absUrl);
         info.localPath = guessExt(info.localPath, ct);
         info.buf = buf; info.ct = ct;
         const fp = path.join(outDir, info.localPath);
