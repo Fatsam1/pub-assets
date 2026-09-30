@@ -1084,7 +1084,24 @@ def _build_driver(profile_dir, proxy=None, size=(1200, 900), headless=False):
     elif p:
         opts.add_argument(f"--proxy-server=http://{p}")
     # else: p is empty — direct connection, no proxy arg added
-    d = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
+    # Pick best matching chromedriver: prefer exact patch match, else highest build
+    import glob as _glob, re as _re2
+    _wdm_root = os.path.join(os.environ.get("USERPROFILE",""), ".wdm", "drivers", "chromedriver")
+    _cd_default = ChromeDriverManager().install()
+    try:
+        import subprocess as _sp
+        _cv = _sp.check_output(
+            [r"C:\Program Files\Google\Chrome\Application\chrome.exe", "--version"],
+            stderr=_sp.DEVNULL, creationflags=0x08000000).decode().strip()
+        _cv_match = _re2.search(r"(\d+\.\d+\.\d+)", _cv)
+        if _cv_match:
+            _cv_base = _cv_match.group(1)  # e.g. 154.0.8037
+            _cds = _glob.glob(os.path.join(_wdm_root, "win64", _cv_base + ".*", "**", "chromedriver*.exe"), recursive=True)
+            if _cds:
+                _cd_default = sorted(_cds)[-1]  # highest patch version
+    except Exception:
+        pass
+    d = webdriver.Chrome(service=Service(_cd_default), options=opts)
     d.set_page_load_timeout(180)
     return d
 
@@ -3429,7 +3446,6 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
                 d, cfg["portal"], cfg["dept"], cfg["survey"],
                 _ep_type, cfg.get("end_page_url", ""),
                 cfg.get("end_page_msg", ""))
-        # Create a fresh survey named after the brand — collector picks up the name from creation
         _brand_name = ""
         if templates:
             _brand_name = templates[0].get("org_name", "").strip()
@@ -3443,15 +3459,20 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         if not _cfg_portal:
             SEND_LOG.put(("err", "  No portal_id — check profile is active and has portal/dept IDs"))
             return
-        SEND_LOG.put(("info", f"  Creating fresh survey: '{_brand_name}' (portal={_cfg_portal})"))
-        _new_survey_id = _create_blank_survey(d, _cfg_portal, _cfg_dept, survey_name=_brand_name)
-        if _new_survey_id:
-            cfg["survey"] = _new_survey_id
-            _cfg_survey = _new_survey_id
-            SEND_LOG.put(("ok", f"  New survey ID: {_new_survey_id}"))
-            _add_dummy_question(d, _cfg_portal, _cfg_dept, _new_survey_id)
+        # Reuse existing survey if one is set; only create a new one if none provided
+        if _cfg_survey:
+            SEND_LOG.put(("info", f"  Reusing survey_id={_cfg_survey} (portal={_cfg_portal})"))
         else:
-            SEND_LOG.put(("warn", "  Survey creation failed — using old survey ID"))
+            SEND_LOG.put(("info", f"  Creating survey: '{_brand_name}' (portal={_cfg_portal})"))
+            _new_survey_id = _create_blank_survey(d, _cfg_portal, _cfg_dept, survey_name=_brand_name)
+            if _new_survey_id:
+                cfg["survey"] = _new_survey_id
+                _cfg_survey = _new_survey_id
+                SEND_LOG.put(("ok", f"  New survey ID: {_new_survey_id}"))
+                _add_dummy_question(d, _cfg_portal, _cfg_dept, _new_survey_id)
+            else:
+                SEND_LOG.put(("warn", "  Survey creation failed — no survey ID available"))
+                return
         # Always set Zoho's "Begin Survey" button text to the template's btn_text
         # (Zoho's button IS the only CTA — no extra button in the body HTML)
         _btn_text = cfg.get("survey_button_text", "").strip()
