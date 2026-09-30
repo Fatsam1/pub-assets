@@ -267,6 +267,9 @@ IMAP_MAP = {
     "mail.com":       ("imap.mail.com",          993),
     "gmx.com":        ("imap.gmx.com",           993),
     "gmx.net":        ("imap.gmx.net",           993),
+    # OVH-hosted domains
+    "solardropshipping.com": ("ssl0.ovh.net",    993),
+    "nissannamiangelopolis.com.mx": ("ssl0.ovh.net", 993),
 }
 
 def _imap_servers(email):
