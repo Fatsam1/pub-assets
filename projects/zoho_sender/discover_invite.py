@@ -30,16 +30,21 @@ DIR     = os.path.dirname(os.path.abspath(__file__))
 LOG_F   = os.path.join(DIR, "discover_log.txt")
 SAVE_F  = os.path.join(DIR, "invite_url.txt")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s  %(message)s",
-    datefmt="%H:%M:%S",
-    handlers=[
-        logging.FileHandler(LOG_F, encoding="utf-8", mode="w"),
-        logging.StreamHandler(sys.stdout),
-    ]
-)
-L = logging.getLogger()
+class _FlushHandler(logging.FileHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()
+
+_L_fmt = logging.Formatter("%(asctime)s  %(message)s", datefmt="%H:%M:%S")
+L = logging.getLogger("discover_invite")
+L.setLevel(logging.INFO)
+L.propagate = False
+# always add file handler pointing to LOG_F
+_L_fh = _FlushHandler(LOG_F, encoding="utf-8", mode="a")
+_L_fh.setFormatter(_L_fmt)
+_L_sh = logging.StreamHandler(sys.stdout)
+_L_sh.setFormatter(_L_fmt)
+L.handlers = [_L_fh, _L_sh]
 
 def ss(d, name):
     try: d.save_screenshot(os.path.join(DIR, name))
@@ -2412,41 +2417,59 @@ def configure_email_invite(d, portal_id, dept_id, survey_id,
 
     L.info(f"configure_email_invite: survey={survey_id} subject={subject!r}")
 
-    # ── Step 0: Rename survey + dept so title bar shows brand ─────────────
-    if survey_name:
-        try:
-            rename_survey(d, portal_id, dept_id, survey_id, survey_name)
-            rename_department(d, portal_id, dept_id, survey_name)
-        except Exception as _re:
-            L.warning(f"rename step skipped (browser issue): {_re}")
-
     # ── Step 1: Navigate to launch ───────────────────────────────────────
-    launch_url = (f"https://survey.zoho.com/survey/newui"
-                  f"#/portal/{portal_id}/department/{dept_id}"
-                  f"/survey/{survey_id}/launch")
+    _launch_hash = (f"#/portal/{portal_id}/department/{dept_id}"
+                    f"/survey/{survey_id}/launch")
+    _summary_hash = (f"#/portal/{portal_id}/department/{dept_id}"
+                     f"/survey/{survey_id}/summary")
+    launch_url = "https://survey.zoho.com/survey/newui" + _launch_hash
     L.info(f"Navigating to launch: {launch_url}")
-    # Break SPA state: go to home first (longer wait after rename navigations)
-    d.get("https://survey.zoho.com/survey/newui"); rw(4, 6)
-    # Retry launch up to 3 times in case of ERR_EMPTY_RESPONSE
-    for _launch_try in range(3):
-        d.get(launch_url); rw(6, 8)
-        # Wait for Zoho SPA spinner to disappear (up to 25 extra seconds)
-        for _sp in range(25):
-            _pg_sp = (d.execute_script("return document.body.innerText") or "").strip()
-            if len(_pg_sp) > 50:
-                break
+
+    # Strategy: load SPA base page first (avoids ERR_EMPTY_RESPONSE on direct hash navigate)
+    # then push the hash via JS so SPA router handles it without a fresh HTTP request
+    def _nav_to_launch(driver, hash_path, base="https://survey.zoho.com/survey/newui"):
+        cur = driver.current_url or ""
+        if cur.startswith(base):
+            # Already on newui — just change hash via JS router
+            driver.execute_script(f"window.location.hash = {hash_path!r};")
+        else:
+            # Navigate fresh (full URL with hash)
+            driver.get(base + hash_path)
+        rw(6, 8)
+        # Wait for SPA content
+        for _ in range(25):
+            _t = (driver.execute_script("return document.body.innerText") or "").strip()
+            if len(_t) > 50: return _t
             time.sleep(1)
+        return (driver.execute_script("return document.body.innerText") or "").strip()
+
+    # Load the SPA base first so we're on the right origin
+    cur_url = d.current_url or ""
+    if not cur_url.startswith("https://survey.zoho.com/survey/newui"):
+        d.get("https://survey.zoho.com/survey/newui"); rw(4, 6)
+
+    # Navigate to summary first to warm up SPA session, then to launch
+    L.info("launch: warming SPA via summary route...")
+    _pg_sum = _nav_to_launch(d, _summary_hash)
+    _pg_sum_l = _pg_sum.lower()
+    if "err_empty_response" in _pg_sum_l or "didn't send any data" in _pg_sum_l:
+        L.info("  summary ERR — hard-reloading SPA base first")
+        d.get("https://survey.zoho.com/survey/newui"); rw(5, 8)
+    else:
+        L.info(f"  summary loaded ({len(_pg_sum)} chars)")
+
+    # Now navigate to launch
+    for _launch_try in range(3):
+        _pg_sp = _nav_to_launch(d, _launch_hash)
         _pg_err = _pg_sp.lower()
         if "err_empty_response" in _pg_err or "didn't send any data" in _pg_err or "page isn't working" in _pg_err:
-            L.info(f"launch page: ERR_EMPTY_RESPONSE on attempt {_launch_try+1} — retrying after 5s...")
-            time.sleep(5)
-            d.get("https://survey.zoho.com/survey/newui"); rw(3, 5)
+            L.info(f"launch page: ERR_EMPTY_RESPONSE on attempt {_launch_try+1} — reloading SPA...")
+            d.get("https://survey.zoho.com/survey/newui"); rw(4, 6)
             continue
         if len(_pg_sp) > 50:
             L.info(f"launch page loaded on attempt {_launch_try+1}")
             break
-        L.info(f"launch page: spinner wait timed out on attempt {_launch_try+1} — proceeding")
-        break
+        L.info(f"launch page: empty on attempt {_launch_try+1} — retrying")
     ss(d, "ci_01_launch.png")
 
     # ── Step 2: Get into "Email Invites by Zoho Survey" flow ────────────

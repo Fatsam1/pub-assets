@@ -2,17 +2,17 @@
   {
     "idx": 4,
     "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_4",
-    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@131.153.163.86:22877",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@107.167.18.122:443",
     "original_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@104.207.54.238:1081",
-    "email": "assistantemarketing@qualissolutions.fr",
+    "email": "472.coordinador.telemarketing@nissannamiangelopolis.com.mx",
     "status": "active",
     "health": "ok",
-    "sent_count": 5,
-    "connected_at": "2026-09-29 01:14",
+    "sent_count": 6,
+    "connected_at": "2026-09-30 17:06",
     "trial_days": 7,
     "last_health_check": null,
     "zoho_password": "pZ8FyKQj!i5I",
-    "imap_pw": "GnitekraM@EtnatsissA!",
+    "imap_pw": "AC874*c1",
     "imap_password": "GnitekraM@EtnatsissA!",
     "surveys": {
       "linkedin": "1276001000000003715",
@@ -22,17 +22,18 @@
     "portal_id": "940622474",
     "dept_id": "6xCZYh",
     "survey_id": "1276001000000067003",
-    "socks5_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@174.138.162.36:3129"
+    "socks5_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@174.138.162.36:3129",
+    "session_id": "clcuvpjsjc"
   },
   {
     "idx": 5,
     "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_5",
-    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@163.128.149.200:3129",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@159.89.51.75:10000",
     "original_proxy": "user:pass@5.6.7.8:1080",
     "email": "logistics.manager.test.1@solardropshipping.com",
     "status": "active",
     "connected_at": "2026-09-29 01:26",
-    "sent_count": 1,
+    "sent_count": 2,
     "health": "ok",
     "trial_days": 7,
     "last_health_check": null,
@@ -40,12 +41,13 @@
     "imap_pw": "6)6xGE?2['d2R(C4",
     "portal_id": "941087806",
     "dept_id": "JRtmbi",
-    "survey_id": "1275121000000003017"
+    "survey_id": "1275121000000003017",
+    "session_id": "fcvyaitbro"
   },
   {
     "idx": 6,
     "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_6",
-    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@38.75.82.210:999",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@68.183.27.147:10000",
     "original_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@174.138.161.187:39880",
     "email": "hscode.manager.test.1@solardropshipping.com",
     "status": "active",
@@ -58,6 +60,21 @@
     "imap_pw": "%.Q6>m^}*]45]]!V",
     "portal_id": "941178562",
     "dept_id": "wsBBCK",
-    "survey_id": "1275705000000004001"
+    "survey_id": "1275705000000004001",
+    "session_id": "53dydb7xrp"
+  },
+  {
+    "idx": 7,
+    "dir": "C:\\Users\\FAT SAM\\ZohoProfiles\\profile_7",
+    "proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@47.236.86.147:443",
+    "original_proxy": "alv68pcvy8kb:u0qd0imgg1i4nj4@47.236.86.147:443",
+    "email": "belgin.ilgar@vpro.com.tr",
+    "status": "free",
+    "connected_at": null,
+    "sent_count": 0,
+    "health": "error",
+    "trial_days": 7,
+    "last_health_check": null,
+    "zoho_password": "Zu@Yv!14VgCa"
   }
 ]
