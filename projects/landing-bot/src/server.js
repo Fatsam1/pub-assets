@@ -94,6 +94,16 @@ app.get('/', (req, res) => res.redirect('/admin'));
 app.get('/p/:slug/:pageSlug?', (req, res) => {
   try {
     const { slug, pageSlug } = req.params;
+
+    // complete page — render directly
+    if (pageSlug === 'complete') {
+      const pg = db.prepare('SELECT * FROM pages WHERE slug = ?').get(slug);
+      if (!pg) return res.status(404).send('الصفحة غير موجودة');
+      const t = getTemplate(pg.template_id);
+      const lastPage = t.pages[t.pages.length - 1];
+      return res.render('complete', { page: pg, tpl: t, pageContent: lastPage || {}, allPages: t.pages });
+    }
+
     const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(slug);
     if (!page) return res.status(404).send('الصفحة غير موجودة');
 
