@@ -3974,12 +3974,21 @@ class API:
         return {"ok": True, "checking": len(active), "results": results}
 
     def connect_profile(self, payload):
-        email    = payload.get("email","")
-        pw       = payload.get("password","")
-        prof_idx = int(payload.get("profile_idx", 1))
-        tg_token = payload.get("tg_token", "")
-        tg_chat  = payload.get("tg_chat", "")
+        email      = payload.get("email","")
+        pw         = payload.get("password","")   # IMAP password (for OTP)
+        zoho_pw    = payload.get("zoho_password","")  # Zoho login password
+        prof_idx   = int(payload.get("profile_idx", 1))
+        tg_token   = payload.get("tg_token", "")
+        tg_chat    = payload.get("tg_chat", "")
         if not email or not pw: return {"error": "missing_credentials"}
+        # If zoho_password provided, save it to profile before connecting
+        if zoho_pw:
+            _profiles = _load_profiles()
+            for _p in _profiles:
+                if str(_p["idx"]) == str(prof_idx):
+                    _p["zoho_password"] = zoho_pw
+                    break
+            _save_profiles(_profiles)
         profiles = _load_profiles()
         prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
         if not prof: return {"error": "profile_not_found"}
@@ -5391,6 +5400,7 @@ calcSafeZone();
       <label>Password (from combo)</label>
       <input type="password" id="dlg-pw">
     </div>
+    <input type="hidden" id="dlg-imap-pw">
     <div style="font-size:10px;color:var(--muted);line-height:1.6">
       Script will:<br>
       1. Open browser with the selected profile<br>
@@ -5417,6 +5427,7 @@ let _checkPoll = null;
 let _sendPoll  = null;
 let _dlgEmail  = '';
 let _dlgPw     = '';
+let _dlgImapPw = '';
 let _dlgProfIdx = 1;
 let _templates  = [];
 
@@ -5632,7 +5643,7 @@ async function clearValid(){
 
 //  CONNECT DIALOG
 function openConnectDlg(email,pw){
-  _dlgEmail=email; _dlgPw=pw;
+  _dlgEmail=email; _dlgPw=pw; _dlgImapPw=pw;
   pywebview.api.get_profiles().then(profs=>{
     // Pick first free profile (with or without email — disconnect now preserves email)
     const free=profs.find(p=>p.status==='free')||profs.find(p=>p.status==='active'&&!p.email);
@@ -5647,10 +5658,11 @@ function openConnectDlg(email,pw){
 function closeDlg(){document.getElementById('dlg-overlay').classList.remove('show');}
 async function doConnect(){
   closeDlg();
+  const imapPw=document.getElementById('dlg-imap-pw').value||_dlgImapPw||_dlgPw;
   addLog('info',`  Connecting ${_dlgEmail}  Profile ${_dlgProfIdx}...`);
   const r=await pywebview.api.connect_profile({
-    email:_dlgEmail,password:_dlgPw,profile_idx:_dlgProfIdx,
-    tg_token:gv('tg_token'),tg_chat:gv('tg_chat')
+    email:_dlgEmail,password:imapPw,zoho_password:_dlgPw,
+    profile_idx:_dlgProfIdx,tg_token:gv('tg_token'),tg_chat:gv('tg_chat')
   });
   if(r&&r.error)addLog('err','  '+r.error);
 }
@@ -5777,10 +5789,13 @@ async function openConnectDlgForProf(profIdx){
   const profs=await pywebview.api.get_profiles();
   const prof=profs.find(p=>String(p.idx)===String(profIdx));
   if(prof&&prof.email&&prof.zoho_password){
-    _dlgEmail=prof.email; _dlgPw=prof.zoho_password; _dlgProfIdx=profIdx;
+    _dlgEmail=prof.email; _dlgPw=prof.zoho_password;
+    _dlgImapPw=prof.imap_pw||prof.imap_password||'';
+    _dlgProfIdx=profIdx;
     document.getElementById('dlg-prof').textContent='#'+profIdx;
     document.getElementById('dlg-email').value=prof.email;
     document.getElementById('dlg-pw').value=prof.zoho_password;
+    document.getElementById('dlg-imap-pw').value=_dlgImapPw;
     document.getElementById('dlg-overlay').classList.add('show');
     return;
   }
@@ -5791,10 +5806,11 @@ async function openConnectDlgForProf(profIdx){
     addLog('err','  No unconnected valid combos  run Combo Checker first');return;
   }
   const v=unconnected[0];
-  _dlgEmail=v.email; _dlgPw=v.password; _dlgProfIdx=profIdx;
+  _dlgEmail=v.email; _dlgPw=v.password; _dlgImapPw=v.password; _dlgProfIdx=profIdx;
   document.getElementById('dlg-prof').textContent='#'+profIdx;
   document.getElementById('dlg-email').value=v.email;
   document.getElementById('dlg-pw').value=v.password;
+  document.getElementById('dlg-imap-pw').value=v.password;
   document.getElementById('dlg-overlay').classList.add('show');
 }
 
