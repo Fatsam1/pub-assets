@@ -64,6 +64,21 @@ export const LOGOS = {
 // Aliases for palKey variants that differ from logo keys
 LOGOS.twitterx = LOGOS.twitter;
 LOGOS.googlegmail = LOGOS.gmail;
+LOGOS.netflixvideo = LOGOS.netflix;
+LOGOS.netflixoriginal = LOGOS.netflix;
+LOGOS.googledrive = LOGOS.google;
+LOGOS.googleplay = LOGOS.google;
+LOGOS.microsoftoutlook = LOGOS.microsoft;
+LOGOS.microsoftoffice = LOGOS.microsoft;
+LOGOS.microsoftteams = LOGOS.microsoft;
+LOGOS.amazonprime = LOGOS.amazon;
+LOGOS.amazonaws = LOGOS.amazon;
+LOGOS.trustwallet = LOGOS.trustwallet || LOGOS.metamask;
+// government/airlines — letter fallback is fine, but add simple ones
+LOGOS.irs = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003366"/><text x="28" y="38" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="900" fill="#fff">IRS</text></svg>`;
+LOGOS.emirates = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#C8102E"/><text x="28" y="36" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#fff">EMIRATES</text></svg>`;
+LOGOS.unitedairlines = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002244"/><text x="28" y="34" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#fff">UNITED</text></svg>`;
+LOGOS.americanairlines = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0078D2"/><text x="28" y="34" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#fff">AMERICAN</text></svg>`;
 
 // Returns the logo SVG for a brand key, or a fallback letter box
 export function getLogo(tplKey, brandName, accentColor) {
