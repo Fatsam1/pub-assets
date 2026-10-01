@@ -21,9 +21,9 @@ p{font-size:.93rem;opacity:.7;line-height:1.6;margin-bottom:24px}
 .brand-logo{font-size:1.1rem;font-weight:700;color:var(--ac);margin-bottom:24px;display:block}
 </style>
 </head>
-<body>
+<body class="brand-<%= tpl.key || tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'') %>">
 <div class="card">
-  <span class="brand-logo"><%= tpl.name %></span>
+  <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %><div style="text-align:center;margin-bottom:16px"><%- logos[tpl.key] %></div><% } else { %><span class="brand-logo"><%= tpl.name %></span><% } %>
   <div class="icon">⚠️</div>
   <h1><%= pageContent.headline %></h1>
   <p><%= pageContent.subheadline %></p>

