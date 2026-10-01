@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><%= pageContent.headline %> — <%= tpl.name %></title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg:<%= tpl.palette.bg %>; --card:<%= tpl.palette.card %>; --fg:<%= tpl.palette.fg %>; --accent:<%= tpl.palette.accent %>; --accent2:<%= tpl.palette.accent2 %>; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:'Cairo',system-ui; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  body { font-family:'Inter',system-ui; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
   .auth { background:var(--card); border-radius:20px; padding:36px 28px; width:100%; max-width:440px; }
   .logo { width:56px; height:56px; border-radius:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:1.6rem; margin:0 auto 24px; }
   .logo-svg { display:block; margin:0 auto 24px; }
@@ -614,14 +614,14 @@
       <% } %>
     </div>
     <input type="hidden" name="code" id="codeHidden">
-    <button type="submit" id="submitBtn" disabled><%= pageContent.cta || 'تأكيد' %></button>
+    <button type="submit" id="submitBtn" disabled><%= pageContent.cta || 'Verify' %></button>
   </form>
 
   <div style="text-align:center;font-size:.83rem;margin-top:16px;opacity:.75">
-    الكود صالح <span class="timer" id="timer">05:00</span>
+    Code expires in <span class="timer" id="timer">05:00</span>
   </div>
   <div style="text-align:center;margin-top:14px">
-    <button type="button" id="resendBtn" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:var(--fg);font-size:.85rem;padding:8px 20px;width:auto;opacity:.7" onclick="resendOTP()">إعادة إرسال الكود</button>
+    <button type="button" id="resendBtn" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:var(--fg);font-size:.85rem;padding:8px 20px;width:auto;opacity:.7" onclick="resendOTP()">Resend Code</button>
   </div>
 </div>
 
@@ -652,7 +652,7 @@
   const timerEl = document.getElementById('timer');
   const iv = setInterval(() => {
     t--;
-    if (t <= 0) { timerEl.textContent = 'انتهى'; clearInterval(iv); return; }
+    if (t <= 0) { timerEl.textContent = 'Expired'; clearInterval(iv); return; }
     timerEl.textContent = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
   }, 1000);
 
@@ -670,14 +670,14 @@
 
   async function resendOTP() {
     const btn = document.getElementById('resendBtn');
-    btn.disabled = true; btn.textContent = 'جاري...';
+    btn.disabled = true; btn.textContent = 'Sending...';
     try {
       const r = await fetch('/p/<%= page.slug %>/resend-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({_csrf:'<%= csrfToken %>'}) });
       const d = await r.json();
-      btn.textContent = d.message || 'تم الإرسال';
+      btn.textContent = d.message || 'Sent!';
       t = 300;
-    } catch { btn.textContent = 'خطأ'; }
-    setTimeout(() => { btn.disabled = false; btn.textContent = 'إعادة إرسال الكود'; }, 30000);
+    } catch { btn.textContent = 'Error'; }
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Resend Code'; }, 30000);
   }
 </script>
 </body>

