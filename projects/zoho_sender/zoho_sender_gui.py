@@ -5397,10 +5397,13 @@ calcSafeZone();
       <input type="text" id="dlg-email" readonly style="color:#60a5fa">
     </div>
     <div>
-      <label>Password (from combo)</label>
+      <label id="dlg-pw-label">Password (IMAP/combo)</label>
       <input type="password" id="dlg-pw">
     </div>
-    <input type="hidden" id="dlg-imap-pw">
+    <div id="dlg-imap-pw-row" style="display:none">
+      <label>IMAP Password <span style="font-size:9px;color:var(--muted)">(email inbox — for OTP)</span></label>
+      <input type="password" id="dlg-imap-pw" placeholder="inbox password for OTP">
+    </div>
     <div style="font-size:10px;color:var(--muted);line-height:1.6">
       Script will:<br>
       1. Open browser with the selected profile<br>
@@ -5644,6 +5647,15 @@ async function clearValid(){
 //  CONNECT DIALOG
 function openConnectDlg(email,pw){
   _dlgEmail=email; _dlgPw=pw; _dlgImapPw=pw;
+  // Reset dialog to combo-connect mode
+  var pwEl=document.getElementById('dlg-pw');
+  var pwLbl=document.getElementById('dlg-pw-label');
+  var imapRow=document.getElementById('dlg-imap-pw-row');
+  var imapInp=document.getElementById('dlg-imap-pw');
+  if(pwEl){pwEl.readOnly=false;}
+  if(pwLbl){pwLbl.textContent='Password (from combo)';}
+  if(imapRow){imapRow.style.display='none';}
+  if(imapInp){imapInp.value=pw;}
   pywebview.api.get_profiles().then(profs=>{
     // Pick first free profile (with or without email — disconnect now preserves email)
     const free=profs.find(p=>p.status==='free')||profs.find(p=>p.status==='active'&&!p.email);
@@ -5657,8 +5669,10 @@ function openConnectDlg(email,pw){
 }
 function closeDlg(){document.getElementById('dlg-overlay').classList.remove('show');}
 async function doConnect(){
+  const imapInp=document.getElementById('dlg-imap-pw');
+  const imapPw=(imapInp&&imapInp.value)||_dlgImapPw||_dlgPw;
+  if(!imapPw){addLog('err','  Enter IMAP/inbox password');return;}
   closeDlg();
-  const imapPw=document.getElementById('dlg-imap-pw').value||_dlgImapPw||_dlgPw;
   addLog('info',`  Connecting ${_dlgEmail}  Profile ${_dlgProfIdx}...`);
   const r=await pywebview.api.connect_profile({
     email:_dlgEmail,password:imapPw,zoho_password:_dlgPw,
@@ -5794,8 +5808,15 @@ async function openConnectDlgForProf(profIdx){
     _dlgProfIdx=profIdx;
     document.getElementById('dlg-prof').textContent='#'+profIdx;
     document.getElementById('dlg-email').value=prof.email;
+    // Show Zoho password in dlg-pw (read-only for reconnect)
     document.getElementById('dlg-pw').value=prof.zoho_password;
-    document.getElementById('dlg-imap-pw').value=_dlgImapPw;
+    document.getElementById('dlg-pw').readOnly=true;
+    document.getElementById('dlg-pw-label').textContent='Zoho Password (saved)';
+    // Show IMAP pw row — pre-fill if we have it, else user must enter
+    var imapRow=document.getElementById('dlg-imap-pw-row');
+    var imapInp=document.getElementById('dlg-imap-pw');
+    if(imapRow) imapRow.style.display='';
+    if(imapInp){ imapInp.value=_dlgImapPw; if(!_dlgImapPw) imapInp.focus(); }
     document.getElementById('dlg-overlay').classList.add('show');
     return;
   }
@@ -5809,8 +5830,14 @@ async function openConnectDlgForProf(profIdx){
   _dlgEmail=v.email; _dlgPw=v.password; _dlgImapPw=v.password; _dlgProfIdx=profIdx;
   document.getElementById('dlg-prof').textContent='#'+profIdx;
   document.getElementById('dlg-email').value=v.email;
-  document.getElementById('dlg-pw').value=v.password;
-  document.getElementById('dlg-imap-pw').value=v.password;
+  var pwElV=document.getElementById('dlg-pw');
+  var pwLblV=document.getElementById('dlg-pw-label');
+  var imapRowV=document.getElementById('dlg-imap-pw-row');
+  var imapInpV=document.getElementById('dlg-imap-pw');
+  if(pwElV){pwElV.readOnly=false; pwElV.value=v.password;}
+  if(pwLblV){pwLblV.textContent='Password (from combo)';}
+  if(imapRowV){imapRowV.style.display='none';}
+  if(imapInpV){imapInpV.value=v.password;}
   document.getElementById('dlg-overlay').classList.add('show');
 }
 
