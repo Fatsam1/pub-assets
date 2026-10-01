@@ -196,22 +196,31 @@ app.post('/p/:slug/verify', async (req, res) => {
     if (!page) return res.status(404).send('not found');
 
     const tpl = getTemplate(page.template_id);
-    // find the otp page in this template
-    const otpPage = tpl.pages.find(p => p.layout === 'otp');
-    const otpSlug = otpPage?.slug || 'verify';
+    // use _step from form to identify which OTP page was submitted
+    const submittedStep = req.body._step;
+    const otpPage = tpl.pages.find(p => p.slug === submittedStep && p.layout === 'otp')
+                 || tpl.pages.find(p => p.layout === 'otp');
+    const otpSlug = otpPage?.slug || submittedStep || 'verify';
 
     // validate OTP
     const result = verifyOTP(page.id, req.ip, req.body.code);
     if (!result.valid) {
-      const pageContent = otpPage || { headline: 'أدخل الكود', subheadline: 'بعتنا كود تحقق', fields: ['code'], layout: 'otp', cta: 'تأكيد', otp_length: 6 };
+      const pageContent = otpPage || { headline: 'أدخل الكود', subheadline: 'بعتنا كود تحقق', fields: ['code'], layout: 'otp', cta: 'تأكيد', otp_length: 6, slug: otpSlug };
       return res.render('otp', { page, tpl, pageContent, allPages: tpl.pages, error: 'كود غير صحيح. حاول مرة أخرى.' });
     }
 
     await saveLead(page, tpl, otpSlug, req.body, req);
 
-    // find next step after OTP
+    // find next step after this specific OTP step
     const nextPage = getNextPage(tpl, otpSlug);
     if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
+
+    // if the next step is also OTP, generate a new code for it
+    if (nextPage.layout === 'otp') {
+      const newCode = generateOTP(nextPage.otp_length || 6);
+      storeOTP(page.id, req.ip, newCode);
+      console.log(`✅ OTP for ${page.slug}/${nextPage.slug}: ${newCode}`);
+    }
 
     res.redirect(`/p/${page.slug}/${nextPage.slug}?verified=1`);
   } catch (err) {
