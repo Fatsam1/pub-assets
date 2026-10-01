@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 `);
 
+// migrations — safe to run multiple times
+try { db.exec(`ALTER TABLE pages ADD COLUMN mode TEXT DEFAULT 'online'`); } catch {}
+try { db.exec(`ALTER TABLE pages ADD COLUMN flow_step TEXT DEFAULT ''`); } catch {}
+
 // تنضيف الجلسات المنتهية كل ساعة
 setInterval(() => {
   const now = Math.floor(Date.now() / 1000);

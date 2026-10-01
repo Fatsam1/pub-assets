@@ -46,15 +46,16 @@
 
   <table>
     <tr>
-      <th>#</th><th>العنوان</th><th>القالب</th><th>الرابط</th><th>الحالة</th><th>مشاهدات</th><th>ليدز</th><th></th>
+      <th>#</th><th>العنوان</th><th>القالب</th><th>الرابط</th><th>الحالة</th><th>المود</th><th>مشاهدات</th><th>ليدز</th><th></th>
     </tr>
     <% pages.forEach(p => { %>
       <tr>
         <td><%= p.id %></td>
         <td><%= p.title %></td>
-        <td><%= p.template_name %></td>
-        <td><a href="/p/<%= p.slug %>/login" target="_blank" style="color:#8ab4ff">/p/<%= p.slug %>/login</a></td>
-        <td><span class="pill <%= p.active ? 'on' : 'off' %>"><%= p.active ? 'شغالة' : 'موقوفة' %></span></td>
+        <td style="font-size:.82rem;opacity:.7"><%= p.template_name %></td>
+        <td><a href="/p/<%= p.slug %>" target="_blank" style="color:#8ab4ff;font-size:.82rem">/p/<%= p.slug %></a></td>
+        <td><span class="pill <%= p.active ? 'on' : 'off' %>"><%= p.active ? 'مفعّلة' : 'موقوفة' %></span></td>
+        <td><span class="pill" style="<%= p.mode==='offline' ? 'background:#78350f33;color:#fcd34d' : 'background:#1e3a8a33;color:#93c5fd' %>"><%= p.mode==='offline' ? '📴' : '🌐' %></span></td>
         <td><%= p.views %></td>
         <td><%= p.leads_count %></td>
         <td><a class="btn" href="/admin/pages/<%= p.id %>">إدارة</a></td>

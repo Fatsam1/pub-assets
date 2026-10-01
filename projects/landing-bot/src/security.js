@@ -3,6 +3,12 @@ import crypto from 'node:crypto';
 const OTP_ATTEMPTS = new Map();
 const OTP_STORE = new Map();
 
+// DEV ONLY — read OTP for testing (remove in production)
+export function getOTPForDev(pageId, ip) {
+  const key = `${pageId}:${ip}`;
+  return OTP_STORE.get(key)?.code || null;
+}
+
 const THROTTLE_CONFIG = {
   maxAttempts: 5,
   windowMs: 15 * 60 * 1000, // 15 دقايق

