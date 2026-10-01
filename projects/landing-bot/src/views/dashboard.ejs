@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة التحكم</title>
+<style>
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:28px; }
+  .wrap { max-width:1100px; margin:auto; }
+  .stats { display:flex; gap:14px; margin-bottom:26px; flex-wrap:wrap; }
+  .stat { background:#151b2b; padding:18px 24px; border-radius:14px; flex:1; min-width:140px; }
+  .stat b { display:block; font-size:1.9rem; color:#8ab4ff; }
+  .stat span { font-size:.85rem; opacity:.7; }
+  .btn { background:#5b8cff; color:#fff; padding:10px 18px; border-radius:10px; text-decoration:none; border:0; cursor:pointer; font-size:.9rem; display:inline-block; margin-right:8px; }
+  table { width:100%; border-collapse:collapse; background:#151b2b; border-radius:14px; overflow:hidden; }
+  th,td { padding:14px; text-align:right; border-bottom:1px solid #ffffff10; font-size:.9rem; }
+  th { background:#1c2436; font-size:.82rem; opacity:.85; }
+  .pill { padding:3px 10px; border-radius:99px; font-size:.78rem; }
+  .on { background:#16a34a33; color:#4ade80; }
+  .off { background:#ef444433; color:#f87171; }
+  h1 { margin:0 0 20px; font-size:1.5rem; }
+  .pagination { text-align:center; margin-top:20px; }
+  .pagination a { margin:0 4px; padding:8px 12px; border-radius:6px; background:#1c2436; color:#8ab4ff; text-decoration:none; }
+  .pagination a.active { background:#5b8cff; color:#fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px">
+    <h1>🎯 لوحة البيدجز</h1>
+    <div>
+      <a class="btn" href="/admin/templates">🎨 قوالب</a>
+      <a class="btn" href="/admin/pages/new">+ جديدة</a>
+      <form method="POST" action="/admin/logout" style="display:inline">
+        <button class="btn">خروج</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b><%= totals.pages %></b><span>صفحات</span></div>
+    <div class="stat"><b><%= totals.views %></b><span>مشاهدات</span></div>
+    <div class="stat"><b><%= totals.leads %></b><span>ليدز</span></div>
+  </div>
+
+  <table>
+    <tr>
+      <th>#</th><th>العنوان</th><th>القالب</th><th>الرابط</th><th>الحالة</th><th>مشاهدات</th><th>ليدز</th><th></th>
+    </tr>
+    <% pages.forEach(p => { %>
+      <tr>
+        <td><%= p.id %></td>
+        <td><%= p.title %></td>
+        <td><%= p.template_name %></td>
+        <td><a href="/p/<%= p.slug %>/login" target="_blank" style="color:#8ab4ff">/p/<%= p.slug %>/login</a></td>
+        <td><span class="pill <%= p.active ? 'on' : 'off' %>"><%= p.active ? 'شغالة' : 'موقوفة' %></span></td>
+        <td><%= p.views %></td>
+        <td><%= p.leads_count %></td>
+        <td><a class="btn" href="/admin/pages/<%= p.id %>">إدارة</a></td>
+      </tr>
+    <% }) %>
+  </table>
+
+  <div class="pagination">
+    <% if (hasPrev) { %><a href="/admin?page=<%= currentPage - 1 %>">←</a><% } %>
+    <span style="color:#8ab4ff"><%= currentPage %>/<%= totalPages %></span>
+    <% if (hasNext) { %><a href="/admin?page=<%= currentPage + 1 %>">→</a><% } %>
+  </div>
+</div>
+</body>
+</html>

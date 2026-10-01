@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>صفحة جديدة</title>
+<style>
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:28px; }
+  .wrap { max-width:720px; margin:auto; }
+  label { display:grid; gap:6px; font-size:.88rem; opacity:.92; margin-bottom:14px; }
+  label span { opacity:.7; font-size:.8rem; }
+  input,textarea,select { padding:11px; border-radius:9px; border:1px solid #ffffff22; background:#ffffff0d; color:#eef2ff; font-family:inherit; font-size:.95rem; width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button[type=submit] { background:#5b8cff; color:#fff; padding:14px; border:0; border-radius:10px; font-size:1rem; cursor:pointer; width:100%; margin-top:8px; }
+  button[type=submit]:hover { background:#4a7bef; }
+  .err { background:#ef444433; border:1px solid #ef4444; padding:12px; border-radius:10px; margin-bottom:16px; color:#fca5a5; }
+  h1 { margin:0 0 24px; font-size:1.4rem; }
+  a { color:#8ab4ff; text-decoration:none; }
+  .section { background:#151b2b; padding:20px; border-radius:14px; margin-bottom:20px; }
+  .section h2 { font-size:1rem; margin:0 0 16px; color:#8ab4ff; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media(max-width:540px) { .row2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p style="margin-bottom:20px"><a href="/admin">← لوحة التحكم</a></p>
+  <h1><%= page.id ? 'تعديل الصفحة' : '+ صفحة جديدة' %></h1>
+
+  <% if (error) { %><div class="err"><%= error %></div><% } %>
+
+  <form method="POST" action="<%= page.id ? '/admin/pages/' + page.id : '/admin/pages' %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div class="section">
+      <h2>معلومات أساسية</h2>
+      <div class="row2">
+        <label>العنوان *<input name="title" value="<%= page.title %>" required placeholder="مثال: صفحة فيسبوك"></label>
+        <label>السلاج * <span>(a-z بدون مسافات)</span><input name="slug" value="<%= page.slug %>" placeholder="facebook-page" required></label>
+      </div>
+      <label>العنوان الرئيسي<input name="headline" value="<%= page.headline || '' %>" placeholder="اختياري - يعوّض عنوان القالب"></label>
+    </div>
+
+    <div class="section">
+      <h2>القالب والإعدادات</h2>
+      <label>رقم القالب <span>(مثال: t001=Facebook، t030=LinkedIn)</span>
+        <input name="template_id" value="<%= page.template_id || 't001' %>" placeholder="t001">
+      </label>
+      <label>حقول الليد <span>(JSON array: ["name","email","phone"])</span>
+        <input name="fields" value="<%= page.fields || '[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]' %>" placeholder='["name","email","phone"]'>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;flex-direction:row">
+        <input type="checkbox" name="active" value="1" <%= page.active ? 'checked' : '' %> style="width:auto">
+        <span style="opacity:1">الصفحة مفعّلة</span>
+      </label>
+    </div>
+
+    <button type="submit">💾 حفظ الصفحة</button>
+  </form>
+
+  <div style="margin-top:16px;text-align:center">
+    <a href="/admin/templates?page_id=<%= page.id || '' %>">🎨 اختر قالب من المكتبة</a>
+  </div>
+</div>
+</body>
+</html>

