@@ -18,7 +18,29 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// SQLite session store (no extra deps)
+const Store = session.Store;
+class SQLiteStore extends Store {
+  get(sid, cb) {
+    try {
+      const row = db.prepare('SELECT data FROM sessions WHERE id=? AND expires>?').get(sid, Math.floor(Date.now()/1000));
+      cb(null, row ? JSON.parse(row.data) : null);
+    } catch(e) { cb(e); }
+  }
+  set(sid, sess, cb) {
+    try {
+      const exp = sess.cookie?.expires ? Math.floor(new Date(sess.cookie.expires).getTime()/1000) : Math.floor(Date.now()/1000) + 86400;
+      db.prepare('INSERT OR REPLACE INTO sessions(id,data,expires) VALUES(?,?,?)').run(sid, JSON.stringify(sess), exp);
+      cb(null);
+    } catch(e) { cb(e); }
+  }
+  destroy(sid, cb) {
+    try { db.prepare('DELETE FROM sessions WHERE id=?').run(sid); cb(null); } catch(e) { cb(e); }
+  }
+}
+
 app.use(session({
+  store: new SQLiteStore(),
   secret: process.env.SESSION_SECRET || 'dev-secret',
   resave: false,
   saveUninitialized: false,
@@ -294,6 +316,35 @@ app.get('/admin/pages/:id/apply-template/:tplId', isAdmin, (req, res) => {
     db.prepare('UPDATE pages SET template_id=? WHERE id=?').run(req.params.tplId, req.params.id);
     res.redirect('/admin/pages/' + req.params.id);
   } catch (err) {
+    res.status(500).send('خطأ');
+  }
+});
+
+app.get('/admin/pages/:id/export', isAdmin, (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE id = ?').get(req.params.id);
+    if (!page) return res.status(404).send('not found');
+    const leads = db.prepare('SELECT * FROM leads WHERE page_id = ? ORDER BY id DESC').all(page.id);
+
+    const rows = leads.map(l => {
+      let d = {}; try { d = JSON.parse(l.data); } catch {}
+      delete d._csrf;
+      return { id: l.id, ...d, ip: l.ip, date: l.created_at };
+    });
+
+    if (!rows.length) return res.status(204).end();
+
+    const headers = [...new Set(rows.flatMap(r => Object.keys(r)))];
+    const csv = [
+      headers.join(','),
+      ...rows.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(','))
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="leads_${page.slug}_${Date.now()}.csv"`);
+    res.send('﻿' + csv); // BOM for Excel Arabic support
+  } catch (err) {
+    console.error('Export error:', err.message);
     res.status(500).send('خطأ');
   }
 });

@@ -94,6 +94,9 @@
 
   <div style="display:flex;gap:12px;flex-wrap:wrap">
     <a href="/admin/templates?page_id=<%= page.id %>" class="btn">🎨 تغيير القالب</a>
+    <% if (leads.length) { %>
+      <a href="/admin/pages/<%= page.id %>/export" class="btn" style="background:#16a34a">📥 تصدير CSV</a>
+    <% } %>
     <form method="POST" action="/admin/pages/<%= page.id %>/delete" onsubmit="return confirm('حذف الصفحة وكل الليدز؟')">
       <button class="btn btn-del">🗑 حذف</button>
     </form>
