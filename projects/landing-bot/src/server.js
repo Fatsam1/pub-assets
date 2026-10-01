@@ -117,7 +117,7 @@ app.get('/p/:slug/:pageSlug?', (req, res) => {
     if (page.mode === 'offline' && targetSlug === defaultSlug) {
       return res.render('locked', {
         page, tpl,
-        pageContent: { headline: 'الخدمة غير متاحة حالياً', subheadline: 'يرجى المحاولة لاحقاً.', slug: 'locked', form_type: 'locked', fields: [], cta: '' },
+        pageContent: { headline: 'Service Temporarily Unavailable', subheadline: 'Please try again later.', slug: 'locked', form_type: 'locked', fields: [], cta: '' },
         allPages: tpl.pages, logos: LOGOS
       });
     }
