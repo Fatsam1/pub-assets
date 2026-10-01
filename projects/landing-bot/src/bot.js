@@ -1,6 +1,6 @@
 import { Telegraf } from 'telegraf';
 import db from './db.js';
-import { getTemplate, getCategories } from './templates.js';
+import { getTemplate, getCategories, TEMPLATES } from './templates.js';
 
 const token = process.env.BOT_TOKEN;
 export const bot = (token && token !== 'test_bot_token_here') ? new Telegraf(token) : null;
@@ -38,7 +38,7 @@ if (bot) {
   bot.action(/^cat_(.+)$/, async ctx => {
     try {
       const cat = ctx.match[1];
-      const list = require('./templates.js').TEMPLATES.filter(t => t.category === cat);
+      const list = TEMPLATES.filter(t => t.category === cat);
       const chunks = [];
       for (let i = 0; i < list.length; i += 3) {
         chunks.push(list.slice(i, i + 3).map(t => [{ text: `${t.name}`, callback_data: `pick_${t.id}` }]));
