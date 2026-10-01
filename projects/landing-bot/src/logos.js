@@ -16,7 +16,7 @@ export const LOGOS = {
 
   amazon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><text x="28" y="36" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="28" font-weight="900" fill="#FF9900">a</text><path fill="#FF9900" d="M14 40c5 3 10.5 5 16 5 5 0 10-.8 14.5-2.5-1-.6-2.5-.4-3.5.2-3.5 1.5-7 2.3-11 2.3-5.5 0-10.8-1.5-15-4.3-.5-.3-1.3-.2-1 .3z"/><path fill="#FF9900" d="M41 38c.8-.4 2.3-1 3.2-1.3l-.2-.4c-.8.1-2.5.5-3.8 1.4l.8.3z"/></svg>`,
 
-  netflix: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><path fill="#E50914" d="M12 8v40l8-2V26l8 22 8-22v20l8 2V8h-8L28 28 20 8z"/></svg>`,
+  netflix: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" width="120" height="32"><text x="0" y="26" font-family="Arial Black,Impact,sans-serif" font-size="30" font-weight="900" fill="#E50914" letter-spacing="1">NETFLIX</text></svg>`,
 
   paypal: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><path fill="#003087" d="M20 8h12c6 0 10 3 9 9-1 7-6 10-12 10h-3l-2 13H16L20 8z"/><path fill="#009CDE" d="M23 10h11c5 0 9 2.5 8.5 8-0.5 6.5-5.5 9.5-11 9.5h-3l-1.5 10H19.5L23 10z"/><path fill="#012169" d="M28 27.5h3c4.5 0 8-2.5 8.5-7.5 0.5-4-2-6-6.5-6H22l-3.5 23h5L26 27.5z"/></svg>`,
 
