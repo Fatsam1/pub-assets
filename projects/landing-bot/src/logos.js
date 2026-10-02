@@ -335,6 +335,15 @@ LOGOS.mhzchoice = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" w
 LOGOS.sundancenow = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><text x="28" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#fff">SUNDANCE</text><text x="28" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#FF8C00">NOW</text></svg>`;
 LOGOS.topic = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A1A2E"/><text x="28" y="36" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#fff">Topic</text></svg>`;
 
+// ── Missing logos patch ───────────────────────────────────────────────────────
+LOGOS.outlook = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="8" fill="#0078D4"/><rect x="6" y="14" width="28" height="22" rx="3" fill="#fff" opacity="0.15"/><rect x="6" y="14" width="28" height="22" rx="3" fill="none" stroke="#fff" stroke-width="1.5"/><text x="20" y="31" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="13" font-weight="700" fill="#fff">Ol</text><rect x="28" y="12" width="22" height="26" rx="3" fill="#1590D8"/><text x="39" y="29" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" font-weight="700" fill="#fff">365</text></svg>`;
+
+LOGOS.hashicorp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="10" fill="#000E1A"/><path d="M17 16h4v10l6-10h5L25 28l7 12h-5l-6-10v10h-4V16zm16 0h4v24h-4V16z" fill="#43C6D8"/></svg>`;
+
+LOGOS.united = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="8" fill="#003A7A"/><text x="28" y="24" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#fff">UNITED</text><text x="28" y="36" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" fill="#ADCCE7">AIRLINES</text><path d="M16 40 Q28 44 40 40" stroke="#ADCCE7" stroke-width="1.5" fill="none"/></svg>`;
+
+LOGOS.american = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="8" fill="#0078D2"/><path d="M28 10 L32 22 L28 18 L24 22 Z" fill="#C8102E"/><path d="M20 24 L28 18 L36 24 L32 34 L24 34 Z" fill="#fff"/><text x="28" y="46" text-anchor="middle" font-family="Arial,sans-serif" font-size="6.5" font-weight="700" fill="#fff">AMERICAN</text></svg>`;
+
 // Returns the logo SVG for a brand key, or a fallback letter box
 export function getLogo(tplKey, brandName, accentColor) {
   if (LOGOS[tplKey]) return LOGOS[tplKey];
