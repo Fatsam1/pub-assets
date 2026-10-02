@@ -3,237 +3,333 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Landing Bot — Admin</title>
+<title>LandingBot — Admin</title>
 <style>
-  *{box-sizing:border-box}
-  body{font-family:system-ui,-apple-system,sans-serif;background:#0b0f19;color:#eef2ff;margin:0;padding:0}
-  a{color:inherit;text-decoration:none}
+:root{
+  --bg:#0e1116;--surface:#161b22;--surface2:#1c232d;--surface3:#21282f;
+  --line:#2a323d;--line2:#1f272f;
+  --ink:#e8eaed;--ink2:#aab1bb;--ink3:#79818c;--ink4:#4a5160;
+  --accent:#4b93ff;--accent-soft:#16273f;--accent-dim:#1a3050;
+  --good:#4ac57e;--good-soft:#12261a;--good-dim:#0e1e14;
+  --warn:#e0ad46;--warn-soft:#2a2410;
+  --crit:#f0766b;--crit-soft:#2c1512;
+  --purple:#a371f7;--purple-soft:#221a35;
+  --cyan:#39c5cf;--cyan-soft:#0d2226;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+  --r8:8px;--r12:12px;--r16:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-width:thin;scrollbar-color:var(--line) var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
 
-  /* ── TOP NAV ─────────────────────────────────────────────── */
-  .nav{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;
-       background:#0d1220;border-bottom:1px solid #ffffff0d;position:sticky;top:0;z-index:100}
-  .nav-brand{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px;color:#eef2ff}
-  .nav-brand span{color:#5b8cff}
-  .nav-right{display:flex;gap:8px;align-items:center}
+/* ── TOP BAR ──────────────────────────────────────────────────── */
+.topbar{height:52px;display:flex;align-items:center;gap:16px;padding:0 20px;
+        background:var(--surface);border-bottom:1px solid var(--line);
+        position:sticky;top:0;z-index:200}
+.tb-logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.95rem;letter-spacing:-.01em;white-space:nowrap}
+.tb-logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.tb-sep{width:1px;height:20px;background:var(--line);flex-shrink:0}
+.tb-stat{font-family:var(--mono);font-size:.75rem;color:var(--ink3);white-space:nowrap}
+.tb-stat span{color:var(--ink2)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 
-  /* ── MAIN LAYOUT ─────────────────────────────────────────── */
-  .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 53px)}
+/* ── LAYOUT ───────────────────────────────────────────────────── */
+.layout{display:flex;min-height:calc(100vh - 52px)}
 
-  /* ── SIDEBAR ─────────────────────────────────────────────── */
-  .sidebar{background:#0d1220;border-right:1px solid #ffffff0d;padding:20px 0}
-  .sidebar-section{padding:6px 16px 4px;font-size:.7rem;text-transform:uppercase;
-                    letter-spacing:.06em;color:#8ab4ff66;font-weight:600;margin-top:12px}
-  .sidebar-link{display:flex;align-items:center;gap:9px;padding:9px 20px;font-size:.87rem;
-                color:#c7d2e8;transition:all .15s;cursor:pointer;border:none;background:none;width:100%}
-  .sidebar-link:hover{background:#ffffff07;color:#eef2ff}
-  .sidebar-link.active{background:#5b8cff18;color:#8ab4ff;border-left:2px solid #5b8cff}
-  .sidebar-link svg{width:16px;height:16px;opacity:.7;flex-shrink:0}
+/* ── SIDEBAR ──────────────────────────────────────────────────── */
+.sidebar{width:212px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);
+         padding:16px 0;display:flex;flex-direction:column;gap:2px;position:sticky;top:52px;
+         height:calc(100vh - 52px);overflow-y:auto}
+.sb-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+          color:var(--ink4);padding:14px 16px 6px;font-weight:600}
+.sb-link{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:.85rem;
+         color:var(--ink2);cursor:pointer;border:none;background:none;width:100%;
+         border-radius:0;transition:color .12s,background .12s;position:relative;white-space:nowrap}
+.sb-link:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+.sb-link.active{color:var(--accent);background:var(--accent-dim)}
+.sb-link.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);border-radius:0 2px 2px 0}
+.sb-icon{width:15px;height:15px;flex-shrink:0;opacity:.6}
+.sb-link.active .sb-icon{opacity:1}
+.sb-link:hover .sb-icon{opacity:.85}
+.sb-badge{margin-left:auto;background:var(--accent-soft);color:var(--accent);font-family:var(--mono);
+          font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700}
+.sb-divider{height:1px;background:var(--line);margin:8px 10px}
 
-  /* ── MAIN CONTENT ────────────────────────────────────────── */
-  .main{padding:28px;overflow:hidden}
-  .section{display:none}
-  .section.active{display:block}
+/* ── MAIN CONTENT ─────────────────────────────────────────────── */
+.main{flex:1;padding:24px 28px;overflow:hidden;max-width:1200px}
 
-  /* ── STAT CARDS ──────────────────────────────────────────── */
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
-  .stat{background:#151b2b;padding:20px 24px;border-radius:14px;border:1px solid #ffffff0a;
-        position:relative;overflow:hidden}
-  .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--a,#5b8cff)}
-  .stat b{display:block;font-size:2.2rem;font-weight:700;color:var(--a,#8ab4ff);line-height:1.1}
-  .stat small{font-size:.8rem;opacity:.5;margin-top:4px;display:block}
+/* ── PAGE HEADER ──────────────────────────────────────────────── */
+.page-hd{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.page-hd h1{font-size:1.1rem;font-weight:700}
+.page-hd-sub{font-size:.82rem;color:var(--ink3);margin-left:4px}
+.page-hd .spacer{flex:1}
 
-  /* ── TOOLBAR ─────────────────────────────────────────────── */
-  .toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
-  .toolbar-end{margin-left:auto;display:flex;gap:8px}
-  input[type=text]{padding:9px 14px;border-radius:9px;border:1px solid #ffffff18;
-                   background:#151b2b;color:#eef2ff;font-size:.88rem;outline:none}
-  input[type=text]:focus{border-color:#5b8cff66}
-  select{padding:9px 12px;border-radius:9px;border:1px solid #ffffff18;background:#151b2b;
-         color:#eef2ff;font-size:.88rem;cursor:pointer}
+/* ── STAT CARDS ───────────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r12);
+           padding:16px 18px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--c,var(--accent))}
+.stat-card .val{font-size:1.8rem;font-weight:700;color:var(--c,var(--accent));line-height:1;font-family:var(--mono)}
+.stat-card .lbl{font-size:.75rem;color:var(--ink3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
+.stat-card .sub{font-size:.72rem;color:var(--ink3);margin-top:2px}
 
-  /* ── TABLE ───────────────────────────────────────────────── */
-  .tbl-wrap{background:#151b2b;border-radius:14px;overflow:hidden;border:1px solid #ffffff08}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:12px 14px;text-align:left;border-bottom:1px solid #ffffff09;font-size:.87rem}
-  th{background:#1c2436;font-size:.72rem;opacity:.6;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:#ffffff04}
+/* ── SECTION ──────────────────────────────────────────────────── */
+.section{display:none}
+.section.active{display:block}
 
-  /* ── PILLS ───────────────────────────────────────────────── */
-  .pill{padding:3px 9px;border-radius:99px;font-size:.73rem;font-weight:600;white-space:nowrap;display:inline-block}
-  .pill-active{background:#16a34a22;color:#4ade80;border:1px solid #4ade8033}
-  .pill-inactive{background:#ef444422;color:#f87171;border:1px solid #f8717133}
-  .pill-online{background:#1e3a8a22;color:#93c5fd;border:1px solid #93c5fd33}
-  .pill-offline{background:#78350f22;color:#fcd34d;border:1px solid #fcd34d33}
+/* ── TOOLBAR ──────────────────────────────────────────────────── */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar .spacer{flex:1}
+.search-box{position:relative;display:flex;align-items:center}
+.search-box svg{position:absolute;left:10px;width:13px;height:13px;color:var(--ink3);pointer-events:none}
+input[type=text]{padding:7px 12px 7px 30px;border-radius:var(--r8);border:1px solid var(--line);
+                 background:var(--surface2);color:var(--ink);font-size:.84rem;outline:none;
+                 font-family:inherit;width:220px;transition:border-color .15s}
+input[type=text]:focus{border-color:var(--accent)}
+select{padding:7px 10px;border-radius:var(--r8);border:1px solid var(--line);background:var(--surface2);
+       color:var(--ink);font-size:.84rem;cursor:pointer;outline:none;font-family:inherit}
+select:focus{border-color:var(--accent)}
 
-  /* ── BUTTONS ─────────────────────────────────────────────── */
-  .btn{background:#5b8cff;color:#fff;padding:9px 16px;border-radius:9px;border:none;
-       cursor:pointer;font-size:.87rem;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-  .btn:hover{background:#4a7be8}
-  .btn-sm{padding:5px 12px;font-size:.78rem;border-radius:7px}
-  .btn-ghost{background:transparent;border:1px solid #5b8cff44;color:#8ab4ff}
-  .btn-ghost:hover{background:#5b8cff11}
-  .btn-red{background:#ef4444}
-  .btn-red:hover{background:#dc2626}
-  .btn-green{background:#16a34a}
-  .btn-green:hover{background:#15803d}
+/* ── TABLE ────────────────────────────────────────────────────── */
+.tbl-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r12);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--surface2);font-family:var(--mono);font-size:11px;font-weight:600;
+         text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);
+         padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--line2);font-size:.84rem;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+.td-id{font-family:var(--mono);font-size:11px;color:var(--ink4)}
+.td-title{font-weight:500;max-width:200px}
+.td-tpl{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.td-url a{font-family:var(--mono);font-size:11px;color:var(--accent)}
+.td-url a:hover{text-decoration:underline}
+.td-num{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.td-num.leads{color:var(--good);font-weight:600}
 
-  /* ── PAGE SECTION HEADER ─────────────────────────────────── */
-  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-  .sec-title{font-size:1.1rem;font-weight:700}
+/* ── PILLS ────────────────────────────────────────────────────── */
+.pill{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;
+      display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.p-active{background:var(--good-soft);color:var(--good);border:1px solid rgba(74,197,126,.2)}
+.p-inactive{background:var(--crit-soft);color:var(--crit);border:1px solid rgba(240,118,107,.2)}
+.p-online{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(75,147,255,.2)}
+.p-offline{background:var(--warn-soft);color:var(--warn);border:1px solid rgba(224,173,70,.2)}
 
-  /* ── LEADS BAR ───────────────────────────────────────────── */
-  .leads-c{font-weight:700;color:#4ade80}
+/* ── BUTTONS ──────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r8);
+     border:none;cursor:pointer;font-size:.83rem;font-weight:600;white-space:nowrap;
+     font-family:inherit;transition:background .12s,opacity .12s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#3d85f5}
+.btn-ghost{background:var(--surface2);color:var(--ink2);border:1px solid var(--line)}
+.btn-ghost:hover{background:var(--surface3);color:var(--ink)}
+.btn-sm{padding:5px 10px;font-size:.78rem;border-radius:6px}
+.btn-xs{padding:3px 8px;font-size:.73rem;border-radius:5px}
+.btn-good{background:var(--good-soft);color:var(--good);border:1px solid rgba(74,197,126,.25)}
+.btn-good:hover{background:#18311f}
+.btn-crit{background:var(--crit-soft);color:var(--crit);border:1px solid rgba(240,118,107,.25)}
+.btn-crit:hover{background:#3a1a17}
+.btn-warn{background:var(--warn-soft);color:var(--warn);border:1px solid rgba(224,173,70,.25)}
 
-  /* ── PAGINATION ──────────────────────────────────────────── */
-  .pager{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}
-  .pager a{padding:6px 14px;border-radius:8px;background:#151b2b;color:#8ab4ff;
-           border:1px solid #ffffff10;font-size:.85rem}
-  .pager a:hover{background:#1c2436}
-  .pager span{color:#8ab4ff;font-size:.85rem;opacity:.7}
+/* ── LIVE PANEL ───────────────────────────────────────────────── */
+.live-header{background:var(--surface);border:1px solid var(--line);border-radius:var(--r12);
+             padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+.live-pulse{display:flex;align-items:center;gap:8px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--good);flex-shrink:0;
+          animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.live-dot.empty{background:var(--ink4);animation:none}
+.live-title{font-weight:600;font-size:.9rem}
+.live-sub{font-size:.78rem;color:var(--ink3)}
+.live-count{margin-left:auto;font-family:var(--mono);font-size:.8rem;color:var(--ink3)}
+.live-count span{color:var(--good);font-weight:700}
 
-  /* ── EMPTY ───────────────────────────────────────────────── */
-  .empty{text-align:center;padding:48px;opacity:.35;font-size:1rem}
+.vc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r12);
+    margin-bottom:10px;overflow:hidden;transition:border-color .15s}
+.vc:hover{border-color:rgba(75,147,255,.35)}
+.vc-top{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer}
+.vc-icon{width:34px;height:34px;border-radius:50%;background:var(--surface2);
+         border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+         font-size:14px;flex-shrink:0}
+.vc-info{flex:1;min-width:0}
+.vc-info strong{font-size:.87rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vc-info small{font-family:var(--mono);font-size:.72rem;color:var(--ink3)}
+.vc-step-pill{background:var(--accent-soft);color:var(--accent);font-family:var(--mono);
+              font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0}
+.vc-chevron{color:var(--ink4);font-size:10px;flex-shrink:0;transition:transform .2s}
+.vc-chevron.open{transform:rotate(180deg)}
+.vc-body{padding:0 16px 14px;border-top:1px solid var(--line2);display:none}
+.vc-body.open{display:block;padding-top:12px}
+.vc-body-label{font-family:var(--mono);font-size:10px;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-bottom:10px}
+.step-btn{padding:8px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--line);
+          cursor:pointer;font-size:.78rem;color:var(--ink2);text-align:center;transition:all .15s;
+          font-family:inherit}
+.step-btn:hover{background:var(--accent-dim);border-color:rgba(75,147,255,.4);color:var(--ink)}
+.step-btn.cur{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:700}
+.vc-ctrl{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 
-  /* ── LIVE PANEL ──────────────────────────────────────────── */
-  .live-banner{background:linear-gradient(135deg,#1a2a4a,#0f1e38);
-               border:1px solid #5b8cff44;border-radius:14px;padding:20px 24px;margin-bottom:20px;
-               display:flex;align-items:center;gap:16px}
-  .live-dot{width:10px;height:10px;border-radius:50%;background:#4ade80;
-            animation:pulse 1.4s ease-in-out infinite;flex-shrink:0}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-  .live-info{flex:1}
-  .live-info h3{margin:0 0 4px;font-size:.95rem}
-  .live-info p{margin:0;font-size:.8rem;opacity:.5}
+/* ── ARRANGER ─────────────────────────────────────────────────── */
+.arr-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r12);overflow:hidden}
+.arr-row{display:flex;align-items:center;gap:10px;padding:10px 14px;
+         border-bottom:1px solid var(--line2);cursor:grab;transition:background .12s}
+.arr-row:last-child{border-bottom:none}
+.arr-row:hover{background:rgba(255,255,255,.025)}
+.arr-row.dragging{opacity:.3;background:var(--accent-dim)}
+.arr-row.drag-over{border-top:2px solid var(--accent)}
+.arr-handle{color:var(--ink4);font-size:13px;cursor:grab;flex-shrink:0;user-select:none}
+.arr-num{width:22px;font-family:var(--mono);font-size:11px;color:var(--ink4);text-align:center;flex-shrink:0}
+.arr-info{flex:1;min-width:0}
+.arr-info strong{font-size:.85rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arr-info small{font-family:var(--mono);font-size:.71rem;color:var(--ink3)}
+.arr-actions{display:flex;gap:5px;flex-shrink:0}
 
-  .visitor-card{background:#151b2b;border:1px solid #ffffff0d;border-radius:12px;
-                margin-bottom:12px;overflow:hidden;transition:border-color .2s}
-  .visitor-card:hover{border-color:#5b8cff44}
-  .vc-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer}
-  .vc-body{padding:0 18px 14px;display:none}
-  .vc-body.open{display:block}
-  .vc-avatar{width:36px;height:36px;border-radius:50%;background:#1c2436;
-             display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-  .vc-meta{flex:1}
-  .vc-meta strong{font-size:.9rem}
-  .vc-meta small{display:block;font-size:.75rem;opacity:.5}
-  .vc-step{background:#5b8cff22;color:#93c5fd;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600}
-  .step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:12px}
-  .step-btn{padding:9px 10px;border-radius:8px;background:#1c2436;border:1px solid #ffffff0d;
-            cursor:pointer;font-size:.78rem;color:#c7d2e8;text-align:center;transition:all .2s}
-  .step-btn:hover{background:#5b8cff22;border-color:#5b8cff55;color:#fff}
-  .step-btn.current{background:#5b8cff33;border-color:#5b8cff;color:#8ab4ff;font-weight:700}
-  .ctrl-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+/* ── PAGER ────────────────────────────────────────────────────── */
+.pager{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:16px}
+.pager a{font-family:var(--mono);font-size:.78rem;padding:5px 12px;border-radius:6px;
+         background:var(--surface2);color:var(--accent);border:1px solid var(--line)}
+.pager a:hover{background:var(--surface3)}
+.pager .cur-page{font-family:var(--mono);font-size:.78rem;color:var(--ink3)}
 
-  /* ── OFFLINE ARRANGER ────────────────────────────────────── */
-  .arranger-wrap{background:#151b2b;border-radius:14px;overflow:hidden;border:1px solid #ffffff08}
-  .page-row{display:flex;align-items:center;gap:10px;padding:12px 16px;
-            border-bottom:1px solid #ffffff09;cursor:grab;transition:background .15s}
-  .page-row:last-child{border-bottom:none}
-  .page-row:hover{background:#ffffff05}
-  .page-row.dragging{opacity:.4;background:#5b8cff11}
-  .page-row.drag-over{border-top:2px solid #5b8cff}
-  .drag-handle{opacity:.3;cursor:grab;font-size:1.1rem;flex-shrink:0}
-  .page-row-idx{width:24px;text-align:center;font-size:.75rem;opacity:.35;flex-shrink:0}
-  .page-row-info{flex:1;min-width:0}
-  .page-row-info strong{font-size:.88rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .page-row-info small{font-size:.73rem;opacity:.45}
-  .page-row-actions{display:flex;gap:6px;flex-shrink:0}
+/* ── EMPTY ────────────────────────────────────────────────────── */
+.empty{text-align:center;padding:40px;color:var(--ink3);font-size:.88rem}
+.empty a{color:var(--accent)}
 
-  .section-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#8ab4ff66;
-                 font-weight:600;padding:8px 16px;background:#1c2436;border-bottom:1px solid #ffffff09}
+/* ── TOAST ────────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--accent);
+       color:var(--ink);padding:10px 18px;border-radius:var(--r8);font-size:.83rem;z-index:9999;
+       box-shadow:0 4px 20px rgba(0,0,0,.4);transform:translateY(60px);opacity:0;
+       transition:all .25s;pointer-events:none;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--good)}
+.toast.err{border-color:var(--crit)}
 
-  /* ── SECTION: SETTINGS ───────────────────────────────────── */
-  .settings-card{background:#151b2b;border-radius:14px;padding:20px 24px;
-                  border:1px solid #ffffff08;margin-bottom:16px}
-  .settings-card h4{margin:0 0 16px;font-size:.9rem;color:#8ab4ff}
-  .field-row{display:flex;align-items:center;justify-content:space-between;
-             margin-bottom:12px;gap:12px;flex-wrap:wrap}
-  .field-row label{font-size:.85rem;opacity:.7;flex-shrink:0}
-  .field-row input{flex:1;min-width:160px}
-
-  /* ── TOAST ───────────────────────────────────────────────── */
-  .toast{position:fixed;bottom:24px;right:24px;background:#1c2436;border:1px solid #5b8cff44;
-         color:#eef2ff;padding:12px 20px;border-radius:10px;font-size:.85rem;z-index:9999;
-         transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
-  .toast.show{transform:translateY(0);opacity:1}
-
-  @media(max-width:768px){
-    .layout{grid-template-columns:1fr}
-    .sidebar{display:none}
-    .stats{grid-template-columns:1fr 1fr}
-    th:nth-child(3),td:nth-child(3){display:none}
-  }
+/* ── RESPONSIVE ───────────────────────────────────────────────── */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .stats{grid-template-columns:1fr 1fr}
+  .main{padding:16px}
+}
+@media(max-width:640px){
+  .stats{grid-template-columns:1fr}
+  table thead th:nth-child(3),table tbody td:nth-child(3),
+  table thead th:nth-child(4),table tbody td:nth-child(4){display:none}
+}
 </style>
 </head>
 <body>
 
-<!-- ── NAV ─────────────────────────────────────────────────── -->
-<nav class="nav">
-  <div class="nav-brand">🎯 <span>LandingBot</span> Admin</div>
-  <div class="nav-right">
-    <span style="font-size:.8rem;opacity:.45"><%= totals.pages %> pages · <%= totals.leads %> leads</span>
-    <form method="POST" action="/admin/logout" style="display:inline">
+<!-- ── TOP BAR ─────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="tb-logo">
+    <div class="tb-logo-dot"></div>
+    LandingBot
+    <span style="color:var(--ink4);font-weight:400;font-size:.8rem">Admin</span>
+  </div>
+  <div class="tb-sep"></div>
+  <span class="tb-stat"><span><%= totals.pages %></span> pages</span>
+  <span class="tb-stat"><span><%= totals.views %></span> views</span>
+  <span class="tb-stat"><span><%= totals.leads %></span> leads</span>
+  <div class="tb-right">
+    <form method="POST" action="/admin/logout">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <button class="btn btn-ghost btn-sm">Sign out</button>
     </form>
   </div>
-</nav>
+</header>
 
 <div class="layout">
 
-  <!-- ── SIDEBAR ──────────────────────────────────────────── -->
+  <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
   <aside class="sidebar">
-    <div class="sidebar-section">Overview</div>
-    <button class="sidebar-link active" data-section="pages" onclick="showSection('pages',this)">
-      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+    <div class="sb-label">Overview</div>
+    <button class="sb-link active" data-section="pages" onclick="showSection('pages',this)">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1.5" y="1.5" width="5" height="5" rx="1.2"/><rect x="9.5" y="1.5" width="5" height="5" rx="1.2"/>
+        <rect x="1.5" y="9.5" width="5" height="5" rx="1.2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/>
+      </svg>
       Pages
+      <span class="sb-badge"><%= totals.pages %></span>
     </button>
-    <button class="sidebar-link" data-section="live" onclick="showSection('live',this)">
-      <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M11.3 3.3l-1.4 1.4M4.7 11.3l-1.4 1.4"/></svg>
+    <button class="sb-link" data-section="live" onclick="showSection('live',this)">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="currentColor">
+        <circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.42 1.42M11.53 11.53l1.42 1.42M11.53 3.05l-1.42 1.42M4.47 11.53l-1.42 1.42" stroke="currentColor" stroke-width="1.2" fill="none"/>
+      </svg>
       Live Control
     </button>
-    <button class="sidebar-link" data-section="offline" onclick="showSection('offline',this)">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4h12v1H2zM2 7.5h12v1H2zM2 11h12v1H2z"/></svg>
+    <button class="sb-link" data-section="offline" onclick="showSection('offline',this)">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M2 4h12M2 8h12M2 12h12"/>
+      </svg>
       Arrange Pages
     </button>
-    <div class="sidebar-section">Tools</div>
-    <a class="sidebar-link" href="/admin/templates">
-      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h6M5 9h4"/></svg>
+    <div class="sb-divider"></div>
+    <div class="sb-label">Tools</div>
+    <a class="sb-link" href="/admin/templates">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h4"/>
+      </svg>
       Templates
     </a>
-    <a class="sidebar-link" href="/admin/pages/new">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3v10M3 8h10"/></svg>
+    <a class="sb-link" href="/admin/pages/new">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M8 3v10M3 8h10"/>
+      </svg>
       New Page
     </a>
-    <a class="sidebar-link" href="/preview" target="_blank">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+    <a class="sb-link" href="/preview" target="_blank">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/>
+      </svg>
       Brand Preview
+    </a>
+    <a class="sb-link" href="/admin/leads">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M2 4h12v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4z"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/>
+      </svg>
+      All Leads
+      <span class="sb-badge" style="background:var(--good-soft);color:var(--good)"><%= totals.leads %></span>
     </a>
   </aside>
 
-  <!-- ── MAIN ──────────────────────────────────────────────── -->
+  <!-- ── MAIN ──────────────────────────────────────────────────── -->
   <main class="main">
 
-    <!-- ═══════════════════════════════════════ SECTION: PAGES -->
+    <!-- ═══════════════════ SECTION: PAGES ══════════════════════ -->
     <div class="section active" id="sec-pages">
 
       <!-- Stat cards -->
       <div class="stats">
-        <div class="stat" style="--a:#5b8cff">
-          <b><%= totals.pages %></b><small>Total Pages</small>
+        <div class="stat-card" style="--c:var(--accent)">
+          <div class="val"><%= totals.pages %></div>
+          <div class="lbl">Pages</div>
         </div>
-        <div class="stat" style="--a:#22d3ee">
-          <b><%= totals.views %></b><small>Total Views</small>
+        <div class="stat-card" style="--c:var(--cyan)">
+          <div class="val"><%= totals.views %></div>
+          <div class="lbl">Views</div>
         </div>
-        <div class="stat" style="--a:#4ade80">
-          <b><%= totals.leads %></b><small>Total Leads</small>
+        <div class="stat-card" style="--c:var(--good)">
+          <div class="val"><%= totals.leads %></div>
+          <div class="lbl">Leads</div>
+        </div>
+        <div class="stat-card" style="--c:var(--warn)">
+          <div class="val"><%= Math.round(totals.leads / Math.max(totals.views,1) * 100) %>%</div>
+          <div class="lbl">Conv. Rate</div>
         </div>
       </div>
 
       <!-- Toolbar -->
       <div class="toolbar">
-        <input type="text" id="searchInput" placeholder="🔍  Search pages…" oninput="filterTable()" style="width:240px">
+        <div class="search-box">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="6.5" cy="6.5" r="4"/><path d="M10 10l3 3"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search pages…" oninput="filterTable()">
+        </div>
         <select id="filterStatus" onchange="filterTable()">
           <option value="">All Status</option>
           <option value="active">Active</option>
@@ -244,10 +340,12 @@
           <option value="online">Online</option>
           <option value="offline">Offline</option>
         </select>
-        <div class="toolbar-end">
-          <a class="btn btn-ghost btn-sm" href="/admin/templates">Templates</a>
-          <a class="btn btn-sm" href="/admin/pages/new">+ New Page</a>
-        </div>
+        <div class="spacer"></div>
+        <a class="btn btn-ghost btn-sm" href="/admin/templates">Templates</a>
+        <a class="btn btn-primary btn-sm" href="/admin/pages/new">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v8M2 6h8"/></svg>
+          New Page
+        </a>
       </div>
 
       <!-- Table -->
@@ -255,7 +353,7 @@
         <table id="pagesTable">
           <thead>
             <tr>
-              <th>#</th>
+              <th>ID</th>
               <th>Title</th>
               <th>Template</th>
               <th>URL</th>
@@ -275,124 +373,132 @@
                 data-mode="<%= isOffline ? 'offline' : 'online' %>"
                 data-title="<%= (p.title||'').toLowerCase() %>"
                 data-tpl="<%= (p.template_name||'').toLowerCase() %>">
-              <td style="opacity:.35;font-size:.78rem"><%= p.id %></td>
-              <td>
-                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
-                  background:<%= isOn ? '#4ade80' : '#f87171' %>;margin-right:7px;vertical-align:middle"></span>
-                <%= p.title %>
+              <td class="td-id">#<%= p.id %></td>
+              <td class="td-title">
+                <div style="display:flex;align-items:center;gap:7px">
+                  <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;
+                    background:<%= isOn ? 'var(--good)' : 'var(--ink4)' %>"></span>
+                  <%= p.title %>
+                </div>
               </td>
-              <td style="font-size:.78rem;opacity:.45"><%= p.template_name %></td>
-              <td>
-                <a href="/p/<%= p.slug %>" target="_blank" style="color:#8ab4ff;font-size:.78rem">/p/<%= p.slug %></a>
+              <td class="td-tpl"><%= p.template_name %></td>
+              <td class="td-url">
+                <a href="/p/<%= p.slug %>" target="_blank">/p/<%= p.slug %></a>
               </td>
               <td>
-                <span class="pill <%= isOn ? 'pill-active' : 'pill-inactive' %>">
+                <span class="pill <%= isOn ? 'p-active' : 'p-inactive' %>">
                   <%= isOn ? 'Active' : 'Inactive' %>
                 </span>
               </td>
               <td>
-                <span class="pill <%= isOffline ? 'pill-offline' : 'pill-online' %>">
+                <span class="pill <%= isOffline ? 'p-offline' : 'p-online' %>">
                   <%= isOffline ? 'Offline' : 'Online' %>
                 </span>
               </td>
-              <td style="font-size:.83rem;opacity:.7"><%= p.views || 0 %></td>
-              <td><span class="leads-c"><%= p.leads_count %></span></td>
+              <td class="td-num"><%= p.views || 0 %></td>
+              <td class="td-num leads"><%= p.leads_count %></td>
               <td>
-                <a class="btn btn-ghost btn-sm" href="/admin/pages/<%= p.id %>">Manage</a>
+                <a class="btn btn-ghost btn-xs" href="/admin/pages/<%= p.id %>">Manage</a>
               </td>
             </tr>
             <% }) %>
           </tbody>
         </table>
         <% if (!pages.length) { %>
-          <div class="empty">No pages yet — <a href="/admin/pages/new" style="color:#8ab4ff">Create your first page</a></div>
+          <div class="empty">No pages yet — <a href="/admin/pages/new">Create your first page</a></div>
         <% } %>
       </div>
 
-      <!-- Pagination -->
+      <!-- Pager -->
       <div class="pager">
         <% if (hasPrev) { %><a href="/admin?page=<%= currentPage-1 %>">&larr; Prev</a><% } %>
-        <span>Page <%= currentPage %> of <%= totalPages %></span>
+        <span class="cur-page">Page <%= currentPage %> of <%= totalPages %></span>
         <% if (hasNext) { %><a href="/admin?page=<%= currentPage+1 %>">Next &rarr;</a><% } %>
       </div>
     </div>
-    <!-- END SECTION: PAGES -->
+    <!-- END: PAGES -->
 
 
-    <!-- ══════════════════════════════════ SECTION: LIVE CONTROL -->
+    <!-- ═══════════════════ SECTION: LIVE CONTROL ═══════════════ -->
     <div class="section" id="sec-live">
-      <div class="sec-head">
-        <div class="sec-title">🟢 Live Visitor Control</div>
-        <button class="btn btn-sm" onclick="refreshLive()">↺ Refresh</button>
+
+      <div class="page-hd">
+        <h1>Live Control</h1>
+        <span class="page-hd-sub">Real-time visitor management</span>
+        <div class="spacer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshLive()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.5 6A4.5 4.5 0 112 4"/><path d="M2 1.5V4.5H5"/></svg>
+          Refresh
+        </button>
       </div>
 
-      <div class="live-banner">
-        <div class="live-dot"></div>
-        <div class="live-info">
-          <h3>Real-Time Control Panel</h3>
-          <p>See active visitors and push them to any step instantly. Changes appear within 2 seconds.</p>
+      <div class="live-header" id="liveHeader">
+        <div class="live-pulse">
+          <div class="live-dot empty" id="liveDot"></div>
+          <div>
+            <div class="live-title" id="liveTitle">Checking…</div>
+            <div class="live-sub">Auto-refresh every 3s · Push visitor to any step instantly</div>
+          </div>
         </div>
+        <div class="live-count" id="liveCount"></div>
       </div>
 
-      <div id="liveVisitors">
-        <div class="empty" id="liveEmpty" style="display:none">No active visitors right now</div>
-      </div>
+      <div id="liveVisitors"></div>
     </div>
-    <!-- END SECTION: LIVE CONTROL -->
+    <!-- END: LIVE CONTROL -->
 
 
-    <!-- ════════════════════════════════ SECTION: ARRANGE PAGES -->
+    <!-- ═══════════════════ SECTION: ARRANGE PAGES ══════════════ -->
     <div class="section" id="sec-offline">
-      <div class="sec-head">
-        <div class="sec-title">📋 Arrange Pages</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="loadArranger()">↺ Reload</button>
-          <a class="btn btn-sm" href="/admin/pages/new">+ New Page</a>
-        </div>
+
+      <div class="page-hd">
+        <h1>Arrange Pages</h1>
+        <span class="page-hd-sub">Drag to reorder · Changes are instant</span>
+        <div class="spacer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadArranger()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.5 6A4.5 4.5 0 112 4"/><path d="M2 1.5V4.5H5"/></svg>
+          Reload
+        </button>
+        <a class="btn btn-primary btn-sm" href="/admin/pages/new">+ New Page</a>
       </div>
 
-      <p style="font-size:.83rem;opacity:.5;margin-bottom:18px">
-        Drag to reorder · Toggle active/mode without stopping the service · Changes are instant.
-      </p>
-
-      <div id="arrangerList" class="arranger-wrap">
-        <div class="empty" style="padding:32px">Loading…</div>
+      <div id="arrangerList" class="arr-wrap">
+        <div class="empty">Loading…</div>
       </div>
     </div>
-    <!-- END SECTION: ARRANGE PAGES -->
+    <!-- END: ARRANGE PAGES -->
 
   </main>
 </div>
 
-<!-- ── TOAST ─────────────────────────────────────────────────── -->
+<!-- ── TOAST ────────────────────────────────────────────────────── -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Section switcher ──────────────────────────────────────────
+// ── Section switcher ──────────────────────────────────────────────
 function showSection(name, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
   document.getElementById('sec-' + name)?.classList.add('active');
-  // btn may be passed from onclick or found by data
-  const el = btn || document.querySelector(`.sidebar-link[data-section="${name}"]`);
+  const el = btn || document.querySelector(`.sb-link[data-section="${name}"]`);
   if (el) el.classList.add('active');
-
-  if (name === 'live')    startLivePolling();
-  else                    stopLivePolling();
+  if (name === 'live') startLivePolling();
+  else stopLivePolling();
   if (name === 'offline') loadArranger();
 }
 
-// ── Toast ─────────────────────────────────────────────────────
-function toast(msg, ms=2800) {
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg, type='ok', ms=2800) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), ms);
+  t.className = 'toast show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), ms);
 }
 
-// ── Table filter (pages section) ─────────────────────────────
+// ── Table filter ──────────────────────────────────────────────────
 function filterTable() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
+  const q  = document.getElementById('searchInput').value.toLowerCase();
   const st = document.getElementById('filterStatus').value;
   const md = document.getElementById('filterMode').value;
   document.querySelectorAll('#pagesTable tbody tr').forEach(tr => {
@@ -403,52 +509,66 @@ function filterTable() {
   });
 }
 
-// ═══════════════════════════════════ LIVE CONTROL ════════════
+// ═══════════════════════ LIVE CONTROL ════════════════════════════
 let liveTimer = null;
 
 function refreshLive() {
   fetch('/admin/api/visitors')
     .then(r => r.json())
-    .then(data => renderVisitors(data))
+    .then(renderVisitors)
     .catch(() => {});
 }
 
 function renderVisitors(visitors) {
-  const wrap = document.getElementById('liveVisitors');
-  const empty = document.getElementById('liveEmpty');
+  const wrap  = document.getElementById('liveVisitors');
+  const dot   = document.getElementById('liveDot');
+  const title = document.getElementById('liveTitle');
+  const count = document.getElementById('liveCount');
 
   if (!visitors.length) {
-    wrap.innerHTML = '';
-    wrap.appendChild(empty);
-    empty.style.display = '';
+    dot.className   = 'live-dot empty';
+    title.textContent = 'No active visitors';
+    count.innerHTML = '';
+    wrap.innerHTML  = '<div class="empty">No visitors online right now.<br>When someone opens a page in Online mode, they appear here.</div>';
     return;
   }
 
-  empty.style.display = 'none';
+  dot.className   = 'live-dot';
+  title.textContent = 'Visitors online';
+  count.innerHTML = `<span>${visitors.length}</span> active`;
+
   wrap.innerHTML = visitors.map(v => `
-    <div class="visitor-card" id="vc-${v.session_id}">
-      <div class="vc-head" onclick="toggleVC('${v.session_id}')">
-        <div class="vc-avatar">👤</div>
-        <div class="vc-meta">
+    <div class="vc" id="vc-${v.session_id}">
+      <div class="vc-top" onclick="toggleVC('${v.session_id}')">
+        <div class="vc-icon">👤</div>
+        <div class="vc-info">
           <strong>${escHtml(v.page_title || 'Unknown Page')}</strong>
-          <small>IP: ${escHtml(v.ip)} · Last seen: ${timeAgo(v.last_seen)}</small>
+          <small>IP: ${escHtml(v.ip || '—')} &nbsp;·&nbsp; ${timeAgo(v.last_seen)}</small>
         </div>
-        <span class="vc-step">${escHtml(v.current_step || 'login')}</span>
-        <span style="margin-left:8px;opacity:.4">▼</span>
+        <span class="vc-step-pill">${escHtml(v.current_step || 'login')}</span>
+        <span class="vc-chevron" id="chev-${v.session_id}">▼</span>
       </div>
       <div class="vc-body" id="vcb-${v.session_id}">
-        <div style="font-size:.78rem;opacity:.5;margin-bottom:8px">Push visitor to step:</div>
+        <div class="vc-body-label">Push to step</div>
         <div class="step-grid">
           ${(v.steps||[]).map(s => `
-            <button class="step-btn ${s.slug === v.current_step ? 'current' : ''}"
-                    onclick="pushStep('${v.session_id}', '${v.page_id}', '${escHtml(s.slug)}')">
+            <button class="step-btn ${s.slug === v.current_step ? 'cur' : ''}"
+                    onclick="pushStep('${v.session_id}','${v.page_id}','${escHtml(s.slug)}')">
               ${escHtml(s.label || s.slug)}
             </button>
           `).join('')}
         </div>
-        <div class="ctrl-row">
-          <button class="btn btn-sm btn-ghost" onclick="pushStep('${v.session_id}', '${v.page_id}', 'HOME')">⏮ Restart</button>
-          <button class="btn btn-sm btn-ghost" onclick="pushStep('${v.session_id}', '${v.page_id}', 'NEXT')">▶ Next Step</button>
+        <div class="vc-ctrl">
+          <button class="btn btn-ghost btn-sm" onclick="pushStep('${v.session_id}','${v.page_id}','HOME')">
+            ⏮ Restart
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="pushStep('${v.session_id}','${v.page_id}','NEXT')">
+            Next Step ▶
+          </button>
+          <span style="flex:1"></span>
+          <span style="font-family:var(--mono);font-size:.72rem;color:var(--ink4);align-self:center">
+            SID: ${escHtml(v.session_id.slice(0,8))}…
+          </span>
         </div>
       </div>
     </div>
@@ -457,7 +577,9 @@ function renderVisitors(visitors) {
 
 function toggleVC(id) {
   const body = document.getElementById('vcb-' + id);
+  const chev = document.getElementById('chev-' + id);
   body.classList.toggle('open');
+  if (chev) chev.classList.toggle('open');
 }
 
 async function pushStep(sessionId, pageId, step) {
@@ -468,16 +590,11 @@ async function pushStep(sessionId, pageId, step) {
       body: JSON.stringify({ session_id: sessionId, page_id: pageId, step })
     });
     const d = await r.json();
-    if (d.ok) {
-      toast(`✅ Pushed to: ${step}`);
-      setTimeout(refreshLive, 800);
-    } else {
-      toast('⚠️ ' + (d.error || 'Failed'));
-    }
-  } catch { toast('⚠️ Request failed'); }
+    if (d.ok) toast('✅ Pushed → ' + step, 'ok');
+    else toast('⚠ ' + (d.error || 'Failed'), 'err');
+  } catch { toast('⚠ Request failed', 'err'); }
 }
 
-// Auto-refresh live panel every 3s while visible
 function startLivePolling() {
   stopLivePolling();
   refreshLive();
@@ -487,72 +604,67 @@ function stopLivePolling() {
   if (liveTimer) { clearInterval(liveTimer); liveTimer = null; }
 }
 
-// ═══════════════════════════════════ ARRANGER ════════════════
+// ═══════════════════════ ARRANGER ════════════════════════════════
 async function loadArranger() {
   const wrap = document.getElementById('arrangerList');
-  wrap.innerHTML = '<div class="empty" style="padding:32px">Loading…</div>';
+  wrap.innerHTML = '<div class="empty">Loading…</div>';
   try {
-    const r = await fetch('/admin/api/pages-all');
-    const d = await r.json();
+    const d = await fetch('/admin/api/pages-all').then(r => r.json());
     renderArranger(d);
-  } catch { wrap.innerHTML = '<div class="empty">Failed to load</div>'; }
+  } catch { wrap.innerHTML = '<div class="empty">Failed to load pages</div>'; }
 }
 
 function renderArranger(pages) {
   const wrap = document.getElementById('arrangerList');
-  if (!pages.length) {
-    wrap.innerHTML = '<div class="empty">No pages yet</div>';
-    return;
-  }
-  wrap.innerHTML = pages.map((p,i) => `
-    <div class="page-row" draggable="true" data-id="${p.id}"
-         ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)" ondrop="drop(event,${p.id})" ondragleave="dragLeave(event)">
-      <span class="drag-handle">⠿</span>
-      <span class="page-row-idx">${i+1}</span>
-      <div class="page-row-info">
+  if (!pages.length) { wrap.innerHTML = '<div class="empty">No pages yet</div>'; return; }
+  wrap.innerHTML = pages.map((p, i) => `
+    <div class="arr-row" draggable="true" data-id="${p.id}"
+         ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)"
+         ondrop="drop(event,${p.id})" ondragleave="dragLeave(event)">
+      <span class="arr-handle">⠿</span>
+      <span class="arr-num">${i+1}</span>
+      <div class="arr-info">
         <strong>${escHtml(p.title)}</strong>
-        <small>${escHtml(p.template_name||'')} · /p/${escHtml(p.slug)}</small>
+        <small>${escHtml(p.template_name||'')} &nbsp;·&nbsp; /p/${escHtml(p.slug)}</small>
       </div>
-      <div class="page-row-actions">
-        <button class="btn btn-sm ${p.active==1?'btn-green':'btn-red'}" style="font-size:.73rem;padding:4px 10px"
-                onclick="toggleActive(${p.id},this)">${p.active==1?'Active':'Inactive'}</button>
-        <button class="btn btn-sm btn-ghost" style="font-size:.73rem;padding:4px 10px"
-                onclick="toggleMode(${p.id},this)">${p.mode==='offline'?'Offline':'Online'}</button>
-        <a class="btn btn-sm btn-ghost" href="/admin/pages/${p.id}" style="font-size:.73rem;padding:4px 10px">Edit</a>
+      <div class="arr-actions">
+        <button class="btn btn-sm ${p.active==1 ? 'btn-good' : 'btn-crit'}"
+                onclick="toggleActive(${p.id},this)">
+          ${p.active==1 ? 'Active' : 'Inactive'}
+        </button>
+        <button class="btn btn-sm ${p.mode==='offline' ? 'btn-warn' : 'btn-ghost'}"
+                onclick="toggleMode(${p.id},this)">
+          ${p.mode==='offline' ? 'Offline' : 'Online'}
+        </button>
+        <a class="btn btn-ghost btn-sm" href="/admin/pages/${p.id}">Edit</a>
       </div>
     </div>
   `).join('');
 }
 
-// Drag & drop reorder
 let dragId = null;
 function dragStart(e, id) { dragId = id; e.currentTarget.classList.add('dragging'); }
 function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
 function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 async function drop(e, targetId) {
   e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  document.querySelectorAll('.page-row').forEach(r => r.classList.remove('dragging','drag-over'));
+  document.querySelectorAll('.arr-row').forEach(r => r.classList.remove('dragging','drag-over'));
   if (dragId === targetId) return;
   try {
-    await fetch('/admin/api/reorder', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ from: dragId, to: targetId })
-    });
-    toast('✅ Order saved');
+    await fetch('/admin/api/reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({from:dragId,to:targetId}) });
+    toast('Order saved');
     loadArranger();
-  } catch { toast('⚠️ Reorder failed'); }
+  } catch { toast('Reorder failed','err'); }
 }
 
 async function toggleActive(id, btn) {
   const r = await fetch(`/admin/api/toggle-active/${id}`, {method:'POST'});
   const d = await r.json();
   if (d.ok) {
-    const isOn = d.active == 1;
-    btn.textContent = isOn ? 'Active' : 'Inactive';
-    btn.className = `btn btn-sm ${isOn ? 'btn-green' : 'btn-red'}`;
-    btn.style.fontSize = '.73rem'; btn.style.padding = '4px 10px';
-    toast(isOn ? '✅ Activated' : '⛔ Deactivated');
+    const on = d.active == 1;
+    btn.textContent = on ? 'Active' : 'Inactive';
+    btn.className = `btn btn-sm ${on ? 'btn-good' : 'btn-crit'}`;
+    toast(on ? '✅ Activated' : 'Deactivated');
   }
 }
 
@@ -560,27 +672,26 @@ async function toggleMode(id, btn) {
   const r = await fetch(`/admin/api/toggle-mode/${id}`, {method:'POST'});
   const d = await r.json();
   if (d.ok) {
-    btn.textContent = d.mode === 'offline' ? 'Offline' : 'Online';
+    const off = d.mode === 'offline';
+    btn.textContent = off ? 'Offline' : 'Online';
+    btn.className = `btn btn-sm ${off ? 'btn-warn' : 'btn-ghost'}`;
     toast(`Mode → ${d.mode}`);
   }
 }
 
-// ── Helpers ──────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────
 function escHtml(s) {
   return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function timeAgo(ts) {
-  const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  const s = Math.floor((Date.now() - new Date(ts+'Z').getTime()) / 1000);
   if (s < 60) return s + 's ago';
   if (s < 3600) return Math.floor(s/60) + 'm ago';
   return Math.floor(s/3600) + 'h ago';
 }
-
-// Watch tab visibility for live polling
 document.addEventListener('visibilitychange', () => {
-  if (document.getElementById('sec-live')?.classList.contains('active')) {
+  if (document.getElementById('sec-live')?.classList.contains('active'))
     document.hidden ? stopLivePolling() : startLivePolling();
-  }
 });
 </script>
 </body>
