@@ -589,24 +589,56 @@
   body.brand-uniswap input:focus { border-color:#FF007A; background:#0D0E13; box-shadow:none; }
   body.brand-uniswap button { background:#FF007A; border-radius:12px; background-image:none; font-weight:700; }
 
-  body.brand-trustwallet { background:#F5F5F5; color:#1a1a1a; }
-  body.brand-trustwallet .auth { background:#fff; border:1px solid #e0e0e0; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
-  body.brand-trustwallet input { background:#f5f5f5; border:1px solid #ddd; border-radius:8px; color:#1a1a1a; }
-  body.brand-trustwallet input:focus { border-color:#3375BB; background:#fff; box-shadow:none; }
-  body.brand-trustwallet button { background:#3375BB; border-radius:12px; background-image:none; font-weight:600; }
+  /* Trust Wallet: pixel-perfect — trustwallet.com */
+  body.brand-trustwallet { background:#fff; color:#141414; font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; }
+  body.brand-trustwallet .auth { background:#fff; border:1px solid #E8E8E8; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); max-width:400px; padding:40px 36px 32px; }
+  body.brand-trustwallet .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-trustwallet h1 { color:#141414; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:6px; }
+  body.brand-trustwallet .sub { color:#6B6B6B; opacity:1; font-size:.88rem; text-align:center; margin-bottom:20px; }
+  body.brand-trustwallet label { display:block; font-size:.82rem; font-weight:600; color:#141414; margin-bottom:4px; }
+  body.brand-trustwallet input { background:#F5F5F5; border:1.5px solid #E8E8E8; border-radius:10px; color:#141414; font-size:.95rem; padding:12px 14px; height:46px; }
+  body.brand-trustwallet input:focus { border-color:#3375BB; background:#fff; box-shadow:0 0 0 3px rgba(51,117,187,.12); outline:none; }
+  body.brand-trustwallet input::placeholder { color:#ADADAD; }
+  body.brand-trustwallet button { background:#3375BB; border-radius:12px; background-image:none; font-weight:600; height:48px; font-size:.95rem; margin-top:4px; }
+  body.brand-trustwallet button:hover { background:#2962a6; transform:none; filter:none; }
+  body.brand-trustwallet .tw-forgot { display:block; text-align:center; font-size:.83rem; color:#3375BB; margin-top:12px; text-decoration:none; }
+  body.brand-trustwallet .tw-forgot:hover { text-decoration:underline; }
+  body.brand-trustwallet .tw-footer { margin-top:16px; padding-top:14px; border-top:1px solid #F0F0F0; font-size:.8rem; color:#6B6B6B; text-align:center; }
+  body.brand-trustwallet .tw-footer a { color:#3375BB; }
 
-  body.brand-ledger { background:#000; color:#fff; }
-  body.brand-ledger .auth { background:#111; border:none; border-radius:0; }
-  body.brand-ledger input { background:#1a1a1a; border:1px solid #333; border-radius:0; color:#fff; }
-  body.brand-ledger input:focus { border-color:#fff; background:#1a1a1a; box-shadow:none; }
-  body.brand-ledger button { background:#fff; color:#000; border-radius:0; background-image:none; font-weight:700; }
+  /* Ledger: pixel-perfect — ledger.com/start */
+  body.brand-ledger { background:#000; color:#fff; font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; }
+  body.brand-ledger .auth { background:#0A0A0A; border:1px solid #1E1E1E; border-radius:12px; max-width:400px; padding:40px 36px 32px; }
+  body.brand-ledger .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
+  body.brand-ledger h1 { color:#fff; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:6px; }
+  body.brand-ledger .sub { color:#888; opacity:1; font-size:.88rem; text-align:center; margin-bottom:20px; }
+  body.brand-ledger label { display:block; font-size:.82rem; font-weight:500; color:#ccc; margin-bottom:4px; }
+  body.brand-ledger input { background:#111; border:1px solid #2a2a2a; border-radius:8px; color:#fff; font-size:.95rem; padding:12px 14px; height:46px; }
+  body.brand-ledger input:focus { border-color:#fff; background:#111; box-shadow:none; outline:none; }
+  body.brand-ledger input::placeholder { color:#555; }
+  body.brand-ledger button { background:#fff; color:#000; border-radius:8px; background-image:none; font-weight:700; height:48px; font-size:.95rem; margin-top:4px; }
   body.brand-ledger button:hover { background:#e5e5e5; transform:none; filter:none; }
+  body.brand-ledger .lg-forgot { display:block; text-align:center; font-size:.83rem; color:#aaa; margin-top:12px; text-decoration:none; }
+  body.brand-ledger .lg-forgot:hover { color:#fff; }
+  body.brand-ledger .lg-footer { margin-top:16px; padding-top:14px; border-top:1px solid #1E1E1E; font-size:.8rem; color:#666; text-align:center; }
+  body.brand-ledger .lg-footer a { color:#aaa; }
 
-  body.brand-trezor { background:#1A1A1A; color:#fff; }
-  body.brand-trezor .auth { background:#2A2A2A; border:none; border-radius:8px; }
-  body.brand-trezor input { background:#1A1A1A; border:1px solid #444; border-radius:4px; color:#fff; }
-  body.brand-trezor input:focus { border-color:#00854D; background:#1A1A1A; box-shadow:none; }
-  body.brand-trezor button { background:#00854D; border-radius:4px; background-image:none; font-weight:600; }
+  /* Trezor: pixel-perfect — suite.trezor.io */
+  body.brand-trezor { background:#F4F3F0; color:#000; font-family:'TTSatoshi','Inter',-apple-system,sans-serif; }
+  body.brand-trezor .auth { background:#fff; border:1px solid #E8E4E0; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.07); max-width:400px; padding:40px 36px 32px; }
+  body.brand-trezor .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
+  body.brand-trezor h1 { color:#000; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:6px; }
+  body.brand-trezor .sub { color:#666; opacity:1; font-size:.88rem; text-align:center; margin-bottom:20px; }
+  body.brand-trezor label { display:block; font-size:.82rem; font-weight:600; color:#333; margin-bottom:4px; }
+  body.brand-trezor input { background:#F8F6F4; border:1.5px solid #D8D4CF; border-radius:8px; color:#000; font-size:.95rem; padding:12px 14px; height:46px; }
+  body.brand-trezor input:focus { border-color:#00854D; background:#fff; box-shadow:0 0 0 3px rgba(0,133,77,.1); outline:none; }
+  body.brand-trezor input::placeholder { color:#AAA; }
+  body.brand-trezor button { background:#00854D; border-radius:8px; background-image:none; font-weight:700; height:48px; font-size:.95rem; margin-top:4px; }
+  body.brand-trezor button:hover { background:#007040; transform:none; filter:none; }
+  body.brand-trezor .tz-forgot { display:block; text-align:center; font-size:.83rem; color:#00854D; margin-top:12px; text-decoration:none; }
+  body.brand-trezor .tz-forgot:hover { text-decoration:underline; }
+  body.brand-trezor .tz-footer { margin-top:16px; padding-top:14px; border-top:1px solid #EEE; font-size:.8rem; color:#888; text-align:center; }
+  body.brand-trezor .tz-footer a { color:#00854D; }
 
   body.brand-exodus { background:#0D0E13; color:#fff; }
   body.brand-exodus .auth { background:#1A1B20; border:none; border-radius:12px; }
@@ -758,13 +790,20 @@
   body.brand-goldmansachs button { background:#1A4173; border-radius:4px; background-image:none; font-weight:700; }
   body.brand-goldmansachs button:hover { background:#133260; transform:none; filter:none; }
 
-  body.brand-santander { background:#EC0000; color:#fff; }
-  body.brand-santander .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  body.brand-santander h1 { color:#EC0000; }
-  body.brand-santander input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#000; }
-  body.brand-santander input:focus { border-color:#EC0000; box-shadow:none; background:#fff; }
-  body.brand-santander button { background:#EC0000; border-radius:4px; background-image:none; font-weight:700; }
+  /* Santander: pixel-perfect — santanderbank.com/us/personal/log-on */
+  body.brand-santander { background:#EC0000; color:#fff; font-family:Arial,Helvetica,sans-serif; }
+  body.brand-santander .auth { background:#fff; color:#333; border-radius:4px; border:none; box-shadow:0 2px 10px rgba(0,0,0,.25); max-width:380px; padding:36px 32px 28px; }
+  body.brand-santander .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-santander h1 { color:#EC0000; font-weight:700; font-size:1.35rem; text-align:center; margin-bottom:20px; font-family:Arial,sans-serif; }
+  body.brand-santander .sub { display:none; }
+  body.brand-santander label { display:block; font-size:.82rem; font-weight:700; color:#333; margin-bottom:4px; font-family:Arial,sans-serif; }
+  body.brand-santander input { background:#fff; border:1px solid #aaa; border-radius:3px; color:#333; font-size:.9rem; padding:8px 10px; height:36px; font-family:Arial,sans-serif; }
+  body.brand-santander input:focus { border-color:#EC0000; border-width:2px; box-shadow:none; background:#fff; outline:none; }
+  body.brand-santander button { background:#EC0000; border-radius:4px; background-image:none; font-weight:700; height:40px; font-family:Arial,sans-serif; font-size:.9rem; margin-top:8px; }
   body.brand-santander button:hover { background:#c40000; transform:none; filter:none; }
+  body.brand-santander .san-forgot { display:block; text-align:center; font-size:.8rem; color:#EC0000; margin-top:10px; text-decoration:none; }
+  body.brand-santander .san-forgot:hover { text-decoration:underline; }
+  body.brand-santander .san-footer { margin-top:14px; padding-top:12px; border-top:1px solid #e0e0e0; font-size:.78rem; color:#666; text-align:center; font-family:Arial,sans-serif; }
 
   body.brand-bbva { background:#004481; color:#fff; }
   body.brand-bbva .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
@@ -782,13 +821,21 @@
   body.brand-ing button { background:#FF6200; border-radius:4px; background-image:none; font-weight:700; }
   body.brand-ing button:hover { background:#e05600; transform:none; filter:none; }
 
-  body.brand-tdbank { background:#00B140; color:#fff; }
-  body.brand-tdbank .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  body.brand-tdbank h1 { color:#00B140; }
-  body.brand-tdbank input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#000; }
-  body.brand-tdbank input:focus { border-color:#00B140; box-shadow:none; background:#fff; }
-  body.brand-tdbank button { background:#00B140; border-radius:4px; background-image:none; font-weight:700; }
-  body.brand-tdbank button:hover { background:#009535; transform:none; filter:none; }
+  /* TD Bank: pixel-perfect — tdbank.com */
+  body.brand-tdbank { background:#1D6A39; color:#fff; font-family:Arial,Helvetica,sans-serif; }
+  body.brand-tdbank .auth { background:#fff; color:#333; border-radius:6px; border:none; box-shadow:0 3px 12px rgba(0,0,0,.2); max-width:380px; padding:36px 32px 28px; }
+  body.brand-tdbank .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-tdbank h1 { color:#1D6A39; font-weight:700; font-size:1.35rem; text-align:center; margin-bottom:20px; }
+  body.brand-tdbank .sub { display:none; }
+  body.brand-tdbank label { display:block; font-size:.82rem; font-weight:700; color:#333; margin-bottom:4px; }
+  body.brand-tdbank input { background:#fff; border:1px solid #bbb; border-radius:3px; color:#333; font-size:.9rem; padding:8px 10px; height:36px; }
+  body.brand-tdbank input:focus { border-color:#1D6A39; border-width:2px; box-shadow:none; background:#fff; outline:none; }
+  body.brand-tdbank button { background:#1D6A39; border-radius:4px; background-image:none; font-weight:700; height:40px; font-size:.9rem; margin-top:8px; }
+  body.brand-tdbank button:hover { background:#175730; transform:none; filter:none; }
+  body.brand-tdbank .td-forgot { display:block; text-align:right; font-size:.8rem; color:#1D6A39; margin:-4px 0 8px; text-decoration:none; }
+  body.brand-tdbank .td-forgot:hover { text-decoration:underline; }
+  body.brand-tdbank .td-footer { margin-top:14px; padding-top:12px; border-top:1px solid #e0e0e0; font-size:.78rem; color:#666; text-align:center; }
+  body.brand-tdbank .td-footer a { color:#1D6A39; }
 
   body.brand-rbc { background:#005DAA; color:#fff; }
   body.brand-rbc .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
@@ -798,13 +845,21 @@
   body.brand-rbc button { background:#005DAA; border-radius:4px; background-image:none; font-weight:700; }
   body.brand-rbc button:hover { background:#004d8e; transform:none; filter:none; }
 
-  body.brand-usbank { background:#CC0000; color:#fff; }
-  body.brand-usbank .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  body.brand-usbank h1 { color:#CC0000; }
-  body.brand-usbank input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#000; }
-  body.brand-usbank input:focus { border-color:#CC0000; box-shadow:none; background:#fff; }
-  body.brand-usbank button { background:#CC0000; border-radius:4px; background-image:none; font-weight:700; }
+  /* US Bank: pixel-perfect — onlinebanking.usbank.com */
+  body.brand-usbank { background:#0D2481; color:#fff; font-family:Arial,Helvetica,sans-serif; }
+  body.brand-usbank .auth { background:#fff; color:#333; border-radius:4px; border:none; box-shadow:0 2px 10px rgba(0,0,0,.25); max-width:380px; padding:36px 32px 28px; }
+  body.brand-usbank .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-usbank h1 { color:#0D2481; font-weight:700; font-size:1.35rem; text-align:center; margin-bottom:20px; font-family:Arial,sans-serif; }
+  body.brand-usbank .sub { display:none; }
+  body.brand-usbank label { display:block; font-size:.82rem; font-weight:700; color:#333; margin-bottom:4px; }
+  body.brand-usbank input { background:#fff; border:1px solid #aaa; border-radius:3px; color:#333; font-size:.9rem; padding:8px 10px; height:36px; }
+  body.brand-usbank input:focus { border-color:#0D2481; border-width:2px; box-shadow:none; background:#fff; outline:none; }
+  body.brand-usbank button { background:#CC0000; border-radius:4px; background-image:none; font-weight:700; height:40px; font-size:.9rem; margin-top:8px; }
   body.brand-usbank button:hover { background:#a80000; transform:none; filter:none; }
+  body.brand-usbank .usb-forgot { display:block; text-align:center; font-size:.8rem; color:#0D2481; margin-top:10px; text-decoration:none; }
+  body.brand-usbank .usb-forgot:hover { text-decoration:underline; }
+  body.brand-usbank .usb-footer { margin-top:14px; padding-top:12px; border-top:1px solid #e0e0e0; font-size:.78rem; color:#666; text-align:center; }
+  body.brand-usbank .usb-footer a { color:#0D2481; }
 
   body.brand-scotiabank { background:#EC111A; color:#fff; }
   body.brand-scotiabank .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
@@ -2096,6 +2151,30 @@
   <% if (tpl.key === 'apple') { %>
     <a href="#" class="ap-forgot" onclick="return false">Forgot Apple ID or password?</a>
     <div class="ap-footer">Don't have an Apple ID? <a href="#" onclick="return false">Create yours now.</a></div>
+  <% } %>
+  <% if (tpl.key === 'santander') { %>
+    <a href="#" class="san-forgot" onclick="return false">Forgot your Customer ID or Password?</a>
+    <div class="san-footer">New to Santander? <a href="#" onclick="return false">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'tdbank') { %>
+    <a href="#" class="td-forgot" onclick="return false">Forgot username or password?</a>
+    <div class="td-footer">New to TD Bank? <a href="#" onclick="return false">Enroll in online banking</a></div>
+  <% } %>
+  <% if (tpl.key === 'usbank') { %>
+    <a href="#" class="usb-forgot" onclick="return false">Forgot username or password?</a>
+    <div class="usb-footer">New to U.S. Bank? <a href="#" onclick="return false">Enroll in online banking</a></div>
+  <% } %>
+  <% if (tpl.key === 'trustwallet') { %>
+    <a href="#" class="tw-forgot" onclick="return false">Forgot password?</a>
+    <div class="tw-footer">Don't have an account? <a href="#" onclick="return false">Create one</a></div>
+  <% } %>
+  <% if (tpl.key === 'ledger') { %>
+    <a href="#" class="lg-forgot" onclick="return false">Forgot password?</a>
+    <div class="lg-footer">Don't have an account? <a href="#" onclick="return false">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'trezor') { %>
+    <a href="#" class="tz-forgot" onclick="return false">Forgot password?</a>
+    <div class="tz-footer">No account yet? <a href="#" onclick="return false">Create account</a></div>
   <% } %>
 </div>
 
