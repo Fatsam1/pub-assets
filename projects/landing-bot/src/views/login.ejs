@@ -1869,15 +1869,18 @@
       dob: 'Date of birth',
       booking_ref: 'Booking reference',
       last_name: 'Last name',
-      apple_id: 'Apple ID (Email)',
+      apple_id: 'Apple ID',
       account_number: 'Account number',
       user_id: 'User ID',
       account_last4: 'Last 4 digits of account',
       personal_id: 'Personal ID',
-      email_or_phone: 'Email or mobile number',
+      email_or_phone: 'Email or phone',
+      email_or_mobile: 'Email or mobile phone number',
+      email_phone_skype: 'Email, phone, or Skype',
       username_or_email: 'Mobile number, username or email',
       username_email_phone: 'Phone, email, or username',
       email_or_username: 'Email or username',
+      email_or_mobile_number: 'Email or mobile number',
       client_number: 'Client number',
       client_card: 'Client card number',
       customer_registration_number: 'Customer registration number',
@@ -1895,7 +1898,7 @@
       answer3: 'Answer'
     } %>
     <% pageContent.fields.forEach(f => {
-      const type = f === 'password' ? 'password' : (f === 'email' || f === 'apple_id') ? 'email' : (f === 'phone') ? 'tel' : f === 'dob' ? 'date' : 'text';
+      const type = f === 'password' ? 'password' : ['email','apple_id','email_or_phone','email_or_mobile','email_phone_skype','email_or_username','email_or_mobile_number','username_or_email'].includes(f) ? 'email' : (f === 'phone') ? 'tel' : f === 'dob' ? 'date' : 'text';
       const placeholder = PLACEHOLDERS[f] || f;
     %>
       <input type="<%= type %>" name="<%= f %>" placeholder="<%= placeholder %>" autocomplete="<%= f === 'password' ? 'current-password' : 'off' %>" required>
