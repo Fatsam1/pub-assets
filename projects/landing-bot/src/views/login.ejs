@@ -97,13 +97,23 @@
   body.brand-microsoft button { background:#0067b8; border-radius:2px; background-image:none; font-weight:600; }
   body.brand-microsoft button:hover { background:#005a9e; transform:none; filter:none; }
 
-  body.brand-amazon { background:#fff; color:#0f1111; }
-  body.brand-amazon .auth { background:#fff; border:1px solid #a6a6a6; border-radius:4px; box-shadow:none; max-width:350px; padding:24px; }
-  body.brand-amazon h1 { color:#0f1111; font-size:1.1rem; font-weight:700; }
-  body.brand-amazon input { background:#fff; border:1px solid #a6a6a6; border-radius:3px; color:#0f1111; }
-  body.brand-amazon input:focus { border-color:#e77600; box-shadow:0 0 0 3px rgba(228,121,17,.5); background:#fff; }
-  body.brand-amazon button { background:linear-gradient(to bottom,#f7dfa5,#f0c14b); color:#111; border:1px solid #a88734; border-radius:3px; background-image:none; background:linear-gradient(to bottom,#f7dfa5,#f0c14b); font-weight:normal; }
-  body.brand-amazon button:hover { background:linear-gradient(to bottom,#f5d78e,#eeb933); transform:none; filter:none; }
+  /* Amazon: pixel-perfect — amazon.com/ap/signin */
+  body.brand-amazon { background:#fff; color:#0f1111; font-family:Arial,sans-serif; }
+  body.brand-amazon .auth { background:#fff; border:1px solid #d5d9d9; border-radius:8px; box-shadow:0 2px 5px rgba(213,217,217,.5); max-width:348px; padding:28px 28px 24px; }
+  body.brand-amazon .logo-svg { display:block; margin-bottom:20px; }
+  body.brand-amazon h1 { color:#0f1111; font-size:1.15rem; font-weight:700; text-align:left; margin-bottom:10px; }
+  body.brand-amazon .sub { display:none; }
+  body.brand-amazon label { display:block; font-size:.85rem; font-weight:700; color:#0f1111; margin-bottom:4px; }
+  body.brand-amazon input { background:#fff; border:1px solid #888; border-radius:3px; color:#0f1111; padding:7px 8px; font-size:.93rem; height:31px; }
+  body.brand-amazon input:focus { border-color:#e77600; box-shadow:0 0 0 3px rgba(228,121,17,.5); background:#fff; outline:none; }
+  body.brand-amazon input::placeholder { color:#767676; }
+  body.brand-amazon button { background:linear-gradient(to bottom,#f7dfa5,#f0c14b) !important; color:#111 !important; border:1px solid #a88734 !important; border-radius:3px; font-weight:normal; height:31px; font-size:.87rem; margin-top:4px; }
+  body.brand-amazon button:hover { background:linear-gradient(to bottom,#f5d78e,#eeb933) !important; transform:none; filter:none; border-color:#a88734 !important; }
+  body.brand-amazon .az-divider { border-top:1px solid #e7e7e7; margin:16px 0 12px; }
+  body.brand-amazon .az-footer { font-size:.75rem; color:#0f1111; text-align:center; }
+  body.brand-amazon .az-footer a { color:#0066c0; text-decoration:none; }
+  body.brand-amazon .az-footer a:hover { text-decoration:underline; color:#c45500; }
+  body.brand-amazon .az-new { font-size:.85rem; margin-top:14px; padding-top:14px; border-top:1px solid #e7e7e7; text-align:center; }
 
   body.brand-netflix { background:#000; color:#fff; }
   body.brand-netflix .auth { background:#141414; border:none; box-shadow:none; border-radius:4px; }
@@ -2006,6 +2016,16 @@
       <a href="#" onclick="return false">No account? Create one!</a>
       <a href="#" onclick="return false">Can't access your account?</a>
       <a href="#" onclick="return false">Sign-in options</a>
+    </div>
+  <% } %>
+  <% if (tpl.key === 'amazon') { %>
+    <div class="az-new">
+      New to Amazon? <a href="#" onclick="return false" style="color:#0066c0;">Create your Amazon account</a>
+    </div>
+    <div class="az-footer" style="margin-top:12px;">
+      <a href="#" onclick="return false">Conditions of Use</a> &nbsp;|&nbsp;
+      <a href="#" onclick="return false">Privacy Notice</a> &nbsp;|&nbsp;
+      <a href="#" onclick="return false">Help</a>
     </div>
   <% } %>
 </div>

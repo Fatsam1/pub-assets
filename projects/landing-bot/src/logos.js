@@ -14,7 +14,7 @@ export const LOGOS = {
 
   microsoft: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect x="4" y="4" width="22" height="22" fill="#F25022"/><rect x="30" y="4" width="22" height="22" fill="#7FBA00"/><rect x="4" y="30" width="22" height="22" fill="#00A4EF"/><rect x="30" y="30" width="22" height="22" fill="#FFB900"/></svg>`,
 
-  amazon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><text x="28" y="36" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="28" font-weight="900" fill="#FF9900">a</text><path fill="#FF9900" d="M14 40c5 3 10.5 5 16 5 5 0 10-.8 14.5-2.5-1-.6-2.5-.4-3.5.2-3.5 1.5-7 2.3-11 2.3-5.5 0-10.8-1.5-15-4.3-.5-.3-1.3-.2-1 .3z"/><path fill="#FF9900" d="M41 38c.8-.4 2.3-1 3.2-1.3l-.2-.4c-.8.1-2.5.5-3.8 1.4l.8.3z"/></svg>`,
+  amazon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 36" width="100" height="36"><text x="4" y="24" font-family="Arial Black,Helvetica Neue,sans-serif" font-weight="900" font-size="26" fill="#F90" letter-spacing="-1">amazon</text><path fill="#F90" d="M4 28c14 8 45 8 60-1-1-1-3-.5-4.5.3-13 5-40 5-54-1-.7-.5-1.8-.3-1.5.7z"/><path fill="#F90" d="M62 25c1.3-.6 4-1.5 5.3-1.8l-.3-.6c-1.4.2-4 .8-6 2.1l1 .3z"/></svg>`,
 
   netflix: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 36" width="140" height="36"><text x="0" y="30" font-family="Arial Black,Impact,sans-serif" font-size="32" font-weight="900" fill="#E50914" letter-spacing="2">NETFLIX</text></svg>`,
 
