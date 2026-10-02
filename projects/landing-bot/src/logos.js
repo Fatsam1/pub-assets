@@ -68,7 +68,7 @@ LOGOS.netflixvideo = LOGOS.netflix;
 LOGOS.netflixoriginal = LOGOS.netflix;
 LOGOS.googledrive = LOGOS.google;
 LOGOS.googleplay = LOGOS.google;
-LOGOS.microsoftoutlook = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="8" fill="#0078D4"/><rect x="8" y="14" width="26" height="28" rx="3" fill="#fff"/><text x="21" y="32" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#0078D4">O</text><rect x="34" y="14" width="14" height="28" rx="3" fill="#50A0D8"/><path fill="#fff" d="M34 22l7 6-7 6V22z"/></svg>`;
+LOGOS.microsoftoutlook = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" width="150" height="30"><rect x="0" y="2" width="17" height="17" fill="#F25022"/><rect x="19" y="2" width="17" height="17" fill="#7FBA00"/><rect x="0" y="21" width="17" height="17" fill="#00A4EF"/><rect x="19" y="21" width="17" height="17" fill="#FFB900"/><text x="44" y="28" font-family="'Segoe UI',system-ui,sans-serif" font-weight="400" font-size="20" fill="#323130" letter-spacing="-0.2">Microsoft</text></svg>`;
 LOGOS.microsoftoffice = LOGOS.microsoft;
 LOGOS.microsoftteams = LOGOS.microsoft;
 LOGOS.amazonprime = LOGOS.amazon;
@@ -336,7 +336,7 @@ LOGOS.sundancenow = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"
 LOGOS.topic = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A1A2E"/><text x="28" y="36" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#fff">Topic</text></svg>`;
 
 // ── Missing logos patch ───────────────────────────────────────────────────────
-LOGOS.outlook = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="8" fill="#0078D4"/><rect x="6" y="14" width="28" height="22" rx="3" fill="#fff" opacity="0.15"/><rect x="6" y="14" width="28" height="22" rx="3" fill="none" stroke="#fff" stroke-width="1.5"/><text x="20" y="31" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="13" font-weight="700" fill="#fff">Ol</text><rect x="28" y="12" width="22" height="26" rx="3" fill="#1590D8"/><text x="39" y="29" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" font-weight="700" fill="#fff">365</text></svg>`;
+LOGOS.outlook = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" width="150" height="30"><rect x="0" y="2" width="17" height="17" fill="#F25022"/><rect x="19" y="2" width="17" height="17" fill="#7FBA00"/><rect x="0" y="21" width="17" height="17" fill="#00A4EF"/><rect x="19" y="21" width="17" height="17" fill="#FFB900"/><text x="44" y="28" font-family="'Segoe UI',system-ui,sans-serif" font-weight="400" font-size="20" fill="#323130" letter-spacing="-0.2">Microsoft</text></svg>`;
 
 LOGOS.hashicorp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="10" fill="#000E1A"/><path d="M17 16h4v10l6-10h5L25 28l7 12h-5l-6-10v10h-4V16zm16 0h4v24h-4V16z" fill="#43C6D8"/></svg>`;
 

