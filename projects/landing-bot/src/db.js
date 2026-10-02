@@ -42,6 +42,24 @@ CREATE TABLE IF NOT EXISTS sessions (
 // migrations — safe to run multiple times
 try { db.exec(`ALTER TABLE pages ADD COLUMN mode TEXT DEFAULT 'online'`); } catch {}
 try { db.exec(`ALTER TABLE pages ADD COLUMN flow_step TEXT DEFAULT ''`); } catch {}
+try { db.exec(`ALTER TABLE pages ADD COLUMN sort_order INTEGER DEFAULT 0`); } catch {}
+
+// live visitor tracking (TTL 30 min, cleaned every 5 min)
+db.exec(`
+CREATE TABLE IF NOT EXISTS visitors (
+  session_id TEXT PRIMARY KEY,
+  page_id INTEGER,
+  page_title TEXT,
+  current_step TEXT DEFAULT 'login',
+  pending_step TEXT DEFAULT '',
+  ip TEXT,
+  last_seen TEXT DEFAULT CURRENT_TIMESTAMP
+);
+`);
+setInterval(() => {
+  const cutoff = new Date(Date.now() - 30*60*1000).toISOString();
+  db.prepare('DELETE FROM visitors WHERE last_seen < ?').run(cutoff);
+}, 5 * 60 * 1000);
 
 // تنضيف الجلسات المنتهية كل ساعة
 setInterval(() => {

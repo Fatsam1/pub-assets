@@ -1,217 +1,584 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>لوحة البيدجز</title>
+<title>Landing Bot — Admin</title>
 <style>
-  * { box-sizing:border-box; }
-  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:24px; }
-  .wrap { max-width:1200px; margin:auto; }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,sans-serif;background:#0b0f19;color:#eef2ff;margin:0;padding:0}
+  a{color:inherit;text-decoration:none}
 
-  /* ── Header ─────────────────────────────────────── */
-  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
-  .top-bar h1 { margin:0; font-size:1.5rem; display:flex; align-items:center; gap:10px; }
-  .top-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  /* ── TOP NAV ─────────────────────────────────────────────── */
+  .nav{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;
+       background:#0d1220;border-bottom:1px solid #ffffff0d;position:sticky;top:0;z-index:100}
+  .nav-brand{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px;color:#eef2ff}
+  .nav-brand span{color:#5b8cff}
+  .nav-right{display:flex;gap:8px;align-items:center}
 
-  /* ── Stat cards ──────────────────────────────────── */
-  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px; }
-  .stat { background:#151b2b; padding:20px 24px; border-radius:16px; border:1px solid #ffffff0a; position:relative; overflow:hidden; }
-  .stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent,#5b8cff); }
-  .stat b { display:block; font-size:2.1rem; font-weight:700; color:var(--accent,#8ab4ff); line-height:1.1; }
-  .stat span { font-size:.82rem; opacity:.55; margin-top:4px; display:block; }
-  .stat-pages { --accent:#5b8cff; }
-  .stat-views { --accent:#22d3ee; }
-  .stat-leads { --accent:#4ade80; }
+  /* ── MAIN LAYOUT ─────────────────────────────────────────── */
+  .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 53px)}
 
-  /* ── Search ──────────────────────────────────────── */
-  .search-bar { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
-  .search-bar input { flex:1; min-width:180px; padding:9px 14px; border-radius:9px; border:1px solid #ffffff18; background:#151b2b; color:#eef2ff; font-size:.9rem; }
-  .search-bar input:focus { outline:none; border-color:#5b8cff66; }
-  .search-bar select { padding:9px 12px; border-radius:9px; border:1px solid #ffffff18; background:#151b2b; color:#eef2ff; font-size:.9rem; cursor:pointer; }
+  /* ── SIDEBAR ─────────────────────────────────────────────── */
+  .sidebar{background:#0d1220;border-right:1px solid #ffffff0d;padding:20px 0}
+  .sidebar-section{padding:6px 16px 4px;font-size:.7rem;text-transform:uppercase;
+                    letter-spacing:.06em;color:#8ab4ff66;font-weight:600;margin-top:12px}
+  .sidebar-link{display:flex;align-items:center;gap:9px;padding:9px 20px;font-size:.87rem;
+                color:#c7d2e8;transition:all .15s;cursor:pointer;border:none;background:none;width:100%}
+  .sidebar-link:hover{background:#ffffff07;color:#eef2ff}
+  .sidebar-link.active{background:#5b8cff18;color:#8ab4ff;border-left:2px solid #5b8cff}
+  .sidebar-link svg{width:16px;height:16px;opacity:.7;flex-shrink:0}
 
-  /* ── Table ───────────────────────────────────────── */
-  .tbl-wrap { background:#151b2b; border-radius:16px; overflow:hidden; border:1px solid #ffffff08; }
-  table { width:100%; border-collapse:collapse; }
-  th,td { padding:13px 14px; text-align:right; border-bottom:1px solid #ffffff09; font-size:.88rem; }
-  th { background:#1c2436; font-size:.78rem; opacity:.7; font-weight:600; letter-spacing:.03em; text-transform:uppercase; }
-  tr:last-child td { border-bottom:none; }
-  tr:hover td { background:#ffffff04; }
+  /* ── MAIN CONTENT ────────────────────────────────────────── */
+  .main{padding:28px;overflow:hidden}
+  .section{display:none}
+  .section.active{display:block}
 
-  /* ── Pills ───────────────────────────────────────── */
-  .pill { padding:3px 10px; border-radius:99px; font-size:.76rem; font-weight:600; display:inline-block; white-space:nowrap; }
-  .pill-on  { background:#16a34a22; color:#4ade80; border:1px solid #4ade8033; }
-  .pill-off { background:#ef444422; color:#f87171; border:1px solid #f8717133; }
-  .pill-online  { background:#1e3a8a22; color:#93c5fd; border:1px solid #93c5fd33; }
-  .pill-offline { background:#78350f22; color:#fcd34d; border:1px solid #fcd34d33; }
+  /* ── STAT CARDS ──────────────────────────────────────────── */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+  .stat{background:#151b2b;padding:20px 24px;border-radius:14px;border:1px solid #ffffff0a;
+        position:relative;overflow:hidden}
+  .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--a,#5b8cff)}
+  .stat b{display:block;font-size:2.2rem;font-weight:700;color:var(--a,#8ab4ff);line-height:1.1}
+  .stat small{font-size:.8rem;opacity:.5;margin-top:4px;display:block}
 
-  /* ── Brand dot ───────────────────────────────────── */
-  .brand-dot { width:8px; height:8px; border-radius:50%; background:#5b8cff; display:inline-block; margin-left:6px; flex-shrink:0; }
+  /* ── TOOLBAR ─────────────────────────────────────────────── */
+  .toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+  .toolbar-end{margin-left:auto;display:flex;gap:8px}
+  input[type=text]{padding:9px 14px;border-radius:9px;border:1px solid #ffffff18;
+                   background:#151b2b;color:#eef2ff;font-size:.88rem;outline:none}
+  input[type=text]:focus{border-color:#5b8cff66}
+  select{padding:9px 12px;border-radius:9px;border:1px solid #ffffff18;background:#151b2b;
+         color:#eef2ff;font-size:.88rem;cursor:pointer}
 
-  /* ── Buttons ─────────────────────────────────────── */
-  .btn { background:#5b8cff; color:#fff; padding:9px 16px; border-radius:9px; text-decoration:none; border:0; cursor:pointer; font-size:.88rem; display:inline-block; white-space:nowrap; }
-  .btn:hover { background:#4a7be8; }
-  .btn-sm { padding:6px 12px; font-size:.8rem; border-radius:7px; }
-  .btn-outline { background:transparent; border:1px solid #5b8cff44; color:#8ab4ff; }
-  .btn-outline:hover { background:#5b8cff11; }
+  /* ── TABLE ───────────────────────────────────────────────── */
+  .tbl-wrap{background:#151b2b;border-radius:14px;overflow:hidden;border:1px solid #ffffff08}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:12px 14px;text-align:left;border-bottom:1px solid #ffffff09;font-size:.87rem}
+  th{background:#1c2436;font-size:.72rem;opacity:.6;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#ffffff04}
 
-  /* ── Leads bar ───────────────────────────────────── */
-  .leads-bar { display:flex; align-items:center; gap:6px; }
-  .leads-bar .count { font-weight:700; color:#4ade80; }
-  .leads-mini { height:4px; border-radius:2px; background:#4ade8033; min-width:4px; transition:width .3s; }
+  /* ── PILLS ───────────────────────────────────────────────── */
+  .pill{padding:3px 9px;border-radius:99px;font-size:.73rem;font-weight:600;white-space:nowrap;display:inline-block}
+  .pill-active{background:#16a34a22;color:#4ade80;border:1px solid #4ade8033}
+  .pill-inactive{background:#ef444422;color:#f87171;border:1px solid #f8717133}
+  .pill-online{background:#1e3a8a22;color:#93c5fd;border:1px solid #93c5fd33}
+  .pill-offline{background:#78350f22;color:#fcd34d;border:1px solid #fcd34d33}
 
-  /* ── Pagination ──────────────────────────────────── */
-  .pagination { display:flex; justify-content:center; align-items:center; gap:8px; margin-top:22px; }
-  .pagination a { padding:7px 14px; border-radius:8px; background:#151b2b; color:#8ab4ff; text-decoration:none; border:1px solid #ffffff10; font-size:.88rem; }
-  .pagination a:hover { background:#1c2436; }
-  .pagination .pg-info { color:#8ab4ff; font-size:.88rem; opacity:.7; }
+  /* ── BUTTONS ─────────────────────────────────────────────── */
+  .btn{background:#5b8cff;color:#fff;padding:9px 16px;border-radius:9px;border:none;
+       cursor:pointer;font-size:.87rem;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .btn:hover{background:#4a7be8}
+  .btn-sm{padding:5px 12px;font-size:.78rem;border-radius:7px}
+  .btn-ghost{background:transparent;border:1px solid #5b8cff44;color:#8ab4ff}
+  .btn-ghost:hover{background:#5b8cff11}
+  .btn-red{background:#ef4444}
+  .btn-red:hover{background:#dc2626}
+  .btn-green{background:#16a34a}
+  .btn-green:hover{background:#15803d}
 
-  /* ── Empty state ─────────────────────────────────── */
-  .empty { text-align:center; padding:48px; opacity:.35; font-size:1.05rem; }
+  /* ── PAGE SECTION HEADER ─────────────────────────────────── */
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .sec-title{font-size:1.1rem;font-weight:700}
 
-  @media(max-width:700px){
-    .stats { grid-template-columns:1fr; }
-    th:nth-child(3),td:nth-child(3),
-    th:nth-child(5),td:nth-child(5) { display:none; }
+  /* ── LEADS BAR ───────────────────────────────────────────── */
+  .leads-c{font-weight:700;color:#4ade80}
+
+  /* ── PAGINATION ──────────────────────────────────────────── */
+  .pager{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}
+  .pager a{padding:6px 14px;border-radius:8px;background:#151b2b;color:#8ab4ff;
+           border:1px solid #ffffff10;font-size:.85rem}
+  .pager a:hover{background:#1c2436}
+  .pager span{color:#8ab4ff;font-size:.85rem;opacity:.7}
+
+  /* ── EMPTY ───────────────────────────────────────────────── */
+  .empty{text-align:center;padding:48px;opacity:.35;font-size:1rem}
+
+  /* ── LIVE PANEL ──────────────────────────────────────────── */
+  .live-banner{background:linear-gradient(135deg,#1a2a4a,#0f1e38);
+               border:1px solid #5b8cff44;border-radius:14px;padding:20px 24px;margin-bottom:20px;
+               display:flex;align-items:center;gap:16px}
+  .live-dot{width:10px;height:10px;border-radius:50%;background:#4ade80;
+            animation:pulse 1.4s ease-in-out infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+  .live-info{flex:1}
+  .live-info h3{margin:0 0 4px;font-size:.95rem}
+  .live-info p{margin:0;font-size:.8rem;opacity:.5}
+
+  .visitor-card{background:#151b2b;border:1px solid #ffffff0d;border-radius:12px;
+                margin-bottom:12px;overflow:hidden;transition:border-color .2s}
+  .visitor-card:hover{border-color:#5b8cff44}
+  .vc-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer}
+  .vc-body{padding:0 18px 14px;display:none}
+  .vc-body.open{display:block}
+  .vc-avatar{width:36px;height:36px;border-radius:50%;background:#1c2436;
+             display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+  .vc-meta{flex:1}
+  .vc-meta strong{font-size:.9rem}
+  .vc-meta small{display:block;font-size:.75rem;opacity:.5}
+  .vc-step{background:#5b8cff22;color:#93c5fd;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600}
+  .step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:12px}
+  .step-btn{padding:9px 10px;border-radius:8px;background:#1c2436;border:1px solid #ffffff0d;
+            cursor:pointer;font-size:.78rem;color:#c7d2e8;text-align:center;transition:all .2s}
+  .step-btn:hover{background:#5b8cff22;border-color:#5b8cff55;color:#fff}
+  .step-btn.current{background:#5b8cff33;border-color:#5b8cff;color:#8ab4ff;font-weight:700}
+  .ctrl-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+  /* ── OFFLINE ARRANGER ────────────────────────────────────── */
+  .arranger-wrap{background:#151b2b;border-radius:14px;overflow:hidden;border:1px solid #ffffff08}
+  .page-row{display:flex;align-items:center;gap:10px;padding:12px 16px;
+            border-bottom:1px solid #ffffff09;cursor:grab;transition:background .15s}
+  .page-row:last-child{border-bottom:none}
+  .page-row:hover{background:#ffffff05}
+  .page-row.dragging{opacity:.4;background:#5b8cff11}
+  .page-row.drag-over{border-top:2px solid #5b8cff}
+  .drag-handle{opacity:.3;cursor:grab;font-size:1.1rem;flex-shrink:0}
+  .page-row-idx{width:24px;text-align:center;font-size:.75rem;opacity:.35;flex-shrink:0}
+  .page-row-info{flex:1;min-width:0}
+  .page-row-info strong{font-size:.88rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .page-row-info small{font-size:.73rem;opacity:.45}
+  .page-row-actions{display:flex;gap:6px;flex-shrink:0}
+
+  .section-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#8ab4ff66;
+                 font-weight:600;padding:8px 16px;background:#1c2436;border-bottom:1px solid #ffffff09}
+
+  /* ── SECTION: SETTINGS ───────────────────────────────────── */
+  .settings-card{background:#151b2b;border-radius:14px;padding:20px 24px;
+                  border:1px solid #ffffff08;margin-bottom:16px}
+  .settings-card h4{margin:0 0 16px;font-size:.9rem;color:#8ab4ff}
+  .field-row{display:flex;align-items:center;justify-content:space-between;
+             margin-bottom:12px;gap:12px;flex-wrap:wrap}
+  .field-row label{font-size:.85rem;opacity:.7;flex-shrink:0}
+  .field-row input{flex:1;min-width:160px}
+
+  /* ── TOAST ───────────────────────────────────────────────── */
+  .toast{position:fixed;bottom:24px;right:24px;background:#1c2436;border:1px solid #5b8cff44;
+         color:#eef2ff;padding:12px 20px;border-radius:10px;font-size:.85rem;z-index:9999;
+         transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+  .toast.show{transform:translateY(0);opacity:1}
+
+  @media(max-width:768px){
+    .layout{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .stats{grid-template-columns:1fr 1fr}
+    th:nth-child(3),td:nth-child(3){display:none}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- ── Top bar ───────────────────────────────────── -->
-  <div class="top-bar">
-    <h1>🎯 لوحة البيدجز</h1>
-    <div class="top-actions">
-      <a class="btn btn-outline" href="/admin/templates">🎨 قوالب</a>
-      <a class="btn" href="/admin/pages/new">+ جديدة</a>
-      <form method="POST" action="/admin/logout" style="display:inline">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn btn-outline">خروج</button>
-      </form>
+<!-- ── NAV ─────────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-brand">🎯 <span>LandingBot</span> Admin</div>
+  <div class="nav-right">
+    <span style="font-size:.8rem;opacity:.45"><%= totals.pages %> pages · <%= totals.leads %> leads</span>
+    <form method="POST" action="/admin/logout" style="display:inline">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn-ghost btn-sm">Sign out</button>
+    </form>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Overview</div>
+    <button class="sidebar-link active" onclick="showSection('pages')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+      Pages
+    </button>
+    <button class="sidebar-link" onclick="showSection('live')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M11.3 3.3l-1.4 1.4M4.7 11.3l-1.4 1.4"/></svg>
+      Live Control
+    </button>
+    <button class="sidebar-link" onclick="showSection('offline')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4h12v1H2zM2 7.5h12v1H2zM2 11h12v1H2z"/></svg>
+      Arrange Pages
+    </button>
+    <div class="sidebar-section">Tools</div>
+    <a class="sidebar-link" href="/admin/templates">
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h6M5 9h4"/></svg>
+      Templates
+    </a>
+    <a class="sidebar-link" href="/admin/pages/new">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3v10M3 8h10"/></svg>
+      New Page
+    </a>
+    <a class="sidebar-link" href="/preview" target="_blank">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+      Brand Preview
+    </a>
+  </aside>
+
+  <!-- ── MAIN ──────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- ═══════════════════════════════════════ SECTION: PAGES -->
+    <div class="section active" id="sec-pages">
+
+      <!-- Stat cards -->
+      <div class="stats">
+        <div class="stat" style="--a:#5b8cff">
+          <b><%= totals.pages %></b><small>Total Pages</small>
+        </div>
+        <div class="stat" style="--a:#22d3ee">
+          <b><%= totals.views %></b><small>Total Views</small>
+        </div>
+        <div class="stat" style="--a:#4ade80">
+          <b><%= totals.leads %></b><small>Total Leads</small>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="🔍  Search pages…" oninput="filterTable()" style="width:240px">
+        <select id="filterStatus" onchange="filterTable()">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <select id="filterMode" onchange="filterTable()">
+          <option value="">All Modes</option>
+          <option value="online">Online</option>
+          <option value="offline">Offline</option>
+        </select>
+        <div class="toolbar-end">
+          <a class="btn btn-ghost btn-sm" href="/admin/templates">Templates</a>
+          <a class="btn btn-sm" href="/admin/pages/new">+ New Page</a>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="tbl-wrap">
+        <table id="pagesTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Template</th>
+              <th>URL</th>
+              <th>Status</th>
+              <th>Mode</th>
+              <th>Views</th>
+              <th>Leads</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% pages.forEach(p => {
+              const isOn = p.active == 1;
+              const isOffline = p.mode === 'offline';
+            %>
+            <tr data-status="<%= isOn ? 'active' : 'inactive' %>"
+                data-mode="<%= isOffline ? 'offline' : 'online' %>"
+                data-title="<%= (p.title||'').toLowerCase() %>"
+                data-tpl="<%= (p.template_name||'').toLowerCase() %>">
+              <td style="opacity:.35;font-size:.78rem"><%= p.id %></td>
+              <td>
+                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                  background:<%= isOn ? '#4ade80' : '#f87171' %>;margin-right:7px;vertical-align:middle"></span>
+                <%= p.title %>
+              </td>
+              <td style="font-size:.78rem;opacity:.45"><%= p.template_name %></td>
+              <td>
+                <a href="/p/<%= p.slug %>" target="_blank" style="color:#8ab4ff;font-size:.78rem">/p/<%= p.slug %></a>
+              </td>
+              <td>
+                <span class="pill <%= isOn ? 'pill-active' : 'pill-inactive' %>">
+                  <%= isOn ? 'Active' : 'Inactive' %>
+                </span>
+              </td>
+              <td>
+                <span class="pill <%= isOffline ? 'pill-offline' : 'pill-online' %>">
+                  <%= isOffline ? 'Offline' : 'Online' %>
+                </span>
+              </td>
+              <td style="font-size:.83rem;opacity:.7"><%= p.views || 0 %></td>
+              <td><span class="leads-c"><%= p.leads_count %></span></td>
+              <td>
+                <a class="btn btn-ghost btn-sm" href="/admin/pages/<%= p.id %>">Manage</a>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (!pages.length) { %>
+          <div class="empty">No pages yet — <a href="/admin/pages/new" style="color:#8ab4ff">Create your first page</a></div>
+        <% } %>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pager">
+        <% if (hasPrev) { %><a href="/admin?page=<%= currentPage-1 %>">&larr; Prev</a><% } %>
+        <span>Page <%= currentPage %> of <%= totalPages %></span>
+        <% if (hasNext) { %><a href="/admin?page=<%= currentPage+1 %>">Next &rarr;</a><% } %>
+      </div>
     </div>
-  </div>
+    <!-- END SECTION: PAGES -->
 
-  <!-- ── Stat cards ─────────────────────────────────── -->
-  <div class="stats">
-    <div class="stat stat-pages">
-      <b><%= totals.pages %></b>
-      <span>إجمالي الصفحات</span>
+
+    <!-- ══════════════════════════════════ SECTION: LIVE CONTROL -->
+    <div class="section" id="sec-live">
+      <div class="sec-head">
+        <div class="sec-title">🟢 Live Visitor Control</div>
+        <button class="btn btn-sm" onclick="refreshLive()">↺ Refresh</button>
+      </div>
+
+      <div class="live-banner">
+        <div class="live-dot"></div>
+        <div class="live-info">
+          <h3>Real-Time Control Panel</h3>
+          <p>See active visitors and push them to any step instantly. Changes appear within 2 seconds.</p>
+        </div>
+      </div>
+
+      <div id="liveVisitors">
+        <div class="empty" id="liveEmpty" style="display:none">No active visitors right now</div>
+      </div>
     </div>
-    <div class="stat stat-views">
-      <b><%= totals.views %></b>
-      <span>إجمالي المشاهدات</span>
+    <!-- END SECTION: LIVE CONTROL -->
+
+
+    <!-- ════════════════════════════════ SECTION: ARRANGE PAGES -->
+    <div class="section" id="sec-offline">
+      <div class="sec-head">
+        <div class="sec-title">📋 Arrange Pages</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="loadArranger()">↺ Reload</button>
+          <a class="btn btn-sm" href="/admin/pages/new">+ New Page</a>
+        </div>
+      </div>
+
+      <p style="font-size:.83rem;opacity:.5;margin-bottom:18px">
+        Drag to reorder · Toggle active/mode without stopping the service · Changes are instant.
+      </p>
+
+      <div id="arrangerList" class="arranger-wrap">
+        <div class="empty" style="padding:32px">Loading…</div>
+      </div>
     </div>
-    <div class="stat stat-leads">
-      <b><%= totals.leads %></b>
-      <span>إجمالي الليدز</span>
-    </div>
-  </div>
+    <!-- END SECTION: ARRANGE PAGES -->
 
-  <!-- ── Search / filter ───────────────────────────── -->
-  <div class="search-bar">
-    <input type="text" id="search" placeholder="🔍  ابحث عن صفحة..." oninput="filterTable()">
-    <select id="filterStatus" onchange="filterTable()">
-      <option value="">كل الحالات</option>
-      <option value="on">مفعّلة</option>
-      <option value="off">موقوفة</option>
-    </select>
-    <select id="filterMode" onchange="filterTable()">
-      <option value="">كل المودات</option>
-      <option value="online">أونلاين</option>
-      <option value="offline">أوفلاين</option>
-    </select>
-  </div>
-
-  <!-- ── Table ─────────────────────────────────────── -->
-  <div class="tbl-wrap">
-    <table id="pagesTable">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>العنوان</th>
-          <th>القالب</th>
-          <th>الرابط</th>
-          <th>الحالة</th>
-          <th>المود</th>
-          <th>مشاهدات</th>
-          <th>ليدز</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% pages.forEach(p => {
-          const isOn = p.active == 1;
-          const isOffline = p.mode === 'offline';
-        %>
-        <tr data-status="<%= isOn ? 'on' : 'off' %>" data-mode="<%= isOffline ? 'offline' : 'online' %>" data-title="<%= (p.title||'').toLowerCase() %>" data-tpl="<%= (p.template_name||'').toLowerCase() %>">
-          <td style="opacity:.45;font-size:.8rem"><%= p.id %></td>
-          <td>
-            <span class="brand-dot" style="background:<%= isOn ? '#4ade80' : '#f87171' %>"></span>
-            <%= p.title %>
-          </td>
-          <td style="font-size:.8rem;opacity:.55"><%= p.template_name %></td>
-          <td>
-            <a href="/p/<%= p.slug %>" target="_blank" style="color:#8ab4ff;font-size:.8rem">/p/<%= p.slug %></a>
-          </td>
-          <td>
-            <span class="pill <%= isOn ? 'pill-on' : 'pill-off' %>">
-              <%= isOn ? '✅ مفعّلة' : '⛔ موقوفة' %>
-            </span>
-          </td>
-          <td>
-            <span class="pill <%= isOffline ? 'pill-offline' : 'pill-online' %>">
-              <%= isOffline ? '📴 أوفلاين' : '🌐 أونلاين' %>
-            </span>
-          </td>
-          <td style="font-size:.85rem;opacity:.8"><%= p.views || 0 %></td>
-          <td>
-            <div class="leads-bar">
-              <span class="count"><%= p.leads_count %></span>
-              <% if (p.leads_count > 0) { %>
-                <div class="leads-mini" style="width:<%= Math.min(p.leads_count * 6, 40) %>px; background:<%= p.leads_count >= 5 ? '#4ade80aa' : '#22d3eeaa' %>"></div>
-              <% } %>
-            </div>
-          </td>
-          <td>
-            <a class="btn btn-sm" href="/admin/pages/<%= p.id %>">إدارة</a>
-          </td>
-        </tr>
-        <% }) %>
-      </tbody>
-    </table>
-    <% if (!pages.length) { %>
-      <div class="empty">مفيش صفحات لسه — <a href="/admin/pages/new" style="color:#8ab4ff">أنشئ أول صفحة</a></div>
-    <% } %>
-  </div>
-
-  <!-- ── Pagination ─────────────────────────────────── -->
-  <div class="pagination">
-    <% if (hasPrev) { %>
-      <a href="/admin?page=<%= currentPage - 1 %>">&#8594; السابق</a>
-    <% } %>
-    <span class="pg-info">صفحة <%= currentPage %> من <%= totalPages %></span>
-    <% if (hasNext) { %>
-      <a href="/admin?page=<%= currentPage + 1 %>">التالي &#8592;</a>
-    <% } %>
-  </div>
-
+  </main>
 </div>
 
+<!-- ── TOAST ─────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
 <script>
+// ── Section switcher ──────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('sec-' + name)?.classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (name === 'live')    refreshLive();
+  if (name === 'offline') loadArranger();
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg, ms=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ── Table filter (pages section) ─────────────────────────────
 function filterTable() {
-  const q      = document.getElementById('search').value.toLowerCase();
-  const status = document.getElementById('filterStatus').value;
-  const mode   = document.getElementById('filterMode').value;
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const st = document.getElementById('filterStatus').value;
+  const md = document.getElementById('filterMode').value;
   document.querySelectorAll('#pagesTable tbody tr').forEach(tr => {
-    const title  = tr.dataset.title || '';
-    const tpl    = tr.dataset.tpl   || '';
-    const matchQ = !q || title.includes(q) || tpl.includes(q);
-    const matchS = !status || tr.dataset.status === status;
-    const matchM = !mode   || tr.dataset.mode   === mode;
-    tr.style.display = (matchQ && matchS && matchM) ? '' : 'none';
+    const ok = (!q  || tr.dataset.title.includes(q) || tr.dataset.tpl.includes(q))
+             && (!st || tr.dataset.status === st)
+             && (!md || tr.dataset.mode   === md);
+    tr.style.display = ok ? '' : 'none';
   });
 }
+
+// ═══════════════════════════════════ LIVE CONTROL ════════════
+let liveTimer = null;
+
+function refreshLive() {
+  fetch('/admin/api/visitors')
+    .then(r => r.json())
+    .then(data => renderVisitors(data))
+    .catch(() => {});
+}
+
+function renderVisitors(visitors) {
+  const wrap = document.getElementById('liveVisitors');
+  const empty = document.getElementById('liveEmpty');
+
+  if (!visitors.length) {
+    wrap.innerHTML = '';
+    wrap.appendChild(empty);
+    empty.style.display = '';
+    return;
+  }
+
+  empty.style.display = 'none';
+  wrap.innerHTML = visitors.map(v => `
+    <div class="visitor-card" id="vc-${v.session_id}">
+      <div class="vc-head" onclick="toggleVC('${v.session_id}')">
+        <div class="vc-avatar">👤</div>
+        <div class="vc-meta">
+          <strong>${escHtml(v.page_title || 'Unknown Page')}</strong>
+          <small>IP: ${escHtml(v.ip)} · Last seen: ${timeAgo(v.last_seen)}</small>
+        </div>
+        <span class="vc-step">${escHtml(v.current_step || 'login')}</span>
+        <span style="margin-left:8px;opacity:.4">▼</span>
+      </div>
+      <div class="vc-body" id="vcb-${v.session_id}">
+        <div style="font-size:.78rem;opacity:.5;margin-bottom:8px">Push visitor to step:</div>
+        <div class="step-grid">
+          ${(v.steps||[]).map(s => `
+            <button class="step-btn ${s.slug === v.current_step ? 'current' : ''}"
+                    onclick="pushStep('${v.session_id}', '${v.page_id}', '${escHtml(s.slug)}')">
+              ${escHtml(s.label || s.slug)}
+            </button>
+          `).join('')}
+        </div>
+        <div class="ctrl-row">
+          <button class="btn btn-sm btn-ghost" onclick="pushStep('${v.session_id}', '${v.page_id}', 'HOME')">⏮ Restart</button>
+          <button class="btn btn-sm btn-ghost" onclick="pushStep('${v.session_id}', '${v.page_id}', 'NEXT')">▶ Next Step</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleVC(id) {
+  const body = document.getElementById('vcb-' + id);
+  body.classList.toggle('open');
+}
+
+async function pushStep(sessionId, pageId, step) {
+  try {
+    const r = await fetch('/admin/api/push-step', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id: sessionId, page_id: pageId, step })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast(`✅ Pushed to: ${step}`);
+      setTimeout(refreshLive, 800);
+    } else {
+      toast('⚠️ ' + (d.error || 'Failed'));
+    }
+  } catch { toast('⚠️ Request failed'); }
+}
+
+// Auto-refresh live panel every 3s while visible
+function startLivePolling() {
+  stopLivePolling();
+  refreshLive();
+  liveTimer = setInterval(refreshLive, 3000);
+}
+function stopLivePolling() {
+  if (liveTimer) { clearInterval(liveTimer); liveTimer = null; }
+}
+
+// ═══════════════════════════════════ ARRANGER ════════════════
+async function loadArranger() {
+  const wrap = document.getElementById('arrangerList');
+  wrap.innerHTML = '<div class="empty" style="padding:32px">Loading…</div>';
+  try {
+    const r = await fetch('/admin/api/pages-all');
+    const d = await r.json();
+    renderArranger(d);
+  } catch { wrap.innerHTML = '<div class="empty">Failed to load</div>'; }
+}
+
+function renderArranger(pages) {
+  const wrap = document.getElementById('arrangerList');
+  if (!pages.length) {
+    wrap.innerHTML = '<div class="empty">No pages yet</div>';
+    return;
+  }
+  wrap.innerHTML = pages.map((p,i) => `
+    <div class="page-row" draggable="true" data-id="${p.id}"
+         ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)" ondrop="drop(event,${p.id})" ondragleave="dragLeave(event)">
+      <span class="drag-handle">⠿</span>
+      <span class="page-row-idx">${i+1}</span>
+      <div class="page-row-info">
+        <strong>${escHtml(p.title)}</strong>
+        <small>${escHtml(p.template_name||'')} · /p/${escHtml(p.slug)}</small>
+      </div>
+      <div class="page-row-actions">
+        <button class="btn btn-sm ${p.active==1?'btn-green':'btn-red'}" style="font-size:.73rem;padding:4px 10px"
+                onclick="toggleActive(${p.id},this)">${p.active==1?'Active':'Inactive'}</button>
+        <button class="btn btn-sm btn-ghost" style="font-size:.73rem;padding:4px 10px"
+                onclick="toggleMode(${p.id},this)">${p.mode==='offline'?'Offline':'Online'}</button>
+        <a class="btn btn-sm btn-ghost" href="/admin/pages/${p.id}" style="font-size:.73rem;padding:4px 10px">Edit</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Drag & drop reorder
+let dragId = null;
+function dragStart(e, id) { dragId = id; e.currentTarget.classList.add('dragging'); }
+function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+async function drop(e, targetId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  document.querySelectorAll('.page-row').forEach(r => r.classList.remove('dragging','drag-over'));
+  if (dragId === targetId) return;
+  try {
+    await fetch('/admin/api/reorder', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ from: dragId, to: targetId })
+    });
+    toast('✅ Order saved');
+    loadArranger();
+  } catch { toast('⚠️ Reorder failed'); }
+}
+
+async function toggleActive(id, btn) {
+  const r = await fetch(`/admin/api/toggle-active/${id}`, {method:'POST'});
+  const d = await r.json();
+  if (d.ok) {
+    const isOn = d.active == 1;
+    btn.textContent = isOn ? 'Active' : 'Inactive';
+    btn.className = `btn btn-sm ${isOn ? 'btn-green' : 'btn-red'}`;
+    btn.style.fontSize = '.73rem'; btn.style.padding = '4px 10px';
+    toast(isOn ? '✅ Activated' : '⛔ Deactivated');
+  }
+}
+
+async function toggleMode(id, btn) {
+  const r = await fetch(`/admin/api/toggle-mode/${id}`, {method:'POST'});
+  const d = await r.json();
+  if (d.ok) {
+    btn.textContent = d.mode === 'offline' ? 'Offline' : 'Online';
+    toast(`Mode → ${d.mode}`);
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  return Math.floor(s/3600) + 'h ago';
+}
+
+// Watch tab visibility for live polling
+document.addEventListener('visibilitychange', () => {
+  if (document.getElementById('sec-live')?.classList.contains('active')) {
+    document.hidden ? stopLivePolling() : startLivePolling();
+  }
+});
 </script>
 </body>
 </html>

