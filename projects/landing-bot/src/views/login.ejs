@@ -4,61 +4,60 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><%= pageContent.headline %> — <%= tpl.name %></title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:<%= tpl.palette.bg %>;
-    --card:<%= tpl.palette.card %>;
-    --fg:<%= tpl.palette.fg %>;
-    --accent:<%= tpl.palette.accent %>;
-    --accent2:<%= tpl.palette.accent2 %>;
+    --bg:#0e1116; --surface:#161b22; --surface2:#1c232d; --line:#2a323d;
+    --ink:#e8eaed; --ink2:#aab1bb; --ink3:#79818c;
+    --accent:<%= tpl.palette.accent %>; --accent2:<%= tpl.palette.accent2 %>;
+    --brand-bg:<%= tpl.palette.bg %>; --brand-card:<%= tpl.palette.card %>; --brand-fg:<%= tpl.palette.fg %>;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --mono:ui-monospace,'Cascadia Code','Roboto Mono',Menlo,Consolas,monospace;
   }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body {
-    font-family:'Inter',system-ui;
-    background:var(--bg); color:var(--fg);
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--sans);
+    background:var(--bg);color:var(--ink);
     min-height:100vh;
-    display:flex; align-items:center; justify-content:center;
+    display:flex;align-items:center;justify-content:center;
     padding:24px;
   }
-  .auth {
-    background:var(--card);
-    border-radius:22px;
-    padding:38px 30px;
-    width:100%; max-width:420px;
-    box-shadow:0 30px 70px rgba(0,0,0,.5);
-    border:1px solid rgba(255,255,255,.07);
+  .auth{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:36px 32px;
+    width:100%;max-width:420px;
+    box-shadow:0 8px 40px rgba(0,0,0,.6);
   }
-  .logo {
-    width:60px; height:60px; border-radius:17px;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    display:flex; align-items:center; justify-content:center;
-    color:#fff; font-weight:800; font-size:1.7rem;
+  .logo{
+    width:60px;height:60px;border-radius:14px;
+    background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:1.7rem;
     margin:0 auto 22px;
-    box-shadow:0 8px 24px rgba(0,0,0,.3);
   }
-  .logo svg, .logo-svg { display:block; margin:0 auto 22px; }
-  h1 { font-size:1.35rem; text-align:center; margin-bottom:6px; font-weight:800; }
-  .sub { text-align:center; font-size:.9rem; opacity:.65; margin-bottom:28px; }
-  form { display:grid; gap:13px; }
-  input {
-    padding:14px 16px; border-radius:13px;
-    border:1.5px solid rgba(255,255,255,.1);
-    background:rgba(0,0,0,.25); color:var(--fg);
-    font-size:1rem; font-family:inherit; width:100%;
-    transition:.2s;
+  .logo svg,.logo-svg{display:block;margin:0 auto 22px}
+  h1{font-size:1.3rem;text-align:center;margin-bottom:6px;font-weight:700;color:var(--ink)}
+  .sub{text-align:center;font-size:.88rem;color:var(--ink3);margin-bottom:26px}
+  label{display:block;font-size:11px;color:var(--ink3);margin:0 0 5px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  form{display:grid;gap:14px}
+  input{
+    width:100%;background:var(--bg);border:1px solid var(--line);
+    border-radius:8px;color:var(--ink);
+    padding:11px 14px;font-size:.95rem;font-family:var(--sans);
+    transition:.15s;
   }
-  input:focus { outline:none; border-color:var(--accent); background:rgba(0,0,0,.35); }
-  input::placeholder { opacity:.5; }
-  button {
-    padding:15px; border:0; border-radius:13px;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    color:#fff; font-size:1.05rem; font-weight:800;
-    cursor:pointer; font-family:inherit; width:100%;
-    transition:.2s; margin-top:2px;
+  input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  input::placeholder{color:var(--ink3)}
+  button{
+    margin-top:4px;background:var(--accent);color:#fff;
+    border:0;border-radius:8px;
+    padding:13px;font-size:.95rem;font-weight:600;
+    cursor:pointer;font-family:var(--sans);width:100%;
+    transition:.15s;
   }
-  button:hover { transform:translateY(-2px); filter:brightness(1.08); }
-  button:active { transform:translateY(0); }
+  button:hover{filter:brightness(1.1)}
+  button:active{filter:brightness(.95)}
 
   /* ── Brand overrides ── */
   body.brand-facebook { background:#f0f2f5; color:#1c1e21; }

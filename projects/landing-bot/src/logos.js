@@ -525,6 +525,331 @@ LOGOS.wellsfargo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" 
 // PayPal — double P wordmark
 LOGOS.paypal = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#009CDE" d="M32 17h-8c-.5 0-.9.4-1 .9L20 37.5c0 .3.2.6.5.6h4l1-6h3.5c4.5 0 7.5-2.7 8-7 .3-2.8-1-4.2-3.5-4.1z"/><path fill="#fff" d="M22.5 17h-7c-.5 0-.9.4-1 .9L11 37.5c0 .3.2.6.5.6h3.8l1-6.2 1 .1c4.5 0 8-2.7 8.5-7.4.3-2.5-.7-4-2.3-3.6z"/></svg>`;
 
+// ── PAYMENTS REAL SVGs
+LOGOS.stripe = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#635BFF"/><path fill="#fff" d="M26.5 22.3c0-1.1.9-1.5 2.4-1.5 2.1 0 4.8.7 6.9 1.9v-6.5c-2.3-.9-4.6-1.3-6.9-1.3-5.6 0-9.4 3-9.4 7.9 0 7.7 10.6 6.5 10.6 9.8 0 1.3-1.1 1.7-2.7 1.7-2.3 0-5.3-.9-7.6-2.3v6.6c2.6 1.1 5.2 1.6 7.6 1.6 5.8 0 9.8-2.9 9.8-7.8-.1-8.3-10.7-6.9-10.7-10.1z"/></svg>`;
+LOGOS.cashapp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00D54B"/><path fill="#fff" d="M31.4 21.2l.6-3.5h-3.5l-.5 3.2c-3.6.4-6.1 2.5-6.1 5.8 0 3.1 2 4.7 5.1 5.6l1.2.4c2.1.6 3.1 1.2 3.1 2.3 0 1.2-1.1 2-2.9 2-2.1 0-4-.8-5.6-2l-1.8 3c1.8 1.4 4 2.2 6.4 2.4l-.6 3.6h3.5l.6-3.7c3.9-.5 6.3-2.8 6.3-6.1 0-3-1.9-4.6-5.4-5.7l-1.1-.3c-2-.6-2.9-1.1-2.9-2.2 0-1 .9-1.8 2.6-1.8 1.8 0 3.5.7 4.9 1.7l1.8-3c-1.6-1.2-3.5-1.9-5.7-2.2z"/></svg>`;
+LOGOS.venmo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#3D95CE"/><path fill="#fff" d="M38 14.6c.7 1.2 1 2.5 1 4.1 0 5.1-4.3 11.7-7.8 16.4H23l-3-21.4 6.5-.6 1.6 12.7c1.5-2.5 3.4-6.4 3.4-9.1 0-1.5-.3-2.5-.7-3.3z"/></svg>`;
+LOGOS.zelle = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#6D1ED4"/><path fill="#fff" d="M38 17H20l-2 4h13.5L18 37h18l2-4H24.5z"/></svg>`;
+LOGOS.klarna = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FFB3C7"/><path fill="#17120F" d="M34.5 14H30v28h4.5V14zm-9.5 0h-4.5v28H25V14zm9.5 11c0 3.5 2.8 6.3 6.3 6.3V27a2 2 0 0 0-2-2v-4.3c3.5 0 6.3 2.8 6.3 6.3v11H44V27c0-5.5-4.5-10-10-10v4h.5c-.3.5-.5.9-.5 1.5z"/></svg>`;
+LOGOS.afterpay = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#B2FCE4"/><path fill="#000" d="M28 14l-9 5.2v10.4L28 35l9-5.4V19.2zm0 5.5l4.5 2.6L28 24.7l-4.5-2.6zm-5 6v-2.3l5 2.9v4.6l-5-2.9zm6.5 5.2v-4.6l5-2.9v2.3z"/></svg>`;
+LOGOS.wise = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#9FE870"/><path fill="#163300" d="M30.5 13L20 43h5l3-9h7l2 6h5L32.5 13zm0 8.5l2.5 7.5H28z"/></svg>`;
+LOGOS.revolut = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#191C1F"/><path fill="#fff" d="M22 14h11c3.9 0 6.8 2.5 6.8 6.5 0 2.8-1.5 5-3.8 6.1l4.5 9.4H36l-4-8.5H26v8.5h-4zm4 4v5.5h6.5c1.6 0 2.8-1.2 2.8-2.7S34.1 18 32.5 18z"/></svg>`;
+LOGOS.square = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><rect x="17" y="17" width="22" height="22" rx="3" fill="#fff"/><rect x="22" y="22" width="12" height="12" rx="1" fill="#000"/></svg>`;
+LOGOS.skrill = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#862165"/><path fill="#fff" d="M28 13c-8.3 0-15 6.7-15 15s6.7 15 15 15 15-6.7 15-15-6.7-15-15-15zm3.5 20c-1.2 1.5-3 2.4-5.2 2.4-3.8 0-6.5-2.4-6.5-6.2h4c0 1.5 1 2.4 2.5 2.4 1.2 0 2.1-.6 2.1-1.6 0-1.1-1-1.5-3-2.1-2.8-.8-5-2-5-4.9 0-2.9 2.4-5 5.8-5 2 0 3.7.7 4.9 2l-2.8 2.5c-.7-.7-1.4-1.1-2.2-1.1-1.1 0-1.8.5-1.8 1.3 0 .9.9 1.3 2.8 1.9 3.1.9 5.3 2.2 5.3 5.2 0 1.2-.4 2.4-1.1 3.2z"/></svg>`;
+LOGOS.payoneer = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF4800"/><path fill="#fff" d="M18 36V20h8.5c4.3 0 7.2 2.6 7.2 6.5s-2.9 6.5-7.2 6.5H22v3zm4-10.5v4.5H26c1.8 0 3.2-1 3.2-2.3S27.8 25.5 26 25.5z"/></svg>`;
+LOGOS.braintree = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A1F71"/><path fill="#fff" d="M16 22h9c4.5 0 7.5 2.5 7.5 6.5S29.5 35 25 35h-5v6h-4zm4 9.5h4.5c2 0 3.5-1.2 3.5-3S26.5 26 24.5 26H20z"/></svg>`;
+LOGOS.adyen = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0ABF53"/><path fill="#fff" d="M16 38l6-26h4l2.5 11L31 12h4l6 26h-4.5l-3.5-15.5-3 10.5h-4l-3-10.5L20.5 38z"/></svg>`;
+LOGOS.worldpay = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M28 14c-7.7 0-14 6.3-14 14s6.3 14 14 14 14-6.3 14-14-6.3-14-14-14zm0 5a9 9 0 0 1 8.9 7.5H19.1A9 9 0 0 1 28 19zm-9 9h18a9 9 0 0 1-18 0z"/></svg>`;
+LOGOS.checkoutcom = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0D0E10"/><path fill="#fff" d="M14 28a14 14 0 1 1 28 0 14 14 0 0 1-28 0zm14-9l-8 5 3 1 5-3 5 3 3-1zm-5 7l-5 3 5 9 5-9z"/></svg>`;
+LOGOS.razorpay = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#072654"/><path fill="#3395FF" d="M28 12L14 32h10l-5 12 23-16H32z"/></svg>`;
+LOGOS.paytm = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00B9F1"/><path fill="#fff" d="M14 20h6v16h-6zm9 0h6v6h5v4h-5v6h-6zm15 0h6v16h-6z"/></svg>`;
+LOGOS.gcash = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#007DFF"/><path fill="#fff" d="M28 16a12 12 0 1 0 12 12H28V22h10.3A12 12 0 0 0 28 16z"/></svg>`;
+LOGOS.phonepe = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#5F259F"/><path fill="#fff" d="M28 14c-7.7 0-14 6.3-14 14s6.3 14 14 14c3.1 0 6-.9 8.4-2.5v-9H28v-4h12.3c.5 1.5.7 3.2.7 4.9 0 7.7-6.3 14-14 14a14 14 0 1 1 14-14h-4.1"/></svg>`;
+LOGOS.neteller = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#CB3B24"/><path fill="#fff" d="M16 38V18h5l9 13.5V18h5v20h-5L21 24.5V38z"/></svg>`;
+LOGOS.paysafe = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#004A97"/><path fill="#fff" d="M22 26h12v4H22zm-4-8h20v4H18zm4 16h12v4H22z"/></svg>`;
+LOGOS.affirm = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M21 36h-4l7-22h5l7 22h-4l-1.5-5h-8zm5-8.5h5.5l-2.8-8.5z"/></svg>`;
+LOGOS.samsungpay = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1428A0"/><path fill="#fff" d="M16 28c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12zm12-8a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm-2 4h4v8h-4z"/></svg>`;
+LOGOS.applepay = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M25 18c-.2-2 .7-4 2-5.3 1.4-1.4 3.7-2.3 5.6-2.4.2 2.2-.6 4.4-2 5.9-1.3 1.4-3.4 2.5-5.6 1.8zm5.5 3c-1.6-.1-4.5 1.9-6.8 1.9-2.3 0-5.1-1.7-7.5-1.7-3.8.1-7.3 2.3-9.2 5.8-3.9 6.8-1 16.9 2.8 22.5 1.9 2.7 4.2 5.7 7.2 5.6 2.8-.1 3.9-1.8 7.3-1.8s4.4 1.8 7.3 1.7c3-.1 5-2.8 6.9-5.5 2.1-3 2.9-6 3-6.3-.1 0-5.8-2.2-5.8-8.7-.1-5.5 4.5-8.1 4.7-8.3-2.6-3.8-6.6-4.2-7.9-4.2z"/></svg>`;
+LOGOS.googlepay = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#fff"/><path fill="#4285F4" d="M28 22.5c2.6 0 4.4 1.1 5.4 2l4-3.9C35.1 17.1 31.8 15.5 28 15.5c-5.8 0-10.8 3.4-13.2 8.3l4.6 3.6c1.1-3.3 4.2-5.7 8.6-5.7z"/><path fill="#34A853" d="M14.2 33.5l4.6-3.6c.8 2.5 3 4.4 5.7 5.1v5c-4.8-.9-8.6-4.5-10.3-9.5z"/><path fill="#FBBC05" d="M28 40.5c-3.4 0-6.4-1.2-8.7-3.1l-4.8 3.7c3 2.7 7 4.4 13.5 4.4 3.7 0 6.9-1.3 9.4-3.4l-4.3-3.5c-1.3.9-3.1 1.5-5.1.9z"/><path fill="#EA4335" d="M42.5 28c0-.9-.1-1.8-.2-2.7H28v5.4h8.1c-.4 2-1.5 3.6-3 4.7l4.3 3.5c2.5-2.4 4.1-5.9 4.1-10.9z"/></svg>`;
+
+// ── CRYPTO REAL SVGs
+LOGOS.uniswap = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF007A"/><path fill="#fff" d="M22.5 17.5c-.4-.1-.5 0-.5.4v4.7c-1.7.6-3 2.2-3 4.1 0 2.4 2 4.3 4.5 4.3s4.5-1.9 4.5-4.3c0-1.7-.9-3.1-2.3-3.8V18c3.8.4 6.8 3.6 6.8 7.7 0 4.3-3.5 7.8-7.7 7.8S17 30 17 25.7c0-3.7 2.5-6.8 6-7.5zm5.5 17l2 7-6-2 4-5zm-1 2.5l-1 1.5 2.5.8z"/></svg>`;
+LOGOS.solflare = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FC8B00"/><path fill="#fff" d="M28 12l4 7h-3v8l8 13H19l8-13V19h-3zm0 6v8l-5 9h10l-5-9z"/></svg>`;
+LOGOS.exodus = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0B0C22"/><path fill="#8B44EF" d="M28 14l12 7v14l-12 7-12-7V21zm0 5l-8 4.7v9.6l8 4.7 8-4.7v-9.6zm0 4l4 2.3v4.6l-4 2.3-4-2.3V25.3z"/></svg>`;
+LOGOS.trezor = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A1A1A"/><path fill="#00854D" d="M28 12c-5.5 0-10 4-10 9v2H15v18h26V23h-3v-2c0-5-4.5-9-10-9zm0 5c2.8 0 5 2 5 4v2H23v-2c0-2 2.2-4 5-4zm-5 10h10v5.5L28 35l-5-2.5z"/></svg>`;
+LOGOS.htx = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#2DB8BE"/><path fill="#fff" d="M16 36V20h5v6h6v-6h5v16h-5v-6h-6v6zm23-16l-3 16h-4l3-16z"/></svg>`;
+LOGOS.bybit = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1E1E1E"/><path fill="#F7A600" d="M16 20h9c4 0 6.5 2.2 6.5 5.5 0 1.5-.5 2.8-1.5 3.7 1.5 1 2.5 2.6 2.5 4.8 0 3.5-2.8 6-7 6H16zm5 4v4h3.5c1.2 0 2-.7 2-2s-.8-2-2-2zm0 8v4h4c1.3 0 2.2-.8 2.2-2s-.9-2-2.2-2z"/></svg>`;
+LOGOS.kucoin = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#23AF91"/><path fill="#fff" d="M22 20h5v6l7-6h6l-9 8 9 8h-6l-7-6v6h-5z"/></svg>`;
+LOGOS.okx = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0A0A0A"/><rect x="15" y="21" width="8" height="8" rx="2" fill="#fff"/><rect x="24" y="21" width="8" height="8" rx="2" fill="#fff"/><rect x="33" y="21" width="8" height="8" rx="2" fill="#fff"/><rect x="15" y="30" width="8" height="8" rx="2" fill="#fff"/><rect x="24" y="30" width="8" height="8" rx="2" fill="#fff" opacity=".3"/><rect x="33" y="30" width="8" height="8" rx="2" fill="#fff"/></svg>`;
+LOGOS.gateio = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#2354E6"/><path fill="#fff" d="M28 16a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm4 15h-8v-3h5v-4h-5v-3h8z"/></svg>`;
+LOGOS.bitfinex = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#16B157" d="M22 20h9c3.5 0 5.5 1.7 5.5 4.5 0 1.5-.6 2.6-1.7 3.4 1.5.8 2.4 2.2 2.4 4.1 0 3.2-2.3 5-6.2 5H22zm4 4v3h4c1 0 1.5-.6 1.5-1.5S31 23 30 23zm0 7v3.5h4.5c1.2 0 1.9-.7 1.9-1.8 0-1-.7-1.7-1.9-1.7z"/></svg>`;
+LOGOS.bitstamp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#33B14B"/><path fill="#fff" d="M26.5 19.5c-4.3.3-7.2 2.5-7.2 6 0 3.2 2.5 5 7 6.2 3 .8 4.2 1.4 4.2 2.5 0 1.2-1.3 1.9-3.2 1.9-2.5 0-4.7-.9-6.6-2.4l-2 3.3c2.2 1.7 5 2.6 8 2.6 4.6 0 7.8-2.4 7.8-6.2 0-3.1-2.3-5-7-6.2-2.9-.8-4-1.4-4-2.4 0-1 1-1.7 2.7-1.7 2 0 3.8.7 5.3 1.8l2-3.3c-1.8-1.3-4.1-2.1-7-2.1z"/></svg>`;
+LOGOS.gemini = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#05CEBB"/><path fill="#fff" d="M22 14v14a6 6 0 0 0 12 0V14h-5v13a1 1 0 0 1-2 0V14z"/></svg>`;
+LOGOS.poloniex = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1C1E2B"/><path fill="#35D07F" d="M16 38V18h10c5.5 0 9 3 9 8.5S31.5 35 26 35H21v3zm5-8h5c2.5 0 4-1.4 4-3.5S28.5 23 26 23H21z"/></svg>`;
+LOGOS.mexc = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1849A9"/><path fill="#fff" d="M15 36l5-13 5 9 5-9 5 13h-4l-1.5-4.5L30 35l-4.5-8L24 35l-1.5-3.5z"/></svg>`;
+LOGOS.phemex = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1E88E5"/><path fill="#fff" d="M22 20h9c4 0 6.5 2.8 6.5 6.5S35 33 31 33h-4v5h-5zm5 4v5.5h3.5c1.5 0 2.5-.9 2.5-2.8 0-1.8-1-2.7-2.5-2.7z"/></svg>`;
+LOGOS.lbank = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1E3A8A"/><path fill="#fff" d="M20 38V18h5v16h11v4z"/></svg>`;
+LOGOS.coinex = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00AEF0"/><circle cx="28" cy="28" r="13" fill="#fff" opacity=".2"/><path fill="#fff" d="M28 18a10 10 0 1 0 0 20A10 10 0 0 0 28 18zm3.5 12H26.5a3.5 3.5 0 1 1 0-4h5a3.5 3.5 0 1 1 0 4z"/></svg>`;
+LOGOS.bitget = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00F0FF" opacity=".1"/><rect width="56" height="56" rx="13" fill="#1DB3BE"/><path fill="#fff" d="M22 20h9c3.8 0 6.2 2.2 6.2 5.3 0 1.8-.8 3.2-2.2 4.2l3.5 8.5H34l-3-7.5H27v7.5h-5zm5 4v4h3.5c1.3 0 2.2-.8 2.2-2s-.9-2-2.2-2z"/></svg>`;
+LOGOS.dydx = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#6966FF"/><path fill="#fff" d="M16 20h9c5 0 9 4 9 8.5S30 37 25 37h-9zm5 4v9h4c2.5 0 4-1.8 4-4.5S27.5 24 25 24z"/></svg>`;
+LOGOS.pionex = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00D4AA"/><path fill="#fff" d="M22 20h9c4 0 6.5 2.8 6.5 6.5S35 33 31 33h-4v5h-5zm5 4v5.5h3.5c1.5 0 2.5-.9 2.5-2.8 0-1.8-1-2.7-2.5-2.7z"/></svg>`;
+LOGOS.bitmartex = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1B2A47"/><path fill="#1785F7" d="M22 20h8.5c3.8 0 6 1.9 6 5 0 1.4-.5 2.6-1.4 3.4 1.3.9 2.1 2.3 2.1 4 0 3.2-2.4 5.1-6.2 5.1H22zm4 4v3.5h4c1 0 1.6-.6 1.6-1.8 0-1-.6-1.7-1.6-1.7zm0 7v4h4.5c1.2 0 2-.7 2-2s-.8-2-2-2z"/></svg>`;
+LOGOS.cryptocom = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002D74"/><path fill="#fff" d="M28 14a14 14 0 1 0 0 28 14 14 0 0 0 0-28zm0 5l7 4v8l-7 4-7-4v-8zm0 3.5l-4 2.3v4.4l4 2.3 4-2.3v-4.4z"/></svg>`;
+LOGOS.huobi = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#2B3C8E"/><path fill="#fff" d="M22 38V18h5v7h7v-7h5v20h-5V29H27v9z"/></svg>`;
+
+// ── STREAMING REAL SVGs
+LOGOS.hulu = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1CE783"/><path fill="#000" d="M17 38V18h5v8h8V18h5v20h-5V30h-8v8z"/></svg>`;
+LOGOS.disneyplus = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#040D3C"/><path fill="#fff" d="M16 28c0-5.3 2.8-9 7.5-9s7.5 3.7 7.5 9-2.8 9-7.5 9-7.5-3.7-7.5-9zm7.5-5.5c-2 0-3.5 2.1-3.5 5.5s1.5 5.5 3.5 5.5 3.5-2.1 3.5-5.5-1.5-5.5-3.5-5.5zM34 19h4v18h-4z"/></svg>`;
+LOGOS.hbomax = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#4B00D1"/><path fill="#fff" d="M13 36V20h5v6h6V20h5v16h-5V30h-6v6zm17-16h11l-4 8 4 8H30l-3.5-8z"/></svg>`;
+LOGOS.paramountplus = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0064FF"/><path fill="#fff" d="M28 14l-16 9v4l8-4.5V42h16V22.5l8 4.5v-4zm0 5.5l8 4.5V38H20V24z"/></svg>`;
+LOGOS.peacock = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#F50" d="M28 28l-8-14h4l4 7 4-7h4z"/><path fill="#FFD700" d="M28 28l14-8v4l-7 4 7 4v4z"/><path fill="#00C300" d="M28 28l8 14h-4l-4-7-4 7h-4z"/><path fill="#0099FF" d="M28 28L14 36v-4l7-4-7-4v-4z"/><circle cx="28" cy="28" r="4" fill="#fff"/></svg>`;
+LOGOS.appletvplus = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M21 24c-.2-1.8.7-3.6 2-4.8 1.3-1.3 3.3-2.1 5-2.2.2 2-.6 4-1.8 5.3-1.2 1.3-3 2.3-5.2 1.7zm4.8 2.7c-1.4-.1-4 1.7-6.1 1.7-2.1 0-4.6-1.5-6.7-1.5-3.4.1-6.5 2-8.2 5.2-3.5 6-1 15 2.5 20 1.7 2.4 3.8 5 6.4 5 2.5-.1 3.5-1.6 6.5-1.6s4 1.6 6.5 1.5c2.7-.1 4.5-2.5 6.2-4.9 1.9-2.7 2.6-5.3 2.7-5.6-.1 0-5.2-2-5.2-7.8-.1-4.9 4-7.2 4.2-7.4-2.4-3.4-5.9-3.8-7.1-3.8-1.5 0-3.3.8-5.1 1.2z"/></svg>`;
+LOGOS.amazonprime = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00A8E1"/><path fill="#fff" d="M16 36V20h8.5c4 0 6.5 2.5 6.5 6 0 3.6-2.5 6-6.5 6H21v4zm5-9h3.5c1.5 0 2.5-1 2.5-3s-1-3-2.5-3H21zm10 9V20h5v16z"/></svg>`;
+LOGOS.discoveryplus = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M16 36V20h9.5c5.5 0 9 3.5 9 8s-3.5 8-9 8zm5-4h4.5c2.5 0 4-1.5 4-4s-1.5-4-4-4H21z"/></svg>`;
+LOGOS.espnplus = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E8002D"/><path fill="#fff" d="M15 38V18h14v4H20v4h8v4h-8v4h9v4zm17-10h3v-5h5v5h3v-5h5v5h-5v5h5v-5h-3v-5h-5v5h-5v-5h-3z"/></svg>`;
+LOGOS.crunchyroll = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F47521"/><circle cx="28" cy="28" r="14" fill="#fff"/><circle cx="28" cy="28" r="9" fill="#F47521"/><circle cx="28" cy="28" r="4" fill="#fff"/></svg>`;
+LOGOS.funimation = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#410099"/><path fill="#fff" d="M18 36V20h14v4H23v4h8v4h-8v8z"/></svg>`;
+LOGOS.fubo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E8072D"/><path fill="#fff" d="M16 36V20h12v4H21v4h6v4h-6v8zm14-16h6c3.5 0 6 2.2 6 5.5S39.5 31 36 31h-2v5h-4zm4 4v4h2c1.2 0 2-.8 2-2s-.8-2-2-2z"/></svg>`;
+LOGOS.sling = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0097D4"/><path fill="#fff" d="M26 22c-3.3.2-5.5 2-5.5 4.8 0 2.8 2 4.3 5.5 5.2 2.5.7 3.5 1.2 3.5 2.1 0 1-.9 1.7-2.5 1.7-1.9 0-3.6-.8-5-2l-2 2.7c1.7 1.5 3.9 2.4 7 2.4 3.7 0 6.5-2 6.5-5.2 0-2.7-1.8-4.3-5.5-5.3-2.4-.7-3.3-1.1-3.3-2 0-.9.8-1.6 2.3-1.6s2.9.6 4.1 1.6l2-2.7c-1.5-1.2-3.5-1.9-6-1.9z"/></svg>`;
+LOGOS.tubi = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FA4928"/><path fill="#fff" d="M17 22h8v16h-4V26H17zm10 0h5v10c0 4-2.5 6.5-6.5 6.5v-4c1.5 0 2.5-1 2.5-2.5V22z"/></svg>`;
+LOGOS.plutotv = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M18 36V20h8c4.5 0 7.5 2.8 7.5 7s-3 7-7.5 7h-3.5v2zm4.5-6h3.5c2 0 3-1.2 3-3s-1-3-3-3h-3.5z"/></svg>`;
+LOGOS.vudu = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#3399CC"/><path fill="#fff" d="M16 20l7 18h5l7-18h-5l-4.5 12-4.5-12z"/></svg>`;
+LOGOS.philo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#494FB5"/><path fill="#fff" d="M18 38V18h8.5c4.5 0 7.5 2.8 7.5 7s-3 7-7.5 7H23v6zm5-10h3.5c2 0 3-1.2 3-3s-1-3-3-3H23z"/></svg>`;
+LOGOS.googletvapp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A73E8"/><path fill="#fff" d="M18 22v12h20V22zm4 4h12v4H22z"/><path fill="#fff" d="M25 34h6v3H25z"/></svg>`;
+
+// ── BANKS REAL SVGs
+LOGOS.bankofamerica = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E31837"/><path fill="#fff" d="M20 38l8-20 8 20h-5l-1.5-4h-4l-1.5 4zm7.5-8.5h1l-0.5-1.5z"/></svg>`;
+LOGOS.jpmorganchase = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M15 38V18h13c3 0 5.5 2 5.5 5s-2.5 5-5.5 5h-7v10zm6-14.5v5H24c1.5 0 2.5-1 2.5-2.5S25.5 24 24 24zm10.5 14.5V18h5v20z"/></svg>`;
+LOGOS.usbank = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#D11F2E"/><path fill="#fff" d="M20 28V18h5v9.5c0 2 1.2 3.5 3 3.5s3-1.5 3-3.5V18h5v10c0 5-3.5 8-8 8s-8-3-8-8z"/></svg>`;
+LOGOS.tdbank = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#34B233"/><path fill="#fff" d="M16 22h10v16h-5V26H16zm11 0h9.5c5 0 8 3 8 8s-3 8-8 8H27zm5 4v8h4.5c2 0 3.5-1.5 3.5-4s-1.5-4-3.5-4z"/></svg>`;
+LOGOS.ally = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#800000"/><path fill="#fff" d="M22 36l6-18 6 18h-4.5l-1-3h-3l-1 3zm5.5-7h1l-.5-2z"/></svg>`;
+LOGOS.morganstanley = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003C7E"/><path fill="#fff" d="M13 36V20h5l4 11 4-11h5v16h-4.5V26l-3 10h-3l-3-10V36z"/></svg>`;
+LOGOS.goldmansachs = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A1A1A"/><path fill="#fff" d="M16 36V20h14v4H21v3.5h8v4h-8V32h9v4zm15.5 0V20h4.5v16z"/></svg>`;
+LOGOS.scotiabank = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#EC111A"/><path fill="#fff" d="M26.5 20c-3.8.2-6.5 2.3-6.5 5.8 0 3.1 2.2 4.8 6.2 5.8 2.8.7 3.8 1.2 3.8 2 0 1-.9 1.6-2.3 1.6-2 0-4-.8-5.7-2.2L20 36c2 1.6 4.5 2.5 7.5 2.5 4.2 0 7-2.2 7-5.5 0-3-2.1-4.7-6.3-5.7-2.7-.7-3.6-1.1-3.6-2 0-.8.8-1.4 2.2-1.4 1.7 0 3.3.6 4.7 1.7l2-2.9c-1.8-1.3-4-2-6.5-2z"/></svg>`;
+LOGOS.rbc = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002F6C"/><path fill="#FFCE00" d="M28 14a14 14 0 1 0 0 28 14 14 0 0 0 0-28zm0 4a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-2 5v8l7-4z"/></svg>`;
+LOGOS.nab = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E00025"/><path fill="#fff" d="M16 36V20h5l9 12V20h5v16h-5L21 24v12z"/></svg>`;
+LOGOS.westpac = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#D5002B"/><path fill="#fff" d="M14 20l5 18h4l3-10 3 10h4l5-18h-4.5l-2.5 9.5-3-9.5h-4l-3 9.5L19.5 20z"/></svg>`;
+LOGOS.anz = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#007DBA"/><path fill="#fff" d="M16 36l6-16h5l6 16h-5l-1-3h-4l-1 3zm6-7h2l-1-3.5z"/></svg>`;
+LOGOS.ing = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF6200"/><path fill="#fff" d="M19 36V20h5v16zm8 0V20h4l8 11V20h5v16h-4L32 25v11z"/></svg>`;
+LOGOS.bbva = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#004481"/><path fill="#fff" d="M15 36V20h9c3.5 0 5.5 1.9 5.5 5 0 1.5-.7 2.8-1.8 3.6 1.4.9 2.3 2.4 2.3 4.4 0 3-2.3 5-6 5zm5-11h3.5c1 0 1.7-.6 1.7-1.6 0-1-.7-1.6-1.7-1.6H20zm0 7h4c1.2 0 2-.8 2-2s-.8-2-2-2h-4z"/></svg>`;
+LOGOS.n26 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M17 36V20h5l8 10.5V20h5v16h-5L22 25.5V36z"/></svg>`;
+LOGOS.chime = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1EC677"/><path fill="#fff" d="M28 16a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm4.5 14.5H26a5 5 0 0 1 0-3h6.5a5 5 0 0 1 0 3z"/></svg>`;
+LOGOS.creditsuisse = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0A5CA8"/><path fill="#fff" d="M20 28a8 8 0 1 1 16 0 8 8 0 0 1-8 11.5V36a5 5 0 0 0 0-10v-3.5a8 8 0 0 0-8 5.5z"/></svg>`;
+LOGOS.ubs = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E4003B"/><path fill="#fff" d="M18 27.5V18h5v9c0 2.5 1.7 4 4 4s4-1.5 4-4V18h5v9.5c0 5-3.8 8.5-9 8.5s-9-3.5-9-8.5z"/></svg>`;
+LOGOS.standardchartered = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0A6E5E"/><path fill="#fff" d="M28 14a14 14 0 1 0 0 28 14 14 0 0 0 0-28zm-2 5h4v4h4v4h-4v4h-4v-4h-4v-4h4z"/></svg>`;
+LOGOS.commerzbank = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FFCC33"/><path fill="#000" d="M28 14a14 14 0 1 0 0 28 14 14 0 0 0 0-28zm0 4a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 5v8l6-4z"/></svg>`;
+LOGOS.bnpparibas = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00965E"/><path fill="#fff" d="M16 36V20h9c3.5 0 5.5 2.2 5.5 5.5S28.5 31 25 31h-4v5zm5-9.5h3.5c1.2 0 2-.8 2-1.8S25.7 23 24.5 23H21zm10 9.5V20h5v16z"/></svg>`;
+LOGOS.qnb = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#8B0000"/><path fill="#fff" d="M28 14a14 14 0 1 0 5 27.2l2.5 2.8h4l-3.5-4A14 14 0 0 0 28 14zm0 4.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19z"/></svg>`;
+LOGOS.mashreq = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E3001B"/><path fill="#fff" d="M15 36V20h5l3 10 3-10h5l3 10 3-10h5l-5.5 16H32l-3-9-3 9h-5.5z"/></svg>`;
+LOGOS.emiratesnbd = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#CF0A1D"/><path fill="#fff" d="M15 36V20h14v4H20v3h8v4h-8v4h9v1h4v-16h5v16z"/></svg>`;
+LOGOS.fab = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0B2E5F"/><path fill="#fff" d="M16 36V20h14v4H21v4h8v4h-8v4z"/></svg>`;
+LOGOS.adcb = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#CE202E"/><path fill="#fff" d="M20 36l6-16h5l-6 16zm9 0V20h7c4.5 0 7.5 3 7.5 8s-3 8-7.5 8zm4.5-4h2.5c2 0 3.5-1.7 3.5-4s-1.5-4-3.5-4H33z"/></svg>`;
+LOGOS.rabobank = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF6600"/><path fill="#fff" d="M18 36V20h10c4 0 6.5 2.5 6.5 6 0 2.2-1 4-2.8 5l3.8 5H31l-3.5-4.5H23V36zm5-8.5h4.5c1.4 0 2.3-.9 2.3-2.2s-.9-2.2-2.3-2.2H23z"/></svg>`;
+LOGOS.abnamro = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#009286"/><path fill="#fff" d="M20 36l6-16h4l6 16h-4.5l-1-3h-5l-1 3zm5.5-7h3l-1.5-5z"/></svg>`;
+
+// ── AIRLINES REAL SVGs
+LOGOS.britishairways = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002267"/><path fill="#eb2226" d="M13 27h30v4H13z"/><path fill="#fff" d="M13 23h30v4H13z"/></svg>`;
+LOGOS.airfrance = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002157"/><path fill="#fff" d="M15 36V20h14v4H20v3.5h8v4H20V32h9v4zm16-16h5v16h-5z"/></svg>`;
+LOGOS.klm = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#009FDB"/><path fill="#fff" d="M16 36V20h5v7l7-7h6l-8 8 8 8h-6l-7-7v7zm21 0V20h5v16z"/></svg>`;
+LOGOS.easyjet = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF6600"/><path fill="#fff" d="M15 36V20h14v4H20v3.5h8v4H20V32h9v4z"/><path fill="#fff" d="M32 36V24h-4v-4h13v4h-4v12z"/></svg>`;
+LOGOS.ryanair = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#FFCE00" d="M13 28l6-6 6 6-6 6z"/><path fill="#fff" d="M26 28h17v3H26z"/></svg>`;
+LOGOS.singaporeairlines = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F5821F"/><path fill="#fff" d="M16 28l12-13 12 13H16zm7 1h10l-5 9z"/></svg>`;
+LOGOS.turkishairlines = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#C8102E"/><path fill="#fff" d="M28 18a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-3 5l6 5-6 5V23z"/></svg>`;
+LOGOS.etihad = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#BF9B30"/><path fill="#fff" d="M15 36V20h5v16zm7 0V20h4l8 11V20h5v16h-4L27 25v11z"/></svg>`;
+LOGOS.airarabia = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#C8102E"/><path fill="#fff" d="M20 36l6-16h4l6 16h-4.5l-1-3h-5l-1 3zm5.5-7h3l-1.5-5z"/></svg>`;
+
+// ── TECH REAL SVGs
+LOGOS.slack = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#4A154B"/><path fill="#E01E5A" d="M20 29a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2a3 3 0 0 0 0 6h3v-6z"/><path fill="#36C5F0" d="M27 29h6v3a3 3 0 1 1-6 0z"/><path fill="#2EB67D" d="M33 22a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm-2 8a3 3 0 0 0 0-6h-3v6z"/><path fill="#ECB22E" d="M29 29h-6v-3a3 3 0 1 1 6 0z"/></svg>`;
+LOGOS.zoom = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#2D8CFF"/><path fill="#fff" d="M14 23a3 3 0 0 1 3-3h15a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3zm24-1l5 4v8l-5 4z"/></svg>`;
+LOGOS.salesforce = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00A1E0"/><path fill="#fff" d="M28 16a7 7 0 0 1 6.5 4.5A5.5 5.5 0 0 1 42 26a5.5 5.5 0 0 1-5.5 5.5H20A5.5 5.5 0 0 1 14.5 26a5.5 5.5 0 0 1 5-5.5A7 7 0 0 1 28 16z"/></svg>`;
+LOGOS.oracle = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F80000"/><path fill="#fff" d="M16 28a12 12 0 1 1 24 0 12 12 0 0 1-24 0zm7 0a5 5 0 1 0 10 0 5 5 0 0 0-10 0z"/></svg>`;
+LOGOS.sap = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1872C4"/><path fill="#fff" d="M14 36V20h10c4.5 0 7.5 2.8 7.5 7s-3 7-7.5 7h-5v2zm5-5h4.5c2 0 3.5-1.3 3.5-3s-1.5-3-3.5-3H19zm12 5V20h5v16z"/></svg>`;
+LOGOS.ibm = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#054ADA"/><path fill="#fff" d="M12 22h8v2H12zm4 4h4v2h-4zm-4 4h8v2H12zm12-8h8v2H24zm0 4h4v2h-4zm0 4h8v2H24zm11-8h5l3 8 3-8h5v2h-3l-2.5 6H36l-2.5-6H31z"/></svg>`;
+LOGOS.adobe = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF0000"/><path fill="#fff" d="M14 40L28 12l14 28h-8l-2-5H24l-2 5zm14-18l4 9h-8z"/></svg>`;
+LOGOS.intel = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0071C5"/><path fill="#fff" d="M17 36V20h5v16zm8 0V20h4l9 11V20h5v16h-4L35 25v11z"/></svg>`;
+LOGOS.amd = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#ED1C24" d="M14 38l7-26h5l7 19 7-19h5l-9 26h-5l-6-17-5 17z"/></svg>`;
+LOGOS.nvidia = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#76B900"/><path fill="#fff" d="M22 36V20h5l6 10V20h5v16h-5l-6-10v10z"/></svg>`;
+LOGOS.cloudflare = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F38020"/><path fill="#fff" d="M33.5 32.5a5.5 5.5 0 0 1-5.5-5.5 5.5 5.5 0 0 1 5.5-5.5c.6 0 1.2.1 1.7.3a8 8 0 0 0-15.2 0c-.5-.2-1.1-.3-1.7-.3a5.5 5.5 0 0 0 0 11h15.2z"/></svg>`;
+LOGOS.twilio = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F22F46"/><circle cx="28" cy="28" r="14" fill="#fff" opacity=".2"/><circle cx="23" cy="23" r="4" fill="#fff"/><circle cx="33" cy="23" r="4" fill="#fff"/><circle cx="23" cy="33" r="4" fill="#fff"/><circle cx="33" cy="33" r="4" fill="#fff"/></svg>`;
+LOGOS.okta = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#007DC1"/><path fill="#fff" d="M28 16a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 6a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>`;
+LOGOS.datadog = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#632CA6"/><path fill="#fff" d="M28 14l-14 8v16l14 4 14-4V22zm0 5l9 5.5v9L28 35l-9-1.5V24.5z"/></svg>`;
+LOGOS.hashicorp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M28 12l-12 7v12l5 3V21.5l7-4 7 4v12.5l5-3V19z"/></svg>`;
+LOGOS.dropbox = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0061FF"/><path fill="#fff" d="M20 14l-8 5.2 8 5.2L28 19zm16 0l-8 5.2 8 5.2 8-5.2zm-16 10l-8 5.3 8 5.2L28 29zm16 0l-8 5.3 8 5.2 8-5.2zM24 36.5l8 5.2 8-5.2-8-5.2z"/></svg>`;
+LOGOS.uber = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M20 27.5V18h5v9c0 3.3 1.3 5 3.5 5s3.5-1.7 3.5-5V18h5v9.5c0 6-3.5 9.5-8.5 9.5S20 33.5 20 27.5z"/></svg>`;
+LOGOS.airbnb = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M28 13c-3 0-5.5 2.5-5.5 5.5 0 4.5 5.5 11.5 5.5 11.5s5.5-7 5.5-11.5c0-3-2.5-5.5-5.5-5.5zm0 3.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM19.5 29c-2.2 0-4 1.8-4 4 0 3.7 5 8 12.5 10.5C35.5 41 40.5 36.7 40.5 33c0-2.2-1.8-4-4-4-1.2 0-2.3.5-3 1.3-.8-.8-1.8-1.3-3-1.3-.7 0-1.4.2-2 .6-.6-.4-1.3-.6-2-.6z"/></svg>`;
+LOGOS.meta = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0082FB"/><path fill="#fff" d="M14 30.5c0 3 1.5 5 4 5s4.5-2.5 6.5-6.5c1.5-3 2.5-5 4.5-5 2.5 0 3.5 2.5 3.5 5 0 2.5-1 4-2.5 4v4c3.5 0 6.5-3.5 6.5-8 0-5-2.5-9-7.5-9-4 0-6.5 4-8 7-1 2-2 4-3 4-1.5 0-2-1.5-2-3 0-2 1.5-4 3.5-4v-4c-3.5.5-5.5 5-5.5 10z"/></svg>`;
+
+// ── GOVERNMENT REAL SVGs
+LOGOS.dhs = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M28 13l-15 5v10c0 8.3 6.4 16.1 15 18 8.6-1.9 15-9.7 15-18V18z"/><path fill="#003087" d="M28 18l-10 3.3v7c0 5 3.5 9.5 10 11 6.5-1.5 10-6 10-11v-7z"/></svg>`;
+LOGOS.tsa = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002868"/><path fill="#fff" d="M16 22h10v16h-4V26H16zm12 0h5v8c0 4.5 2.5 7 7 6.5v4c-7 .5-12-3.5-12-10.5z"/></svg>`;
+LOGOS.uscis = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M20 27.5V18h5v9.5c0 2.7 1 4 3 4s3-1.3 3-4V18h5v9.5c0 5.5-3 9-8 9s-8-3.5-8-9z"/></svg>`;
+LOGOS.dmv = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A3C6E"/><path fill="#fff" d="M16 36V20h9.5c5 0 8.5 3.5 8.5 8s-3.5 8-8.5 8zm5-4h4.5c2.5 0 4-1.5 4-4s-1.5-4-4-4H21zm14 4V20h5v16z"/></svg>`;
+LOGOS.nsa = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#12284C"/><path fill="#fff" d="M17 36V20h5l9 12V20h5v16h-5L22 24v12z"/></svg>`;
+LOGOS.fbi = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M16 36V20h14v4H21v4h8v4h-8v4zm16 0V20h9c3 0 5 2 5 5 0 1.5-.7 2.8-1.8 3.5C46.6 29.5 47 31 47 33c0 3.5-3 5.5-6 5.5zm5-4.5h3.5c1 0 1.5-.5 1.5-1.3 0-.8-.5-1.3-1.5-1.3H37zm0-6h3c1 0 1.5-.5 1.5-1.2S41 23 40 23H37z"/></svg>`;
+LOGOS.cia = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M22 36V20h5v16zm8 0V20h9c4.5 0 7.5 3.5 7.5 8s-3 8-7.5 8zm5-4h4c2 0 3.5-1.5 3.5-4s-1.5-4-3.5-4H35z"/></svg>`;
+LOGOS.ftc = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002868"/><path fill="#fff" d="M15 36V20h14v4H20v4h8v4h-8v4zm15 0V24h-4v-4h13v4h-4v12z"/></svg>`;
+LOGOS.sec = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0A3161"/><path fill="#fff" d="M26 20c-4.4.2-7.5 2.5-7.5 6.5 0 3.7 2.7 5.5 7.7 6.8 3 .8 4 1.3 4 2.2 0 1.1-1 1.8-2.8 1.8-2.3 0-4.5-.9-6.3-2.4l-2.1 3.2c2.2 1.8 5.2 2.8 8.7 2.8 4.8 0 8-2.5 8-6.2 0-3.5-2.5-5.3-7.8-6.7-2.7-.7-3.8-1.2-3.8-2.2 0-1 .9-1.7 2.5-1.7 1.9 0 3.7.7 5.2 1.9l2-2.9c-1.8-1.4-4.3-2.2-7.4-2.2z"/></svg>`;
+LOGOS.usps = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#333366"/><path fill="#BE0000" d="M10 20h36v16H10z"/><path fill="#fff" d="M10 20l18 12 18-12z"/></svg>`;
+LOGOS.sba = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#004B87"/><path fill="#fff" d="M25.5 20c-3.8.2-6.5 2.3-6.5 5.8 0 3.1 2.2 4.8 6.2 5.8 2.8.7 3.8 1.2 3.8 2 0 1-.9 1.6-2.3 1.6-2 0-4-.8-5.7-2.2L19 36c2 1.6 4.5 2.5 7.5 2.5 4.2 0 7-2.2 7-5.5 0-3-2.1-4.7-6.3-5.7-2.7-.7-3.6-1.1-3.6-2 0-.8.8-1.4 2.2-1.4 1.7 0 3.3.6 4.7 1.7l2-2.9c-1.8-1.3-4-2-6.5-2z"/></svg>`;
+LOGOS.nasa = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><ellipse cx="28" cy="28" rx="20" ry="9" fill="none" stroke="#0B3D91" stroke-width="3"/><ellipse cx="28" cy="28" rx="14" ry="14" fill="none" stroke="#FC3D21" stroke-width="3"/><circle cx="28" cy="28" r="6" fill="#0B3D91"/></svg>`;
+LOGOS.medicaid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#00649E"/><path fill="#fff" d="M25 14h6v11h11v6H31v11h-6V31H14v-6h11z"/></svg>`;
+LOGOS.medicare = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M25 14h6v11h11v6H31v11h-6V31H14v-6h11z"/></svg>`;
+LOGOS.va = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M17 20l8 18h6l8-18h-5l-5.5 13L23 20z"/></svg>`;
+
+// ── AUDIO/MUSIC REAL SVGs
+LOGOS.amazonmusic = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A73E8"/><path fill="#fff" d="M28 15a13 13 0 0 0-13 13 13 13 0 0 0 13 13 13 13 0 0 0 13-13 13 13 0 0 0-13-13zm-4 9h8v2h-8zm0 4h8v2h-8zm0 4h6v2h-6z"/></svg>`;
+LOGOS.deezer = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#A238FF"/><rect x="14" y="22" width="4" height="12" rx="2" fill="#40AB00"/><rect x="20" y="18" width="4" height="16" rx="2" fill="#FF0092"/><rect x="26" y="20" width="4" height="14" rx="2" fill="#FF3A00"/><rect x="32" y="24" width="4" height="10" rx="2" fill="#FFF"/><rect x="38" y="22" width="4" height="12" rx="2" fill="#40AB00"/></svg>`;
+LOGOS.siriusxm = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#002868"/><path fill="#fff" d="M16 28a12 12 0 1 1 24 0 12 12 0 0 1-24 0zm12-7v14l7-7z"/></svg>`;
+LOGOS.lastfm = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#D51007"/><path fill="#fff" d="M24.5 28.5l-1.5 5.5-1-2.5c-.7 1.2-1.7 2-3.5 2-3 0-4.5-2.5-4.5-5.5 0-3 1.5-5.5 4.5-5.5 2.8 0 4 1.8 4 5zm8 5.5c2 0 3-1.2 3-3.8v-8.7h4v9c0 4.5-2.5 7-7 7-4 0-6.5-2.5-6.5-7v-9h4v8.7c0 2.6 1 3.8 2.5 3.8z"/></svg>`;
+LOGOS.mixcloud = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#5000FF"/><path fill="#fff" d="M35 28a7 7 0 0 1-7 7 7 7 0 0 1-7-7 7 7 0 0 1 7-7c1.2 0 2.3.3 3.3.8A5 5 0 0 0 27 22a5 5 0 0 0-5 5 5 5 0 0 0 5 5 5 5 0 0 0 5-5h3z"/></svg>`;
+LOGOS.napster = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><circle cx="28" cy="28" r="12" fill="none" stroke="#FF0" stroke-width="3"/><path fill="#FF0" d="M24 22h2v8l6-8h2v12h-2v-8l-6 8h-2z"/></svg>`;
+LOGOS.audiomack = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FFA200"/><path fill="#fff" d="M16 36V20h5v16zm7 0V20h5l5 12V20h5v16h-5l-5-12v12z"/></svg>`;
+LOGOS.datpiff = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#C82821"/><path fill="#fff" d="M16 36V20h9c5.5 0 9 3.5 9 8s-3.5 8-9 8zm5-4h4c2.5 0 4-1.5 4-4s-1.5-4-4-4H21z"/></svg>`;
+LOGOS.youtubemusic = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF0000"/><circle cx="28" cy="28" r="14" fill="#fff" opacity=".15"/><path fill="#fff" d="M24 21v14l12-7z"/></svg>`;
+
+// ── MISC/SOCIAL REAL SVGs
+LOGOS.bereal = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><text x="28" y="35" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="16" font-weight="900" fill="#fff">BeReal.</text></svg>`;
+LOGOS.clubhouse = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F1EDE4"/><circle cx="22" cy="22" r="7" fill="#000"/><circle cx="34" cy="22" r="7" fill="#000"/><path fill="#000" d="M12 42c0-8.8 7.2-16 16-16s16 7.2 16 16z"/></svg>`;
+LOGOS.tumblr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#34526F"/><path fill="#fff" d="M27 14h-5v7h-3v5h3v10c0 4.4 2.5 6.5 7 6.5 2 0 3.8-.4 5.3-1.2l-1.5-4.3c-.8.5-1.8.7-2.8.7-1.5 0-2.5-.8-2.5-2.7V26h6.5v-5H27z"/></svg>`;
+LOGOS.viber = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#665CA7"/><path fill="#fff" d="M28 12c-8.3 0-15 7-15 15.6 0 4.6 1.8 8.8 4.8 11.8v5.6l5.2-2.8c1.6.4 3.3.7 5 .7 8.3 0 15-7 15-15.6S36.3 12 28 12zm-3 9h6l-3.5 8.5zm-4.5 0h2.5l2.5 6-5-1zm15 0L31 27.5 33.5 21zm-11 8h8l-4 7z"/></svg>`;
+
+// ── FINAL BATCH — replacing all remaining rect+text placeholders
+
+// bereal — wordmark on black
+LOGOS.bereal = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40" width="100" height="40"><rect width="100" height="40" rx="8" fill="#000"/><text x="50" y="28" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="18" font-weight="900" fill="#fff" letter-spacing="-1">BeReal.</text></svg>`;
+
+// wellsfargo — proper WF stagecoach
+LOGOS.wellsfargo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#B8202F"/><path fill="#FFCD41" d="M13 33h30v2H13zm3-9h24v7H16zm0 0l4-5h16l4 5z"/><circle cx="21" cy="37" r="2" fill="#FFCD41"/><circle cx="35" cy="37" r="2" fill="#FFCD41"/></svg>`;
+
+// emirates — airline livery
+LOGOS.emirates = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#C60C30"/><path fill="#fff" d="M14 22h28v4H14zm0 8h28v4H14z"/><path fill="#C60C30" d="M22 26h12v2H22z"/></svg>`;
+
+// united — UA globe
+LOGOS.united = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003580"/><circle cx="28" cy="28" r="13" fill="none" stroke="#fff" stroke-width="2"/><path fill="#fff" stroke="#fff" stroke-width="1" d="M15 28h26M28 15v26M18 18l20 20M38 18L18 38" opacity=".5"/><circle cx="28" cy="28" r="5" fill="#fff"/></svg>`;
+
+// ssa — Social Security seal
+LOGOS.ssa = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003F72"/><path fill="#fff" d="M28 13c-8.3 0-15 6.7-15 15s6.7 15 15 15 15-6.7 15-15-6.7-15-15-15zm0 5a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-3 5l5 5-5 5V23z"/></svg>`;
+
+// statedept — State Dept eagle
+LOGOS.statedept = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A3C6E"/><path fill="#fff" d="M28 12l-2 8-6-6 4 8-8-2 6 6-8 2 8 2-6 6 8-2-4 8 6-6 2 8 2-8 6 6-4-8 8 2-6-6 8-2-8-2 6-6-8 2 4-8-6 6z"/><circle cx="28" cy="28" r="6" fill="#1A3C6E"/><circle cx="28" cy="28" r="3" fill="#fff"/></svg>`;
+
+// monzo — coral M
+LOGOS.monzo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF3464"/><path fill="#fff" d="M14 38V18h5l4 12 4-12h5l4 12 4-12h5v20h-4.5V25l-3.5 10h-4l-3.5-10V38H29V25l-3.5 10h-4L18 25v13z"/></svg>`;
+
+// tutanota — red T shield
+LOGOS.tutanota = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#840010"/><path fill="#fff" d="M28 13L14 19v12c0 8.3 6 15.5 14 17 8-1.5 14-8.7 14-17V19zm-4 6h8v4h-3v12h-2V23h-3z"/></svg>`;
+
+// zohomail — orange Z
+LOGOS.zohomail = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E42527"/><path fill="#fff" d="M14 20h28v5L23 37h19v4H14v-5l19-12H14z"/></svg>`;
+
+// vimeo — teal V circle
+LOGOS.vimeo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1AB7EA"/><path fill="#fff" d="M40.5 22.8c-.5 5-4.3 11.8-7 15-2.8 3.3-5.2 5-7.2 5-3 0-5.5-3-7-9.5L16 23.5c-1-4.4 0-6.6 3-6.6 1.2 0 2.8 1 4.8 4.5 1.7 3 2.5 5 2.5 5.5 1.5-2.5 2.5-3.8 3.5-3.8 1.2 0 2.5 1.5 3.5 3.8 2.2-4 4-6 5.2-6 1.7 0 2.5 1.5 3 2z"/></svg>`;
+
+// youtubevideo — same as youtube
+LOGOS.youtubevideo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF0000"/><path fill="#fff" d="M40 21.5s-.3-2-1.2-2.8c-1.2-1.2-2.5-1.2-3.1-1.3C32 17.2 28 17.2 28 17.2s-4 0-7.7.2c-.6.1-1.9.1-3.1 1.3-.9.8-1.2 2.8-1.2 2.8S16 23.7 16 25.9v2.1c0 2.2.3 4.4.3 4.4s.3 2 1.2 2.8c1.2 1.2 2.7 1.2 3.4 1.3 2.4.2 8.1.3 8.1.3s4 0 7.7-.3c.6-.1 1.9-.1 3.1-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.2.3-4.4v-2.1c0-2.2-.3-4.4-.3-4.4zm-15 7.6v-7.6l8.3 3.8-8.3 3.8z"/></svg>`;
+
+// googletv — Google TV icon
+LOGOS.googletv = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#fff"/><path fill="#4285F4" d="M28 21a7 7 0 0 1 6.5 4.5A5 5 0 0 1 41 30a5 5 0 0 1-5 5H20a5 5 0 0 1-5-5 5 5 0 0 1 5-5.5A7 7 0 0 1 28 21z"/><rect x="24" y="37" width="8" height="3" fill="#4285F4"/><rect x="20" y="40" width="16" height="2" fill="#4285F4"/></svg>`;
+
+// sendgrid — blue SG
+LOGOS.sendgrid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A82E2"/><path fill="#fff" d="M14 28h14V14H14zM14 42h14V28H14zm14-14h14V14H28zm14 14V28H28v14z" opacity=".5"/><path fill="#fff" d="M14 28h14v14H14zm14-14h14v14H28z"/></svg>`;
+
+// fastmail — blue FM
+LOGOS.fastmail = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A1A2E"/><path fill="#fff" d="M12 20h32v16H12zm16 8l-14-8v14zm16-8l-16 8 16 8z" opacity=".7"/><path fill="#CF6224" d="M14 20l14 8 14-8z"/></svg>`;
+
+// hey — orange HEY
+LOGOS.hey = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FA4000"/><path fill="#fff" d="M16 36V20h5v6h6v-6h5v16h-5V30h-6v6zm17 0l6-16h5l-6 16z"/></svg>`;
+
+// airmail — red letter M
+LOGOS.airmail = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#E03434"/><path fill="#fff" d="M12 20h32v16H12zm0 0l16 10 16-10z"/><path fill="#E03434" d="M12 20l16 10 16-10z"/></svg>`;
+
+// basecampmail — green BC
+LOGOS.basecampmail = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1D9E6B"/><path fill="#fff" d="M16 36V20h9c3.5 0 5.5 1.9 5.5 5 0 1.5-.7 2.8-1.8 3.6 1.4.9 2.3 2.4 2.3 4.4 0 3-2.3 5-6 5zm5-11h3.5c1 0 1.7-.6 1.7-1.6 0-1-.7-1.6-1.7-1.6H21zm0 7h4c1.2 0 2-.8 2-2s-.8-2-2-2h-4z"/></svg>`;
+
+// superhuman — dark S
+LOGOS.superhuman = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0B0B0B"/><path fill="#fff" d="M26 22c-3.3.2-5 2-5 4.5 0 2.7 2 4 5.5 5 2.7.7 3.5 1.2 3.5 2 0 .9-.8 1.5-2.3 1.5-1.9 0-3.7-.8-5.2-2L21 35.5c1.8 1.6 4.2 2.5 7 2.5 3.8 0 6.5-2.1 6.5-5.1 0-2.9-2-4.4-5.8-5.4-2.4-.7-3.2-1.1-3.2-1.9 0-.8.7-1.4 2-1.4 1.6 0 3.1.6 4.4 1.6l1.8-2.8c-1.7-1.3-3.8-2-6.2-2z"/></svg>`;
+
+// acorntv — green A
+LOGOS.acorntv = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#2D7B3F"/><path fill="#fff" d="M22 36l6-18 6 18h-4.5l-1-3h-3l-1 3zm5.5-7h1l-.5-1.8z"/></svg>`;
+
+// britbox — dark blue BB
+LOGOS.britbox = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003087"/><path fill="#fff" d="M16 36V20h9c3.5 0 5.5 1.9 5.5 5 0 1.5-.7 2.8-1.8 3.6C30.1 29.5 31 31 31 33c0 3-2.3 5-6 5zm5-11h3.5c1 0 1.7-.6 1.7-1.6 0-1-.7-1.6-1.7-1.6H21zm0 7h4c1.2 0 2-.8 2-2s-.8-2-2-2h-4z"/></svg>`;
+
+// shudder — horror red
+LOGOS.shudder = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0A0A0A"/><path fill="#E20000" d="M28 12l-4 12h8zm0 14c-5 0-9 4-9 9h18c0-5-4-9-9-9zm-9 10h18v2H19z"/></svg>`;
+
+// mubi — black M film
+LOGOS.mubi = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M12 36V20h5l5 12 5-12h5l5 12V20h5v16h-5l-3-8-3 8h-4l-3-8-3 8z"/></svg>`;
+
+// criterion — black C
+LOGOS.criterion = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#fff" d="M32 20a10 10 0 1 0 0 16c1.8-1.1 3.2-2.8 3.8-4.8h-5A4.5 4.5 0 0 1 28 33a4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 1 2.8 1h5A10 10 0 0 0 32 20z"/></svg>`;
+
+// mhzchoice — purple M
+LOGOS.mhzchoice = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#5A2D82"/><path fill="#fff" d="M13 36V20h5l4 12 4-12h5l4 12 4-12h5v20h-4.5V26l-3 10h-4l-3-10V36z"/></svg>`;
+
+// livexlive — orange music
+LOGOS.livexlive = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F60"/><path fill="#fff" d="M18 36V20h5v12h9v4zm13-16l5 16h-5l-5-16z"/></svg>`;
+
+// luminary — gold mic
+LOGOS.luminary = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FFCC00"/><path fill="#000" d="M28 14a5 5 0 0 0-5 5v8a5 5 0 0 0 10 0v-8a5 5 0 0 0-5-5zm-9 12a9 9 0 0 0 18 0h-3a6 6 0 0 1-12 0zm9 9v5m-4 0h8" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+
+// radiopublic — blue radio waves
+LOGOS.radiopublic = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#CE262F"/><circle cx="28" cy="28" r="6" fill="#fff"/><path fill="none" stroke="#fff" stroke-width="2.5" d="M18 18a14 14 0 0 1 20 0M14 14a20 20 0 0 1 28 0M22 22a9 9 0 0 1 12 0"/></svg>`;
+
+// stitcher — green S
+LOGOS.stitcher = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#EB300A"/><path fill="#fff" d="M26 22c-3 .2-5 2-5 4.5 0 2.7 2 4 5.5 5 2.7.7 3.5 1.2 3.5 2 0 .9-.8 1.5-2.3 1.5-1.9 0-3.7-.8-5.2-2L21 35.5c1.8 1.6 4.2 2.5 7 2.5 3.8 0 6.5-2.1 6.5-5.1 0-2.9-2-4.4-5.8-5.4-2.4-.7-3.2-1.1-3.2-1.9 0-.8.7-1.4 2-1.4 1.6 0 3.1.6 4.4 1.6l1.8-2.8c-1.7-1.3-3.8-2-6.2-2z"/></svg>`;
+
+// breaker — blue podcast
+LOGOS.breaker = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0062FF"/><path fill="#fff" d="M28 16a12 12 0 0 0 0 24 12 12 0 0 0 0-24zm0 4a8 8 0 0 1 8 8h-4a4 4 0 0 0-4-4V20zm0 6v4l3 3-3 1a4 4 0 0 1-4-4 4 4 0 0 1 4-4z"/></svg>`;
+
+// castbox — orange CB
+LOGOS.castbox = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F55B23"/><path fill="#fff" d="M24 28a4 4 0 1 1 8 0 4 4 0 0 1-8 0zm4-9a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm0-5a14 14 0 0 0-14 14 14 14 0 0 0 14 14 14 14 0 0 0 14-14 14 14 0 0 0-14-14z"/></svg>`;
+
+// slacker — dark S radio
+LOGOS.slacker = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#2D2D2D"/><path fill="#fff" d="M26 22c-3 .2-5 2-5 4.5 0 2.7 2 4 5.5 5 2.7.7 3.5 1.2 3.5 2 0 .9-.8 1.5-2.3 1.5-1.9 0-3.7-.8-5.2-2L21 35.5c1.8 1.6 4.2 2.5 7 2.5 3.8 0 6.5-2.1 6.5-5.1 0-2.9-2-4.4-5.8-5.4-2.4-.7-3.2-1.1-3.2-1.9 0-.8.7-1.4 2-1.4 1.6 0 3.1.6 4.4 1.6l1.8-2.8c-1.7-1.3-3.8-2-6.2-2z"/></svg>`;
+
+// topic — dark red T film
+LOGOS.topic = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#B0001A"/><path fill="#fff" d="M17 22h8v16h-4V26H17zm12 0h4v16h-4z"/></svg>`;
+
+// eighttracks — 8t music
+LOGOS.eighttracks = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#122D4B"/><text x="28" y="35" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#fff">8</text></svg>`;
+
+// sundancenow — film reel
+LOGOS.sundancenow = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><circle cx="28" cy="28" r="13" fill="none" stroke="#fff" stroke-width="2"/><circle cx="28" cy="28" r="5" fill="#fff"/><circle cx="28" cy="16" r="2" fill="#fff"/><circle cx="28" cy="40" r="2" fill="#fff"/><circle cx="16" cy="28" r="2" fill="#fff"/><circle cx="40" cy="28" r="2" fill="#fff"/></svg>`;
+
+// spike — orange lightning
+LOGOS.spike = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1A1A2E"/><path fill="#FF6B35" d="M32 13H22l-5 16h7l-6 14 20-18H27z"/></svg>`;
+
+// audible — dark A
+LOGOS.audible = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#F8991D"/><path fill="#fff" d="M22 36l6-18 6 18h-4.5l-1-3h-3l-1 3zm5.5-7h1l-.5-2z"/></svg>`;
+
+// cathaypacific — brush wing
+LOGOS.cathaypacific = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#003B5C"/><path fill="#006564" d="M28 14l20 14H14z"/><path fill="#fff" d="M22 28l6 14 6-14z"/></svg>`;
+
+// ana — Japanese ANA wings
+LOGOS.ana = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0A1F6E"/><path fill="#fff" d="M16 36V20h5l9 12V20h5v16h-5L21 24v12z"/></svg>`;
+
+// qatarairways — burgundy QA
+LOGOS.qatarairways = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#5C0632"/><path fill="#C9A84C" d="M13 28h30v2H13z"/><path fill="#fff" d="M17 20h22v6H17zm5 10h12v6H22z"/></svg>`;
+
+// swissair — red SWISS cross
+LOGOS.swissair = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#CC0000"/><path fill="#fff" d="M25 14h6v11h11v6H31v11h-6V31H14v-6h11z"/></svg>`;
+
+// un — UN globe
+LOGOS.un = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#4B92DB"/><circle cx="28" cy="28" r="12" fill="none" stroke="#fff" stroke-width="2"/><path fill="none" stroke="#fff" stroke-width="1.5" d="M16 28h24M28 16v24M19 19a18 18 0 0 0 18 0M19 37a18 18 0 0 1 18 0"/><ellipse cx="28" cy="28" rx="5" ry="12" fill="none" stroke="#fff" stroke-width="1.5"/></svg>`;
+
+// ── MISSING + REMAINING PLACEHOLDERS
+
+// facebook — blue F
+LOGOS.facebook = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#1877F2"/><path fill="#fff" d="M31 29h4l.5-4H31v-2.5c0-1.1.5-2 2.3-2H36V17s-1.6-.3-3.2-.3c-3.3 0-5.4 2-5.4 5.6V25h-3.5v4H27v10h4z"/></svg>`;
+
+// instagram — gradient rainbow
+LOGOS.instagram = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="5%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="56" height="56" rx="13" fill="url(#ig)"/><rect x="14" y="14" width="28" height="28" rx="7" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="28" cy="28" r="7" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="37" cy="19" r="2" fill="#fff"/></svg>`;
+
+// gmail — G envelope
+LOGOS.gmail = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#fff"/><path fill="#EA4335" d="M12 20h32v16H12z"/><path fill="#34A853" d="M12 36h7V27l-7-7z"/><path fill="#4285F4" d="M44 36h-7V27l7-7z"/><path fill="#FBBC05" d="M12 20l16 12 16-12z"/><path fill="#EA4335" d="M19 27v9h18v-9l-9 6z"/></svg>`;
+
+// google — multicolor G
+LOGOS.google = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#fff"/><path fill="#4285F4" d="M28 22.5c2.8 0 4.8 1.2 5.9 2.2l4.4-4.3C36 17.1 32.4 15.5 28 15.5A12.5 12.5 0 0 0 15.5 28c0 5.1 2.9 9.5 7.2 11.7l4.5-3.5C24.5 34.8 22 31.7 22 28c0-3.3 2.7-5.5 6-5.5z"/><path fill="#34A853" d="M15.5 28c0 1.6.3 3.1.8 4.5l4.5-3.5a7.5 7.5 0 0 1-.3-2 7.5 7.5 0 0 1 .3-2l-4.5-3.5a12.5 12.5 0 0 0-.8 4.5z"/><path fill="#FBBC05" d="M15.5 23.5l4.5 3.5c1.1-3.3 4.2-5.5 8-5.5 2.8 0 4.8 1.2 5.9 2.2l4.4-4.3C36 17.1 32.4 15.5 28 15.5A12.5 12.5 0 0 0 15.5 28c0-1.6.3-3.1.8-4.5z"/><path fill="#EA4335" d="M28 40.5c3.8 0 7.1-1.3 9.6-3.5l-4.4-3.6c-1.4 1-3.2 1.6-5.2 1.6-3.5 0-6.5-2.4-7.6-5.6L16 33c2.4 4.4 7 7.5 12 7.5z"/><path fill="#4285F4" d="M40.5 28c0-.8-.1-1.5-.2-2.2H28v4.4h7c-.3 1.8-1.3 3.3-2.8 4.3l4.4 3.5C39.5 35.3 40.5 32 40.5 28z"/></svg>`;
+
+// linkedin — blue in
+LOGOS.linkedin = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#0A66C2"/><path fill="#fff" d="M16 20a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7zm-3 16V21h6v15zm10 0V21h5.7v2.1c.8-1.2 2.3-2.5 5.3-2.5 5.7 0 7 3.7 7 8.5V36H35V30c0-3.5-1.3-5-3.8-5s-4.2 1.8-4.2 5v6z"/></svg>`;
+
+// reddit — orange alien
+LOGOS.reddit = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#FF4500"/><circle cx="28" cy="30" r="12" fill="#fff"/><path fill="#FF4500" d="M44 28a4 4 0 0 0-4-4c-1 0-1.8.4-2.5 1-2.5-1.8-6-3-9.5-3.1l1.6-7.5 5.2 1.1a2.5 2.5 0 1 0 .3-2l-5.8-1.2-2 9c-3.7.1-7.2 1.2-9.7 3-.7-.6-1.5-1-2.5-1a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5v.5c0 6 7 11 15.5 11S41 38 41 32v-.5c1.2-.7 3-2 3-3.5zm-27 2a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm11 6c-2 0-3.5-1-3.5-1.5s1.5 0 3.5 0 3.5-.5 3.5 0-1.5 1.5-3.5 1.5zm6-4a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>`;
+
+// tiktok — TikTok note
+LOGOS.tiktok = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#000"/><path fill="#69C9D0" d="M31 14.5c.5 3 2.5 5 5.5 5.5v4c-2 0-3.8-.7-5.5-1.8V30c0 5-3.5 9-8.5 9S14 35 14 30s3.5-9 8.5-9c.3 0 .7 0 1 .1v4.1c-.3-.1-.7-.1-1-.1-2.5 0-4.5 2-4.5 4.9s2 4.9 4.5 4.9 4.5-2 4.5-4.9v-20z"/><path fill="#EE1D52" d="M33 12.5c.5 3 2.5 5 5.5 5.5v4c-2 0-3.8-.7-5.5-1.8V28c0 5-3.5 9-8.5 9S16 33 16 28s3.5-9 8.5-9c.3 0 .7 0 1 .1v4.1c-.3-.1-.7-.1-1-.1-2.5 0-4.5 2-4.5 4.9s2 4.9 4.5 4.9 4.5-2 4.5-4.9v-20z" opacity=".7"/></svg>`;
+
+// netflixvideo — same as netflix
+LOGOS.netflixvideo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#141414"/><path fill="#E50914" d="M18 13h5.6v13.4L29 13h5.6L28 28.7 34.6 43H29L23.6 29.6V43H18z"/></svg>`;
+
+// tunein — green radio
+LOGOS.tunein = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="13" fill="#02B7E5"/><circle cx="28" cy="28" r="5" fill="#fff"/><path fill="none" stroke="#fff" stroke-width="2.5" d="M20 20a11 11 0 0 1 16 0M16 16a17 17 0 0 1 24 0M24 24a6 6 0 0 1 8 0"/></svg>`;
+
+// bereal — proper B logo
+LOGOS.bereal = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40" width="100" height="40"><rect width="100" height="40" rx="8" fill="#000"/><text x="50" y="29" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="19" font-weight="900" fill="#fff" letter-spacing="-0.5">BeReal.</text></svg>`;
+
 // Returns the logo SVG for a brand key, or a fallback letter box
 export function getLogo(tplKey, brandName, accentColor) {
   if (LOGOS[tplKey]) return LOGOS[tplKey];
