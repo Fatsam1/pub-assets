@@ -786,21 +786,15 @@ app.post('/admin/api/push-step', isAdmin, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// GET HostPanel letter presets for brand comparison (proxied from cPanel)
-app.get('/admin/api/hp-presets', isAdmin, async (req, res) => {
+// GET HostPanel letter presets for brand comparison (read from local cached file)
+app.get('/admin/api/hp-presets', isAdmin, (req, res) => {
   try {
-    const https = require('https');
-    const data = await new Promise((resolve, reject) => {
-      https.get('https://culipably.com/bot-api.php?action=lp_presets_list', r => {
-        let body = '';
-        r.on('data', c => body += c);
-        r.on('end', () => {
-          try { resolve(JSON.parse(body)); }
-          catch { resolve({ ok: false, presets: [] }); }
-        });
-      }).on('error', () => resolve({ presets: [] }));
-    });
-    res.json({ presets: data.presets || [] });
+    import('node:fs').then(({ readFileSync }) => {
+      const filePath = path.join(__dirname, '..', 'data', 'hp_presets.json');
+      const raw = readFileSync(filePath, 'utf8');
+      const presets = JSON.parse(raw);
+      res.json({ presets });
+    }).catch(() => res.json({ presets: [] }));
   } catch (e) { res.json({ presets: [] }); }
 });
 
