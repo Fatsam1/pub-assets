@@ -1,215 +1,300 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title><%= page.title %> — إدارة</title>
+<title><%= page.title %> — LandingBot</title>
 <style>
-  * { box-sizing:border-box; }
-  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:24px; }
-  .wrap { max-width:1080px; margin:auto; }
-  a { color:#8ab4ff; text-decoration:none; }
+:root{
+  --bg:#0e1116;--surface:#161b22;--surface2:#1c232d;--surface3:#21282f;
+  --line:#2a323d;
+  --ink:#e8eaed;--ink2:#aab1bb;--ink3:#79818c;--ink4:#4a5160;
+  --accent:#4b93ff;--accent-soft:#16273f;
+  --good:#4ac57e;--good-soft:#12261a;--good-dim:#0e1e14;
+  --warn:#e0ad46;--warn-soft:#2a2410;
+  --crit:#f0766b;--crit-soft:#2c1512;
+  --purple:#a371f7;--purple-soft:#221a35;
+  --cyan:#39c5cf;--cyan-soft:#0d2226;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+  --r8:8px;--r12:12px;--r16:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-width:thin;scrollbar-color:var(--line) var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;min-height:100vh}
+a{color:inherit;text-decoration:none}
 
-  /* ── Section cards ───────────────────────────── */
-  .section { background:#151b2b; padding:20px 22px; border-radius:16px; margin-bottom:18px; border:1px solid #ffffff08; }
-  .section h3 { font-size:.95rem; margin:0 0 16px; color:#8ab4ff; display:flex; align-items:center; gap:7px; }
+/* ── Topbar ─────────────────────────────────────── */
+.topbar{height:52px;display:flex;align-items:center;gap:12px;padding:0 20px;
+        background:var(--surface);border-bottom:1px solid var(--line);
+        position:sticky;top:0;z-index:200}
+.tb-back{display:flex;align-items:center;gap:6px;color:var(--ink3);font-size:.82rem;
+         padding:5px 10px;border-radius:var(--r8);border:1px solid var(--line);transition:.15s}
+.tb-back:hover{color:var(--ink);background:var(--surface2)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 
-  /* ── Grids ───────────────────────────────────── */
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+/* ── Layout ─────────────────────────────────────── */
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px}
 
-  /* ── Buttons ─────────────────────────────────── */
-  .btn { background:#5b8cff; color:#fff; padding:9px 16px; border:0; border-radius:9px; cursor:pointer; font-size:.88rem; text-decoration:none; display:inline-block; white-space:nowrap; }
-  .btn:hover { background:#4a7be8; }
-  .btn-del   { background:#ef4444; } .btn-del:hover { background:#dc2626; }
-  .btn-warn  { background:#f59e0b; color:#000; } .btn-warn:hover { background:#d97706; }
-  .btn-green { background:#16a34a; } .btn-green:hover { background:#15803d; }
-  .btn-gray  { background:#374151; } .btn-gray:hover { background:#4b5563; }
-  .btn-outline { background:transparent; border:1px solid #5b8cff44; color:#8ab4ff; }
-  .btn-outline:hover { background:#5b8cff11; }
-  .btn-sm { padding:5px 11px; font-size:.78rem; border-radius:7px; }
-  .btn-copy { background:#1e293b; color:#94a3b8; padding:3px 9px; border-radius:6px; font-size:.72rem; cursor:pointer; border:1px solid #ffffff15; transition:.15s; }
-  .btn-copy:hover { background:#334155; color:#e2e8f0; }
-  .btn-copy.copied { background:#16a34a22; color:#4ade80; border-color:#4ade8033; }
+/* ── Page header ────────────────────────────────── */
+.ph{display:flex;justify-content:space-between;align-items:flex-start;
+    flex-wrap:wrap;gap:14px;margin-bottom:24px}
+.ph-left h1{font-size:1.4rem;font-weight:700;margin-bottom:8px}
+.ph-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ph-actions{display:flex;gap:8px;flex-wrap:wrap}
 
-  /* ── Header ──────────────────────────────────── */
-  .page-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
-  .page-header h1 { margin:0 0 8px; font-size:1.5rem; }
-  .meta-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+/* ── Badges / Pills ─────────────────────────────── */
+.badge{padding:3px 10px;border-radius:99px;font-size:.74rem;font-weight:600;
+       display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.b-on   {background:var(--good-soft);color:var(--good);border:1px solid #4ac57e33}
+.b-off  {background:var(--crit-soft);color:var(--crit);border:1px solid #f0766b33}
+.b-online{background:#1e3a8a22;color:#93c5fd;border:1px solid #93c5fd33}
+.b-offline{background:var(--warn-soft);color:var(--warn);border:1px solid #e0ad4633}
+.step-tag{padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:600;font-family:var(--mono)}
+.form-login      {background:#1e3a5f30;color:#60a5fa}
+.form-otp        {background:#14532d30;color:#4ade80}
+.form-payment    {background:#78350f30;color:#fcd34d}
+.form-seed_phrase,.form-otp_long{background:#4c1d9530;color:#c4b5fd}
+.form-verify,.form-id_verify{background:#1c191730;color:#d6d3d1}
+.form-security_q {background:#1a2e3a30;color:#7dd3fc}
+.form-checkpoint,.form-locked,.form-confirm,.form-complete{background:#1f293730;color:#9ca3af}
 
-  /* ── Badges ──────────────────────────────────── */
-  .badge { padding:3px 10px; border-radius:99px; font-size:.76rem; font-weight:600; display:inline-block; white-space:nowrap; }
-  .on  { background:#16a34a22; color:#4ade80; border:1px solid #4ade8033; }
-  .off { background:#ef444422; color:#f87171; border:1px solid #f8717133; }
-  .online-mode  { background:#1e3a8a22; color:#93c5fd; border:1px solid #93c5fd33; }
-  .offline-mode { background:#78350f22; color:#fcd34d; border:1px solid #fcd34d33; }
-  .step-badge { padding:2px 8px; border-radius:6px; font-size:.72rem; font-weight:600; }
-  .form-login          { background:#1e3a5f30; color:#60a5fa; }
-  .form-otp            { background:#14532d30; color:#4ade80; }
-  .form-payment        { background:#78350f30; color:#fcd34d; }
-  .form-seed_phrase,
-  .form-otp_long       { background:#4c1d9530; color:#c4b5fd; }
-  .form-verify,
-  .form-id_verify      { background:#1c191730; color:#d6d3d1; }
-  .form-security_q     { background:#1a2e3a30; color:#7dd3fc; }
-  .form-checkpoint,
-  .form-locked,
-  .form-confirm,
-  .form-complete       { background:#1f293730; color:#9ca3af; }
+/* ── Stat pills ─────────────────────────────────── */
+.stat-pill{display:inline-flex;align-items:center;gap:5px;font-size:.85rem}
+.stat-pill .val{font-weight:700;color:var(--accent)}
+.stat-pill.leads .val{color:var(--good)}
 
-  /* ── Stat pills in header ─────────────────────── */
-  .stat-pill { display:flex; align-items:center; gap:5px; font-size:.85rem; }
-  .stat-pill .val { font-weight:700; color:#8ab4ff; }
+/* ── Cards ──────────────────────────────────────── */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r12);padding:20px 22px;margin-bottom:16px}
+.card-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
+            color:var(--ink3);font-family:var(--mono);margin-bottom:16px}
 
-  /* ── Toggle panel ────────────────────────────── */
-  .toggle-panel { background:#0b0f19; border-radius:12px; padding:16px; }
-  .toggle-panel .lbl { font-size:.82rem; opacity:.6; margin-bottom:6px; }
-  .toggle-panel .mode-val { font-size:1.05rem; font-weight:700; margin-bottom:12px; }
+/* ── Grids ──────────────────────────────────────── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
 
-  /* ── Step cards ──────────────────────────────── */
-  .step-card { background:#0b0f19; border-radius:10px; padding:12px 14px; border:1.5px solid #ffffff10; transition:.15s; }
-  .step-card:hover { border-color:#5b8cff44; }
-  .step-card .step-name { font-size:.82rem; font-weight:700; color:#8ab4ff; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
-  .step-card .step-fields { font-size:.73rem; opacity:.45; margin-bottom:7px; }
-  .step-card a { font-size:.78rem; color:#60a5fa; }
+/* ── Toggle panel ────────────────────────────────── */
+.toggle-panel{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r12);padding:16px}
+.toggle-panel .tp-label{font-size:.75rem;color:var(--ink3);font-family:var(--mono);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.toggle-panel .tp-val{font-size:1rem;font-weight:700;margin-bottom:12px}
 
-  /* ── Leads table ─────────────────────────────── */
-  table { width:100%; border-collapse:collapse; }
-  th,td { padding:11px 12px; text-align:right; border-bottom:1px solid #ffffff09; font-size:.85rem; }
-  th { background:#1c2436; font-size:.78rem; opacity:.65; font-weight:600; }
-  tr:last-child td { border-bottom:none; }
-  tr:hover td { background:#ffffff03; }
-  .lead-data { font-family:monospace; font-size:.78rem; color:#cbd5e1; max-width:340px; }
-  .lead-data-wrap { display:flex; align-items:center; gap:8px; }
+/* ── Step card ───────────────────────────────────── */
+.step-card{background:var(--surface2);border:1.5px solid var(--line);border-radius:var(--r8);
+           padding:12px 14px;transition:.15s}
+.step-card:hover{border-color:var(--accent)}
+.step-card-name{font-size:.82rem;font-weight:600;color:var(--accent);
+                margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.step-card-fields{font-size:.72rem;color:var(--ink4);margin-bottom:7px}
+.step-card a{font-size:.78rem;color:var(--cyan)}
 
-  /* ── Form inputs ─────────────────────────────── */
-  label { display:grid; gap:6px; font-size:.84rem; margin-bottom:12px; }
-  input,select,textarea {
-    width:100%; padding:10px 12px; border-radius:9px;
-    border:1px solid #ffffff18; background:#0b0f19;
-    color:#eef2ff; font-family:inherit; font-size:.9rem;
-  }
-  input:focus, select:focus { outline:none; border-color:#5b8cff55; }
+/* ── URL block ───────────────────────────────────── */
+.url-block{display:flex;align-items:center;gap:8px;background:var(--surface2);
+           border:1px solid var(--line);border-radius:var(--r8);padding:10px 14px}
+.url-block span{font-family:var(--mono);font-size:.82rem;color:var(--ink2);flex:1;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-copy{background:var(--surface);color:var(--ink3);border:1px solid var(--line);
+          padding:4px 10px;border-radius:6px;font-size:.72rem;cursor:pointer;
+          font-family:var(--mono);transition:.15s}
+.btn-copy:hover{color:var(--ink);background:var(--surface3)}
+.btn-copy.copied{background:var(--good-dim);color:var(--good);border-color:#4ac57e33}
 
-  /* ── Bottom actions ──────────────────────────── */
-  .bottom-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+/* ── Buttons ─────────────────────────────────────── */
+.btn{padding:8px 16px;border-radius:var(--r8);border:none;cursor:pointer;
+     font-size:.82rem;font-family:inherit;font-weight:600;transition:.15s;
+     display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--line)}
+.btn-ghost:hover{color:var(--ink);background:var(--surface2)}
+.btn-good{background:var(--good-soft);color:var(--good);border:1px solid #4ac57e33}
+.btn-good:hover{filter:brightness(1.1)}
+.btn-warn{background:var(--warn-soft);color:var(--warn);border:1px solid #e0ad4633}
+.btn-warn:hover{filter:brightness(1.1)}
+.btn-crit{background:var(--crit-soft);color:var(--crit);border:1px solid #f0766b33}
+.btn-crit:hover{filter:brightness(1.1)}
+.btn-sm{padding:5px 10px;font-size:.76rem;border-radius:7px}
 
-  /* ── Toast ───────────────────────────────────── */
-  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#16a34a; color:#fff; padding:10px 22px; border-radius:10px; font-size:.88rem; opacity:0; transition:.3s; pointer-events:none; z-index:999; }
-  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+/* ── Leads table ─────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r8);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead tr{background:var(--surface2)}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--ink3);font-weight:600;font-family:var(--mono);font-size:.7rem;
+   text-transform:uppercase;letter-spacing:.05em}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.td-data{font-family:var(--mono);font-size:.76rem;color:var(--ink2);
+         max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-  @media(max-width:700px){ .grid2,.grid3{grid-template-columns:1fr} .page-header{flex-direction:column} }
+/* ── Form inputs ─────────────────────────────────── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.75rem;color:var(--ink3);font-family:var(--mono);
+             text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+input,select{width:100%;padding:9px 12px;border-radius:var(--r8);
+             border:1px solid var(--line);background:var(--bg);
+             color:var(--ink);font-family:inherit;font-size:.88rem}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+
+/* ── Toast ───────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+       background:var(--surface);border:1px solid var(--line);color:var(--ink);
+       padding:10px 22px;border-radius:12px;font-size:.88rem;opacity:0;
+       transition:.3s;pointer-events:none;z-index:999;box-shadow:0 4px 20px #0008}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:#4ac57e55;background:var(--good-dim);color:var(--good)}
+.toast.err{border-color:#f0766b55;background:var(--crit-soft);color:var(--crit)}
+
+.divider{height:1px;background:var(--line);margin:16px 0}
+.empty{padding:32px;text-align:center;color:var(--ink4)}
 </style>
 </head>
 <body>
+
+<div class="topbar">
+  <a class="tb-back" href="/admin">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2L4 6l4 4"/></svg>
+    Dashboard
+  </a>
+  <span style="font-weight:600;font-size:.9rem"><%= page.title %></span>
+  <div class="tb-right">
+    <a href="/p/<%= page.slug %>" target="_blank" class="btn btn-ghost btn-sm">
+      <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 1h4v4M11 1L5 7"/><path d="M5 3H2a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1V8"/></svg>
+      View Page
+    </a>
+  </div>
+</div>
+
 <div class="wrap">
 
-  <p style="margin-bottom:14px"><a href="/admin">← لوحة التحكم</a></p>
-
-  <!-- ── Page Header ────────────────────────────── -->
-  <div class="page-header">
-    <div>
+  <!-- ── Page Header ─────────────────────────────── -->
+  <div class="ph">
+    <div class="ph-left">
       <h1><%= page.title %></h1>
-      <div class="meta-row">
-        <span style="font-size:.85rem;opacity:.5">القالب: <b><%= page.template_name %></b></span>
-        <span class="badge <%= page.active == 1 ? 'on' : 'off' %>"><%= page.active == 1 ? '✅ مفعّلة' : '⛔ موقوفة' %></span>
-        <span class="badge <%= page.mode === 'offline' ? 'offline-mode' : 'online-mode' %>"><%= page.mode === 'offline' ? '📴 أوفلاين' : '🌐 أونلاين' %></span>
-        <span class="stat-pill">👁 <span class="val"><%= page.views || 0 %></span></span>
-        <span class="stat-pill">🎯 <span class="val" style="color:#4ade80"><%= leads.length %></span> ليد</span>
+      <div class="ph-meta">
+        <span style="font-size:.82rem;color:var(--ink3)">Template: <strong style="color:var(--ink2)"><%= page.template_name %></strong></span>
+        <span class="badge <%= page.active == 1 ? 'b-on' : 'b-off' %>">
+          <span style="width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0"></span>
+          <%= page.active == 1 ? 'Active' : 'Inactive' %>
+        </span>
+        <span class="badge <%= page.mode === 'offline' ? 'b-offline' : 'b-online' %>">
+          <%= page.mode === 'offline' ? 'Offline' : 'Online' %>
+        </span>
+        <span class="stat-pill">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="4" r="2"/><path d="M1 10c0-2.5 2-4 5-4s5 1.5 5 4"/></svg>
+          <span class="val"><%= page.views || 0 %></span> views
+        </span>
+        <span class="stat-pill leads">
+          <span class="val"><%= leads.length %></span> leads
+        </span>
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
-      <!-- Active toggle -->
+    <div class="ph-actions">
       <form method="POST" action="/admin/pages/<%= page.id %>/toggle-active" style="display:inline">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button type="submit" class="btn <%= page.active == 1 ? 'btn-warn' : 'btn-green' %>">
-          <%= page.active == 1 ? '⛔ إيقاف' : '✅ تفعيل' %>
+        <button type="submit" class="btn <%= page.active == 1 ? 'btn-warn' : 'btn-good' %> btn-sm">
+          <%= page.active == 1 ? 'Deactivate' : 'Activate' %>
         </button>
       </form>
-      <a href="/p/<%= page.slug %>" target="_blank" class="btn btn-outline">🔗 عرض</a>
     </div>
   </div>
 
-  <!-- ── Mode + Flow Control ────────────────────── -->
-  <div class="section">
-    <h3>🎛️ تحكم في المود والخطوات</h3>
+  <!-- ── Live URL ────────────────────────────────── -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Live URL</div>
+    <div class="url-block">
+      <span id="urlText"><%= typeof siteBase !== 'undefined' ? siteBase : '' %>/p/<%= page.slug %></span>
+      <button class="btn-copy" id="urlCopyBtn" onclick="copyUrl()">Copy</button>
+      <a href="/p/<%= page.slug %>" target="_blank" class="btn btn-ghost btn-sm">Open</a>
+    </div>
+  </div>
+
+  <!-- ── Mode + Flow ─────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">Mode & Flow Control</div>
     <div class="grid2" style="margin-bottom:18px">
 
-      <!-- Online/Offline toggle -->
       <div class="toggle-panel">
-        <div class="lbl">المود الحالي</div>
-        <div class="mode-val"><%= page.mode === 'offline' ? '📴 أوفلاين (مغلق)' : '🌐 أونلاين (شغال)' %></div>
+        <div class="tp-label">Current Mode</div>
+        <div class="tp-val">
+          <span class="badge <%= page.mode === 'offline' ? 'b-offline' : 'b-online' %>">
+            <%= page.mode === 'offline' ? 'Offline (Closed)' : 'Online (Live)' %>
+          </span>
+        </div>
         <form method="POST" action="/admin/pages/<%= page.id %>/mode">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button type="submit" class="btn <%= page.mode === 'offline' ? 'btn-green' : 'btn-warn' %>" style="width:100%">
-            <%= page.mode === 'offline' ? '✅ تشغيل (أونلاين)' : '🔴 إيقاف (أوفلاين)' %>
+          <button type="submit" class="btn <%= page.mode === 'offline' ? 'btn-good' : 'btn-warn' %>" style="width:100%">
+            <%= page.mode === 'offline' ? 'Go Online' : 'Go Offline' %>
           </button>
         </form>
       </div>
 
-      <!-- Flow step override -->
       <div class="toggle-panel">
-        <div class="lbl">تحديد الخطوة الافتراضية</div>
+        <div class="tp-label">Default Start Step</div>
         <form method="POST" action="/admin/pages/<%= page.id %>/flow-step">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <select name="step" style="margin-bottom:10px">
-            <option value="">— الأولى تلقائياً —</option>
+            <option value="">— Auto (first step) —</option>
             <% tpl.pages.forEach(p => { %>
               <option value="<%= p.slug %>" <%= page.flow_step === p.slug ? 'selected' : '' %>><%= p.step_label || p.slug %></option>
             <% }) %>
           </select>
-          <button type="submit" class="btn btn-gray" style="width:100%">💾 تطبيق</button>
+          <button type="submit" class="btn btn-ghost" style="width:100%">Apply</button>
         </form>
       </div>
     </div>
 
-    <!-- Steps list -->
-    <div style="font-size:.8rem;opacity:.5;margin-bottom:10px">خطوات الفلو (اضغط للمعاينة)</div>
+    <div style="font-size:.75rem;color:var(--ink4);font-family:var(--mono);
+                text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Flow Steps</div>
     <div class="grid3">
       <% tpl.pages.forEach((p, i) => { %>
         <div class="step-card">
-          <div class="step-name">
-            <span style="opacity:.4"><%= i+1 %>.</span>
+          <div class="step-card-name">
+            <span style="color:var(--ink4)"><%= i+1 %>.</span>
             <%= p.step_label || p.slug %>
-            <span class="step-badge form-<%= p.form_type || p.layout %>"><%= p.form_type || p.layout %></span>
+            <span class="step-tag form-<%= p.form_type || p.layout %>"><%= p.form_type || p.layout %></span>
           </div>
-          <div class="step-fields"><%= (p.fields||[]).join(', ') || 'لا حقول' %></div>
-          <a href="/p/<%= page.slug %>/<%= p.slug %>" target="_blank">🔗 معاينة</a>
+          <div class="step-card-fields"><%= (p.fields||[]).join(', ') || 'no fields' %></div>
+          <a href="/p/<%= page.slug %>/<%= p.slug %>" target="_blank">Preview ↗</a>
         </div>
       <% }) %>
     </div>
   </div>
 
-  <!-- ── Leads ──────────────────────────────────── -->
-  <div class="section">
-    <h3>🎯 الليدز (<%= leads.length %>)
+  <!-- ── Leads ───────────────────────────────────── -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="card-title" style="margin:0">Leads (<%= leads.length %>)</div>
       <% if (leads.length) { %>
-        <a href="/admin/pages/<%= page.id %>/export" class="btn btn-sm btn-green" style="margin-right:auto">📥 تصدير CSV</a>
+        <a href="/admin/pages/<%= page.id %>/export" class="btn btn-good btn-sm">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 1v7M3 5l3 3 3-3"/><path d="M1 10h10"/></svg>
+          Export CSV
+        </a>
       <% } %>
-    </h3>
+    </div>
     <% if (leads.length) { %>
-      <div style="overflow-x:auto">
+      <div class="tbl-wrap">
         <table>
-          <thead><tr><th>#</th><th>الخطوة</th><th>البيانات</th><th>التاريخ</th><th></th></tr></thead>
+          <thead><tr><th>#</th><th>Step</th><th>Data</th><th>Date</th><th></th></tr></thead>
           <tbody>
           <% leads.forEach(l => {
             let d = {}; try { d = JSON.parse(l.data); } catch {}
             const step = d.step || 'submit';
             delete d.step; delete d._csrf; delete d._hp; delete d._step;
-            const preview = Object.entries(d).map(([k,v]) => `${k}: ${v}`).join(' • ');
+            const preview = Object.entries(d).map(([k,v]) => k+': '+v).join(' · ');
             const formType = tpl.pages.find(p=>p.slug===step)?.form_type || step;
             const stepLabel = tpl.pages.find(p=>p.slug===step)?.step_label || step;
           %>
             <tr>
-              <td style="opacity:.4;font-size:.78rem"><%= l.id %></td>
-              <td><span class="badge step-badge form-<%= formType %>"><%= stepLabel %></span></td>
+              <td style="color:var(--ink4);font-family:var(--mono);font-size:.75rem"><%= l.id %></td>
+              <td><span class="badge step-tag form-<%= formType %>"><%= stepLabel %></span></td>
               <td>
-                <div class="lead-data-wrap">
-                  <span class="lead-data" title="<%= preview %>"><%= preview %></span>
-                  <button class="btn-copy" onclick="copyLead(this, `<%= preview.replace(/`/g,'\\`') %>`)">نسخ</button>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="td-data" title="<%= preview %>"><%= preview %></span>
+                  <button class="btn-copy btn-sm" onclick="copyText(this,'<%= preview.replace(/'/g,"&#39;").replace(/\n/g,' ') %>')">Copy</button>
                 </div>
               </td>
-              <td style="font-size:.76rem;opacity:.4;white-space:nowrap"><%= l.created_at %></td>
+              <td style="font-family:var(--mono);font-size:.73rem;color:var(--ink4);white-space:nowrap"><%= l.created_at %></td>
               <td></td>
             </tr>
           <% }) %>
@@ -217,63 +302,74 @@
         </table>
       </div>
     <% } else { %>
-      <p style="opacity:.35;margin:0">مفيش ليدز لسه.</p>
+      <div class="empty">No leads yet.</div>
     <% } %>
   </div>
 
-  <!-- ── Edit Form ──────────────────────────────── -->
-  <div class="section">
-    <h3>✏️ تعديل الصفحة</h3>
+  <!-- ── Edit Form ────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">Edit Page</div>
     <form method="POST" action="/admin/pages/<%= page.id %>">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="grid2">
-        <label>العنوان<input name="title" value="<%= page.title %>" required></label>
-        <label>السلاج<input name="slug" value="<%= page.slug %>" required></label>
+        <div class="field"><label>Title</label><input name="title" value="<%= page.title %>" required></div>
+        <div class="field"><label>Slug</label><input name="slug" value="<%= page.slug %>" required></div>
       </div>
-      <label>رقم القالب<input name="template_id" value="<%= page.template_id %>"></label>
-      <label style="display:flex;gap:8px;align-items:center;flex-direction:row;margin-bottom:16px">
-        <input type="checkbox" name="active" value="1" <%= page.active == 1 ? 'checked' : '' %> style="width:auto;margin:0">
-        <span>الصفحة مفعّلة</span>
-      </label>
+      <div class="field"><label>Template ID</label><input name="template_id" value="<%= page.template_id %>"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <input type="checkbox" name="active" value="1" <%= page.active == 1 ? 'checked' : '' %> style="width:auto;accent-color:var(--accent)">
+        <span style="font-size:.88rem;color:var(--ink2)">Page is active</span>
+      </div>
       <input type="hidden" name="headline"    value="<%= page.headline    || '' %>">
       <input type="hidden" name="subheadline" value="<%= page.subheadline || '' %>">
       <input type="hidden" name="body"        value="<%= page.body        || '' %>">
-      <input type="hidden" name="button_text" value="<%= page.button_text || 'سجل الآن' %>">
+      <input type="hidden" name="button_text" value="<%= page.button_text || 'Continue' %>">
       <input type="hidden" name="theme"       value="<%= page.theme       || 'dark' %>">
       <input type="hidden" name="pixel"       value="<%= page.pixel       || '' %>">
       <input type="hidden" name="fields"      value="<%= page.fields %>">
-      <button type="submit" class="btn" style="padding:10px 26px">💾 حفظ</button>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
   </div>
 
-  <!-- ── Bottom actions ─────────────────────────── -->
-  <div class="bottom-actions">
-    <a href="/admin/templates?page_id=<%= page.id %>" class="btn">🎨 تغيير القالب</a>
-    <form method="POST" action="/admin/pages/<%= page.id %>/delete" onsubmit="return confirm('حذف الصفحة وكل الليدز؟')">
+  <!-- ── Bottom actions ───────────────────────────── -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+    <a href="/admin/templates?page_id=<%= page.id %>" class="btn btn-ghost">Change Template</a>
+    <form method="POST" action="/admin/pages/<%= page.id %>/delete"
+          onsubmit="return confirm('Delete page and all its leads? This cannot be undone.')">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button class="btn btn-del">🗑 حذف</button>
+      <button class="btn btn-crit">Delete Page</button>
     </form>
   </div>
 
 </div>
 
-<!-- Toast -->
-<div id="toast"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-function copyLead(btn, text) {
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓ تم';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'نسخ'; btn.classList.remove('copied'); }, 2000);
-    showToast('تم النسخ ✓');
-  });
-}
-function showToast(msg) {
+function toast(msg, type='ok', ms=2600) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  t.className = 'toast show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    toast('Copied!');
+  });
+}
+function copyUrl() {
+  const url = document.getElementById('urlText').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('urlCopyBtn');
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    toast('URL copied!');
+  });
 }
 </script>
 </body>

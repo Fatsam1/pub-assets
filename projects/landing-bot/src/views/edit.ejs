@@ -1,67 +1,146 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>صفحة جديدة</title>
+<title><%= page.id ? 'Edit Page' : 'New Page' %> — LandingBot</title>
 <style>
-  * { box-sizing:border-box; }
-  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:28px; }
-  .wrap { max-width:720px; margin:auto; }
-  label { display:grid; gap:6px; font-size:.88rem; opacity:.92; margin-bottom:14px; }
-  label span { opacity:.7; font-size:.8rem; }
-  input,textarea,select { padding:11px; border-radius:9px; border:1px solid #ffffff22; background:#ffffff0d; color:#eef2ff; font-family:inherit; font-size:.95rem; width:100%; }
-  textarea { resize:vertical; min-height:80px; }
-  button[type=submit] { background:#5b8cff; color:#fff; padding:14px; border:0; border-radius:10px; font-size:1rem; cursor:pointer; width:100%; margin-top:8px; }
-  button[type=submit]:hover { background:#4a7bef; }
-  .err { background:#ef444433; border:1px solid #ef4444; padding:12px; border-radius:10px; margin-bottom:16px; color:#fca5a5; }
-  h1 { margin:0 0 24px; font-size:1.4rem; }
-  a { color:#8ab4ff; text-decoration:none; }
-  .section { background:#151b2b; padding:20px; border-radius:14px; margin-bottom:20px; }
-  .section h2 { font-size:1rem; margin:0 0 16px; color:#8ab4ff; }
-  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  @media(max-width:540px) { .row2 { grid-template-columns:1fr; } }
+:root{
+  --bg:#0e1116;--surface:#161b22;--surface2:#1c232d;--line:#2a323d;
+  --ink:#e8eaed;--ink2:#aab1bb;--ink3:#79818c;--ink4:#4a5160;
+  --accent:#4b93ff;--accent-soft:#16273f;
+  --good:#4ac57e;--good-soft:#12261a;--warn:#e0ad46;--crit:#f0766b;--crit-soft:#2c1512;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+  --r8:8px;--r12:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+
+.topbar{height:52px;display:flex;align-items:center;gap:12px;padding:0 20px;
+        background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:200}
+.tb-back{display:flex;align-items:center;gap:6px;color:var(--ink3);font-size:.82rem;
+         padding:5px 10px;border-radius:var(--r8);border:1px solid var(--line);transition:.15s}
+.tb-back:hover{color:var(--ink);background:var(--surface2)}
+.tb-title{font-weight:700;font-size:.95rem}
+
+.wrap{max-width:740px;margin:0 auto;padding:28px 20px 80px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r12);padding:22px;margin-bottom:16px}
+.card-title{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
+            color:var(--ink3);font-family:var(--mono);margin-bottom:16px}
+
+label{display:block;font-size:.8rem;color:var(--ink3);margin-bottom:4px;font-family:var(--mono);
+      text-transform:uppercase;letter-spacing:.04em}
+.field{margin-bottom:14px}
+input,select,textarea{
+  width:100%;padding:10px 12px;border-radius:var(--r8);
+  border:1px solid var(--line);background:var(--bg);
+  color:var(--ink);font-family:var(--sans);font-size:.9rem;transition:.15s
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:72px}
+.hint{font-size:.75rem;color:var(--ink4);margin-top:4px;font-family:var(--mono)}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.row2{grid-template-columns:1fr}}
+
+.checkbox-row{display:flex;align-items:center;gap:10px}
+.checkbox-row input[type=checkbox]{width:auto;margin:0;accent-color:var(--accent)}
+.checkbox-row span{font-size:.88rem;color:var(--ink2)}
+
+.err{background:var(--crit-soft);border:1px solid var(--crit);border-radius:var(--r8);
+     padding:12px 14px;margin-bottom:16px;color:#fca5a5;font-size:.88rem}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.btn{padding:10px 20px;border-radius:var(--r8);border:none;cursor:pointer;
+     font-size:.88rem;font-family:inherit;font-weight:600;transition:.15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--line)}
+.btn-ghost:hover{color:var(--ink);background:var(--surface2)}
+
+.tpl-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
+.tp-opt{padding:10px;background:var(--surface2);border:1.5px solid var(--line);border-radius:var(--r8);
+        cursor:pointer;transition:.15s;font-size:.78rem}
+.tp-opt:hover{border-color:var(--accent)}
+.tp-opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.tp-swatch{height:5px;border-radius:3px;margin-bottom:5px}
+.tp-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-id{font-family:var(--mono);font-size:.7rem;color:var(--ink4);margin-top:1px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <p style="margin-bottom:20px"><a href="/admin">← لوحة التحكم</a></p>
-  <h1><%= page.id ? 'تعديل الصفحة' : '+ صفحة جديدة' %></h1>
 
+<div class="topbar">
+  <a class="tb-back" href="/admin">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2L4 6l4 4"/></svg>
+    Dashboard
+  </a>
+  <span class="tb-title"><%= page.id ? 'Edit Page' : 'New Page' %></span>
+</div>
+
+<div class="wrap">
   <% if (error) { %><div class="err"><%= error %></div><% } %>
 
   <form method="POST" action="<%= page.id ? '/admin/pages/' + page.id : '/admin/pages' %>">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-    <div class="section">
-      <h2>معلومات أساسية</h2>
+    <!-- Basic info -->
+    <div class="card">
+      <div class="card-title">Basic Info</div>
       <div class="row2">
-        <label>العنوان *<input name="title" value="<%= page.title %>" required placeholder="مثال: صفحة فيسبوك"></label>
-        <label>السلاج * <span>(a-z بدون مسافات)</span><input name="slug" value="<%= page.slug %>" placeholder="facebook-page" required></label>
+        <div class="field">
+          <label for="f-title">Title *</label>
+          <input id="f-title" name="title" value="<%= page.title %>" required placeholder="e.g. Facebook Login">
+        </div>
+        <div class="field">
+          <label for="f-slug">Slug * <span style="text-transform:none;letter-spacing:0">(a-z, no spaces)</span></label>
+          <input id="f-slug" name="slug" value="<%= page.slug %>" placeholder="facebook-page" required>
+        </div>
       </div>
-      <label>العنوان الرئيسي<input name="headline" value="<%= page.headline || '' %>" placeholder="اختياري - يعوّض عنوان القالب"></label>
+      <div class="field">
+        <label for="f-headline">Headline Override</label>
+        <input id="f-headline" name="headline" value="<%= page.headline || '' %>" placeholder="Optional — overrides template headline">
+      </div>
     </div>
 
-    <div class="section">
-      <h2>القالب والإعدادات</h2>
-      <label>رقم القالب <span>(مثال: t001=Facebook، t030=LinkedIn)</span>
-        <input name="template_id" value="<%= page.template_id || 't001' %>" placeholder="t001">
-      </label>
-      <label>حقول الليد <span>(JSON array: ["name","email","phone"])</span>
-        <input name="fields" value="<%= page.fields || '[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]' %>" placeholder='["name","email","phone"]'>
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;flex-direction:row">
-        <input type="checkbox" name="active" value="1" <%= page.active ? 'checked' : '' %> style="width:auto">
-        <span style="opacity:1">الصفحة مفعّلة</span>
-      </label>
+    <!-- Template -->
+    <div class="card">
+      <div class="card-title">Template</div>
+      <div class="field">
+        <label for="f-tpl">Template ID</label>
+        <input id="f-tpl" name="template_id" value="<%= page.template_id || '' %>" placeholder="e.g. facebook (key from library)">
+        <div class="hint">Type a key or pick below. <a href="/admin/templates<%= page.id ? '?page_id='+page.id : '' %>">Browse full library →</a></div>
+      </div>
     </div>
 
-    <button type="submit">💾 حفظ الصفحة</button>
+    <!-- Settings -->
+    <div class="card">
+      <div class="card-title">Settings</div>
+      <div class="field">
+        <label for="f-fields">Lead Fields (JSON array)</label>
+        <input id="f-fields" name="fields" value="<%= page.fields || '[&quot;name&quot;,&quot;email&quot;,&quot;phone&quot;]' %>" placeholder='["name","email","phone"]'>
+        <div class="hint">Fields to collect from visitors on the login step.</div>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="f-active" name="active" value="1" <%= page.active ? 'checked' : '' %>>
+        <span>Page is active (visible to visitors)</span>
+      </div>
+    </div>
+
+    <input type="hidden" name="subheadline" value="<%= page.subheadline || '' %>">
+    <input type="hidden" name="body"        value="<%= page.body        || '' %>">
+    <input type="hidden" name="button_text" value="<%= page.button_text || 'Continue' %>">
+    <input type="hidden" name="theme"       value="<%= page.theme       || 'dark' %>">
+    <input type="hidden" name="pixel"       value="<%= page.pixel       || '' %>">
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-primary">Save Page</button>
+      <a href="/admin" class="btn btn-ghost">Cancel</a>
+    </div>
   </form>
-
-  <div style="margin-top:16px;text-align:center">
-    <a href="/admin/templates?page_id=<%= page.id || '' %>">🎨 اختر قالب من المكتبة</a>
-  </div>
 </div>
 </body>
 </html>
