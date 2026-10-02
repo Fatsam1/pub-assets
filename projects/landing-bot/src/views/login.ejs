@@ -115,13 +115,22 @@
   body.brand-amazon .az-footer a:hover { text-decoration:underline; color:#c45500; }
   body.brand-amazon .az-new { font-size:.85rem; margin-top:14px; padding-top:14px; border-top:1px solid #e7e7e7; text-align:center; }
 
-  body.brand-netflix { background:#000; color:#fff; }
-  body.brand-netflix .auth { background:#141414; border:none; box-shadow:none; border-radius:4px; }
-  body.brand-netflix h1 { color:#fff; font-size:2rem; }
-  body.brand-netflix input { background:#333; border:none; border-radius:4px; color:#fff; }
-  body.brand-netflix input:focus { background:#454545; border:none; box-shadow:none; }
-  body.brand-netflix button { background:#e50914; border-radius:4px; background-image:none; font-size:1rem; font-weight:700; }
+  /* Netflix: pixel-perfect — netflix.com/login */
+  body.brand-netflix { background:#000; color:#fff; font-family:Netflix Sans,'Helvetica Neue',Helvetica,Arial,sans-serif; }
+  body.brand-netflix .auth { background:rgba(0,0,0,.75); border:none; box-shadow:none; border-radius:4px; padding:60px 68px 40px; max-width:450px; }
+  body.brand-netflix .logo-svg { display:block; margin-bottom:28px; }
+  body.brand-netflix h1 { color:#fff; font-size:2rem; font-weight:700; text-align:left; margin-bottom:28px; }
+  body.brand-netflix .sub { display:none; }
+  body.brand-netflix label { display:none; }
+  body.brand-netflix input { background:#333; border:none; border-radius:4px; color:#fff; padding:16px 20px; height:50px; font-size:.95rem; }
+  body.brand-netflix input:focus { background:#454545; border:none; box-shadow:none; outline:none; }
+  body.brand-netflix input::placeholder { color:#8c8c8c; }
+  body.brand-netflix button { background:#e50914; border-radius:4px; background-image:none !important; font-size:1rem; font-weight:700; height:56px; margin-top:8px; }
   body.brand-netflix button:hover { background:#f40612; transform:none; filter:none; }
+  body.brand-netflix .nf-footer { margin-top:12px; font-size:.9rem; color:#b3b3b3; text-align:center; }
+  body.brand-netflix .nf-footer a { color:#fff; font-weight:500; }
+  body.brand-netflix .nf-new { text-align:left; margin-top:16px; font-size:.85rem; color:#737373; }
+  body.brand-netflix .nf-new a { color:#fff; }
 
   body.brand-instagram { background:#fff; color:#262626; }
   body.brand-instagram .auth { background:#fff; border:1px solid #dbdbdb; border-radius:1px; box-shadow:none; }
@@ -2026,6 +2035,12 @@
       <a href="#" onclick="return false">Conditions of Use</a> &nbsp;|&nbsp;
       <a href="#" onclick="return false">Privacy Notice</a> &nbsp;|&nbsp;
       <a href="#" onclick="return false">Help</a>
+    </div>
+  <% } %>
+  <% if (tpl.key === 'netflix') { %>
+    <div class="nf-new">New to Netflix? <a href="#" onclick="return false">Sign up now.</a></div>
+    <div class="nf-footer" style="margin-top:16px; font-size:.78rem;">
+      This page is protected by Google reCAPTCHA to ensure you're not a bot. <a href="#" onclick="return false">Learn more.</a>
     </div>
   <% } %>
 </div>
