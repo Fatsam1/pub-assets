@@ -451,6 +451,18 @@ app.post('/admin/pages/:id', isAdmin, (req, res) => {
   }
 });
 
+// active toggle: مفعّلة ↔ موقوفة
+app.post('/admin/pages/:id/toggle-active', isAdmin, (req, res) => {
+  try {
+    const page = db.prepare('SELECT * FROM pages WHERE id=?').get(req.params.id);
+    if (!page) return res.status(404).send('not found');
+    db.prepare('UPDATE pages SET active=? WHERE id=?').run(page.active ? 0 : 1, req.params.id);
+    res.redirect(req.headers.referer || '/admin/pages/' + req.params.id);
+  } catch (err) {
+    res.status(500).send('خطأ');
+  }
+});
+
 // mode toggle: online ↔ offline
 app.post('/admin/pages/:id/mode', isAdmin, (req, res) => {
   try {
