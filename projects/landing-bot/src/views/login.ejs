@@ -411,15 +411,17 @@
   body.brand-statedept button { background:#C8102E; border-radius:4px; background-image:none; font-weight:700; }
 
   /* ── Crypto / Web3 ── */
-  body.brand-kraken { background:#f0f0f8; color:#0a0a0a; }
-  body.brand-kraken .auth { background:#fff; border:none; border-radius:24px; box-shadow:0 8px 32px rgba(0,0,0,.08); }
-  body.brand-kraken h1 { color:#0a0a0a; font-weight:700; font-size:1.75rem; }
-  body.brand-kraken .sub { color:#6b6b6b; opacity:1; }
-  body.brand-kraken input { background:#f0f0f8; border:1.5px solid transparent; border-radius:12px; color:#0a0a0a; }
-  body.brand-kraken input::placeholder { color:#9898a8; opacity:1; }
-  body.brand-kraken input:focus { border-color:#5741D9; background:#f0f0f8; box-shadow:none; }
-  body.brand-kraken button { background:#5741D9; border-radius:50px; background-image:none; font-weight:600; letter-spacing:.2px; }
-  body.brand-kraken button:hover { background:#4631c5; transform:none; filter:none; }
+  /* Kraken: exact values from live kraken.com/sign-in — bg #F6F5F9, btn #7132F5, input pill */
+  body.brand-kraken { background:#F6F5F9; color:#101114; font-family:ui-sans-serif,system-ui,sans-serif; }
+  body.brand-kraken .auth { background:#fff; border:none; border-radius:16px; box-shadow:0 2px 16px rgba(0,0,0,.06); padding:40px 36px; }
+  body.brand-kraken h1 { color:#101114; font-weight:500; font-size:1.75rem; text-align:center; margin-bottom:24px; }
+  body.brand-kraken .sub { color:#686B82; opacity:1; font-size:.82rem; }
+  body.brand-kraken input { background:#fff; border:.8px solid #D1D1D1; border-radius:50px; color:#101114; font-size:.9rem; }
+  body.brand-kraken input::placeholder { color:#686B82; opacity:1; }
+  body.brand-kraken input:focus { border-color:#7132F5; background:#fff; box-shadow:0 0 0 3px rgba(113,50,245,.12); }
+  body.brand-kraken button { background:#7132F5; border-radius:12px; background-image:none; font-weight:500; font-size:1rem; height:52px; }
+  body.brand-kraken button:hover { background:#5e28d4; transform:none; filter:none; }
+  body.brand-kraken a { color:#7132F5; }
 
   body.brand-bitfinex { background:#1B1B1B; color:#fff; }
   body.brand-bitfinex .auth { background:#2A2A2A; border:none; border-radius:6px; }

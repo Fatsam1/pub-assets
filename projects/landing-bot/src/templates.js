@@ -101,7 +101,7 @@ const PALETTES = {
 
   binance:        ['#0B0E11','#1E2026','#EAECEF','#F0B90B','#FCD535'],
   coinbase:       ['#ffffff','#ffffff','#0a0b0d','#0052FF','#1652F0'],
-  kraken:         ['#f0f0f8','#ffffff','#0a0a0a','#5741D9','#4631c5'],
+  kraken:         ['#F6F5F9','#ffffff','#101114','#7132F5','#5e28d4'],
   bitfinex:       ['#1B1B1B','#2A2A2A','#FFFFFF','#16B157','#12904C'],
   gemini:         ['#05061B','#0B0D2A','#FFFFFF','#00DCFA','#05D2F5'],
   okx:            ['#000000','#111111','#FFFFFF','#FFFFFF','#AAAAAA'],
