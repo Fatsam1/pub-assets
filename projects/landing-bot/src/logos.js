@@ -14,7 +14,7 @@ export const LOGOS = {
 
   microsoft: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56"><rect x="4" y="4" width="22" height="22" fill="#F25022"/><rect x="30" y="4" width="22" height="22" fill="#7FBA00"/><rect x="4" y="30" width="22" height="22" fill="#00A4EF"/><rect x="30" y="30" width="22" height="22" fill="#FFB900"/></svg>`,
 
-  amazon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 36" width="100" height="36"><text x="4" y="24" font-family="Arial Black,Helvetica Neue,sans-serif" font-weight="900" font-size="26" fill="#F90" letter-spacing="-1">amazon</text><path fill="#F90" d="M4 28c14 8 45 8 60-1-1-1-3-.5-4.5.3-13 5-40 5-54-1-.7-.5-1.8-.3-1.5.7z"/><path fill="#F90" d="M62 25c1.3-.6 4-1.5 5.3-1.8l-.3-.6c-1.4.2-4 .8-6 2.1l1 .3z"/></svg>`,
+  amazon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 40" width="130" height="40"><text x="4" y="26" font-family="Arial Black,Helvetica Neue,sans-serif" font-weight="900" font-size="28" fill="#F90" letter-spacing="-1">amazon</text><path fill="#F90" d="M4 31c16 9 52 9 70-1-1-1-3-.5-5 .3-15 5-46 5-62-1-.7-.5-2-.3-1.5.8z"/><path fill="#F90" d="M72 28c1.5-.7 4.5-1.6 6-2l-.4-.7c-1.6.2-4.5.9-7 2.4l1.4.3z"/></svg>`,
 
   netflix: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 36" width="140" height="36"><text x="0" y="30" font-family="Arial Black,Impact,sans-serif" font-size="32" font-weight="900" fill="#E50914" letter-spacing="2">NETFLIX</text></svg>`,
 

@@ -2096,9 +2096,7 @@
     %>
       <input type="<%= type %>" name="<%= f %>" placeholder="<%= placeholder %>" autocomplete="<%= f === 'password' ? 'current-password' : 'off' %>" required>
     <% }) %>
-    <% /* Kraken: add label above each field + forgot password */ %>
     <button type="submit"><%= pageContent.cta || 'Sign In' %></button>
-    <% } %>
   </form>
   <% if (tpl.key === 'kraken') { %>
     <div class="kr-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
