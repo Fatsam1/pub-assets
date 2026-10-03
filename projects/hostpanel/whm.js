@@ -61,7 +61,10 @@ export async function readFile(cpanelUser, filename) {
   const text = await whmRequest(url);
   try {
     const d = JSON.parse(text);
-    return d?.result?.data?.[0]?.content ?? null;
+    // cPanel Fileman UAPI v3 returns result.data as an object (not array)
+    const data = d?.result?.data;
+    if (!data) return null;
+    return Array.isArray(data) ? (data[0]?.content ?? null) : (data.content ?? null);
   } catch { return null; }
 }
 

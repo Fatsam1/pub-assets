@@ -97,6 +97,7 @@
     <div class="tab" data-tab="zones">Cloudflare zones</div>
     <div class="tab" data-tab="cloner">🔁 Clone Site</div>
     <div class="tab" data-tab="bot">🤖 Bot Deploy</div>
+    <div class="tab" data-tab="market">🛒 RA3D Market</div>
   </div>
 
   <!-- CREATE CPANEL -->
@@ -198,6 +199,17 @@
       <div id="bot-list"><p style="color:var(--ink3);font-family:var(--mono);font-size:13px">Loading…</p></div>
     </div>
   </section>
+
+  <!-- RA3D MARKET -->
+  <section id="tab-market" class="hidden">
+    <div class="card" style="text-align:center;padding:60px 24px">
+      <div style="font-size:56px;margin-bottom:20px">🛒</div>
+      <h2 style="margin-bottom:8px">RA3D Market</h2>
+      <p class="hint" style="margin-bottom:28px">سوق الأدوات والقوالب — قريباً</p>
+      <div id="market-status" style="font-family:var(--mono);font-size:12px;color:var(--ink3);margin-bottom:24px">جاري التحقق من الحالة…</div>
+      <a id="market-link" href="https://market.privatehash.online" target="_blank" class="ghost" style="padding:10px 28px;text-decoration:none;display:inline-block">فتح في تاب جديد ↗</a>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -253,15 +265,32 @@ document.querySelectorAll(".tab").forEach(t=>{
   t.onclick=()=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
     t.classList.add("active");
-    for(const id of ["cpanel","link","accounts","zones","cloner","bot"]) $("#tab-"+id).classList.add("hidden");
+    for(const id of ["cpanel","link","accounts","zones","cloner","bot","market"]) $("#tab-"+id).classList.add("hidden");
     $("#tab-"+t.dataset.tab).classList.remove("hidden");
     if(t.dataset.tab==="accounts") loadAccounts();
     if(t.dataset.tab==="zones") loadZones();
     if(t.dataset.tab==="link") loadCpanelOptions();
     if(t.dataset.tab==="cloner") loadClones();
     if(t.dataset.tab==="bot") loadBotTab();
+    if(t.dataset.tab==="market") checkMarket();
   };
 });
+
+async function checkMarket(){
+  const el = document.getElementById("market-status");
+  const link = document.getElementById("market-link");
+  if(!el) return;
+  try {
+    const r = await fetch("https://market.privatehash.online", {method:"HEAD", mode:"no-cors", cache:"no-cache"});
+    el.textContent = "✓ الماركت متاح";
+    el.style.color = "var(--good)";
+    link.style.display = "inline-block";
+  } catch(e) {
+    el.textContent = "⚠ الماركت قيد الإعداد — سيكون متاحاً قريباً";
+    el.style.color = "var(--warn)";
+    link.style.display = "none";
+  }
+}
 
 function renderLog(el, log){
   el.classList.remove("hidden");

